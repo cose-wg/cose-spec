@@ -454,6 +454,8 @@ ul.toc a:first-child {
 
   <link href="#rfc.toc" rel="Contents"/>
 <link href="#rfc.section.1" rel="Chapter" title="1 Introduction"/>
+<link href="#rfc.section.1.1" rel="Chapter" title="1.1 Requirements Terminology"/>
+<link href="#rfc.section.1.2" rel="Chapter" title="1.2 CBOR Grammar"/>
 <link href="#rfc.section.2" rel="Chapter" title="2 The COSE_MSG structure"/>
 <link href="#rfc.section.3" rel="Chapter" title="3 Key Format"/>
 <link href="#rfc.section.4" rel="Chapter" title="4 Signing Structure"/>
@@ -476,7 +478,7 @@ ul.toc a:first-child {
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Schaad, J." />
-  <meta name="dct.identifier" content="urn:ietf:id:draft-schaad-cosy-00" />
+  <meta name="dct.identifier" content="urn:ietf:id:draft-schaad-cose-latest" />
   <meta name="dct.issued" scheme="ISO8601" content="2014-11-27" />
   <meta name="dct.abstract" content="Make JOSE work with CBOR - but don't care about crypto compatability" />
   <meta name="description" content="Make JOSE work with CBOR - but don't care about crypto compatability" />
@@ -510,7 +512,7 @@ ul.toc a:first-child {
   </table>
 
   <p class="title">CBOR Encoded Message Syntax<br />
-  <span class="filename">draft-schaad-cosy-00</span></p>
+  <span class="filename">draft-schaad-cose-latest</span></p>
   
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
@@ -535,6 +537,8 @@ ul.toc a:first-child {
   <ul class="toc">
 
   	<li>1.   <a href="#rfc.section.1">Introduction</a></li>
+<li>1.1.   <a href="#rfc.section.1.1">Requirements Terminology</a></li>
+<li>1.2.   <a href="#rfc.section.1.2">CBOR Grammar</a></li>
 <li>2.   <a href="#rfc.section.2">The COSE_MSG structure</a></li>
 <li>3.   <a href="#rfc.section.3">Key Format</a></li>
 <li>4.   <a href="#rfc.section.4">Signing Structure</a></li>
@@ -556,7 +560,19 @@ ul.toc a:first-child {
   </ul>
 
   <h1 id="rfc.section.1"><a href="#rfc.section.1">1.</a> Introduction</h1>
-<p id="rfc.section.1.p.1">TBD </p>
+<p id="rfc.section.1.p.1">The JOSE working group produced a set of documents that defined how to perform encryption, signatures and message authentication (MAC) operations for JSON documents and then to encode the results using the JSON format <a href="#RFC7159">[RFC7159]</a>.  This document does the same work for use with the CBOR <a href="#RFC7049">[RFC7049]</a> document format.  While there is a strong attempt to keep the flavor of the original JOSE documents, two considerations are taking into account: </p>
+
+<ul class="empty">
+  <li>CBOR has capabilities that are not present in JSON and should be used.  One example of this is the fact that CBOR has a method of encoding binary directly without first converting it into a base64 encoded sting.  </li>
+  <li>The authors did not always agree with some of the decisions made by the JOSE working group.  Many of these decisions have been re-examined, and where it seems to the authors to be superior, replaced.  </li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.1.1"><a href="#rfc.section.1.1">1.1.</a> Requirements Terminology</h1>
+<p id="rfc.section.1.1.p.1">The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in <a href="#RFC2119">[RFC2119]</a>.</p>
+<p id="rfc.section.1.1.p.2">When the words appear in lower case, their natural language meaning is used.</p>
+<h1 id="rfc.section.1.2"><a href="#rfc.section.1.2">1.2.</a> CBOR Grammar</h1>
+<p id="rfc.section.1.2.p.1">There currently is no standard CBOR grammar available for use by specifications.  In this document, we use a modified version of the CBOR data definition language (CDDL) defined in <a href="#I-D.greevenbosch-appsawg-cbor-cddl">[I-D.greevenbosch-appsawg-cbor-cddl]</a>.  The differences between the defined grammar and the one we used are mostly self explanatory.  The biggest difference being the addition of the choice operator '|'.  </p>
 <h1 id="rfc.section.2"><a href="#rfc.section.2">2.</a> The COSE_MSG structure</h1>
 <p id="rfc.section.2.p.1">The COSE_MSG structure is a top level CBOR object which corresponds to the DataContent type in <a href="#CMS">[CMS]</a>.  This structure allows for a top level message to be sent which could be any of the different security services, where the security service is identified.  The presence of this structure does not preclude a protocol to use one of the individual structures as a stand alone component.  </p>
 <pre>
@@ -688,12 +704,12 @@ COSE_encrypt {
 <h1 id="rfc.section.6"><a href="#rfc.section.6">6.</a> MAC objects</h1>
 <p id="rfc.section.6.p.1">add description </p>
 <pre>
-COSE-mac : map (tstr) {
-   ? "payload" : bstr;
-   ? "protected" : bstr;
-   ? "unprotected" : bstr;
-   "tag" : bstr;
-   "recipients" : COSE-encrypt* ;
+COSE-mac :  {
+   payload : bstr;
+   protected : bstr | null;
+   unprotected" : map(tstr) | null;
+   tag : bstr;
+   recipients : COSE_encrypt_a* | null;
 }
       </pre>
 <h1 id="rfc.section.7"><a href="#rfc.section.7">7.</a> Key Structure</h1>
@@ -722,6 +738,12 @@ COSE_key : map (tstr)
     </tr>
     <tr>
       <td class="reference">
+        <b id="I-D.greevenbosch-appsawg-cbor-cddl">[I-D.greevenbosch-appsawg-cbor-cddl]</b>
+      </td>
+      <td class="top"><a>Greevenbosch, B.</a> and <a>C. Vigano</a>, "<a href="http://tools.ietf.org/html/draft-greevenbosch-appsawg-cbor-cddl-03">CBOR data definition language: a notational convention to express CBOR data structures.</a>", Internet-Draft draft-greevenbosch-appsawg-cbor-cddl-03, September 2014.</td>
+    </tr>
+    <tr>
+      <td class="reference">
         <b id="JWE">[JWE]</b>
       </td>
       <td class="top"><a>JOSE, </a>, "<a>JWE</a>", .</td>
@@ -731,6 +753,24 @@ COSE_key : map (tstr)
         <b id="JWK">[JWK]</b>
       </td>
       <td class="top"><a>JOSE, </a>, "<a>JWK</a>", .</td>
+    </tr>
+    <tr>
+      <td class="reference">
+        <b id="RFC2119">[RFC2119]</b>
+      </td>
+      <td class="top"><a href="mailto:sob@harvard.edu" title="Harvard University">Bradner, S.</a>, "<a href="http://tools.ietf.org/html/rfc2119">Key words for use in RFCs to Indicate Requirement Levels</a>", BCP 14, RFC 2119, March 1997.</td>
+    </tr>
+    <tr>
+      <td class="reference">
+        <b id="RFC7049">[RFC7049]</b>
+      </td>
+      <td class="top"><a>Bormann, C.</a> and <a>P. Hoffman</a>, "<a href="http://tools.ietf.org/html/rfc7049">Concise Binary Object Representation (CBOR)</a>", RFC 7049, October 2013.</td>
+    </tr>
+    <tr>
+      <td class="reference">
+        <b id="RFC7159">[RFC7159]</b>
+      </td>
+      <td class="top"><a>Bray, T.</a>, "<a href="http://tools.ietf.org/html/rfc7159">The JavaScript Object Notation (JSON) Data Interchange Format</a>", RFC 7159, March 2014.</td>
     </tr>
   </tbody>
 </table>
