@@ -1,0 +1,504 @@
+
+
+
+
+Network Working Group                                          J. Schaad
+Internet-Draft                                            August Cellars
+Intended status: Informational                         November 27, 2014
+Expires: May 31, 2015
+
+
+                      CBOR Encoded Message Syntax
+                          draft-schaad-cosy-00
+
+Abstract
+
+   Make JOSE work with CBOR - but don't care about crypto compatability
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at http://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on May 31, 2015.
+
+Copyright Notice
+
+   Copyright (c) 2014 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (http://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Simplified BSD License text as described in Section 4.e of
+   the Trust Legal Provisions and are provided without warranty as
+   described in the Simplified BSD License.
+
+
+
+
+
+
+
+Schaad                    Expires May 31, 2015                  [Page 1]
+
+Internet-Draft         CBOR Encoded Message Syntax         November 2014
+
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   8
+   2.  The COSE_MSG structure  . . . . . . . . . . . . . . . . . . .   2
+   3.  Key Format  . . . . . . . . . . . . . . . . . . . . . . . . .   3
+   4.  Signing Structure . . . . . . . . . . . . . . . . . . . . . .   3
+   5.  Encryption object . . . . . . . . . . . . . . . . . . . . . .   3
+     5.1.  Header Parameters . . . . . . . . . . . . . . . . . . . .   4
+     5.2.  Encryption Algorithm for AEAD algorithsm  . . . . . . . .   5
+     5.3.  Encryption algorithm for AE algorithms  . . . . . . . . .   5
+   6.  MAC objects . . . . . . . . . . . . . . . . . . . . . . . . .   6
+   7.  Key Structure . . . . . . . . . . . . . . . . . . . . . . . .   6
+   8.  Informational References  . . . . . . . . . . . . . . . . . .   6
+   Appendix A.  AEAD and AE algorithms . . . . . . . . . . . . . . .   7
+   Appendix B.  Examples . . . . . . . . . . . . . . . . . . . . . .   7
+     B.1.  Direct MAC  . . . . . . . . . . . . . . . . . . . . . . .   7
+     B.2.  Wrapped MAC - PSK . . . . . . . . . . . . . . . . . . . .   7
+     B.3.  Big encryption  . . . . . . . . . . . . . . . . . . . . .   7
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .   9
+
+1.  Introduction
+
+   TBD
+
+2.  The COSE_MSG structure
+
+   The COSE_MSG structure is a top level CBOR object which corresponds
+   to the DataContent type in [CMS].  This structure allows for a top
+   level message to be sent which could be any of the different security
+   services, where the security service is identified.  The presence of
+   this structure does not preclude a protocol to use one of the
+   individual structures as a stand alone component.
+
+   *COSE_MSG {
+     msg_type : uint;
+     ?sign_msg: COSE-Sign;         # present if msg_type = 0
+     ?encrypt_msg: COSE-Encrypt;   # present if msg_type = 1
+     ?mac_msg: COSE-MAC;           # present if msg_type = 2
+   }
+
+   This structure is encoded as an array by CBOR.  Descriptions of the
+   fields:
+
+      msg_type indicates which of the security structures is in this
+      block.
+
+
+
+
+
+
+Schaad                    Expires May 31, 2015                  [Page 2]
+
+Internet-Draft         CBOR Encoded Message Syntax         November 2014
+
+
+3.  Key Format
+
+4.  Signing Structure
+
+   Describe an overview of things
+
+   COSE-Sign : {
+       payload : bstr;
+       signatures: COSE-signature* | COSE-signature;
+   }
+
+   This structure is encoded as a map.  [CREF1] Field descriptions:
+
+      payload contains the serialized content to be signed.
+
+      signatures is either a single signature or an array of signature
+      values.  [CREF2]
+
+   COSE-signature :  {
+       protected : bstr | null;
+       unprotected : map(tstr);
+       signature : bstr;
+   }
+
+   Field descriptions:
+
+      protected is optional and contains additional information to be
+      authenticated by the signature.  The field generally holds data
+      about the signture operation or inner content.
+
+      header is optional and contains additional information for
+      evaluation of the signature.
+
+   How to compute a signature:
+
+      Concatenate the "protected" field and the "payload" field into a
+      single octet string.  If the "protected" field is absent, use a
+      zero length bstr object for it.
+
+      Hash the resulting string
+
+      Sign the hash
+
+5.  Encryption object
+
+   In this section we describe the structure and methods to be used when
+   doing an encryption in COSE.  In COSE, we use the same techniques and
+   structures for encrypting both the plain text and the keys used to
+
+
+
+Schaad                    Expires May 31, 2015                  [Page 3]
+
+Internet-Draft         CBOR Encoded Message Syntax         November 2014
+
+
+   protect the text.  This is different from the approach used by both
+   [CMS] and [JWE] where different structures are used both for the
+   plain text and for the different key management techniques.
+
+   One of the by products of using the same technique for encrypting and
+   encoding bot the content and the keys using the various key managment
+   techniques, is a requirement that all of the key management
+   techniques use an Authenticated Encryption (AE) algorithm.  When
+   encrypting the plain text, it is normal to use an Authenticated
+   Encryption with Additional Data (AEAD) algorithm.  For key
+   management, either AE or AEAD algorithms can be used.  See Appendix A
+   for more details about the different types of algorithms.
+
+   The structure has two bags where data about the content can be
+   placed.  The data placed here is also the data which is used to
+   control how the decryption is to be done for this object.  When data
+   is placed in these two structures, it is extremely poor practice to
+   have data which is applicable to a different level.  For example, the
+   unprotected field at the level of a key management decryption should
+   not contain information either about how to interpret the plain text
+   (i.e. content type) or how to convert the cipher text back to plain
+   text (i.e. the kid for the recipient).
+
+   COSE_encrypt {
+     protected : bstr | null;
+     unprotected : map(tstr) | null;
+     iv : bstr | null;
+     aad : bstr | null;
+     ciphertext : bstr | null;
+     tag : bstr;
+     recipients : COSE_encrypt_a* | null;
+   }
+
+   * COSE_encrypt_a : COSE_encrypt
+
+
+   Description of the fields:
+
+      tag [CREF3]
+
+      recipients is an array of recipient information.  [CREF4]
+
+5.1.  Header Parameters
+
+   The header parameters discussed here are taken from [JWE].  For the
+   most part they are interpreted the same here as for JOSE.
+
+
+
+
+
+Schaad                    Expires May 31, 2015                  [Page 4]
+
+Internet-Draft         CBOR Encoded Message Syntax         November 2014
+
+
+   alg  contains the algorithm identifier used to encrypt the plain
+      text.
+
+   epk  contains an ephemeral key for key agreement management
+      algorithms.
+
+   zip  contains a compression algorithm identifier if the plain text
+      was compressed prior to being encrypted.
+
+   jku  contains a URL pointing to a JWK Set (defined in [JWK]).
+      [CREF5]
+
+   cwk  contains the public key fields for the key used to encrypt the
+      object.
+
+   kid  contains a value which can be used to select a key from one or
+      more keys the application has access to.
+
+   cty  contains a string which identifies the content of the plain
+      text.
+
+   There are a number of header fields defined in [JWE] which are not
+   used.  These include PUT THE LIST OF UNUSED ITEMS HERE.  Includes
+   'enc'?
+
+5.2.  Encryption Algorithm for AEAD algorithsm
+
+   Nice short encryption algorithm.
+
+   1.  Construct the octet string to be placed in the protected field:
+       CBOR encode the protected data map, place it the protected field.
+
+   2.  Construct the octet string to be used as the AAD value for the
+       AEAD algorithm: Concatenate the values in the protected and aad
+       fields after applying the CBOR bstr encoding to them.
+
+   3.  Encrypt the plain text and place it in the ciphertext field.  The
+       AAD value is passed in as part of the encryption process.
+
+   4.  For each recipient of the message, recursively perform the
+       encryption algorithm for that recipient using the encryption key
+       as the plain text.
+
+5.3.  Encryption algorithm for AE algorithms
+
+   1.  Verify that the protected field is empty.
+
+   2.  Verify that the aad field is empty.
+
+
+
+Schaad                    Expires May 31, 2015                  [Page 5]
+
+Internet-Draft         CBOR Encoded Message Syntax         November 2014
+
+
+   3.  Encrypt the plain text and place in the ciphertext field.
+
+6.  MAC objects
+
+   add description
+
+   COSE-mac : map (tstr) {
+      ? "payload" : bstr;
+      ? "protected" : bstr;
+      ? "unprotected" : bstr;
+      "tag" : bstr;
+      "recipients" : COSE-encrypt* ;
+   }
+
+7.  Key Structure
+
+   For COSE we use the same set of fields that were defined in [JWK].
+
+   COSE_key : map (tstr)
+
+   The same fields defined in [JWK] are used here with the following
+   changes in rules:
+
+      Any item which is base64 encoded in JWK, is bstr encoded for COSE.
+
+      Any item which is integer encoded in JWK, is int encoded for COSE.
+
+      Any item which is string (but not base64) encoded in JWK, is tstr
+      encoded for COSE.
+
+      Exceptions to this are the following fields:
+
+      kid  is always bstr encoded rather than tstr encoded.  This change
+         in encoded is due to the fact that frequently, values such as a
+         hash of the public key is used for a kid value.  Since the
+         field is defined as not having a specific structure, making it
+         binary rather than textual makes sense.
+
+8.  Informational References
+
+   [CMS]      Housley, R., "Cryptographic Message Syntax (CMS)", STD 70,
+              RFC 5652, September 2009.
+
+   [JWE]      JOSE, , "JWE", .
+
+   [JWK]      JOSE, , "JWK", .
+
+
+
+
+
+Schaad                    Expires May 31, 2015                  [Page 6]
+
+Internet-Draft         CBOR Encoded Message Syntax         November 2014
+
+
+Appendix A.  AEAD and AE algorithms
+
+   PKCS v1.5 is not an AE algorithm RSA OAEP is.  Don't use v1.5.
+
+Appendix B.  Examples
+
+B.1.  Direct MAC
+
+   { "payload" : "xxxxx",
+     "unprotected" : {
+         "alg" : "HMAC-SHA2",
+         "kid" : "bilbo"
+     }
+   }
+
+B.2.  Wrapped MAC - PSK
+
+   { "payload" : "xxxxx",
+     "protected" : { "alg" : "HMAC-SHA2" },
+     "recipients" : [
+        {
+           "unprotected" : {
+              "kid": "bilbo",
+              "alg": "AESKW"
+           },
+           "ciphertext" : "xx"
+        },
+        {
+           "unprotected" : {
+              "kid" : "samwise",
+              "alg" : "RSA_1.5"
+           },
+           "ciphertext" : "yyy"
+        }
+     ]
+   }
+
+B.3.  Big encryption
+
+
+
+
+
+
+
+
+
+
+
+
+
+Schaad                    Expires May 31, 2015                  [Page 7]
+
+Internet-Draft         CBOR Encoded Message Syntax         November 2014
+
+
+ { "ciphertext" : "xxxx",
+   "iv" : "yyy",
+   "aad" : "zzz",
+   "protected" : "{'alg':'A128KW','kid':'bilbo','enc':'A128GCM'}",
+   "unprotected" : { "cty" : "vcard" }
+   "tag" : "aaaa",
+   "recipients" : [
+       {
+           "ciphertext" : "mmmm",
+           "unprotected" : { "alg": "RSA1_5", "kid": "frodo" }
+       {
+           "unprotected" : {
+              "alg" : "ECDH-ES+A256KW",
+              "kid" : "peregrin",
+              "epk" : {...}
+           },
+           "ciphertext" : "qqqqq"
+        },
+        {
+            "ciphertext" : "rrrrr",
+            "unprotected" : {
+                "alg" : "A256GCMKW",
+                "kid" : "bilbo",
+                "tag" : "rrrrr1",
+                "iv" : "rrrrr2",
+            }
+        },
+        {
+            "ciphertext" : "nnnnn",
+            "unprotected" : {
+                "alg": "A256GCMKW",
+                "tag": "ddddd1",
+                "iv" : "ddddd2",
+                "key" : {
+                    "ciphertext" : "oooooo",
+                    "unprotected" : { "alg":"RSA1_5", "kid":"two_wrap" }
+                }
+             }
+         }
+     ]
+ }
+
+Editorial Comments
+
+[CREF1] JLS: Do we want to change the top level maps to arrays?  There
+        is goodness and badness in doing so.  Size wise it should be
+        smaller in a general case.  The only fun question is what to do
+        if the payload element is not present.
+
+
+
+Schaad                    Expires May 31, 2015                  [Page 8]
+
+Internet-Draft         CBOR Encoded Message Syntax         November 2014
+
+
+[CREF2] JLS: Does it make sense to retain the flattened structure to
+        save 1 or 2(?) bytes?
+
+[CREF3] JLS: Is life easier if this goes away and becomes part of the
+        cipher text?
+
+[CREF4] JLS: Is there a reason to do a flatten on the recipient array?
+        This is easier if we make the recipient structure a map as it
+        becomes a difference between array vs map as the next item down.
+        If we flatten for arrays, then it because a question of checking
+        - "array, bstr" vs "array, array, bstr".  I don't know how hard
+        this is to deal with.  We can also do the flattening in a
+        different way as we can look at the length of the array if we
+        just append the recipient vs doing an array of recipients.  I
+        think this would work.  Implies the rule: recipients :
+        COSE_encrypt | COSE_encrypt_a* | null;
+
+[CREF5] JLS: Do we defined a cku as well?
+
+Author's Address
+
+   Jim Schaad
+   August Cellars
+
+   Email: ietf@augustcellars.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Schaad                    Expires May 31, 2015                  [Page 9]
