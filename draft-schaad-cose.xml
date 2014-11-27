@@ -6,9 +6,12 @@
 <?rfc comments="yes" ?>
 <!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
 <!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
+<!ENTITY RFC7049 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7049.xml">
+<!ENTITY RFC7159 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7159.xml">
+<!ENTITY CDDL SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-greevenbosch-appsawg-cbor-cddl.xml">
 ]>
 
-<rfc category="info" docName="draft-schaad-cosy-00" ipr="trust200902">
+<rfc category="info" docName="draft-schaad-cose-latest" ipr="trust200902">
   <front>
     <title>CBOR Encoded Message Syntax</title>
     <author initials="J." surname="Schaad" fullname="Jim Schaad">
@@ -25,9 +28,38 @@
   </front>
   <middle>
     <section title="Introduction">
-      <t>TBD
+      <t>
+        The JOSE working group produced a set of documents that defined how to perform encryption, signatures and message authentication (MAC) operations for JSON documents and then to encode the results using the JSON format <xref target="RFC7159"/>.
+        This document does the same work for use with the CBOR <xref target="RFC7049"/> document format.
+        While there is a strong attempt to keep the flavor of the original JOSE documents, two considerations are taking into account:
+        <list>
+          <t>
+            CBOR has capabilities that are not present in JSON and should be used.
+            One example of this is the fact that CBOR has a method of encoding binary directly without first converting it into a base64 encoded sting.
+          </t>
+          <t>
+            The authors did not always agree with some of the decisions made by the JOSE working group.
+            Many of these decisions have been re-examined, and where it seems to the authors to be superior, replaced.
+          </t>
+        </list>
       </t>
+
+      <section title="Requirements Terminology">
+        <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in <xref target="RFC2119"/>.</t>
+        <t>When the words appear in lower case, their natural language meaning is used.</t>
+      </section>
+
+      <section title="CBOR Grammar">
+        <t>
+          There currently is no standard CBOR grammar available for use by specifications.
+          In this document, we use a modified version of the CBOR data definition language (CDDL) defined in <xref target="reference.I-D.draft-greevenbosch-appsawg-cbor-cddl"/>.
+          The differences between the defined grammar and the one we used are mostly self explanatory.
+          The biggest difference being the addition of the choice operator '|'.
+        </t>
+      </section>
+
     </section>
+
     <section title="The COSE_MSG structure">
       <t>
         The COSE_MSG structure is a top level CBOR object which corresponds to the DataContent type in <xref target="CMS"/>.
@@ -276,12 +308,12 @@ COSE_encrypt {
       <t> add description </t>
       <figure>
       <artwork>
-COSE-mac : map (tstr) {
-   ? "payload" : bstr;
-   ? "protected" : bstr;
-   ? "unprotected" : bstr;
-   "tag" : bstr;
-   "recipients" : COSE-encrypt* ;
+COSE-mac :  {
+   payload : bstr;
+   protected : bstr | null;
+   unprotected" : map(tstr) | null;
+   tag : bstr;
+   recipients : COSE_encrypt_a* | null;
 }
       </artwork>
       </figure>
@@ -353,6 +385,10 @@ COSE_key : map (tstr)
 <date/>
 </front>
 </reference>
+
+&RFC7049;
+&RFC7159;
+&CDDL;
     </references>
     <section title="AEAD and AE algorithms" anchor="AE-algo">
       <t>
