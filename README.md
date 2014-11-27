@@ -1,16 +1,16 @@
-# |CBOR Encoded Message Syntax|
+# CBOR Encoded Message Syntax
 
-This is the working area for the [IETF |COSE| Working
-Group](https://trac.tools.ietf.org/wg/|COSE|/trac/wiki) draft of |CBOR Encoded Message Syntax|
+This is the working area for the [IETF COSE non-Working
+Group] draft of CBOR Encoded Message Syntax
 
 * [Editor's copy](https://cose-wg.github.io/cose-spec/)
-* [Working Group Draft] (https://tools.ietf.org/html/|draft-schaad-cose|)
+* [Working Group Draft] (https://tools.ietf.org/html/draft-schaad-cose)
 
 
 ## Contributing
 
 Before submitting feedback, please familiarize yourself with our current issues
-list and review the [working group home page](|WG-HOMEPAGE|). If you're
+list and review the [working group home page](WG-HOMEPAGE) (when and if we git one). If you're
 new to this, you may also want to read the [Tao of the
 IETF](https://www.ietf.org/tao.html).
 
@@ -19,7 +19,7 @@ terms outlined below.
 
 1. The best way to provide feedback (editorial or design) and ask questions is
 sending an e-mail to [our mailing
-list](https://www.ietf.org/mailman/listinfo/|COSE|). This will ensure that
+list](https://www.ietf.org/mailman/listinfo/COSE) (when we get one). This will ensure that
 the entire Working Group sees your input in a timely fashion.
 
 2. If you have **editorial** suggestions (i.e., those that do not change the
