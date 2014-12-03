@@ -6,9 +6,17 @@
 <?rfc comments="yes" ?>
 <!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
 <!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
+<!ENTITY RFC3394 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3394.xml">
+<!ENTITY RFC3447 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3447.xml">
+<!ENTITY RFC3610 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3610.xml">
 <!ENTITY RFC7049 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7049.xml">
 <!ENTITY RFC7159 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7159.xml">
 <!ENTITY CDDL SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.greevenbosch-appsawg-cbor-cddl.xml">
+<!ENTITY JWK SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-jose-json-web-key.xml">
+<!ENTITY JWA SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-jose-json-web-algorithms.xml">
+<!ENTITY JWE SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-jose-json-web-encryption.xml">
+<!ENTITY JWS SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-jose-json-web-signature.xml">
+<!ENTITY AES-HMAC SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.mcgrew-aead-aes-cbc-hmac-sha2.xml">
 ]>
 
 <rfc category="info" docName="draft-schaad-cose-latest" ipr="trust200902">
@@ -43,6 +51,18 @@
           </t>
         </list>
       </t>
+
+      <section title="Design changes from JOSE">
+        <t>
+          <list style="symbols">
+            <t>
+              We switched from using a map to using an array at the message level.
+              While this change means that it is no longer possible to add new information in the form of new fields to the message object, this ability is still there as this data can be added to the protected and unprotected maps.
+            </t>
+          </list>
+        </t>
+      </section>
+        
 
       <section title="Requirements Terminology">
         <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in <xref target="RFC2119"/>.</t>
@@ -88,9 +108,11 @@
         </list>
       </t>
     </section>
+
     <section title="Key Format">
       
     </section>
+
     <section title="Signing Structure">
       <t>
         Describe an overview of things
@@ -106,13 +128,7 @@ COSE-Sign : {
       </figure>
 
       <t>
-        This structure is encoded as a map.
-        <cref source="JLS">
-          Do we want to change the top level maps to arrays?
-          There is goodness and badness in doing so.
-          Size wise it should be smaller in a general case.
-          The only fun question is what to do if the payload element is not present.
-        </cref>
+        This structure is encoded as an array.
 
         Field descriptions:
 
@@ -167,7 +183,7 @@ COSE-signature :  {
       <t>
         In this section we describe the structure and methods to be used when doing an encryption in COSE.
         In COSE, we use the same techniques and structures for encrypting both the plain text and the keys used to protect the text.
-        This is different from the approach used by both <xref target="CMS"/> and <xref target="JWE"/> where different structures are used both for the plain text and for the different key management techniques.
+        This is different from the approach used by both <xref target="CMS"/> and <xref target="I-D.ietf-jose-json-web-encryption"/> where different structures are used both for the plain text and for the different key management techniques.
       </t>
         
       <t>
@@ -177,7 +193,7 @@ COSE-signature :  {
       </t>
 
       <t>
-        The structure has two bags where data about the content can be placed.
+        The structure has two maps where data about the content can be placed.
         The data placed here is also the data which is used to control how the decryption is to be done for this object.
         When data is placed in these two structures, it is extremely poor practice to have data which is applicable to a different level.
         For example, the unprotected field at the level of a key management decryption should not contain information either about how to interpret the plain text (i.e. content type) or how to convert the cipher text back to plain text (i.e. the kid for the recipient).
@@ -186,7 +202,7 @@ COSE-signature :  {
       <figure>
       <artwork>
 COSE_encrypt {
-  protected : bstr | null;
+  protected : bstr | null;   # Contains map(tstr)
   unprotected : map(tstr) | null;
   iv : bstr | null;
   aad : bstr | null;
@@ -203,10 +219,38 @@ COSE_encrypt {
       <t>
         Description of the fields:
 
-        <list>
-          <t>tag <cref source="JLS">Is life easier if this goes away and becomes part of the cipher text?</cref></t>
-          <t>
-            recipients is an array of recipient information.
+        <list style="hanging">
+          <t hangText="protected">
+            contains the information about the plain text or encryption process that is to be integrity protected.
+            The field is encoded in CBOR as a 'bstr' if present and the value 'null' if there is no data.
+            The contents of the protected field is a CBOR map of the protected data names and values.
+            The map is CBOR encoded before placing it into the bstr.
+          </t>
+          <t hangText="unprotected">
+            contains infomration about the plain text that is not integrity protected.
+            If there are no field, then the value 'null' is used.
+          </t>
+          <t hangText="iv">
+            contains the initialization vector (IV), or it's equivalent, if one is needed by the encryption algorithm.
+            If there is no IV, then the value 'null' is used.
+          </t>
+          <t hangText="aad">
+            contains additional authenticated data (aad) supplied by the application.
+            This field contains information about the plain text data that is authenticated, but not encrypted.
+            If the application does not provide this data, the value 'null' is used.
+          </t>
+          <t hangText="cipherText">
+            contains the encrypted plain text.
+            If the cipherText is to be transported independently of the control information about the encryption process (i.e. detached content) then the value 'null' is encoded here.
+          </t>
+          <t hangText="tag">
+            <cref source="JLS">Is life easier if this goes away and becomes part of the cipher text?</cref>
+          </t>
+          <t hangText="recipients">
+            contains the recipient information.
+            The field is an array of elements, one for each recipient.
+            If there is no recipient information, the value 'null' is used.
+            
             <cref source="JLS"> 
               Is there a reason to do a flatten on the recipient array?
               This is easier if we make the recipient structure a map as it becomes a difference between array vs map as the next item down.
@@ -222,7 +266,7 @@ COSE_encrypt {
 
       <section title="Header Parameters">
         <t>
-          The header parameters discussed here are taken from <xref target="JWE"/>.
+          The header parameters discussed here are taken from <xref target="I-D.ietf-jose-json-web-encryption"/>.
           For the most part they are interpreted the same here as for JOSE.
         </t>
 
@@ -241,7 +285,7 @@ COSE_encrypt {
             </t>
 
             <t hangText="jku">
-              contains a URL pointing to a JWK Set (defined in <xref target="JWK"/>).
+              contains a URL pointing to a JWK Set (defined in <xref target="I-D.ietf-jose-json-web-key"/>).
               <cref source="JLS">Do we defined a cku as well?</cref>
             </t>
 
@@ -260,13 +304,109 @@ COSE_encrypt {
         </t>
 
         <t>
-          There are a number of header fields defined in <xref target="JWE"/> which are not used.
+          There are a number of header fields defined in <xref target="I-D.ietf-jose-json-web-encryption"/> which are not used.
           These include PUT THE LIST OF UNUSED ITEMS HERE.  Includes 'enc'?
         </t>
       </section>
             
+      <section title="Key Management Methods">
+        <t>
+          There are a number of different key management methods that can be used in the COSE encryption system.
+          In this section we will discuss each of the key management methods and what fields need to be specified to deal with each of them.
+        </t>
 
-      <section title="Encryption Algorithm for AEAD algorithsm">
+        <t>
+          The names of the key management methods used here are the same as are defined in <xref target="I-D.ietf-jose-json-web-key"/>.
+          Other specifications use different terms for the key management methods or do not support some of the key management methods.
+        </t>
+
+        <section title="Direct Encryption">
+          <t>
+            In direct encryption mode, a shared secret between the sender and the recipient is used as the CEK.
+            For direct encryption mode, no recipient structure is built.
+            All of the information about the key is placed in either the protected or unprotected fields at the content level.
+            When direct encryption mode is used, it MUST be the only mode used on the message.
+            It is a massive security leak to have both direct encryption and a different key management mode on the same message.
+          </t>
+
+          <t>
+            For JOSE, direct encryption key management is the only key management method allowed for doing MAC-ed messages.
+            In COSE, all of the key management methods can be used for MAC-ed messages.
+          </t>
+        </section>
+
+        <section title="Key Wrapping">
+          <t>
+            In key wrapping mode, the CEK is randomly generated and that key is then encrypted by a shared secret between the sender and the recipient.
+            All of the currently defined key wrapping algorithms for JOSE (and thus for COSE) are AE algorithms.
+            Key wrapping mode is considered to be superior to direct encryption if the system has any capability for doing random key generation.
+            This is because the shared key is used to wrap random data rather than data  has some degree of organization and may in fact be repeating the same content.
+          </t>
+
+          <t>
+            The COSE_encrypt structure for the recipient is organized as follows:
+            <list style="symbols">
+              <t>The 'protected', 'aad', and 'recipients' fields MUST be null.</t>
+              <t>The plain text to be encrypted is the key from next layer down (usually the content layer).</t>
+              <t>At a minimum, the 'unprotected' field SHOULD contain the 'alg' parameter as well as a parameter identifying the shared secret.</t>
+              <t>Use of the 'iv' field will depend on the key wrap algorithm.</t>
+            </list>
+          </t>
+            
+        </section>
+
+        <section title="Key Encryption">
+          <t>
+            Key Encryption mode is also called key transport mode in some standards.
+            Key Encryption mode differs from Key Wrap mode in that it uses an asymmetric encryption algorithm rather than a symmetric encryption algorithm to protect the key.
+            The only current Key Encryption mode algorithm supported is RSAES-OAEP.
+          </t>
+
+          <t>
+            The COSE_encrypt structure for the recipient is organized as follows:
+            <list style="symbols">
+              <t>The 'protected', 'aad', 'iv', and 'tag' fields all use the 'null' value.</t>
+              <t>The plain text to be encrypted is the key from next layer down (usually the content layer).</t>
+              <t>At a minimum, the 'unprotected' field SHOULD contain the 'alg' parameter as well as a parameter identifying the asymmetric key.</t>
+            </list>
+          </t>
+        </section>
+
+        <section title="Direct Key Agreement">
+          <t>
+            Direct Key Agreement derives the CEK from the shared secret computed by the key agreement operation.
+            For Direct Key Agreement, no recipient structure is built.
+            All of the information about the key and key agreement process is placed in either the 'protected' or 'unprotected' fields at the content level.
+          </t>
+            
+          <t>
+            When direct key agreement mode is used, it MUST be the only mode used on the message.
+            It is a security leak to have both direct key agreement and a different key management mode on the same message.
+          </t>
+            
+          <t>
+            The COSE_encrypt structure for the recipient is organized as follows:
+          </t>
+        </section>
+
+        <section title="Key Agreement with Key Wrapping">
+          <t>
+            Key Agreement with Key Wrapping uses a randomly generated CEK.
+            The CEK is then encrypted using a Key Wrapping algorithm and a key derived from the shared secret computed by the key agreement algorithm.
+          </t>
+
+          <t>
+            The COSE_encrypt structure for the recipient is organized as follows:
+            <list style="symbols">
+              <t>The 'protected', 'aad', 'iv', and 'tag' fields all use the 'null' value.</t>
+              <t>The plain text to be encrypted is the key from next layer down (usually the content layer).</t>
+              <t>At a minimum, the 'unprotected' field SHOULD contain the 'alg' parameter, a parameter identifying the recipient asymmetric key, and a parameter with the sender's asymmetric public key.</t>
+            </list>
+          </t>
+        </section>
+      </section>
+
+      <section title="Encryption Algorithm for AEAD algorithms">
         <t>
           Nice short encryption algorithm.
 
@@ -276,12 +416,13 @@ COSE_encrypt {
           </t>
           <t>
             Construct the octet string to be used as the AAD value for the AEAD algorithm:  Concatenate the values in the protected and aad fields after applying the CBOR bstr encoding to them.
+            <cref source="JLS">Should we use the value null if the fields are not present rather than a zero length bstr.  (I.e. what is actually encoded in the final output.)</cref>
           </t>
           <t>
             Encrypt the plain text and place it in the ciphertext field.  The AAD value is passed in as part of the encryption process.
           </t>
           <t>
-            For each recipient of the message, recursively perform the encryption algorithm for that recipient using the encryption key as the plain text.
+            For recipient of the message, recursively perform the encryption algorithm for that recipient using the encryption key as the plain text.
           </t>
         </list>
         </t>
@@ -323,7 +464,7 @@ COSE-mac :  {
 
     <section title="Key Structure">
       <t>
-        For COSE we use the same set of fields that were defined in <xref target="JWK"/>.
+        For COSE we use the same set of fields that were defined in <xref target="I-D.ietf-jose-json-web-key"/>.
       </t>
 
       <figure>
@@ -333,7 +474,7 @@ COSE_key : map (tstr)
       </figure>
 
       <t>
-        The same fields defined in <xref target="JWK"/> are used here with the following changes in rules:
+        The same fields defined in <xref target="I-D.ietf-jose-json-web-key"/> are used here with the following changes in rules:
         <list>
           <t>Any item which is base64 encoded in JWK, is bstr encoded for COSE.</t>
           <t>Any item which is integer encoded in JWK, is int encoded for COSE.</t>
@@ -368,33 +509,71 @@ COSE_key : map (tstr)
 <format type='TXT' octets='126813' target='http://www.rfc-editor.org/rfc/rfc5652.txt' />
 </reference>
 
-<reference anchor='JWE'>
-<front>
-<title>JWE</title>
-<author initials='' surname='JOSE' fullname='JOSE'>
-<organization /></author>
-<date/>
-</front>
-</reference>
+&JWA;
+&JWE;
+&JWK;
+&JWS;
+&AES-HMAC;
 
-<reference anchor='JWK'>
+<reference anchor="AES-GCM">
 <front>
-<title>JWK</title>
-<author initials='' surname='JOSE' fullname='JOSE'>
-<organization /></author>
+<title>NIST Special Publication 800-38D: Recommendation for Block Cipher Modes of Operation: Galois/Counter Mode (GCM) and GMAC.</title>
+<author initials='M.' surname='Dworkin'>
+<organization>U.S. National Institute of Standards and Technology</organization>
+</author>
 <date/>
 </front>
+<format type='PDF' target='http://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf'/>
 </reference>
 
 &RFC2119;
+&RFC3394;
+&RFC3447;
+&RFC3610;
 &RFC7049;
 &RFC7159;
 &CDDL;
     </references>
     <section title="AEAD and AE algorithms" anchor="AE-algo">
       <t>
-        PKCS v1.5 is not an AE algorithm RSA OAEP is.  Don't use v1.5.
+        The set of encryption algorithms that can be used with this specification is restricted to authenticated encryption (AE) and authenticated encryption with additional data (AEAD) algorithms.
+        This means that there is a strong check that the data decrypted by the recipient is the same as what was encrypted by the sender.
+        Encryption modes such as counter have no check on this at all.
+        The CBC encryption mode had a weak check that the data is correct, given a random key and random data, the CBC padding check will pass one out of 256 times.
+        There have been several times that a normal encryption mode has been combined with an integrity check to provide a content encryption mode that does provide the necessary authentication.
+        AES-GCM <xref target="AES-GCM"/>, AES-CCM <xref target="RFC3610"/>, AES-CBC-HMAC <xref target="I-D.mcgrew-aead-aes-cbc-hmac-sha2"/> are  examples of these composite modes.
       </t>
+
+      <t>
+        PKCS v1.5 RSA key transport does not qualify as an AE algorithm.  
+        There are only three bytes in the encoding that can be checked as having decrypted correctly, the rest of the content can only be probabilistically checked as having decrypted correctly.
+        For this reason, PKCS v1.5 RSA key transport MUST NOT be used with this specification.
+        RSA-OAEP was designed to have the necessary checks that that content correctly decrypted and does qualify as an AE algorithm.
+      </t>
+
+      <t>
+        When dealing with authenticated encryption algorithms, there is always some type of value that needs to be checked to see if the authentication level has passed.
+        This authentication value may be:
+        <list style="symbols">
+          <t>
+            A separately generated tag computed by both the encrypter and decrypter and then compared by the decryptor.
+            This tag value may be either placed at the end of the cipher text (the decision we made) or kept separately (the decision made by the JOSE working group).
+            This is the approach followed by AES-GCM <xref target="AES-GCM"/> and AES-CCM <xref target="RFC3610"/>.
+          </t>
+
+          <t>
+            A fixed value which is part of the encoded plain text.
+            This is the approach followed by the AES key wrap algorithm <xref target="RFC3394"/>.
+          </t>
+
+          <t>
+            A computed value is included as part of the encoded plain text.
+            The computed value is then checked by the decryptor using the same computation path.
+            This is the approach followed by RSAES-OAEP <xref target="RFC3447"/>.
+          </t>
+        </list>
+      </t>
+        
     </section>
 
     <section title="Examples">
