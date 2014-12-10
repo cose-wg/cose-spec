@@ -475,9 +475,9 @@ ul.toc a:first-child {
 <link href="#rfc.references" rel="Chapter" title="8 Informational References"/>
 <link href="#rfc.appendix.A" rel="Chapter" title="A AEAD and AE algorithms"/>
 <link href="#rfc.appendix.B" rel="Chapter" title="B Examples"/>
-<link href="#rfc.appendix.B.1" rel="Chapter" title="B.1 Direct MAC"/>
-<link href="#rfc.appendix.B.2" rel="Chapter" title="B.2 Wrapped MAC - PSK"/>
-<link href="#rfc.appendix.B.3" rel="Chapter" title="B.3 Big encryption"/>
+<link href="#rfc.appendix.B.1" rel="Chapter" title="B.1 Direct Encryption"/>
+<link href="#rfc.appendix.B.2" rel="Chapter" title="B.2 Wrapped Encryption"/>
+<link href="#rfc.appendix.B.3" rel="Chapter" title="B.3 Direct ECDH"/>
 <link href="#rfc.authors" rel="Chapter"/>
 
 
@@ -486,7 +486,7 @@ ul.toc a:first-child {
 
   <meta name="dct.creator" content="Schaad, J." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-schaad-cose-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2014-12-3" />
+  <meta name="dct.issued" scheme="ISO8601" content="2014-12-10" />
   <meta name="dct.abstract" content="Make JOSE work with CBOR - but don't care about crypto compatability" />
   <meta name="description" content="Make JOSE work with CBOR - but don't care about crypto compatability" />
 
@@ -507,10 +507,10 @@ ul.toc a:first-child {
 </tr>
 <tr>
   <td class="left">Intended status: Informational</td>
-  <td class="right">December 3, 2014</td>
+  <td class="right">December 10, 2014</td>
 </tr>
 <tr>
-  <td class="left">Expires: June 6, 2015</td>
+  <td class="left">Expires: June 13, 2015</td>
   <td class="right"></td>
 </tr>
 
@@ -531,7 +531,7 @@ ul.toc a:first-child {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on June 6, 2015.</p>
+<p>This Internet-Draft will expire on June 13, 2015.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -565,9 +565,9 @@ ul.toc a:first-child {
 <li>8.   <a href="#rfc.references">Informational References</a></li>
 <li>Appendix A.   <a href="#rfc.appendix.A">AEAD and AE algorithms</a></li>
 <li>Appendix B.   <a href="#rfc.appendix.B">Examples</a></li>
-<li>B.1.   <a href="#rfc.appendix.B.1">Direct MAC</a></li>
-<li>B.2.   <a href="#rfc.appendix.B.2">Wrapped MAC - PSK</a></li>
-<li>B.3.   <a href="#rfc.appendix.B.3">Big encryption</a></li>
+<li>B.1.   <a href="#rfc.appendix.B.1">Direct Encryption</a></li>
+<li>B.2.   <a href="#rfc.appendix.B.2">Wrapped Encryption</a></li>
+<li>B.3.   <a href="#rfc.appendix.B.3">Direct ECDH</a></li>
 <li><a href="#rfc.authors">Author's Address</a></li>
 
 
@@ -720,6 +720,15 @@ COSE_encrypt {
 <h1 id="rfc.section.5.2.1"><a href="#rfc.section.5.2.1">5.2.1.</a> Direct Encryption</h1>
 <p id="rfc.section.5.2.1.p.1">In direct encryption mode, a shared secret between the sender and the recipient is used as the CEK.  For direct encryption mode, no recipient structure is built.  All of the information about the key is placed in either the protected or unprotected fields at the content level.  When direct encryption mode is used, it MUST be the only mode used on the message.  It is a massive security leak to have both direct encryption and a different key management mode on the same message.  </p>
 <p id="rfc.section.5.2.1.p.2">For JOSE, direct encryption key management is the only key management method allowed for doing MAC-ed messages.  In COSE, all of the key management methods can be used for MAC-ed messages.  </p>
+<p id="rfc.section.5.2.1.p.3">The COSE_encrypt structure for the recipient is organized as follows: </p>
+
+<ul>
+  <li>The 'protected', 'iv', 'aad', 'ciphertext' and 'recipients' fields MUST be null.</li>
+  <li>The plain text to be encrypted is the key from next layer down (usually the content layer).</li>
+  <li>At a minimum, the 'unprotected' field SHOULD contain the 'alg' parameter as well as a parameter identifying the shared secret.</li>
+</ul>
+
+<p> </p>
 <h1 id="rfc.section.5.2.2"><a href="#rfc.section.5.2.2">5.2.2.</a> Key Wrapping</h1>
 <p id="rfc.section.5.2.2.p.1">In key wrapping mode, the CEK is randomly generated and that key is then encrypted by a shared secret between the sender and the recipient.  All of the currently defined key wrapping algorithms for JOSE (and thus for COSE) are AE algorithms.  Key wrapping mode is considered to be superior to direct encryption if the system has any capability for doing random key generation.  This is because the shared key is used to wrap random data rather than data  has some degree of organization and may in fact be repeating the same content.  </p>
 <p id="rfc.section.5.2.2.p.2">The COSE_encrypt structure for the recipient is organized as follows: </p>
@@ -747,6 +756,14 @@ COSE_encrypt {
 <p id="rfc.section.5.2.4.p.1">Direct Key Agreement derives the CEK from the shared secret computed by the key agreement operation.  For Direct Key Agreement, no recipient structure is built.  All of the information about the key and key agreement process is placed in either the 'protected' or 'unprotected' fields at the content level.  </p>
 <p id="rfc.section.5.2.4.p.2">When direct key agreement mode is used, it MUST be the only mode used on the message.  It is a security leak to have both direct key agreement and a different key management mode on the same message.  </p>
 <p id="rfc.section.5.2.4.p.3">The COSE_encrypt structure for the recipient is organized as follows: </p>
+
+<ul>
+  <li>The 'protected', 'aad', 'iv', and 'tag' fields all use the 'null' value.</li>
+  <li>At a minimum, the 'unprotected' field SHOULD contain the 'alg' parameter as well as a parameter identifying the asymmetric key.</li>
+  <li>The 'unprotected' field MUST contain the 'epk' parameter.</li>
+</ul>
+
+<p> </p>
 <h1 id="rfc.section.5.2.5"><a href="#rfc.section.5.2.5">5.2.5.</a> Key Agreement with Key Wrapping</h1>
 <p id="rfc.section.5.2.5.p.1">Key Agreement with Key Wrapping uses a randomly generated CEK.  The CEK is then encrypted using a Key Wrapping algorithm and a key derived from the shared secret computed by the key agreement algorithm.  </p>
 <p id="rfc.section.5.2.5.p.2">The COSE_encrypt structure for the recipient is organized as follows: </p>
@@ -907,81 +924,38 @@ COSE_key : map (tstr)
 
 <p> </p>
 <h1 id="rfc.appendix.B"><a href="#rfc.appendix.B">Appendix B.</a> Examples</h1>
-<h1 id="rfc.appendix.B.1"><a href="#rfc.appendix.B.1">B.1.</a> Direct MAC</h1>
+<h1 id="rfc.appendix.B.1"><a href="#rfc.appendix.B.1">B.1.</a> Direct Encryption</h1>
+<p id="rfc.section.B.1.p.1">This example has some features that are in questions but not yet in corperated in the document.</p>
+<p id="rfc.section.B.1.p.2">To make it easier to read, this is a JSON dump rather than a binary dump</p>
+<p id="rfc.section.B.1.p.3">Encoded in CBOR - 116 bytes, content is 14 bytes long </p>
 <pre>
-{ "payload" : "xxxxx",
-  "unprotected" : {
-      "alg" : "HMAC-SHA2",
-      "kid" : "bilbo"
-  }
-}
-</pre>
-<h1 id="rfc.appendix.B.2"><a href="#rfc.appendix.B.2">B.2.</a> Wrapped MAC - PSK</h1>
+[1, null, {"alg": "A128GCM"}, h'a5fc4e0092ba296a8c587e8d',
+h'aa9702fdf334be0efd90b3fcedf14903f1b778c4ebb80970990587f68fd4', 
+null, {"alg": "dir", "kid": "77c7e2b8-6e13-45cf-8672-617b5b45243a"}, 
+null, null, null]
+          </pre>
+<h1 id="rfc.appendix.B.2"><a href="#rfc.appendix.B.2">B.2.</a> Wrapped Encryption</h1>
+<p id="rfc.section.B.2.p.1">This example has some features that are in questions but not yet in corperated in the document.</p>
+<p id="rfc.section.B.2.p.2">To make it easier to read, this is a JSON dump rather than a binary dump</p>
+<p id="rfc.section.B.2.p.3">Encoded in CBOR - 144 bytes, content is 14 bytes long </p>
 <pre>
-{ "payload" : "xxxxx",
-  "protected" : { "alg" : "HMAC-SHA2" },
-  "recipients" : [
-     {
-        "unprotected" : {
-           "kid": "bilbo",
-           "alg": "AESKW"
-        },
-        "ciphertext" : "xx"
-     },
-     {
-        "unprotected" : {
-           "kid" : "samwise",
-           "alg" : "RSA_1.5"
-        },
-        "ciphertext" : "yyy"
-     }
-  ]
-}
-        </pre>
-<h1 id="rfc.appendix.B.3"><a href="#rfc.appendix.B.3">B.3.</a> Big encryption</h1>
+[1, null, {"alg": "A128GCM"}, h'9c48bb8097ac5267c8ac5207',
+h'e3dc16520f2f847530b53977d3d74d2c5fb4312711f91b4528c1cc951e5d',
+null, {"alg": "A128KW", "kid": "77c7e2b8-6e13-45cf-8672-617b5b45243a"}, 
+null, h'0e0e58acaf66fb57074a39614d970b09f93a8cf98fd826bc', null]
+          </pre>
+<h1 id="rfc.appendix.B.3"><a href="#rfc.appendix.B.3">B.3.</a> Direct ECDH</h1>
+<p id="rfc.section.B.3.p.1">This example has some features that are in questions but not yet in corperated in the document.</p>
+<p id="rfc.section.B.3.p.2">To make it easier to read, this is a JSON dump rather than a binary dump</p>
+<p id="rfc.section.B.3.p.3">Encoded in CBOR - 216 bytes, content is 14 bytes long </p>
 <pre>
-{ "ciphertext" : "xxxx",
-  "iv" : "yyy",
-  "aad" : "zzz",
-  "protected" : "{'alg':'A128KW','kid':'bilbo','enc':'A128GCM'}",
-  "unprotected" : { "cty" : "vcard" }
-  "tag" : "aaaa",
-  "recipients" : [
-      {
-          "ciphertext" : "mmmm",
-          "unprotected" : { "alg": "RSA1_5", "kid": "frodo" }
-      {
-          "unprotected" : {
-             "alg" : "ECDH-ES+A256KW",
-             "kid" : "peregrin",
-             "epk" : {...}
-          },
-          "ciphertext" : "qqqqq"
-       },
-       {
-           "ciphertext" : "rrrrr",
-           "unprotected" : {
-               "alg" : "A256GCMKW",
-               "kid" : "bilbo",
-               "tag" : "rrrrr1",
-               "iv" : "rrrrr2",
-           }
-       },
-       {
-           "ciphertext" : "nnnnn",
-           "unprotected" : {
-               "alg": "A256GCMKW",
-               "tag": "ddddd1",
-               "iv" : "ddddd2",
-               "key" : {
-                   "ciphertext" : "oooooo",
-                   "unprotected" : { "alg":"RSA1_5", "kid":"two_wrap" }
-               }         
-            }
-        }
-    ]
-}
-        </pre>
+[1, null, {"alg": "A128GCM"}, h'656d6a73ccf1b35fb99044e1', 
+h'd7b27b67a81b212ee513b148454fe2d571d51bb679239769f5d2299bb96b', 
+null, {"alg": "ECDH-ES", "epk": {"kty": "EC", "crv": "P-256", 
+"x": h'00b81ff1de0eeba27613027526d83b5f4cbffaca433488e3805e7a75c43bd1b966',
+"y": h'00d142a334ac8790dc821abe9362434daeb00c1b8b076843e51a4a4717b30c54ce'},
+"kid": "meriadoc.brandybuck@buckland.example"}, null, null, null]
+          </pre>
 <h1 id="rfc.authors">
   <a href="#rfc.authors">Author's Address</a>
 </h1>

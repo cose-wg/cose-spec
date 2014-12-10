@@ -4,8 +4,8 @@
 
 Network Working Group                                          J. Schaad
 Internet-Draft                                            August Cellars
-Intended status: Informational                          December 3, 2014
-Expires: June 6, 2015
+Intended status: Informational                         December 10, 2014
+Expires: June 13, 2015
 
 
                       CBOR Encoded Message Syntax
@@ -30,7 +30,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on June 6, 2015.
+   This Internet-Draft will expire on June 13, 2015.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Schaad                    Expires June 6, 2015                  [Page 1]
+Schaad                    Expires June 13, 2015                 [Page 1]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2014
 
@@ -71,21 +71,21 @@ Table of Contents
      5.1.  Header Parameters . . . . . . . . . . . . . . . . . . . .   6
      5.2.  Key Management Methods  . . . . . . . . . . . . . . . . .   7
        5.2.1.  Direct Encryption . . . . . . . . . . . . . . . . . .   7
-       5.2.2.  Key Wrapping  . . . . . . . . . . . . . . . . . . . .   7
+       5.2.2.  Key Wrapping  . . . . . . . . . . . . . . . . . . . .   8
        5.2.3.  Key Encryption  . . . . . . . . . . . . . . . . . . .   8
        5.2.4.  Direct Key Agreement  . . . . . . . . . . . . . . . .   8
-       5.2.5.  Key Agreement with Key Wrapping . . . . . . . . . . .   8
+       5.2.5.  Key Agreement with Key Wrapping . . . . . . . . . . .   9
      5.3.  Encryption Algorithm for AEAD algorithms  . . . . . . . .   9
-     5.4.  Encryption algorithm for AE algorithms  . . . . . . . . .   9
-   6.  MAC objects . . . . . . . . . . . . . . . . . . . . . . . . .   9
+     5.4.  Encryption algorithm for AE algorithms  . . . . . . . . .  10
+   6.  MAC objects . . . . . . . . . . . . . . . . . . . . . . . . .  10
    7.  Key Structure . . . . . . . . . . . . . . . . . . . . . . . .  10
-   8.  Informational References  . . . . . . . . . . . . . . . . . .  10
-   Appendix A.  AEAD and AE algorithms . . . . . . . . . . . . . . .  11
-   Appendix B.  Examples . . . . . . . . . . . . . . . . . . . . . .  12
-     B.1.  Direct MAC  . . . . . . . . . . . . . . . . . . . . . . .  12
-     B.2.  Wrapped MAC - PSK . . . . . . . . . . . . . . . . . . . .  13
-     B.3.  Big encryption  . . . . . . . . . . . . . . . . . . . . .  13
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  15
+   8.  Informational References  . . . . . . . . . . . . . . . . . .  11
+   Appendix A.  AEAD and AE algorithms . . . . . . . . . . . . . . .  12
+   Appendix B.  Examples . . . . . . . . . . . . . . . . . . . . . .  13
+     B.1.  Direct Encryption . . . . . . . . . . . . . . . . . . . .  13
+     B.2.  Wrapped Encryption  . . . . . . . . . . . . . . . . . . .  13
+     B.3.  Direct ECDH . . . . . . . . . . . . . . . . . . . . . . .  13
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  14
 
 1.  Introduction
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Schaad                    Expires June 6, 2015                  [Page 2]
+Schaad                    Expires June 13, 2015                 [Page 2]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2014
 
@@ -165,7 +165,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2014
 
 
 
-Schaad                    Expires June 6, 2015                  [Page 3]
+Schaad                    Expires June 13, 2015                 [Page 3]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2014
 
@@ -221,7 +221,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2014
 
 
 
-Schaad                    Expires June 6, 2015                  [Page 4]
+Schaad                    Expires June 13, 2015                 [Page 4]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2014
 
@@ -277,7 +277,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2014
 
 
 
-Schaad                    Expires June 6, 2015                  [Page 5]
+Schaad                    Expires June 13, 2015                 [Page 5]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2014
 
@@ -333,7 +333,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2014
 
 
 
-Schaad                    Expires June 6, 2015                  [Page 6]
+Schaad                    Expires June 13, 2015                 [Page 6]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2014
 
@@ -372,6 +372,28 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2014
    method allowed for doing MAC-ed messages.  In COSE, all of the key
    management methods can be used for MAC-ed messages.
 
+   The COSE_encrypt structure for the recipient is organized as follows:
+
+   o  The 'protected', 'iv', 'aad', 'ciphertext' and 'recipients' fields
+      MUST be null.
+
+   o  The plain text to be encrypted is the key from next layer down
+      (usually the content layer).
+
+   o  At a minimum, the 'unprotected' field SHOULD contain the 'alg'
+      parameter as well as a parameter identifying the shared secret.
+
+
+
+
+
+
+
+Schaad                    Expires June 13, 2015                 [Page 7]
+
+Internet-Draft         CBOR Encoded Message Syntax         December 2014
+
+
 5.2.2.  Key Wrapping
 
    In key wrapping mode, the CEK is randomly generated and that key is
@@ -386,13 +408,6 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2014
    The COSE_encrypt structure for the recipient is organized as follows:
 
    o  The 'protected', 'aad', and 'recipients' fields MUST be null.
-
-
-
-Schaad                    Expires June 6, 2015                  [Page 7]
-
-Internet-Draft         CBOR Encoded Message Syntax         December 2014
-
 
    o  The plain text to be encrypted is the key from next layer down
       (usually the content layer).
@@ -426,6 +441,15 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2014
    Direct Key Agreement derives the CEK from the shared secret computed
    by the key agreement operation.  For Direct Key Agreement, no
    recipient structure is built.  All of the information about the key
+
+
+
+
+Schaad                    Expires June 13, 2015                 [Page 8]
+
+Internet-Draft         CBOR Encoded Message Syntax         December 2014
+
+
    and key agreement process is placed in either the 'protected' or
    'unprotected' fields at the content level.
 
@@ -435,20 +459,20 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2014
 
    The COSE_encrypt structure for the recipient is organized as follows:
 
+   o  The 'protected', 'aad', 'iv', and 'tag' fields all use the 'null'
+      value.
+
+   o  At a minimum, the 'unprotected' field SHOULD contain the 'alg'
+      parameter as well as a parameter identifying the asymmetric key.
+
+   o  The 'unprotected' field MUST contain the 'epk' parameter.
+
 5.2.5.  Key Agreement with Key Wrapping
 
    Key Agreement with Key Wrapping uses a randomly generated CEK.  The
    CEK is then encrypted using a Key Wrapping algorithm and a key
    derived from the shared secret computed by the key agreement
    algorithm.
-
-
-
-
-Schaad                    Expires June 6, 2015                  [Page 8]
-
-Internet-Draft         CBOR Encoded Message Syntax         December 2014
-
 
    The COSE_encrypt structure for the recipient is organized as follows:
 
@@ -473,6 +497,15 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2014
        AEAD algorithm: Concatenate the values in the protected and aad
        fields after applying the CBOR bstr encoding to them.  [CREF5]
 
+
+
+
+
+Schaad                    Expires June 13, 2015                 [Page 9]
+
+Internet-Draft         CBOR Encoded Message Syntax         December 2014
+
+
    3.  Encrypt the plain text and place it in the ciphertext field.  The
        AAD value is passed in as part of the encryption process.
 
@@ -491,20 +524,6 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2014
 6.  MAC objects
 
    add description
-
-
-
-
-
-
-
-
-
-
-Schaad                    Expires June 6, 2015                  [Page 9]
-
-Internet-Draft         CBOR Encoded Message Syntax         December 2014
-
 
    COSE-mac :  {
       payload : bstr;
@@ -535,6 +554,14 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2014
 
       kid  is always bstr encoded rather than tstr encoded.  This change
          in encoded is due to the fact that frequently, values such as a
+
+
+
+Schaad                    Expires June 13, 2015                [Page 10]
+
+Internet-Draft         CBOR Encoded Message Syntax         December 2014
+
+
          hash of the public key is used for a kid value.  Since the
          field is defined as not having a specific structure, making it
          binary rather than textual makes sense.
@@ -553,14 +580,6 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2014
               language: a notational convention to express CBOR data
               structures.", draft-greevenbosch-appsawg-cbor-cddl-03
               (work in progress), September 2014.
-
-
-
-
-Schaad                    Expires June 6, 2015                 [Page 10]
-
-Internet-Draft         CBOR Encoded Message Syntax         December 2014
-
 
    [I-D.ietf-jose-json-web-algorithms]
               Jones, M., "JSON Web Algorithms (JWA)", draft-ietf-jose-
@@ -591,6 +610,14 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2014
    [RFC3394]  Schaad, J. and R. Housley, "Advanced Encryption Standard
               (AES) Key Wrap Algorithm", RFC 3394, September 2002.
 
+
+
+
+Schaad                    Expires June 13, 2015                [Page 11]
+
+Internet-Draft         CBOR Encoded Message Syntax         December 2014
+
+
    [RFC3447]  Jonsson, J. and B. Kaliski, "Public-Key Cryptography
               Standards (PKCS) #1: RSA Cryptography Specifications
               Version 2.1", RFC 3447, February 2003.
@@ -610,14 +637,6 @@ Appendix A.  AEAD and AE algorithms
    specification is restricted to authenticated encryption (AE) and
    authenticated encryption with additional data (AEAD) algorithms.
    This means that there is a strong check that the data decrypted by
-
-
-
-Schaad                    Expires June 6, 2015                 [Page 11]
-
-Internet-Draft         CBOR Encoded Message Syntax         December 2014
-
-
    the recipient is the same as what was encrypted by the sender.
    Encryption modes such as counter have no check on this at all.  The
    CBC encryption mode had a weak check that the data is correct, given
@@ -646,6 +665,15 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2014
       decrypter and then compared by the decryptor.  This tag value may
       be either placed at the end of the cipher text (the decision we
       made) or kept separately (the decision made by the JOSE working
+
+
+
+
+Schaad                    Expires June 13, 2015                [Page 12]
+
+Internet-Draft         CBOR Encoded Message Syntax         December 2014
+
+
       group).  This is the approach followed by AES-GCM [AES-GCM] and
       AES-CCM [RFC3610].
 
@@ -659,132 +687,65 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2014
 
 Appendix B.  Examples
 
-B.1.  Direct MAC
+B.1.  Direct Encryption
+
+   This example has some features that are in questions but not yet in
+   corperated in the document.
+
+   To make it easier to read, this is a JSON dump rather than a binary
+   dump
+
+   Encoded in CBOR - 116 bytes, content is 14 bytes long
+
+   [1, null, {"alg": "A128GCM"}, h'a5fc4e0092ba296a8c587e8d',
+   h'aa9702fdf334be0efd90b3fcedf14903f1b778c4ebb80970990587f68fd4',
+   null, {"alg": "dir", "kid": "77c7e2b8-6e13-45cf-8672-617b5b45243a"},
+   null, null, null]
+
+B.2.  Wrapped Encryption
+
+   This example has some features that are in questions but not yet in
+   corperated in the document.
+
+   To make it easier to read, this is a JSON dump rather than a binary
+   dump
+
+   Encoded in CBOR - 144 bytes, content is 14 bytes long
+
+ [1, null, {"alg": "A128GCM"}, h'9c48bb8097ac5267c8ac5207',
+ h'e3dc16520f2f847530b53977d3d74d2c5fb4312711f91b4528c1cc951e5d',
+ null, {"alg": "A128KW", "kid": "77c7e2b8-6e13-45cf-8672-617b5b45243a"},
+ null, h'0e0e58acaf66fb57074a39614d970b09f93a8cf98fd826bc', null]
+
+B.3.  Direct ECDH
+
+   This example has some features that are in questions but not yet in
+   corperated in the document.
 
 
 
 
-
-
-
-
-
-Schaad                    Expires June 6, 2015                 [Page 12]
+Schaad                    Expires June 13, 2015                [Page 13]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2014
 
 
-   { "payload" : "xxxxx",
-     "unprotected" : {
-         "alg" : "HMAC-SHA2",
-         "kid" : "bilbo"
-     }
-   }
+   To make it easier to read, this is a JSON dump rather than a binary
+   dump
 
-B.2.  Wrapped MAC - PSK
+   Encoded in CBOR - 216 bytes, content is 14 bytes long
 
-   { "payload" : "xxxxx",
-     "protected" : { "alg" : "HMAC-SHA2" },
-     "recipients" : [
-        {
-           "unprotected" : {
-              "kid": "bilbo",
-              "alg": "AESKW"
-           },
-           "ciphertext" : "xx"
-        },
-        {
-           "unprotected" : {
-              "kid" : "samwise",
-              "alg" : "RSA_1.5"
-           },
-           "ciphertext" : "yyy"
-        }
-     ]
-   }
-
-B.3.  Big encryption
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Schaad                    Expires June 6, 2015                 [Page 13]
-
-Internet-Draft         CBOR Encoded Message Syntax         December 2014
-
-
- { "ciphertext" : "xxxx",
-   "iv" : "yyy",
-   "aad" : "zzz",
-   "protected" : "{'alg':'A128KW','kid':'bilbo','enc':'A128GCM'}",
-   "unprotected" : { "cty" : "vcard" }
-   "tag" : "aaaa",
-   "recipients" : [
-       {
-           "ciphertext" : "mmmm",
-           "unprotected" : { "alg": "RSA1_5", "kid": "frodo" }
-       {
-           "unprotected" : {
-              "alg" : "ECDH-ES+A256KW",
-              "kid" : "peregrin",
-              "epk" : {...}
-           },
-           "ciphertext" : "qqqqq"
-        },
-        {
-            "ciphertext" : "rrrrr",
-            "unprotected" : {
-                "alg" : "A256GCMKW",
-                "kid" : "bilbo",
-                "tag" : "rrrrr1",
-                "iv" : "rrrrr2",
-            }
-        },
-        {
-            "ciphertext" : "nnnnn",
-            "unprotected" : {
-                "alg": "A256GCMKW",
-                "tag": "ddddd1",
-                "iv" : "ddddd2",
-                "key" : {
-                    "ciphertext" : "oooooo",
-                    "unprotected" : { "alg":"RSA1_5", "kid":"two_wrap" }
-                }
-             }
-         }
-     ]
- }
+[1, null, {"alg": "A128GCM"}, h'656d6a73ccf1b35fb99044e1',
+h'd7b27b67a81b212ee513b148454fe2d571d51bb679239769f5d2299bb96b',
+null, {"alg": "ECDH-ES", "epk": {"kty": "EC", "crv": "P-256",
+"x": h'00b81ff1de0eeba27613027526d83b5f4cbffaca433488e3805e7a75c43bd1b966',
+"y": h'00d142a334ac8790dc821abe9362434daeb00c1b8b076843e51a4a4717b30c54ce'},
+"kid": "meriadoc.brandybuck@buckland.example"}, null, null, null]
 
 Editorial Comments
 
 [CREF1] JLS: Does it make sense to retain the flattened structure to
         save 1 or 2(?) bytes?
-
-
-
-
-
-Schaad                    Expires June 6, 2015                 [Page 14]
-
-Internet-Draft         CBOR Encoded Message Syntax         December 2014
-
 
 [CREF2] JLS: Is life easier if this goes away and becomes part of the
         cipher text?
@@ -820,21 +781,4 @@ Author's Address
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Schaad                    Expires June 6, 2015                 [Page 15]
+Schaad                    Expires June 13, 2015                [Page 14]
