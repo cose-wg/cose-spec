@@ -333,6 +333,16 @@ COSE_encrypt {
             For JOSE, direct encryption key management is the only key management method allowed for doing MAC-ed messages.
             In COSE, all of the key management methods can be used for MAC-ed messages.
           </t>
+
+          <t>
+            The COSE_encrypt structure for the recipient is organized as follows:
+            <list style="symbols">
+              <t>The 'protected', 'iv', 'aad', 'ciphertext' and 'recipients' fields MUST be null.</t>
+              <t>The plain text to be encrypted is the key from next layer down (usually the content layer).</t>
+              <t>At a minimum, the 'unprotected' field SHOULD contain the 'alg' parameter as well as a parameter identifying the shared secret.</t>
+            </list>
+          </t>
+
         </section>
 
         <section title="Key Wrapping">
@@ -386,6 +396,11 @@ COSE_encrypt {
             
           <t>
             The COSE_encrypt structure for the recipient is organized as follows:
+            <list style="symbols">
+              <t>The 'protected', 'aad', 'iv', and 'tag' fields all use the 'null' value.</t>
+              <t>At a minimum, the 'unprotected' field SHOULD contain the 'alg' parameter as well as a parameter identifying the asymmetric key.</t>
+              <t>The 'unprotected' field MUST contain the 'epk' parameter.</t>
+            </list>
           </t>
         </section>
 
@@ -577,90 +592,48 @@ COSE_key : map (tstr)
     </section>
 
     <section title="Examples">
-      <section title="Direct MAC">
-      <figure>
-<artwork>
-{ "payload" : "xxxxx",
-  "unprotected" : {
-      "alg" : "HMAC-SHA2",
-      "kid" : "bilbo"
-  }
-}
-</artwork>
-      </figure>
+      <section title="Direct Encryption">
+        <t>This example has some features that are in questions but not yet in corperated in the document.</t>
+        <t>To make it easier to read, this is a JSON dump rather than a binary dump</t>
+        <t> Encoded in CBOR - 116 bytes, content is 14 bytes long </t>
+        <figure>
+          <artwork>
+[1, null, {"alg": "A128GCM"}, h'a5fc4e0092ba296a8c587e8d',
+h'aa9702fdf334be0efd90b3fcedf14903f1b778c4ebb80970990587f68fd4', 
+null, {"alg": "dir", "kid": "77c7e2b8-6e13-45cf-8672-617b5b45243a"}, 
+null, null, null]
+          </artwork>
+        </figure>
       </section>
 
-      <section title="Wrapped MAC - PSK">
-      <figure>
-        <artwork>
-{ "payload" : "xxxxx",
-  "protected" : { "alg" : "HMAC-SHA2" },
-  "recipients" : [
-     {
-        "unprotected" : {
-           "kid": "bilbo",
-           "alg": "AESKW"
-        },
-        "ciphertext" : "xx"
-     },
-     {
-        "unprotected" : {
-           "kid" : "samwise",
-           "alg" : "RSA_1.5"
-        },
-        "ciphertext" : "yyy"
-     }
-  ]
-}
-        </artwork>
-      </figure>
+      <section title="Wrapped Encryption">
+        <t>This example has some features that are in questions but not yet in corperated in the document.</t>
+        <t>To make it easier to read, this is a JSON dump rather than a binary dump</t>
+        <t> Encoded in CBOR - 144 bytes, content is 14 bytes long </t>
+        <figure>
+          <artwork>
+[1, null, {"alg": "A128GCM"}, h'9c48bb8097ac5267c8ac5207',
+h'e3dc16520f2f847530b53977d3d74d2c5fb4312711f91b4528c1cc951e5d',
+null, {"alg": "A128KW", "kid": "77c7e2b8-6e13-45cf-8672-617b5b45243a"}, 
+null, h'0e0e58acaf66fb57074a39614d970b09f93a8cf98fd826bc', null]
+          </artwork>
+        </figure>
       </section>
-      <section title="Big encryption">
-      <figure>
-        <artwork>
-{ "ciphertext" : "xxxx",
-  "iv" : "yyy",
-  "aad" : "zzz",
-  "protected" : "{'alg':'A128KW','kid':'bilbo','enc':'A128GCM'}",
-  "unprotected" : { "cty" : "vcard" }
-  "tag" : "aaaa",
-  "recipients" : [
-      {
-          "ciphertext" : "mmmm",
-          "unprotected" : { "alg": "RSA1_5", "kid": "frodo" }
-      {
-          "unprotected" : {
-             "alg" : "ECDH-ES+A256KW",
-             "kid" : "peregrin",
-             "epk" : {...}
-          },
-          "ciphertext" : "qqqqq"
-       },
-       {
-           "ciphertext" : "rrrrr",
-           "unprotected" : {
-               "alg" : "A256GCMKW",
-               "kid" : "bilbo",
-               "tag" : "rrrrr1",
-               "iv" : "rrrrr2",
-           }
-       },
-       {
-           "ciphertext" : "nnnnn",
-           "unprotected" : {
-               "alg": "A256GCMKW",
-               "tag": "ddddd1",
-               "iv" : "ddddd2",
-               "key" : {
-                   "ciphertext" : "oooooo",
-                   "unprotected" : { "alg":"RSA1_5", "kid":"two_wrap" }
-               }         
-            }
-        }
-    ]
-}
-        </artwork>
-      </figure>
+
+      <section title="Direct ECDH">
+        <t>This example has some features that are in questions but not yet in corperated in the document.</t>
+        <t>To make it easier to read, this is a JSON dump rather than a binary dump</t>
+        <t> Encoded in CBOR - 216 bytes, content is 14 bytes long </t>
+        <figure>
+          <artwork>
+[1, null, {"alg": "A128GCM"}, h'656d6a73ccf1b35fb99044e1', 
+h'd7b27b67a81b212ee513b148454fe2d571d51bb679239769f5d2299bb96b', 
+null, {"alg": "ECDH-ES", "epk": {"kty": "EC", "crv": "P-256", 
+"x": h'00b81ff1de0eeba27613027526d83b5f4cbffaca433488e3805e7a75c43bd1b966',
+"y": h'00d142a334ac8790dc821abe9362434daeb00c1b8b076843e51a4a4717b30c54ce'},
+"kid": "meriadoc.brandybuck@buckland.example"}, null, null, null]
+          </artwork>
+        </figure>
       </section>
     </section>
   </back>
