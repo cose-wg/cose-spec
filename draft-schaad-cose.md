@@ -67,7 +67,7 @@ JOSE documents, two considerations are taking into account:
 
 * Define a top level message structure so that encrypted, signed and MAC-ed messages can easily identified and still have a consistent view.
 
-* We switched from using a map to using an array at the message level.
+* Switch from using a map to using an array at the message level.
   While this change means that it is no longer possible to add new
   information in the form of new fields to the message object, this
   ability is still there as this data can be added to the protected
@@ -75,11 +75,13 @@ JOSE documents, two considerations are taking into account:
 
 * Signed messages separate the concept of protected and unprotected attributes that are for the content and the signature.
 
-* Encrypted messages key management has been made to be more uniform.  All key management techniques are represented as a recipient rather than only have some of them be so.
+* Key management has been made to be more uniform.  All key management techniques are represented as a recipient rather than only have some of them be so.
 
 * MAC messages are separated from signed messages.
 
 * MAC messages have the ability to do key management on the MAC key.
+
+* Use binary encodings for binary data rather than base64url encodings.
 
 ## Requirements Terminology
 
@@ -100,7 +102,7 @@ definition language (CDDL) defined in
 The differences between the defined grammar and the one we used are
 mostly self explanatory.
 The biggest difference being the addition of the choice operator '|'.
-
+Additionally, note the use of the null value which is used to occupy a location in an array but to mark that the element is not present.
 
 
 # The COSE_MSG structure
@@ -117,18 +119,17 @@ of the individual structures as a stand alone component.
 
 *COSE_MSG {
   msg_type : uint;
-  ?sign_msg: COSE-Sign;         # present if msg_type = 0
-  ?encrypt_msg: COSE-Encrypt;   # present if msg_type = 1
-  ?mac_msg: COSE-MAC;           # present if msg_type = 2
+  ?sign_msg: COSE-Sign;         # present if msg_type = 1
+  ?encrypt_msg: COSE-Encrypt;   # present if msg_type = 2
+  ?mac_msg: COSE-MAC;           # present if msg_type = 3
 }
 ~~~~
 
 This structure is encoded as an array by CBOR.
 Descriptions of the fields:
 
-> msg_type indicates which of the security structures is in this block.
-
-# Key Format
+msg_type
+: indicates which of the security structures is in this block.
 
 # Signing Structure
 
@@ -138,8 +139,8 @@ Describe an overview of things
 
 COSE_Sign : {
     protected : bstr | null;
-    unprotected : map(tstr);
-    payload : bstr;
+    unprotected : map(tstr) | null;
+    payload : bstr | null;
     signatures: COSE_signature_a* | COSE_signature;
 }
 ~~~~
@@ -153,6 +154,7 @@ protected
   The content is a CBOR map of attributes which is encoded to a byte stream.
   This field MUST NOT contain attributes about the signature, even if
   those attributes are common across multiple signatures.
+  At least one of protected and unprotected MUST be present.
 
 
 unprotected
@@ -160,21 +162,22 @@ unprotected
   An example of such an attribute would be the content type ('cty') attribute.
   This field MUST NOT contain attributes about a signature, even if
   the attributes are common across multiple signatures.
+  At least one of protected and unprotected MUST be present.
 
 
 payload
-: contains the serialized content to be signed.
+: contains the serialized content to be signed.  If the payload is not present in the message, the application is required to supply the payload separately.  The payload is wrapped in a bstr to ensure that it is transported without changes, if the payload is transported separately it is the responsibility of the application to ensure that it will be transported without changes.
 
 
 signatures
-: is either a single signature or an array of signature values.
+: is either a single signature or an array of signature values.  It is legal to use the array of signature values for a single signature.  Implementations MUST be able to parse both layouts.
 
 
 ~~~~
 
 COSE_signature :  {
     protected : bstr | null;
-    unprotected : map(tstr);
+    unprotected : map(tstr) | null;
     signature : bstr;
 }
 *COSE_signature_a : COSE_signature;
@@ -187,11 +190,13 @@ protected
   The field holds data about the signature operation.
   The field MUST NOT hold attributes about the payload being signed.
   The content is a CBOR map of attributes which is encoded to a byte stream.
-
+  At least one of protected and unprotected MUST be present.
+  
 
 unprotected
 : contains attributes about the signature which are not protected by the signature.
   This field MUST NOT contain attributes about the payload being signed.
+  At least one of protected and unprotected MUST be present.
 
 signature
 : contains the computed signature value.
@@ -208,13 +213,13 @@ signature
 
 How to compute a signature:
 
-> Create a Sig_structure object and populate it with the appropriate fields.
+1. Create a Sig_structure object and populate it with the appropriate fields.
 
-> Create the value to be hashed by encode the Sig_structure to a byte string.
+2. Create the value to be hashed by encode the Sig_structure to a byte string.
 
-> Sign the hash
+3. Sign the hash
 
-> Place the signature value into the appropriate signature field.
+4. Place the signature value into the appropriate signature field.
 
 
 
@@ -233,7 +238,7 @@ used both for the plain text and for the different key management
 techniques.
 
 One of the by products of using the same technique for encrypting and
-encoding bot the content and the keys using the various key management
+encoding both the content and the keys using the various key management
 techniques, is a requirement that all of the key management techniques
 use an Authenticated Encryption (AE) algorithm.
 When encrypting the plain text, it is normal to use an Authenticated
@@ -330,7 +335,7 @@ alg
 :   contains the algorithm identifier used to encrypt the plain text.
 
 epk
-:   contains an ephemeral key for key agreement management algorithms.
+:   contains an ephemeral key for key agreement management algorithms.  Note however, that it is a COSE encoded key and not a JOSE encoded key.
 
 zip
 :   contains a compression algorithm identifier if the plain text was compressed prior to being encrypted.
@@ -364,6 +369,8 @@ The names of the key management methods used here are the same as are
 defined in {{I-D.ietf-jose-json-web-key}}.
 Other specifications use different terms for the key management
 methods or do not support some of the key management methods.
+
+At the moment we do not have any key management methods that allow for the use of protected headers.  This may be changed in the future if, for example, the AES-GCM Key wrap method defined in [JWA] were extended to allow for authenticated data.  In that event the use of the 'protected' field, which is current forbidden below, would be permitted.
 
 ### Direct Encryption
 
@@ -532,13 +539,30 @@ COSE_mac :  {
 
 # Key Structure
 
+There are only a few changes between JOSE and COSE for how keys are formatted.
+As with JOSE, COSE uses a map to contain the elements of a key.
+Those values, which in JOSE, are base64url encoded because they are binary values, are encoded as bstr values in COSE.
+
 For COSE we use the same set of fields that were defined in
 {{I-D.ietf-jose-json-web-key}}.
 
 ~~~~
 
-COSE_key : map (tstr)
+COSE_Key : map(tstr, *) {
+    "kty" : tstr;
+    ?"use" : tstr;
+    ?"key_ops" : tstr*;
+    ?"alg" : tstr;
+    ?"kid" : tstr;
+}
+
+*COSE_KeySet : COSE_Key*;
 ~~~~
+
+The element "kty" is a required element in a COSE_Key map.  
+All other elements are optional and not all of the elements listed in [JWK] or [JWA] have been listed here even though they can all appear in a COSE_Key map.
+
+The "key_ops" element is prefered over the "use" element as the information provided that way is more finely detailed about the operations allowed.  It is strongly suggested that this element be present for all keys.
 
 The same fields defined in {{I-D.ietf-jose-json-web-key}} are used
 here with the following changes in rules:
@@ -556,6 +580,37 @@ here with the following changes in rules:
 >   such as a hash of the public key is used for a kid value.
 >   Since the field is defined as not having a specific structure,
 >   making it binary rather than textual makes sense.
+
+# CBOR Encoder Restrictions
+
+There as been an attempt to resrict the number of places where the document 
+needs to impose restrictions on how the CBOR Encoder needs to work.  We have
+managed to narrow it down to the following restrictions:
+
+> The restriction applies only the encoding the Sig_structure.
+
+> The rules for Canonical CBOR (Section 3.9 of RFC 7049) MUST be used in these
+> locations.  The main rule that needs to be enforced is that all lengths
+> in these structures MUST be encoded such that they are encoded using definite lengths 
+> and the minimum length encoding is used.
+
+# IANA Considerations
+
+There are IANA considerations to be filled in.
+
+# Security Considerations
+
+There are security considertions:
+
+1.  Protect private keys
+
+2.  MAC messages with more than one recipient means one cannot figure out who sent the message
+
+3.  Use of direct key with other recipient structures hands the key to other recipients.
+
+4.  Use of direcct ECDH direct encryption is easy for people to leak information on if there are other recipients in the message.
+
+
 
 --- back
 
