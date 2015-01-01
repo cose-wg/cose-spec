@@ -17,9 +17,9 @@ author:
   email: ietf@augustcellars.com
 normative:
   I-D.greevenbosch-appsawg-cbor-cddl:
+  I-D.ietf-jose-json-web-algorithms:
 informative:
   I-D.ietf-jose-json-web-encryption:
-  I-D.ietf-jose-json-web-algorithms:
   I-D.ietf-jose-json-web-signature:
   I-D.ietf-jose-json-web-key:
   I-D.mcgrew-aead-aes-cbc-hmac-sha2:
@@ -142,7 +142,7 @@ msg_type
 # Signing Structure
 
 The signature structure allows for one or more signatures to be applied to a message payload.
-There are provisions for there to be attributes about the content and about the signature to be
+There are provisions for  attributes about the content and attributes about the signature to be
 carried along with the signature itself.
 These attributes may be authenticated by the signature, or just present.
 Examples of attributes about the content would be the type of content, when the content 
@@ -165,17 +165,20 @@ than one signature.  For example, the COSE_Sign structure might
 include signatures generated with the RSA signature algorithm and
 with the Elliptic Curve Digital Signature Algorithm (ECDSA) signature
 algorithm.  This allows recipients to verify the signature associated
-with one algorithm or the other. (Source of text is {{RFC5652}}.)  
+with one algorithm or the other. (Source of text is {{RFC5652}}.)
 More detailed information on multiple signature evaluation can be found in {{RFC5752}}.
 
-The CDDL grammar structure for a signature is:
+The CDDL grammar structure for a signature message is:
+
 ~~~~
+
 COSE_Sign : {
     protected : bstr | null;
     unprotected : map(tstr) | null;
     payload : bstr | null;
     signatures: COSE_signature_a* | COSE_signature;
 }
+
 ~~~~
 
 The fields is the structure have the following semantics:
@@ -204,11 +207,13 @@ payload
   if the payload is transported separately it is the responsibility of the application
   to ensure that it will be transported without changes.
 
-
 signatures
 : is either a single signature or an array of signature values.  
-  It is legal to use the array of signature values for a single signature.  
-  Implementations MUST be able to parse both layouts.
+  A single signature value can be represented using either data type.
+  Implementations MUST be able to parse both data types.
+
+
+The CDDL grammar structure for a signature is:
 
 ~~~~
 
@@ -238,6 +243,8 @@ unprotected
 signature
 : contains the computed signature value.
 
+The COSE structure used to create the byte stream to be signed uses the following CDDL grammar structure:
+
 ~~~~
 
 *Sig_structure : {
@@ -251,7 +258,7 @@ How to compute a signature:
 
 1. Create a Sig_structure object and populate it with the appropriate fields.
 
-2. Create the value to be hashed by encode the Sig_structure to a byte string.
+2. Create the value to be hashed by encoding the Sig_structure to a byte string.
 
 3. Sign the hash
 
@@ -271,22 +278,14 @@ techniques.
 One of the by products of using the same technique for encrypting and
 encoding both the content and the keys using the various key management
 techniques, is a requirement that all of the key management techniques
-use an Authenticated Encryption (AE) algorithm.
+use an Authenticated Encryption (AE) algorithm.  (For the purpose of this document we use a slightly loose definition of AE algorithms.)
 When encrypting the plain text, it is normal to use an Authenticated
 Encryption with Additional Data (AEAD) algorithm.  For key management,
 either AE or AEAD algorithms can be used.
 See {{AE-algo}} for more details about the different types of
 algorithms.
 
-The structure has two maps where data about the content can be placed.
-The data placed here is also the data which is used to control how the
-decryption is to be done for this object.
-When data is placed in these two structures, it is extremely poor
-practice to have data which is applicable to a different level.
-For example, the unprotected field at the level of a key management
-decryption should not contain information either about how to
-interpret the plain text (i.e. content type) or how to convert the
-cipher text back to plain text (i.e. the kid for the recipient).
+The CDDL grammar structure for encryption is:
 
 ~~~~
 
@@ -298,6 +297,7 @@ COSE_encrypt {
   ciphertext : bstr | null;
   recipients : COSE_encrypt_a* | COSE_encrypt | null;
 }
+
 * COSE_encrypt_a : COSE_encrypt
 ~~~~
 
@@ -311,10 +311,12 @@ protected
   The contents of the protected field is a CBOR map of the protected
   data names and values.
   The map is CBOR encoded before placing it into the bstr.
+  Only values associated with the current cipher text are to be placed in this location even if the value would apply to multiple recipient structures.
 
 unprotected
 : contains information about the plain text that is not integrity protected.
   If there are no field, then the value 'null' is used.
+  Only values associated with the current cipher text are to be placed in this location even if the value would apply to multiple recipient structures.
 
 iv
 : contains the initialization vector (IV), or it's equivalent, if one
@@ -335,10 +337,13 @@ cipherText
 
 recipients
 :   contains the recipient information.
-  The field can have one of three values.
+  The field can have one of three types:
+
   *  An array of COSE_Encrypt elements, one for each recipient.
+
   *  A single COSE_Element, encoded as an extension to the containing COSE_element, for a single recipient.
      Single recipients can be encoded either this way or as a single array element.
+
   *  A 'null' value if there are no recipients.
 
 ## Header Parameters
@@ -624,19 +629,18 @@ The "key_ops" element is prefered over the "use" element as the information prov
 The same fields defined in {{I-D.ietf-jose-json-web-key}} are used
 here with the following changes in rules:
 
-> Any item which is base64 encoded in JWK, is bstr encoded for COSE.
+* Any item which is base64 encoded in JWK, is bstr encoded for COSE.
 
-> Any item which is integer encoded in JWK, is int encoded for COSE.
+* Any item which is integer encoded in JWK, is int encoded for COSE.
 
-> Any item which is string (but not base64) encoded in JWK, is tstr encoded for COSE.
-
-> Exceptions to this are the following fields:
-> kid
-> : is always bstr encoded rather than tstr encoded.
->   This change in encoded is due to the fact that frequently, values
->   such as a hash of the public key is used for a kid value.
->   Since the field is defined as not having a specific structure,
->   making it binary rather than textual makes sense.
+* Any item which is string (but not base64) encoded in JWK, is tstr encoded for COSE.
+  Exceptions to this are the following fields:
+  kid
+: is always bstr encoded rather than tstr encoded.
+   This change in encoded is due to the fact that frequently, values
+   such as a hash of the public key is used for a kid value.
+   Since the field is defined as not having a specific structure,
+   making it binary rather than textual makes sense.
 
 # CBOR Encoder Restrictions {#CBOR-Canonical}
 
@@ -644,12 +648,12 @@ There as been an attempt to resrict the number of places where the document
 needs to impose restrictions on how the CBOR Encoder needs to work.  We have
 managed to narrow it down to the following restrictions:
 
-> The restriction applies only the encoding the Sig_structure.
+* The restriction applies only the encoding the Sig_structure.
 
-> The rules for Canonical CBOR (Section 3.9 of RFC 7049) MUST be used in these
-> locations.  The main rule that needs to be enforced is that all lengths
-> in these structures MUST be encoded such that they are encoded using definite lengths 
-> and the minimum length encoding is used.
+* The rules for Canonical CBOR (Section 3.9 of RFC 7049) MUST be used in these
+ locations.  The main rule that needs to be enforced is that all lengths
+ in these structures MUST be encoded such that they are encoded using definite lengths 
+ and the minimum length encoding is used.
 
 # IANA Considerations
 
@@ -657,7 +661,7 @@ There are IANA considerations to be filled in.
 
 # Security Considerations
 
-There are security considertions:
+There are security considerations:
 
 1.  Protect private keys
 
@@ -667,7 +671,7 @@ There are security considertions:
 
 4.  Use of direcct ECDH direct encryption is easy for people to leak information on if there are other recipients in the message.
 
-
+5.  Considerations about protected vs unprotected header fields.
 
 --- back
 
@@ -721,7 +725,7 @@ This authentication value may be:
 
 All of the currently defined Key Management methods only use two levels of the COSE_Encrypt structure.
 The first level is the message content and the second level is the content key encryption.
-However, if one uses a key management technique such as RSA-KEY (see Appendix A of RSA-KEM {{RFC5990}}, then
+However, if one uses a key management technique such as RSA-KEM (see Appendix A of RSA-KEM {{RFC5990}}, then
 it make sense to have three levels of the COSE_Encrypt structure.
 
 These levels would be:
@@ -807,3 +811,62 @@ h'00e9769c05afb2d93baf5a0c2cace1747b5091f50596831911c67ebf76f4220adb53698fe78310
 ~~~~
 
 
+# Parameter Table
+
+This table contains a list of all currently defined parameters, types and index
+
+| name | number | type |
+| alg | * | tstr |
+| apu | * | bstr |
+| apv | * | bstr |
+| crit | * | tstr* |
+| crv | * | tstr |
+| cty | * | tstr |
+| enc | * | tstr |
+| epk | * | map |
+| iv | * | not used |
+| jku | * | tstr |
+| jwk | * | tstr |
+| kid | * | tstr |
+| p2c | * | int |
+| p2s | * | bstr |
+| tag | * | not used |
+| typ | * | not used |
+| x5c | * | bstr* |
+| x5t | * | tstr |
+| x5t#S256 | * | tstr |
+| x5u | * | tstr |
+| zip | * | tstr |
+
+
+Parameters of keys
+
+| name | number | type |
+| kty |  * | tstr |
+| use | * | tstr |
+| key_ops | * | tstr* |
+| alg | * | tstr |
+| kid | * | tstr |
+| x5u | * | tstr |
+| x5c | * | bstr* |
+| x5t | * | bstr |
+| xt5#S256 | * | bstr |
+
+Parameters dealing with keys
+
+|  | name | number | type |
+| EC | d | * | bstr |
+| EC | x | * | bstr |
+| EC | y | * | bstr |
+| RSA | e | * | bstr | 
+| RSA | n | * | bstr |
+| RSA | d | * | bstr |
+| RSA | p | * | bstr |
+| RSA | q | * | bstr |
+| RSA | dp | * | bstr |
+| RSA | dq | * | bstr |
+| RSA | qi | * | bstr |
+| RSA | oth | * | bstr |
+| RSA | r | * | bstr |
+| RSA | t | * | bstr |
+| oct | k | * | bstr |
