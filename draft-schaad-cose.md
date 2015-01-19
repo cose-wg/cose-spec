@@ -127,9 +127,7 @@ of the individual structures as a stand alone component.
 
 *COSE_MSG {
   msg_type : uint;
-  ?sign_msg: COSE-Sign;         # present if msg_type = 1
-  ?encrypt_msg: COSE-Encrypt;   # present if msg_type = 2
-  ?mac_msg: COSE-MAC;           # present if msg_type = 3
+  msg_content : COSE_Sign | COSE_encrypt | COSE_mac;
 }
 ~~~~
 
@@ -138,6 +136,15 @@ Descriptions of the fields:
 
 msg_type
 : indicates which of the security structures is in this block.
+
+msg_content
+: contains the top level fields for the security service provided.  The type in this field is based on the value of the field msg_type.
+  
+> msg_type 1 is used for COSE_sign
+
+> msg_type 2 is used for COSE_encrypt
+
+> msg_type 3 is used for COSE_mac  
 
 # Signing Structure
 
@@ -174,7 +181,7 @@ The CDDL grammar structure for a signature message is:
 
 COSE_Sign : {
     protected : bstr | null;
-    unprotected : map(tstr) | null;
+    unprotected : map(tstr, .) | null;
     payload : bstr | null;
     signatures: COSE_signature_a* | COSE_signature;
 }
@@ -189,14 +196,12 @@ protected
   The content is a CBOR map of attributes which is encoded to a byte stream.
   This field MUST NOT contain attributes about the signature, even if
   those attributes are common across multiple signatures.
-  At least one of protected and unprotected MUST be present.
 
 unprotected
 : contains attributes about the payload which are not protected by the signature.
   An example of such an attribute would be the content type ('cty') attribute.
   This field MUST NOT contain attributes about a signature, even if
   the attributes are common across multiple signatures.
-  At least one of protected and unprotected MUST be present.
 
 
 payload
@@ -219,7 +224,7 @@ The CDDL grammar structure for a signature is:
 
 COSE_signature :  {
     protected : bstr | null;
-    unprotected : map(tstr) | null;
+    unprotected : map(tstr, .) | null;
     signature : bstr;
 }
 *COSE_signature_a : COSE_signature;
@@ -260,6 +265,8 @@ How to compute a signature:
 
 2. Create the value to be hashed by encoding the Sig_structure to a byte string.
 
+1. Comput the hash value from the byte string.
+
 3. Sign the hash
 
 4. Place the signature value into the appropriate signature field.
@@ -272,7 +279,7 @@ In COSE, we use the same techniques and structures for encrypting both
 the plain text and the keys used to protect the text.
 This is different from the approach used by both {{RFC5652}} and
 {{I-D.ietf-jose-json-web-encryption}} where different structures are
-used both for the plain text and for the different key management
+used for the plain text and for the different key management
 techniques.
 
 One of the by products of using the same technique for encrypting and
@@ -290,8 +297,8 @@ The CDDL grammar structure for encryption is:
 ~~~~
 
 COSE_encrypt {
-  protected : bstr | null;   # Contains map(tstr)
-  unprotected : map(tstr) | null;
+  protected : bstr | null;   # Contains map(tstr, .)
+  unprotected : map(tstr, .) | null;
   iv : bstr | null;
   aad : bstr | null;
   ciphertext : bstr | null;
@@ -337,46 +344,14 @@ cipherText
 
 recipients
 :   contains the recipient information.
-  The field can have one of three types:
+  The field can have one of three data types:
 
-  *  An array of COSE_Encrypt elements, one for each recipient.
+  *  An array of COSE_encrypt elements, one for each recipient.
 
-  *  A single COSE_Element, encoded as an extension to the containing COSE_element, for a single recipient.
+  *  A single COSE_encrypt element, encoded as an extension to the containing COSE_encrypt element, for a single recipient.
      Single recipients can be encoded either this way or as a single array element.
 
   *  A 'null' value if there are no recipients.
-
-## Header Parameters
-
-The header parameters discussed here are taken from {{I-D.ietf-jose-json-web-encryption}}.
-For the most part they are interpreted the same here as for JOSE.
-
-alg
-:   contains the algorithm identifier used to encrypt the plain text.
-
-epk
-:   contains an ephemeral key for key agreement management algorithms.  Note however, that it is a COSE encoded key and not a JOSE encoded key.
-
-zip
-:   contains a compression algorithm identifier if the plain text was compressed prior to being encrypted.
-
-jku
-:   contains a URL pointing to a JWK Set (defined in {{I-D.ietf-jose-json-web-key}}).[^CREF3]{: source="JLS"}
-
-[^CREF3]: Do we defined a cku as well?
-
-cwk
-:   contains the public key fields for the key used to encrypt the object.
-
-kid
-:   contains a value which can be used to select a key from one or more keys the application has access to.
-
-cty
-:   contains a string which identifies the content of the plain text.
-
-There are a number of header fields defined in
-{{I-D.ietf-jose-json-web-encryption}} which are not used.
-These include PUT THE LIST OF UNUSED ITEMS HERE.  Includes 'enc'?
 
 ## Key Management Methods
 
@@ -411,9 +386,6 @@ The COSE_encrypt structure for the recipient is organized as follows:
 
 * The 'protected', 'iv', 'aad', 'ciphertext' and 'recipients' fields
   MUST be null.
-
-* The plain text to be encrypted is the key from next layer down
-  (usually the content layer).
 
 * At a minimum, the 'unprotected' field SHOULD contain the 'alg'
   parameter as well as a parameter identifying the shared secret.
@@ -471,10 +443,8 @@ All of the information about the key and key agreement process is
 placed in either the 'protected' or 'unprotected' fields at the
 content level.
 
-When direct key agreement mode is used, it MUST be the only mode used
-on the message.
-It is a security leak to have both direct key agreement and a
-different key management mode on the same message.
+When direct key agreement mode is used, it SHOULD be the only mode used
+on the message.  This method creates the CEK directly and that makes it difficult to mix with additional recipients.
 
 The COSE_encrypt structure for the recipient is organized as follows:
 
@@ -539,13 +509,15 @@ In order to get a consistent encoding of the data to be authenticated, the Enc_s
 
 # MAC objects
 
-add description
+In this section we describe the structure and methods to be used when doing MAC authentication in COSE.  JOSE used a variant of the signature structure for doing MAC operations and it is restricted to using a single pre-shared secret to do the authentication.  This document allows for the use of all of the same methods of key management as are allowed for encryption.
+
+When using MAC operations, there are two modes in which it can be used.  The first is just a check that the content has not been changed since the MAC was computed.  Any of the key management methods can be used for this purpose.  The second mode is to both check that the content has not been changed since the MAC was computed, and to use key management to verify who sent it.  The key management modes that support this are ones that either use a pre-shared secret, or do static-static key agreement.  In both of these cases the entity MAC-ing the message can be validated by a key binding.  (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.)
 
 ~~~~
 
 COSE_mac :  {
    protected : bstr | null;
-   unprotected" : map(tstr) | null;
+   unprotected" : map(tstr, .) | null;
    payload : bstr;
    tag : bstr;
    recipients : COSE_encrypt_a* | COSE_encrypt | null;
@@ -610,12 +582,12 @@ For COSE we use the same set of fields that were defined in
 
 ~~~~
 
-COSE_Key : map(tstr, *) {
+COSE_Key : map {
     "kty" : tstr;
-    ?"use" : tstr;
-    ?"key_ops" : tstr*;
-    ?"alg" : tstr;
-    ?"kid" : tstr;
+    "use" : tstr;
+    "key_ops" : tstr*;
+    "alg" : tstr;
+    "kid" : tstr;
 }
 
 *COSE_KeySet : COSE_Key*;
@@ -648,12 +620,14 @@ There as been an attempt to resrict the number of places where the document
 needs to impose restrictions on how the CBOR Encoder needs to work.  We have
 managed to narrow it down to the following restrictions:
 
-* The restriction applies only the encoding the Sig_structure.
+* The restriction applies to the encoding the Sig_structure, the Enc_structure, and the MAC_structure.
 
 * The rules for Canonical CBOR (Section 3.9 of RFC 7049) MUST be used in these
  locations.  The main rule that needs to be enforced is that all lengths
  in these structures MUST be encoded such that they are encoded using definite lengths 
  and the minimum length encoding is used.
+
+* All parsers used SHOULD fail on both parsing and generation if the same key is used twice in a map.
 
 # IANA Considerations
 
@@ -811,37 +785,37 @@ h'00e9769c05afb2d93baf5a0c2cace1747b5091f50596831911c67ebf76f4220adb53698fe78310
 ~~~~
 
 
-# Parameter Table
+# Processing Parameter Table
 
-This table contains a list of all currently defined parameters, types and index
+This table contains a list of all of the parameters for use in signature and encryption message types defined by the JOSE document set.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
 
-| name | number | type |
-| alg | * | tstr |
+| name | number | CBOR type | comments |
+| alg | * | tstr | presence is required |
 | apu | * | bstr |
 | apv | * | bstr |
 | crit | * | tstr* |
-| crv | * | tstr |
 | cty | * | tstr |
-| enc | * | tstr |
-| epk | * | map |
-| iv | * | not used |
+| enc | * |  | use alg instead |
+| epk | * | map | contains a COSE key not a JWK key |
+| iv | * |  | use field in array instead |
 | jku | * | tstr |
-| jwk | * | tstr |
+| jwk | * | map | contains a COSE key not a JWK key |
 | kid | * | tstr |
 | p2c | * | int |
 | p2s | * | bstr |
-| tag | * | not used |
-| typ | * | not used |
+| tag | * |  | tag is included in the cipher text |
+| typ | * |  | use cty for the content type, no concept of a different wrapper type |
 | x5c | * | bstr* |
-| x5t | * | tstr |
-| x5t#S256 | * | tstr |
+| x5t | * | bstr |
+| x5t#S256 | * | bstr |
 | x5u | * | tstr |
-| zip | * | tstr |
+| zip | * | tstr | only used at content level |
 
+# Key Parameter Tables
 
-Parameters of keys
+This table contains a list of all of the parameters defined for keys that were defined by the JOSE document set.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
 
-| name | number | type |
+| name | number | CBOR type |
 | kty |  * | tstr |
 | use | * | tstr |
 | key_ops | * | tstr* |
@@ -852,9 +826,10 @@ Parameters of keys
 | x5t | * | bstr |
 | xt5#S256 | * | bstr |
 
+This table contains a list of all of the parameters that were defined by the JOSE document set for a specific key type.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
 Parameters dealing with keys
 
-|  | name | number | type |
+| key type | name | number | CBOR type |
 | EC | d | * | bstr |
 | EC | x | * | bstr |
 | EC | y | * | bstr |
