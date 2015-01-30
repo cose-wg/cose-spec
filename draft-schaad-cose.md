@@ -18,6 +18,7 @@ author:
 normative:
   I-D.greevenbosch-appsawg-cbor-cddl:
   I-D.ietf-jose-json-web-algorithms:
+  RFC7049:
 informative:
   I-D.ietf-jose-json-web-encryption:
   I-D.ietf-jose-json-web-signature:
@@ -30,7 +31,6 @@ informative:
   RFC5752:
   RFC5990:
   RFC5652:
-  RFC7049:
   RFC7159:
   AES-GCM:
     title: 'NIST Special Publication 800-38D: Recommendation for Block Cipher Modes
@@ -59,22 +59,18 @@ This document does the same work for use with the Concise Binary Object Represen
 While there is a strong attempt to keep the flavor of the original
 JOSE documents, two considerations are taking into account:
 
-> CBOR has capabilities that are not present in JSON and should be used.
-> One example of this is the fact that CBOR has a method of encoding
-> binary directly without first converting it into a base64 encoded
-> sting. 
+* CBOR has capabilities that are not present in JSON and should be used.
+  One example of this is the fact that CBOR has a method of encoding binary directly without first converting it into a base64 encoded sting. 
 
-> The authors did not always agree with some of the decisions made by
-> the JOSE working group.
-> Many of these decisions have been re-examined, and where it seems to
-> the authors to be superior or simpler, replaced.
+* The authors did not always agree with some of the decisions made by the JOSE working group.
+  Many of these decisions have been re-examined, and where it seems to the authors to be superior or simpler, replaced.
 
 ## Design changes from JOSE
 
 * Define a top level message structure so that encrypted, signed and MAC-ed messages can easily identified and still have a consistent view.
 
 * Switch from using a map to using an array at the message level.
-  While this change means that it is no longer possible to new named parameters to
+  While this change means that it is no longer possible to add new named parameters to
   the top level message, it also means that there is not a need to define how older
   implementations are defined to behave when new fields are present. 
   Most of the reasons that a new field would need to be defined are adequately addressed
@@ -282,7 +278,7 @@ This is different from the approach used by both {{RFC5652}} and
 used for the plain text and for the different key management
 techniques.
 
-One of the by products of using the same technique for encrypting and
+One of the byproducts of using the same technique for encrypting and
 encoding both the content and the keys using the various key management
 techniques, is a requirement that all of the key management techniques
 use an Authenticated Encryption (AE) algorithm.  (For the purpose of this document we use a slightly loose definition of AE algorithms.)
@@ -487,11 +483,11 @@ In order to get a consistent encoding of the data to be authenticated, the Enc_s
 
 1.   If there is protected data, CBOR encode the map to a byte string and place in the protected field of the Enc_structure and the COSE_Encrypt structure.
 
-1.   Copy the add field from the COSE_Encrypt structure to the Enc_Structure.
+1.   Copy the 'aad' field from the COSE_Encrypt structure to the Enc_Structure.
 
 1.   Encode the Enc_structure using a CBOR Canonical encoding {{CBOR-Canonical}} to get the AAD value.
 
-1.   Encrypt the plain text and place it in the ciphertext field.  The
+1.   Encrypt the plain text and place it in the 'ciphertext' field.  The
      AAD value is passed in as part of the encryption process.
 
 1.   For recipient of the message, recursively perform the encryption
@@ -501,11 +497,11 @@ In order to get a consistent encoding of the data to be authenticated, the Enc_s
 ## Encryption algorithm for AE algorithms
 
 
-1.   Verify that the protected field is empty.
+1.   Verify that the 'protected' field is empty.
 
-1.   Verify that the aad field is empty.
+1.   Verify that the 'aad' field is empty.
 
-1.   Encrypt the plain text and place in the ciphertext field.
+1.   Encrypt the plain text and place in the 'ciphertext' field.
 
 # MAC objects
 
@@ -722,10 +718,23 @@ Encoded in CBOR - 118 bytes, content is 14 bytes long
 
 ~~~~
 
-[2, null, {"alg": "HS256"}, h'436f6e74656e7420537472696e67',
-h'78956d858ee6c026ac630063627a4ce98d3003bc68e7c1e53b5b468331b69f93',
-null, {"alg": "dir", "kid": "018c0ae5-4d9b-471b-bfd6-eef314bc7037"},
-null, null, null]
+[
+  2,
+  null,
+  {
+    "alg": "HS256"
+  },
+  h'436f6e74656e7420537472696e67',
+  h'78956d858ee6c026ac630063627a4ce98d3003bc68e7c1e53b5b468331b69f93',
+  null,
+  {
+    "alg": "dir",
+    "kid": "018c0ae5-4d9b-471b-bfd6-eef314bc7037"
+  },
+  null,
+  null,
+  null
+]
 ~~~~
 
 
@@ -739,12 +748,25 @@ Encoded in CBOR - 162 bytes, content is 14 bytes long
 
 ~~~~
 
-[2, null, {"alg": "HS256"}, h'436f6e74656e7420537472696e67',
-h'2ee486376b8b2a61fe526589ceb456e20919a68ebc0458431ef3e13ffe7bf698',
-null, {"alg": "A128KW", "kid": "77c7e2b8-6e13-45cf-8672-617b5b45243a"},
-null,
-h'4f6e9e6a3e43b79561ef602a2a9e629a437e8df90a7ff361acbdb1076c955d0f25c660a67aee1bdf',
-null]
+[
+  2,
+  null,
+  {
+    "alg": "HS256"
+  },
+  h'436f6e74656e7420537472696e67',
+  h'2ee486376b8b2a61fe526589ceb456e20919a68ebc0458431ef3e13ffe7b
+    f698',
+  null,
+  {
+    "alg": "A128KW",
+    "kid": "77c7e2b8-6e13-45cf-8672-617b5b45243a"
+  },
+  null,
+  h'4f6e9e6a3e43b79561ef602a2a9e629a437e8df90a7ff361acbdb1076c95
+    5d0f25c660a67aee1bdf',
+  null
+]
 ~~~~
 
 
@@ -758,14 +780,60 @@ Encoded in CBOR - 216 bytes, content is 14 bytes long
 
 ~~~~
 
-[1, null, {"alg": "A128GCM"}, h'656d6a73ccf1b35fb99044e1',
-h'd7b27b67a81b212ee513b148454fe2d571d51bb679239769f5d2299bb96b',
-null, {"alg": "ECDH-ES", "epk": {"kty": "EC", "crv": "P-256",
-"x": h'00b81ff1de0eeba27613027526d83b5f4cbffaca433488e3805e7a75c43bd1b966',
-"y": h'00d142a334ac8790dc821abe9362434daeb00c1b8b076843e51a4a4717b30c54ce'},
-"kid": "meriadoc.brandybuck@buckland.example"}, null, null, null]
+[
+  1,
+  null,
+  {"alg": "A128GCM"},
+  h'656d6a73ccf1b35fb99044e1',
+  h'd7b27b67a81b212ee513b148454fe2d571d51bb679239769f5d2299bb96b',
+  null,
+  {
+    "alg": "ECDH-ES",
+    "epk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": h'00b81ff1de0eeba27613027526d83b5f4cbffaca433488e3805
+             e7a75c43bd1b966',
+      "y": h'00d142a334ac8790dc821abe9362434daeb00c1b8b076843e51
+             a4a4717b30c54ce'},
+      "kid": "meriadoc.brandybuck@buckland.example"
+    }
+  },
+  null,
+  null,
+  null
+]
 ~~~~
 
+## Single Signature
+
+This example has some features that are in questions but not yet cooperated in the document.
+
+To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
+
+~~~~
+
+[
+  0,
+  null,
+  null,
+  h'436f6e74656e7420537472696e67',
+  null,
+  {
+    "kid": "bilbo.baggins@hobbiton.example",
+    "alg": "PS256"
+  },
+   h'5afe80ec9f208b4719a3bd688c803a3154b1ff25af86e054173ad6ddf71
+     ba77a4a2b793beed077a4e1a8a69ac1277c457f636691cb4a7d3dc67b47
+     ec84c067076b720236bae498bdb21deebbc0a0f525f9a24b336d51e2b3e
+     ffd67df3e051405a3599aed83b8a8e94e4194dded2f661e5e6894825779
+     b79b463bd4f477f33356cf8aecfa8a543344d2620145be8a72a712f9854
+     57040140176164c77cdae7cc480ae4357683cce79b97ddb10f390862a24
+     2aae1aa391cc730b1631f020874a8a6efc77b08f027323e2c4ae85eeb3e
+     5dc715e0e2fa8aec63fb828d7a2c45e361e249117bd8b41e1e12388412d
+     8ce3809c9a2172afda5ca7c5839896825da66a50'
+]
+~~~~
 
 ## Multiple Signers
 
@@ -777,11 +845,43 @@ Encoded in CBOR - 491 bytes, content is 14 bytes long
 
 ~~~~
 
-[0, null, null, h'436f6e74656e7420537472696e67', [
-[null, {"kid": "bilbo.baggins@hobbiton.example", "alg": "PS256"},
-h'5afe80ec9f208b4719a3bd688c803a3154b1ff25af86e054173ad6ddf71ba77a4a2b793beed077a4e1a8a69ac1277c457f636691cb4a7d3dc67b47ec84c067076b720236bae498bdb21deebbc0a0f525f9a24b336d51e2b3effd67df3e051405a3599aed83b8a8e94e4194dded2f661e5e6894825779b79b463bd4f477f33356cf8aecfa8a543344d2620145be8a72a712f985457040140176164c77cdae7cc480ae4357683cce79b97ddb10f390862a242aae1aa391cc730b1631f020874a8a6efc77b08f027323e2c4ae85eeb3e5dc715e0e2fa8aec63fb828d7a2c45e361e249117bd8b41e1e12388412d8ce3809c9a2172afda5ca7c5839896825da66a50'],
-[null, {"kid": "bilbo.baggins@hobbiton.example", "alg": "ES512"},
-h'00e9769c05afb2d93baf5a0c2cace1747b5091f50596831911c67ebf76f4220adb53698fe7831000d526887893d67de05ead1bbe378ce9e9731bda4cd37f53dcf8d40186c46d872795b566682c113cc9d5bf5a8c5321fd50a003237115decf0cb8b09e5c3cb50bc2203af45bebd51e6c4d0ec51170d5b9ac1b21a2017a50d7c15b6de8f9']]]
+[
+  0,
+  null,
+  null,
+  h'436f6e74656e7420537472696e67',
+  [
+    [
+      null,
+      {
+        "kid": "bilbo.baggins@hobbiton.example",
+        "alg": "PS256"
+      },
+       h'5afe80ec9f208b4719a3bd688c803a3154b1ff25af86e054173ad6d
+         df71ba77a4a2b793beed077a4e1a8a69ac1277c457f636691cb4a7d
+         3dc67b47ec84c067076b720236bae498bdb21deebbc0a0f525f9a24
+         b336d51e2b3effd67df3e051405a3599aed83b8a8e94e4194dded2f
+         661e5e6894825779b79b463bd4f477f33356cf8aecfa8a543344d26
+         20145be8a72a712f985457040140176164c77cdae7cc480ae435768
+         3cce79b97ddb10f390862a242aae1aa391cc730b1631f020874a8a6
+         efc77b08f027323e2c4ae85eeb3e5dc715e0e2fa8aec63fb828d7a2
+         c45e361e249117bd8b41e1e12388412d8ce3809c9a2172afda5ca7c
+         5839896825da66a50'
+    ],
+    [
+      null,
+      {
+        "kid": "bilbo.baggins@hobbiton.example",
+        "alg": "ES512"
+      },
+      h'00e9769c05afb2d93baf5a0c2cace1747b5091f50596831911c67ebf
+        76f4220adb53698fe7831000d526887893d67de05ead1bbe378ce9e9
+        731bda4cd37f53dcf8d40186c46d872795b566682c113cc9d5bf5a8c
+        5321fd50a003237115decf0cb8b09e5c3cb50bc2203af45bebd51e6c
+        4d0ec51170d5b9ac1b21a2017a50d7c15b6de8f9'
+    ]
+  ]
+]
 ~~~~
 
 
