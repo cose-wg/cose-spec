@@ -106,7 +106,7 @@ definition language (CDDL) defined in
 The differences between the defined grammar and the one we used are
 mostly self explanatory.
 The biggest difference being the addition of the choice operator '|'.
-Additionally, note the use of the null value which is used to occupy a location in an array but to mark that the element is not present.
+Additionally, note the use of the nil value which is used to occupy a location in an array but to mark that the element is not present.
 
 
 # The COSE_MSG structure
@@ -121,10 +121,13 @@ of the individual structures as a stand alone component.
 
 ~~~~
 
-*COSE_MSG {
-  msg_type : uint;
-  msg_content : COSE_Sign | COSE_encrypt | COSE_mac;
-}
+COSE_MSG = [(
+  &msg_type,
+  msg_content : [COSE_Sign] / [COSE_encrypt] / [COSE_mac]
+)]
+
+msg_type = ( sign:1, encrypt:2, mac:3 )
+
 ~~~~
 
 This structure is encoded as an array by CBOR.
@@ -175,12 +178,18 @@ The CDDL grammar structure for a signature message is:
 
 ~~~~
 
-COSE_Sign : {
-    protected : bstr | null;
-    unprotected : map(tstr, .) | null;
-    payload : bstr | null;
-    signatures: COSE_signature_a* | COSE_signature;
-}
+COSE_Sign = (
+    protected : bstr / nil;
+    unprotected : header_map / nil;
+    payload : bstr / nil;
+    signatures: [+[COSE_signature]] / COSE_signature;
+)
+
+COSE_SignMessage = #6.999[ COSE_Sign ]
+
+keys = int / tstr
+values = int / tstr / bstr / bool
+header_map = {+ keys => values }
 
 ~~~~
 
@@ -218,12 +227,12 @@ The CDDL grammar structure for a signature is:
 
 ~~~~
 
-COSE_signature :  {
-    protected : bstr | null;
-    unprotected : map(tstr, .) | null;
+COSE_signature :  (
+    protected : bstr | nil;
+    unprotected : header_map | nil;
     signature : bstr;
-}
-*COSE_signature_a : COSE_signature;
+)
+
 ~~~~
 
 The fields is the structure have the following semantics:
@@ -248,11 +257,12 @@ The COSE structure used to create the byte stream to be signed uses the followin
 
 ~~~~
 
-*Sig_structure : {
-    body_protected : bstr | null;
-    sign_protected : bstr | null;
+*Sig_structure : [
+    body_protected : bstr | nil;
+    sign_protected : bstr | nil;
     payload : bstr;
-}
+]
+
 ~~~~
 
 How to compute a signature:
@@ -292,16 +302,17 @@ The CDDL grammar structure for encryption is:
 
 ~~~~
 
-COSE_encrypt {
-  protected : bstr | null;   # Contains map(tstr, .)
-  unprotected : map(tstr, .) | null;
-  iv : bstr | null;
-  aad : bstr | null;
-  ciphertext : bstr | null;
-  recipients : COSE_encrypt_a* | COSE_encrypt | null;
+COSE_encrypt = (
+  protected : bstr / nil,   # Contains header_map
+  unprotected : header_map / nil,
+  iv : bstr / nil,
+  aad : bstr / nil,
+  ciphertext : bstr / nil,
+  recipients : [+COSE_encrypt_a] / COSE_encrypt / nil;
 }
 
-* COSE_encrypt_a : COSE_encrypt
+COSE_encrypt_a = [COSE_encrypt]
+
 ~~~~
 
 Description of the fields:
@@ -310,7 +321,7 @@ protected
 : contains the information about the plain text or encryption
   process that is to be integrity protected.
   The field is encoded in CBOR as a 'bstr' if present and the value
-  'null' if there is no data.
+  'nil' if there is no data.
   The contents of the protected field is a CBOR map of the protected
   data names and values.
   The map is CBOR encoded before placing it into the bstr.
@@ -318,25 +329,25 @@ protected
 
 unprotected
 : contains information about the plain text that is not integrity protected.
-  If there are no field, then the value 'null' is used.
+  If there are no field, then the value 'nil' is used.
   Only values associated with the current cipher text are to be placed in this location even if the value would apply to multiple recipient structures.
 
 iv
 : contains the initialization vector (IV), or it's equivalent, if one
   is needed by the encryption algorithm.
-  If there is no IV, then the value 'null' is used.
+  If there is no IV, then the value 'nil' is used.
 
 aad
 : contains additional authenticated data (aad) supplied by the application.
   This field contains information about the plain text data that is
   authenticated, but not encrypted.
-  If the application does not provide this data, the value 'null' is used.
+  If the application does not provide this data, the value 'nil' is used.
 
 cipherText
 : contains the encrypted plain text.
   If the cipherText is to be transported independently of the control
   information about the encryption process (i.e. detached content)
-  then the value 'null' is encoded here.
+  then the value 'nil' is encoded here.
 
 recipients
 :   contains the recipient information.
@@ -347,7 +358,7 @@ recipients
   *  A single COSE_encrypt element, encoded as an extension to the containing COSE_encrypt element, for a single recipient.
      Single recipients can be encoded either this way or as a single array element.
 
-  *  A 'null' value if there are no recipients.
+  *  A 'nil' value if there are no recipients.
 
 ## Key Management Methods
 
@@ -381,7 +392,7 @@ In COSE, all of the key management methods can be used for MAC-ed messages.
 The COSE_encrypt structure for the recipient is organized as follows:
 
 * The 'protected', 'iv', 'aad', 'ciphertext' and 'recipients' fields
-  MUST be null.
+  MUST be nil.
 
 * At a minimum, the 'unprotected' field SHOULD contain the 'alg'
   parameter as well as a parameter identifying the shared secret.
@@ -401,7 +412,7 @@ same content.
 
 The COSE_encrypt structure for the recipient is organized as follows:
 
-* The 'protected', 'aad', and 'recipients' fields MUST be null.
+* The 'protected', 'aad', and 'recipients' fields MUST be nil.
 
 * The plain text to be encrypted is the key from next layer down
   (usually the content layer).
@@ -422,7 +433,7 @@ The only current Key Encryption mode algorithm supported is RSAES-OAEP.
 
 The COSE_encrypt structure for the recipient is organized as follows:
 
-* The 'protected', 'aad', and 'iv' fields all use the 'null' value.
+* The 'protected', 'aad', and 'iv' fields all use the 'nil' value.
 
 * The plain text to be encrypted is the key from next layer down
   (usually the content layer).
@@ -444,7 +455,7 @@ on the message.  This method creates the CEK directly and that makes it difficul
 
 The COSE_encrypt structure for the recipient is organized as follows:
 
-* The 'protected', 'aad', and 'iv' fields all use the 'null' value.
+* The 'protected', 'aad', and 'iv' fields all use the 'nil' value.
 
 * At a minimum, the 'unprotected' field SHOULD contain the 'alg'
   parameter as well as a parameter identifying the asymmetric key.
@@ -460,7 +471,7 @@ algorithm.
 
 The COSE_encrypt structure for the recipient is organized as follows:
 
-* The 'protected', 'aad', and 'iv' fields all use the 'null' value.
+* The 'protected', 'aad', and 'iv' fields all use the 'nil' value.
 
 * The plain text to be encrypted is the key from next layer down
   (usually the content layer).
@@ -475,10 +486,12 @@ The encryption algorithm for AEAD algorithms is fairly simple.
 In order to get a consistent encoding of the data to be authenticated, the Enc_structure is used to have canonical form of the AAD.
 
 ~~~~
-*Enc_structure : {
-   protected : bstr | null;
-   aad : bstr | null;
-}
+
+Enc_structure = [
+   protected : bstr / nil,
+   aad : bstr / nil
+]
+
 ~~~~
 
 1.   If there is protected data, CBOR encode the map to a byte string and place in the protected field of the Enc_structure and the COSE_Encrypt structure.
@@ -511,13 +524,14 @@ When using MAC operations, there are two modes in which it can be used.  The fir
 
 ~~~~
 
-COSE_mac :  {
-   protected : bstr | null;
-   unprotected" : map(tstr, .) | null;
-   payload : bstr;
-   tag : bstr;
-   recipients : COSE_encrypt_a* | COSE_encrypt | null;
-}
+COSE_mac = (
+   protected : bstr / nil,
+   unprotected : header_map / nil,
+   payload : bstr,
+   tag : bstr,
+   recipients : [+COSE_encrypt_a] / COSE_encrypt / nil;
+)
+
 ~~~~
 
 Field descriptions:
@@ -551,10 +565,12 @@ recipients
 
 
 ~~~~
+
 *MAC_structure : {
-   protected : bstr | null;
+   protected : bstr | nil;
    payload : bstr;
 }
+
 ~~~~~
 
 How to compute a MAC:
@@ -578,15 +594,16 @@ For COSE we use the same set of fields that were defined in
 
 ~~~~
 
-COSE_Key : map {
-    "kty" : tstr;
-    "use" : tstr;
-    "key_ops" : tstr*;
-    "alg" : tstr;
-    "kid" : tstr;
+COSE_Key = {
+    "kty" : tstr,
+    ? "use" : tstr,
+    ? "key_ops" : [+tstr],
+    ? "alg" : tstr,
+    ? "kid" : tstr,
+    + keys => values
 }
 
-*COSE_KeySet : COSE_Key*;
+COSE_KeySet = [+COSE_Key]
 ~~~~
 
 The element "kty" is a required element in a COSE_Key map.  
@@ -720,20 +737,20 @@ Encoded in CBOR - 118 bytes, content is 14 bytes long
 
 [
   2,
-  null,
+  nil,
   {
     "alg": "HS256"
   },
   h'436f6e74656e7420537472696e67',
   h'78956d858ee6c026ac630063627a4ce98d3003bc68e7c1e53b5b468331b69f93',
-  null,
+  nil,
   {
     "alg": "dir",
     "kid": "018c0ae5-4d9b-471b-bfd6-eef314bc7037"
   },
-  null,
-  null,
-  null
+  nil,
+  nil,
+  nil
 ]
 ~~~~
 
@@ -750,22 +767,22 @@ Encoded in CBOR - 162 bytes, content is 14 bytes long
 
 [
   2,
-  null,
+  nil,
   {
     "alg": "HS256"
   },
   h'436f6e74656e7420537472696e67',
   h'2ee486376b8b2a61fe526589ceb456e20919a68ebc0458431ef3e13ffe7b
     f698',
-  null,
+  nil,
   {
     "alg": "A128KW",
     "kid": "77c7e2b8-6e13-45cf-8672-617b5b45243a"
   },
-  null,
+  nil,
   h'4f6e9e6a3e43b79561ef602a2a9e629a437e8df90a7ff361acbdb1076c95
     5d0f25c660a67aee1bdf',
-  null
+  nil
 ]
 ~~~~
 
@@ -782,11 +799,11 @@ Encoded in CBOR - 216 bytes, content is 14 bytes long
 
 [
   1,
-  null,
+  nil,
   {"alg": "A128GCM"},
   h'656d6a73ccf1b35fb99044e1',
   h'd7b27b67a81b212ee513b148454fe2d571d51bb679239769f5d2299bb96b',
-  null,
+  nil,
   {
     "alg": "ECDH-ES",
     "epk": {
@@ -799,9 +816,9 @@ Encoded in CBOR - 216 bytes, content is 14 bytes long
       "kid": "meriadoc.brandybuck@buckland.example"
     }
   },
-  null,
-  null,
-  null
+  nil,
+  nil,
+  nil
 ]
 ~~~~
 
@@ -815,10 +832,10 @@ To make it easier to read, this uses CBOR's diagnostic notation rather than a bi
 
 [
   0,
-  null,
-  null,
+  nil,
+  nil,
   h'436f6e74656e7420537472696e67',
-  null,
+  nil,
   {
     "kid": "bilbo.baggins@hobbiton.example",
     "alg": "PS256"
@@ -847,12 +864,12 @@ Encoded in CBOR - 491 bytes, content is 14 bytes long
 
 [
   0,
-  null,
-  null,
+  nil,
+  nil,
   h'436f6e74656e7420537472696e67',
   [
     [
-      null,
+      nil,
       {
         "kid": "bilbo.baggins@hobbiton.example",
         "alg": "PS256"
@@ -869,7 +886,7 @@ Encoded in CBOR - 491 bytes, content is 14 bytes long
          5839896825da66a50'
     ],
     [
-      null,
+      nil,
       {
         "kid": "bilbo.baggins@hobbiton.example",
         "alg": "ES512"
