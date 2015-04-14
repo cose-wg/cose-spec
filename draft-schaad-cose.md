@@ -100,13 +100,9 @@ When the words appear in lower case, their natural language meaning is used.
 
 There currently is no standard CBOR grammar available for use by
 specifications.
-In this document, we use a modified version of the CBOR data
-definition language (CDDL) defined in
+In this document, we use the grammar defined in the CBOR data
+definition language (CDDL) 
 {{I-D.greevenbosch-appsawg-cbor-cddl}}.
-The differences between the defined grammar and the one we used are
-mostly self explanatory.
-The biggest difference being the addition of the choice operator '|'.
-Additionally, note the use of the nil value which is used to occupy a location in an array but to mark that the element is not present.
 
 
 # The COSE_MSG structure
@@ -123,7 +119,7 @@ of the individual structures as a stand alone component.
 
 COSE_MSG = [(
   &msg_type,
-  msg_content : [COSE_Sign] / [COSE_encrypt] / [COSE_mac]
+  msg_content : COSE_Sign / COSE_encrypt / COSE_mac
 )]
 
 msg_type = ( sign:1, encrypt:2, mac:3 )
@@ -378,9 +374,6 @@ At the moment we do not have any key management methods that allow for the use o
 
 In direct encryption mode, a shared secret between the sender and the
 recipient is used as the CEK.
-For direct encryption mode, no recipient structure is built.
-All of the information about the key is placed in either the protected
-or unprotected fields at the content level.
 When direct encryption mode is used, it MUST be the only mode used on the message.
 It is a massive security leak to have both direct encryption and a
 different key management mode on the same message.
@@ -445,10 +438,6 @@ The COSE_encrypt structure for the recipient is organized as follows:
 
 Direct Key Agreement derives the CEK from the shared secret computed
 by the key agreement operation.
-For Direct Key Agreement, no recipient structure is built.
-All of the information about the key and key agreement process is
-placed in either the 'protected' or 'unprotected' fields at the
-content level.
 
 When direct key agreement mode is used, it SHOULD be the only mode used
 on the message.  This method creates the CEK directly and that makes it difficult to mix with additional recipients.
