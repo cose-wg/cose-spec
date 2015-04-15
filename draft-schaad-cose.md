@@ -115,7 +115,7 @@ is identified.
 The presence of this structure does not preclude a protocol to use one
 of the individual structures as a stand alone component.
 
-~~~~ cddl-fragment
+~~~~ CDDL
 
 COSE_MSG = [
   &msg_type,
@@ -182,7 +182,7 @@ More detailed information on multiple signature evaluation can be found in {{RFC
 
 The CDDL grammar structure for a signature message is:
 
-~~~~  cddl-fragment
+~~~~ CDDL
 
 COSE_Sign = (
     protected : bstr / nil,
@@ -230,7 +230,7 @@ signatures
 
 The CDDL grammar structure for a signature is:
 
-~~~~  cddl-fragment
+~~~~ CDDL
 
 COSE_signature =  (
     protected : bstr / nil,
@@ -240,7 +240,7 @@ COSE_signature =  (
 
 ~~~~
 
-The fields is the structure have the following semantics:
+The fields in the structure have the following semantics:
 
 protected
 : contains additional information to be authenticated by the signature.
@@ -260,7 +260,7 @@ signature
 
 The COSE structure used to create the byte stream to be signed uses the following CDDL grammar structure:
 
-~~~~  cddl-fragment
+~~~~ CDDL
 
 Sig_structure = [
     body_protected : bstr / nil,
@@ -305,7 +305,7 @@ algorithms.
 
 The CDDL grammar structure for encryption is:
 
-~~~~  cddl-fragment
+~~~~ CDDL
 
 COSE_encrypt = (
   protected : bstr / nil,  ; Contains header_map
@@ -483,7 +483,7 @@ The COSE_encrypt structure for the recipient is organized as follows:
 The encryption algorithm for AEAD algorithms is fairly simple.  
 In order to get a consistent encoding of the data to be authenticated, the Enc_structure is used to have canonical form of the AAD.
 
-~~~~  cddl-fragment
+~~~~ CDDL
 
 Enc_structure = [
    protected : bstr / nil,
@@ -520,7 +520,7 @@ In this section we describe the structure and methods to be used when doing MAC 
 
 When using MAC operations, there are two modes in which it can be used.  The first is just a check that the content has not been changed since the MAC was computed.  Any of the key management methods can be used for this purpose.  The second mode is to both check that the content has not been changed since the MAC was computed, and to use key management to verify who sent it.  The key management modes that support this are ones that either use a pre-shared secret, or do static-static key agreement.  In both of these cases the entity MAC-ing the message can be validated by a key binding.  (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.)
 
-~~~~  cddl-fragment
+~~~~ CDDL
 
 COSE_mac = (
    protected : bstr / nil,
@@ -562,7 +562,7 @@ recipients
 :   contains the recipient information.  See the description under COSE_Encryption for more info.
 
 
-~~~~  cddl-fragment
+~~~~ CDDL
 
 MAC_structure = {
    protected : bstr / nil,
@@ -590,7 +590,7 @@ Those values, which in JOSE, are base64url encoded because they are binary value
 For COSE we use the same set of fields that were defined in
 {{I-D.ietf-jose-json-web-key}}.
 
-~~~~  cddl-fragment
+~~~~ CDDL
 
 COSE_Key = {
     "kty" : tstr,
@@ -732,7 +732,7 @@ To make it easier to read, this uses CBOR's diagnostic notation rather than a bi
 
 Encoded in CBOR - 118 bytes, content is 14 bytes long
 
-~~~~
+~~~~ CBORdiag
 
 [
   2,
@@ -762,7 +762,7 @@ To make it easier to read, this uses CBOR's diagnostic notation rather than a bi
 
 Encoded in CBOR - 162 bytes, content is 14 bytes long
 
-~~~~
+~~~~ CBORdiag
 
 [
   2,
@@ -794,7 +794,7 @@ To make it easier to read, this uses CBOR's diagnostic notation rather than a bi
 
 Encoded in CBOR - 216 bytes, content is 14 bytes long
 
-~~~~
+~~~~ CBORdiag
 
 [
   1,
@@ -812,8 +812,7 @@ Encoded in CBOR - 216 bytes, content is 14 bytes long
              e7a75c43bd1b966',
       "y": h'00d142a334ac8790dc821abe9362434daeb00c1b8b076843e51
              a4a4717b30c54ce'},
-      "kid": "meriadoc.brandybuck@buckland.example"
-    }
+    "kid": "meriadoc.brandybuck@buckland.example"
   },
   nil,
   nil,
@@ -827,7 +826,7 @@ This example has some features that are in questions but not yet cooperated in t
 
 To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
 
-~~~~
+~~~~ CBORdiag
 
 [
   0,
@@ -859,7 +858,7 @@ To make it easier to read, this uses CBOR's diagnostic notation rather than a bi
 
 Encoded in CBOR - 491 bytes, content is 14 bytes long
 
-~~~~
+~~~~ CBORdiag
 
 [
   0,
