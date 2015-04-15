@@ -115,12 +115,12 @@ is identified.
 The presence of this structure does not preclude a protocol to use one
 of the individual structures as a stand alone component.
 
-~~~~
+~~~~ cddl-fragment
 
-COSE_MSG = [(
+COSE_MSG = [
   &msg_type,
   msg_content : COSE_Sign / COSE_encrypt / COSE_mac
-)]
+]
 
 msg_type = ( sign:1, encrypt:2, mac:3 )
 
@@ -140,6 +140,16 @@ msg_content
 > msg_type 2 is used for COSE_encrypt
 
 > msg_type 3 is used for COSE_mac  
+
+NOTE: Alternative syntax with tags would be
+
+~~~~  cddl-fragment
+
+COSE_MSG = COSE_SignMessage / COSE_EncryptMessage / COSE_MacMessage
+
+~~~~
+
+Where we would need to define the latter two as tagged arrays like is currently done for COSE_SignedMessage.  There is no space savings in CBOR, this is strictly about using CBOR paradymes.  It is not clear what would happen if a JOSE serialization appeared, but that is probably not interesting.
 
 # Signing Structure
 
@@ -172,20 +182,19 @@ More detailed information on multiple signature evaluation can be found in {{RFC
 
 The CDDL grammar structure for a signature message is:
 
-~~~~
+~~~~  cddl-fragment
 
 COSE_Sign = (
-    protected : bstr / nil;
-    unprotected : header_map / nil;
-    payload : bstr / nil;
-    signatures: [+[COSE_signature]] / COSE_signature;
+    protected : bstr / nil,
+    unprotected : header_map / nil,
+    payload : bstr / nil,
+    signatures: [+[COSE_signature]] / COSE_signature
 )
 
-COSE_SignMessage = #6.999[ COSE_Sign ]
+COSE_SignMessage = #6.999([ COSE_Sign ])
 
 keys = int / tstr
-values = int / tstr / bstr / bool
-header_map = {+ keys => values }
+header_map = {+ keys => * }
 
 ~~~~
 
@@ -221,12 +230,12 @@ signatures
 
 The CDDL grammar structure for a signature is:
 
-~~~~
+~~~~  cddl-fragment
 
-COSE_signature :  (
-    protected : bstr | nil;
-    unprotected : header_map | nil;
-    signature : bstr;
+COSE_signature =  (
+    protected : bstr / nil,
+    unprotected : header_map / nil,
+    signature : bstr
 )
 
 ~~~~
@@ -251,12 +260,12 @@ signature
 
 The COSE structure used to create the byte stream to be signed uses the following CDDL grammar structure:
 
-~~~~
+~~~~  cddl-fragment
 
-*Sig_structure : [
-    body_protected : bstr | nil;
-    sign_protected : bstr | nil;
-    payload : bstr;
+Sig_structure = [
+    body_protected : bstr / nil,
+    sign_protected : bstr / nil,
+    payload : bstr
 ]
 
 ~~~~
@@ -296,16 +305,16 @@ algorithms.
 
 The CDDL grammar structure for encryption is:
 
-~~~~
+~~~~  cddl-fragment
 
 COSE_encrypt = (
-  protected : bstr / nil,   # Contains header_map
+  protected : bstr / nil,  ; Contains header_map
   unprotected : header_map / nil,
   iv : bstr / nil,
   aad : bstr / nil,
   ciphertext : bstr / nil,
-  recipients : [+COSE_encrypt_a] / COSE_encrypt / nil;
-}
+  recipients : [+COSE_encrypt_a] / COSE_encrypt / nil
+)
 
 COSE_encrypt_a = [COSE_encrypt]
 
@@ -474,7 +483,7 @@ The COSE_encrypt structure for the recipient is organized as follows:
 The encryption algorithm for AEAD algorithms is fairly simple.  
 In order to get a consistent encoding of the data to be authenticated, the Enc_structure is used to have canonical form of the AAD.
 
-~~~~
+~~~~  cddl-fragment
 
 Enc_structure = [
    protected : bstr / nil,
@@ -511,14 +520,14 @@ In this section we describe the structure and methods to be used when doing MAC 
 
 When using MAC operations, there are two modes in which it can be used.  The first is just a check that the content has not been changed since the MAC was computed.  Any of the key management methods can be used for this purpose.  The second mode is to both check that the content has not been changed since the MAC was computed, and to use key management to verify who sent it.  The key management modes that support this are ones that either use a pre-shared secret, or do static-static key agreement.  In both of these cases the entity MAC-ing the message can be validated by a key binding.  (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.)
 
-~~~~
+~~~~  cddl-fragment
 
 COSE_mac = (
    protected : bstr / nil,
    unprotected : header_map / nil,
    payload : bstr,
    tag : bstr,
-   recipients : [+COSE_encrypt_a] / COSE_encrypt / nil;
+   recipients : [+COSE_encrypt_a] / COSE_encrypt / nil
 )
 
 ~~~~
@@ -553,11 +562,11 @@ recipients
 :   contains the recipient information.  See the description under COSE_Encryption for more info.
 
 
-~~~~
+~~~~  cddl-fragment
 
-*MAC_structure : {
-   protected : bstr | nil;
-   payload : bstr;
+MAC_structure = {
+   protected : bstr / nil,
+   payload : bstr
 }
 
 ~~~~~
@@ -581,7 +590,7 @@ Those values, which in JOSE, are base64url encoded because they are binary value
 For COSE we use the same set of fields that were defined in
 {{I-D.ietf-jose-json-web-key}}.
 
-~~~~
+~~~~  cddl-fragment
 
 COSE_Key = {
     "kty" : tstr,
@@ -589,10 +598,11 @@ COSE_Key = {
     ? "key_ops" : [+tstr],
     ? "alg" : tstr,
     ? "kid" : tstr,
-    + keys => values
+    * keys => values
 }
 
 COSE_KeySet = [+COSE_Key]
+
 ~~~~
 
 The element "kty" is a required element in a COSE_Key map.  
