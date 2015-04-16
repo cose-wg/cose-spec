@@ -14,7 +14,6 @@ This represents a list of issues that needs to be discussed on the mailing list 
 
 4.  Indicator for which type of message we are looking at - Use integer or tagging?  This includes a question of registering for CBOR tagging of each type or just the top level type as well.  Do we even create a top level CBOR message type or group?  It would be useful for including in other specifications.
 
-
 6.  Mapping of strings to integers:  Is this global to both tags and values or just for tags?  Do we need to have a policy for having assignment ranges (tags, values, private use)?  Is this a single table or is it spread over multiple registries?  IANA considerations for updating the table?
 
 1.  Compression:  Do we keep it as is, remove it as being not useful, create a new message type just for compression?
@@ -29,7 +28,7 @@ This represents a list of issues that needs to be discussed on the mailing list 
 
 #  Encrypted Message Issues
 
-1.  Make Key Management more uniform:  This includes two different issues.  1) use a single structure for all of the different key management structures including direct by making a separation of layers.  2) Use the same structure as the base message.
+1.  Make Key Management more uniform:  This includes three different issues.  1) use a single structure for all of the different key management structures including direct by making a separation of layers.  2) Use the same structure as the base message.  3) deprecate use of 'enc' for 'alg' for different layers
 
 2.  Roll authentication tag into encrypted value
 
@@ -38,6 +37,7 @@ This represents a list of issues that needs to be discussed on the mailing list 
 4.  Add authenticated data to the recipient layer.
 
 5.  Key Management section:  Needs review of all of the requirements on presence and for readability.
+
 
 #  MAC Message Issues
 
@@ -55,7 +55,8 @@ This represents a list of issues that needs to be discussed on the mailing list 
 
 1.  Should kid be a binary rather than a text value?
 
-5.  Dealing with COSE keys. Sub items are: 1) define a new tag for this when used in structures.   2) IANA registrations of mime media types.
+5.  Dealing with COSE keys. Sub items are: 1) define a new tag for this when used in structures  (use 'epk', 'jwk', 'jku').   2) IANA registrations of mime media types.
 
 1.  Presence requirements:  Need to do a general review of what fields MUST and SHOULD be present in different messages.
 
+1.  Deprecate the usage of some headers:  'typ'
