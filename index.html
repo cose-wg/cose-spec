@@ -494,7 +494,7 @@ ul.toc a:first-child {
 
   <meta name="dct.creator" content="Schaad, J." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-schaad-cose-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2015-4-15" />
+  <meta name="dct.issued" scheme="ISO8601" content="2015-4-16" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  The work in this document is derived in part from the JSON web security documents using the same parameters and algorithm identifiers as they do." />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  The work in this document is derived in part from the JSON web security documents using the same parameters and algorithm identifiers as they do." />
 
@@ -515,10 +515,10 @@ ul.toc a:first-child {
 </tr>
 <tr>
   <td class="left">Intended status: Informational</td>
-  <td class="right">April 15, 2015</td>
+  <td class="right">April 16, 2015</td>
 </tr>
 <tr>
-  <td class="left">Expires: October 17, 2015</td>
+  <td class="left">Expires: October 18, 2015</td>
   <td class="right"></td>
 </tr>
 
@@ -539,7 +539,7 @@ ul.toc a:first-child {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on October 17, 2015.</p>
+<p>This Internet-Draft will expire on October 18, 2015.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -618,55 +618,34 @@ ul.toc a:first-child {
 <h1 id="rfc.section.2"><a href="#rfc.section.2">2.</a> <a href="#the-cosemsg-structure" id="the-cosemsg-structure">The COSE_MSG structure</a></h1>
 <p id="rfc.section.2.p.1">The COSE_MSG structure is a top level CBOR object which corresponds to the DataContent type in <a href="#RFC5652">[RFC5652]</a>.  This structure allows for a top level message to be sent which could be any of the different security services, where the security service is identified.  The presence of this structure does not preclude a protocol to use one of the individual structures as a stand alone component.</p>
 <pre>
-COSE_MSG = [(
-  &amp;msg_type,
-  msg_content : COSE_Sign / COSE_encrypt / COSE_mac
-)]
-
-msg_type = ( sign:1, encrypt:2, mac:3 )
+COSE_MSG = [sign:1, COSE_Sign] / [encrypt:2, COSE_encrypt] / [mac:3, COSE_mac]
 
 </pre>
-<p id="rfc.section.2.p.2">This structure is encoded as an array by CBOR.  Descriptions of the fields:</p>
-<p/>
+<p id="rfc.section.2.p.2">The top level of each of the COSE message structures are encoded as arrays.<br/> We use an integer to distingish bettwen the different security message types.  By looking at the integer in the first element, one can determine which security message is being used and thus what the syntax is for the rest of the elements in the array.</p>
+<p id="rfc.section.2.p.3">Implementations SHOULD be prepared to find an integer in the location which does not correspond to the values 0 to 2.  If this is found then the client MUST stop attempting to parse the structure and fail.  Clients need to recognize that the set of values could be extended at a later date, but should not provide a security service based on guesses of what is there.</p>
+<p id="rfc.section.2.p.4">NOTE: Alternative syntax with tags would be</p>
+<pre>
+COSE_MSG = COSE_SignedMessage / #6.998([COSE_encrypt]) / #6.999([COSE_mac])
 
-<dl>
-  <dt>msg_type</dt>
-  <dd style="margin-left: 8">indicates which of the security structures is in this block.</dd>
-  <dt>msg_content</dt>
-  <dd style="margin-left: 8">contains the top level fields for the security service provided.  The type in this field is based on the value of the field msg_type.</dd>
-</dl>
-<p/>
 
-<ul class="empty">
-  <li>msg_type 1 is used for COSE_sign</li>
-</ul>
-<p/>
-
-<ul class="empty">
-  <li>msg_type 2 is used for COSE_encrypt</li>
-</ul>
-<p/>
-
-<ul class="empty">
-  <li>msg_type 3 is used for COSE_mac</li>
-</ul>
+</pre>
+<p id="rfc.section.2.p.5">Where we would need to define the latter two as tagged arrays like is currently done for COSE_SignedMessage.<br/> There is no space savings in CBOR, this is strictly about using CBOR paradymes.  It is not clear what would happen if a JOSE serialization appeared, but that is probably not interesting.  If this path is used, then there is no extensibility for new messages types.  They would need to be defined on their own.</p>
 <h1 id="rfc.section.3"><a href="#rfc.section.3">3.</a> <a href="#signing-structure" id="signing-structure">Signing Structure</a></h1>
 <p id="rfc.section.3.p.1">The signature structure allows for one or more signatures to be applied to a message payload.  There are provisions for  attributes about the content and attributes about the signature to be carried along with the signature itself.  These attributes may be authenticated by the signature, or just present.  Examples of attributes about the content would be the type of content, when the content was created, and who created the content.  Examples of attributes about the signature would be the algorithm and key used to create the signature, when the signature was created, and counter-signatures.</p>
 <p id="rfc.section.3.p.2">When more than one signature is present, the successful validation of one signature associated with a given signer is usually treated as a successful signature by that signer.  However, there are some application environments where other rules are needed.  An application that employs a rule other than one valid signature for each signer must specify those rules.  Also, where simple matching of the signer identifier is not sufficient to determine whether the signatures were generated by the same signer, the application specification must describe how to determine which signatures were generated by the same signer.  Support of different communities of recipients is the primary reason that signers choose to include more than one signature.  For example, the COSE_Sign structure might include signatures generated with the RSA signature algorithm and with the Elliptic Curve Digital Signature Algorithm (ECDSA) signature algorithm.  This allows recipients to verify the signature associated with one algorithm or the other. (Source of text is <a href="#RFC5652">[RFC5652]</a>.) More detailed information on multiple signature evaluation can be found in <a href="#RFC5752">[RFC5752]</a>.</p>
 <p id="rfc.section.3.p.3">The CDDL grammar structure for a signature message is:</p>
 <pre>
 COSE_Sign = (
-    protected : bstr / nil;
-    unprotected : header_map / nil;
-    payload : bstr / nil;
-    signatures: [+[COSE_signature]] / COSE_signature;
+    protected : bstr / nil,
+    unprotected : header_map / nil,
+    payload : bstr / nil,
+    signatures: [+[COSE_signature]] / COSE_signature
 )
 
-COSE_SignMessage = #6.999[ COSE_Sign ]
+COSE_SignMessage = #6.997([ COSE_Sign ])
 
 keys = int / tstr
-values = int / tstr / bstr / bool
-header_map = {+ keys =&gt; values }
+header_map = {+ keys =&gt; any }
 
 </pre>
 <p id="rfc.section.3.p.4">The fields is the structure have the following semantics:</p>
@@ -684,10 +663,10 @@ header_map = {+ keys =&gt; values }
 </dl>
 <p id="rfc.section.3.p.6">The CDDL grammar structure for a signature is:</p>
 <pre>
-COSE_signature :  (
-    protected : bstr | nil;
-    unprotected : header_map | nil;
-    signature : bstr;
+COSE_signature =  (
+    protected : bstr / nil,
+    unprotected : header_map / nil,
+    signature : bstr
 )
 
 </pre>
@@ -704,10 +683,10 @@ COSE_signature :  (
 </dl>
 <p id="rfc.section.3.p.9">The COSE structure used to create the byte stream to be signed uses the following CDDL grammar structure:</p>
 <pre>
-*Sig_structure : [
-    body_protected : bstr | nil;
-    sign_protected : bstr | nil;
-    payload : bstr;
+Sig_structure = [
+    body_protected : bstr / nil,
+    sign_protected : bstr / nil,
+    payload : bstr
 ]
 
 </pre>
@@ -727,13 +706,13 @@ COSE_signature :  (
 <p id="rfc.section.4.p.3">The CDDL grammar structure for encryption is:</p>
 <pre>
 COSE_encrypt = (
-  protected : bstr / nil,   # Contains header_map
+  protected : bstr / nil,  ; Contains header_map
   unprotected : header_map / nil,
   iv : bstr / nil,
   aad : bstr / nil,
   ciphertext : bstr / nil,
-  recipients : [+COSE_encrypt_a] / COSE_encrypt / nil;
-}
+  recipients : [+COSE_encrypt_a] / COSE_encrypt / nil
+)
 
 COSE_encrypt_a = [COSE_encrypt]
 
@@ -853,7 +832,7 @@ COSE_mac = (
    unprotected : header_map / nil,
    payload : bstr,
    tag : bstr,
-   recipients : [+COSE_encrypt_a] / COSE_encrypt / nil;
+   recipients : [+COSE_encrypt_a] / COSE_encrypt / nil
 )
 
 </pre>
@@ -873,9 +852,9 @@ COSE_mac = (
   <dd style="margin-left: 8">contains the recipient information.  See the description under COSE_Encryption for more info.</dd>
 </dl>
 <pre>
-*MAC_structure : {
-   protected : bstr | nil;
-   payload : bstr;
+MAC_structure = {
+   protected : bstr / nil,
+   payload : bstr
 }
 
 </pre>
@@ -898,10 +877,11 @@ COSE_Key = {
     ? "key_ops" : [+tstr],
     ? "alg" : tstr,
     ? "kid" : tstr,
-    + keys =&gt; values
+    * keys =&gt; values
 }
 
 COSE_KeySet = [+COSE_Key]
+
 </pre>
 <p id="rfc.section.6.p.3">The element &#8220;kty&#8221; is a required element in a COSE_Key map.<br/> All other elements are optional and not all of the elements listed in <a href="#I-D.ietf-jose-json-web-key">[I-D.ietf-jose-json-web-key]</a> or <a href="#I-D.ietf-jose-json-web-algorithms">[I-D.ietf-jose-json-web-algorithms]</a> have been listed here even though they can all appear in a COSE_Key map.</p>
 <p id="rfc.section.6.p.4">The &#8220;key_ops&#8221; element is prefered over the &#8220;use&#8221; element as the information provided that way is more finely detailed about the operations allowed.  It is strongly suggested that this element be present for all keys.</p>
@@ -1079,7 +1059,7 @@ COSE_KeySet = [+COSE_Key]
 <p id="rfc.section.C.1.p.3">Encoded in CBOR - 118 bytes, content is 14 bytes long</p>
 <pre>
 [
-  2,
+  3,
   nil,
   {
     "alg": "HS256"
@@ -1102,7 +1082,7 @@ COSE_KeySet = [+COSE_Key]
 <p id="rfc.section.C.2.p.3">Encoded in CBOR - 162 bytes, content is 14 bytes long</p>
 <pre>
 [
-  2,
+  3,
   nil,
   {
     "alg": "HS256"
@@ -1127,7 +1107,7 @@ COSE_KeySet = [+COSE_Key]
 <p id="rfc.section.C.3.p.3">Encoded in CBOR - 216 bytes, content is 14 bytes long</p>
 <pre>
 [
-  1,
+  2,
   nil,
   {"alg": "A128GCM"},
   h'656d6a73ccf1b35fb99044e1',
@@ -1154,7 +1134,7 @@ COSE_KeySet = [+COSE_Key]
 <p id="rfc.section.C.4.p.2">To make it easier to read, this uses CBOR&#8217;s diagnostic notation rather than a binary dump.</p>
 <pre>
 [
-  0,
+  1,
   nil,
   nil,
   h'436f6e74656e7420537472696e67',
@@ -1180,7 +1160,7 @@ COSE_KeySet = [+COSE_Key]
 <p id="rfc.section.C.5.p.3">Encoded in CBOR - 491 bytes, content is 14 bytes long</p>
 <pre>
 [
-  0,
+  1,
   nil,
   nil,
   h'436f6e74656e7420537472696e67',
