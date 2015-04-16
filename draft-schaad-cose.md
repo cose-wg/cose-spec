@@ -117,29 +117,31 @@ of the individual structures as a stand alone component.
 
 ~~~~ CDDL
 
-COSE_MSG = [(
-  &msg_type,
-  msg_content : COSE_Sign / COSE_encrypt / COSE_mac
-)]
-
-msg_type = ( sign:1, encrypt:2, mac:3 )
+COSE_MSG = [sign:1, COSE_Sign] / [encrypt:2, COSE_encrypt] / [mac:3, COSE_mac]
 
 ~~~~
 
-This structure is encoded as an array by CBOR.
-Descriptions of the fields:
+The top level of each of the COSE message structures are encoded as arrays.  
+We use an integer to distingish bettwen the different security message types.
+By looking at the integer in the first element, one can determine which security message is
+being used and thus what the syntax is for the rest of the elements in the array.
 
-msg_type
-: indicates which of the security structures is in this block.
+Implementations SHOULD be prepared to find an integer in the location which does not correspond to the values 0 to 2.
+If this is found then the client MUST stop attempting to parse the structure and fail.
+Clients need to recognize that the set of values could be extended at a later date, but should not provide a security service based on guesses of what is there.
 
-msg_content
-: contains the top level fields for the security service provided.  The type in this field is based on the value of the field msg_type.
-  
-> msg_type 1 is used for COSE_sign
+NOTE: Alternative syntax with tags would be
 
-> msg_type 2 is used for COSE_encrypt
+~~~~  
 
-> msg_type 3 is used for COSE_mac  
+COSE_MSG = COSE_SignedMessage / #6.998([COSE_encrypt]) / #6.999([COSE_mac])
+
+
+~~~~
+
+Where we would need to define the latter two as tagged arrays like is currently done for COSE_SignedMessage.  
+There is no space savings in CBOR, this is strictly about using CBOR paradymes.  It is not clear what would happen if a JOSE serialization appeared, but that is probably not interesting.
+If this path is used, then there is no extensibility for new messages types.  They would need to be defined on their own.
 
 # Signing Structure
 
@@ -175,17 +177,16 @@ The CDDL grammar structure for a signature message is:
 ~~~~ CDDL
 
 COSE_Sign = (
-    protected : bstr / nil;
-    unprotected : header_map / nil;
-    payload : bstr / nil;
-    signatures: [+[COSE_signature]] / COSE_signature;
+    protected : bstr / nil,
+    unprotected : header_map / nil,
+    payload : bstr / nil,
+    signatures: [+[COSE_signature]] / COSE_signature
 )
 
-COSE_SignMessage = #6.999[ COSE_Sign ]
+COSE_SignMessage = #6.997([ COSE_Sign ])
 
 keys = int / tstr
-values = int / tstr / bstr / bool
-header_map = {+ keys => values }
+header_map = {+ keys => any }
 
 ~~~~
 
@@ -223,10 +224,10 @@ The CDDL grammar structure for a signature is:
 
 ~~~~ CDDL
 
-COSE_signature :  (
-    protected : bstr | nil;
-    unprotected : header_map | nil;
-    signature : bstr;
+COSE_signature =  (
+    protected : bstr / nil,
+    unprotected : header_map / nil,
+    signature : bstr
 )
 
 ~~~~
@@ -253,10 +254,10 @@ The COSE structure used to create the byte stream to be signed uses the followin
 
 ~~~~ CDDL
 
-*Sig_structure : [
-    body_protected : bstr | nil;
-    sign_protected : bstr | nil;
-    payload : bstr;
+Sig_structure = [
+    body_protected : bstr / nil,
+    sign_protected : bstr / nil,
+    payload : bstr
 ]
 
 ~~~~
@@ -299,13 +300,13 @@ The CDDL grammar structure for encryption is:
 ~~~~ CDDL
 
 COSE_encrypt = (
-  protected : bstr / nil,   # Contains header_map
+  protected : bstr / nil,  ; Contains header_map
   unprotected : header_map / nil,
   iv : bstr / nil,
   aad : bstr / nil,
   ciphertext : bstr / nil,
-  recipients : [+COSE_encrypt_a] / COSE_encrypt / nil;
-}
+  recipients : [+COSE_encrypt_a] / COSE_encrypt / nil
+)
 
 COSE_encrypt_a = [COSE_encrypt]
 
@@ -518,7 +519,7 @@ COSE_mac = (
    unprotected : header_map / nil,
    payload : bstr,
    tag : bstr,
-   recipients : [+COSE_encrypt_a] / COSE_encrypt / nil;
+   recipients : [+COSE_encrypt_a] / COSE_encrypt / nil
 )
 
 ~~~~
@@ -555,9 +556,9 @@ recipients
 
 ~~~~ CDDL
 
-*MAC_structure : {
-   protected : bstr | nil;
-   payload : bstr;
+MAC_structure = {
+   protected : bstr / nil,
+   payload : bstr
 }
 
 ~~~~~
@@ -589,10 +590,11 @@ COSE_Key = {
     ? "key_ops" : [+tstr],
     ? "alg" : tstr,
     ? "kid" : tstr,
-    + keys => values
+    * keys => values
 }
 
 COSE_KeySet = [+COSE_Key]
+
 ~~~~
 
 The element "kty" is a required element in a COSE_Key map.  
@@ -725,7 +727,7 @@ Encoded in CBOR - 118 bytes, content is 14 bytes long
 ~~~~ CBORdiag
 
 [
-  2,
+  3,
   nil,
   {
     "alg": "HS256"
@@ -755,7 +757,7 @@ Encoded in CBOR - 162 bytes, content is 14 bytes long
 ~~~~ CBORdiag
 
 [
-  2,
+  3,
   nil,
   {
     "alg": "HS256"
@@ -787,7 +789,7 @@ Encoded in CBOR - 216 bytes, content is 14 bytes long
 ~~~~ CBORdiag
 
 [
-  1,
+  2,
   nil,
   {"alg": "A128GCM"},
   h'656d6a73ccf1b35fb99044e1',
@@ -819,7 +821,7 @@ To make it easier to read, this uses CBOR's diagnostic notation rather than a bi
 ~~~~ CBORdiag
 
 [
-  0,
+  1,
   nil,
   nil,
   h'436f6e74656e7420537472696e67',
@@ -851,7 +853,7 @@ Encoded in CBOR - 491 bytes, content is 14 bytes long
 ~~~~ CBORdiag
 
 [
-  0,
+  1,
   nil,
   nil,
   h'436f6e74656e7420537472696e67',
