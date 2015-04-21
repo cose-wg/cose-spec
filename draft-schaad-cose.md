@@ -117,7 +117,9 @@ of the individual structures as a stand alone component.
 
 ~~~~ CDDL
 
-COSE_MSG = [sign:1, COSE_Sign] / [encrypt:2, COSE_encrypt] / [mac:3, COSE_mac]
+COSE_MSG = [sign:1, COSE_Sign] / 
+        [encrypt:2, COSE_encrypt] / 
+        [mac:3, COSE_mac]
 
 ~~~~
 
@@ -134,8 +136,9 @@ NOTE: Alternative syntax with tags would be
 
 ~~~~  
 
-COSE_MSG = COSE_SignedMessage / #6.998([COSE_encrypt]) / #6.999([COSE_mac])
-
+COSE_MSG = COSE_SignedMessage / 
+        #6.998([COSE_encrypt]) / 
+        #6.999([COSE_mac])
 
 ~~~~
 
@@ -177,10 +180,11 @@ The CDDL grammar structure for a signature message is:
 ~~~~ CDDL
 
 COSE_Sign = (
-    protected : bstr / nil,
-    unprotected : header_map / nil,
-    payload : bstr / nil,
-    signatures: [+[COSE_signature]] / COSE_signature
+    protected : (bstr / nil),
+    unprotected : (header_map / nil),
+    payload : (bstr / nil),
+    ? signatures: ([+[COSE_signature]] / nil),
+    ? COSE_signature
 )
 
 COSE_SignMessage = #6.997([ COSE_Sign ])
@@ -225,8 +229,8 @@ The CDDL grammar structure for a signature is:
 ~~~~ CDDL
 
 COSE_signature =  (
-    protected : bstr / nil,
-    unprotected : header_map / nil,
+    protected : (bstr / nil),
+    unprotected : (header_map / nil),
     signature : bstr
 )
 
@@ -255,8 +259,8 @@ The COSE structure used to create the byte stream to be signed uses the followin
 ~~~~ CDDL
 
 Sig_structure = [
-    body_protected : bstr / nil,
-    sign_protected : bstr / nil,
+    body_protected : (bstr / nil),
+    sign_protected : (bstr / nil),
     payload : bstr
 ]
 
@@ -300,12 +304,13 @@ The CDDL grammar structure for encryption is:
 ~~~~ CDDL
 
 COSE_encrypt = (
-  protected : bstr / nil,  ; Contains header_map
-  unprotected : header_map / nil,
-  iv : bstr / nil,
-  aad : bstr / nil,
-  ciphertext : bstr / nil,
-  recipients : [+COSE_encrypt_a] / COSE_encrypt / nil
+  protected : (bstr / nil),  ; Contains header_map
+  unprotected : (header_map / nil),
+  iv : (bstr / nil),
+  aad : (bstr / nil),
+  ciphertext : (bstr / nil),
+  ? recipients : ([+COSE_encrypt_a] / nil) 
+  ? COSE_encrypt
 )
 
 COSE_encrypt_a = [COSE_encrypt]
@@ -478,8 +483,8 @@ In order to get a consistent encoding of the data to be authenticated, the Enc_s
 ~~~~ CDDL
 
 Enc_structure = [
-   protected : bstr / nil,
-   aad : bstr / nil
+   protected : (bstr / nil),
+   aad : (bstr / nil)
 ]
 
 ~~~~
@@ -515,11 +520,12 @@ When using MAC operations, there are two modes in which it can be used.  The fir
 ~~~~ CDDL
 
 COSE_mac = (
-   protected : bstr / nil,
-   unprotected : header_map / nil,
+   protected : (bstr / nil),
+   unprotected : (header_map / nil),
    payload : bstr,
    tag : bstr,
-   recipients : [+COSE_encrypt_a] / COSE_encrypt / nil
+   ?recipients : ([+COSE_encrypt_a] / nil)
+   ? COSE_encrypt
 )
 
 ~~~~
@@ -557,7 +563,7 @@ recipients
 ~~~~ CDDL
 
 MAC_structure = {
-   protected : bstr / nil,
+   protected : (bstr / nil),
    payload : bstr
 }
 
@@ -728,20 +734,20 @@ Encoded in CBOR - 118 bytes, content is 14 bytes long
 
 [
   3,
-  nil,
+  null,
   {
     "alg": "HS256"
   },
   h'436f6e74656e7420537472696e67',
   h'78956d858ee6c026ac630063627a4ce98d3003bc68e7c1e53b5b468331b69f93',
-  nil,
+  null,
   {
     "alg": "dir",
     "kid": "018c0ae5-4d9b-471b-bfd6-eef314bc7037"
   },
-  nil,
-  nil,
-  nil
+  null,
+  null,
+  null
 ]
 ~~~~
 
@@ -758,22 +764,22 @@ Encoded in CBOR - 162 bytes, content is 14 bytes long
 
 [
   3,
-  nil,
+  null,
   {
     "alg": "HS256"
   },
   h'436f6e74656e7420537472696e67',
   h'2ee486376b8b2a61fe526589ceb456e20919a68ebc0458431ef3e13ffe7b
     f698',
-  nil,
+  null,
   {
     "alg": "A128KW",
     "kid": "77c7e2b8-6e13-45cf-8672-617b5b45243a"
   },
-  nil,
+  null,
   h'4f6e9e6a3e43b79561ef602a2a9e629a437e8df90a7ff361acbdb1076c95
     5d0f25c660a67aee1bdf',
-  nil
+  null
 ]
 ~~~~
 
@@ -790,11 +796,11 @@ Encoded in CBOR - 216 bytes, content is 14 bytes long
 
 [
   2,
-  nil,
+  null,
   {"alg": "A128GCM"},
   h'656d6a73ccf1b35fb99044e1',
   h'd7b27b67a81b212ee513b148454fe2d571d51bb679239769f5d2299bb96b',
-  nil,
+  null,
   {
     "alg": "ECDH-ES",
     "epk": {
@@ -806,9 +812,9 @@ Encoded in CBOR - 216 bytes, content is 14 bytes long
              a4a4717b30c54ce'},
     "kid": "meriadoc.brandybuck@buckland.example"
   },
-  nil,
-  nil,
-  nil
+  null,
+  null,
+  null
 ]
 ~~~~
 
@@ -822,10 +828,10 @@ To make it easier to read, this uses CBOR's diagnostic notation rather than a bi
 
 [
   1,
-  nil,
-  nil,
+  null,
+  null,
   h'436f6e74656e7420537472696e67',
-  nil,
+  null,
   {
     "kid": "bilbo.baggins@hobbiton.example",
     "alg": "PS256"
@@ -854,12 +860,12 @@ Encoded in CBOR - 491 bytes, content is 14 bytes long
 
 [
   1,
-  nil,
-  nil,
+  null,
+  null,
   h'436f6e74656e7420537472696e67',
   [
     [
-      nil,
+      null,
       {
         "kid": "bilbo.baggins@hobbiton.example",
         "alg": "PS256"
@@ -876,7 +882,7 @@ Encoded in CBOR - 491 bytes, content is 14 bytes long
          5839896825da66a50'
     ],
     [
-      nil,
+      null,
       {
         "kid": "bilbo.baggins@hobbiton.example",
         "alg": "ES512"
