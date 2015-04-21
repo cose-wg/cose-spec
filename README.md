@@ -18,8 +18,7 @@ Be aware that all contributions to the specification fall under the "NOTE WELL"
 terms outlined below.
 
 1. The best way to provide feedback (editorial or design) and ask questions is
-sending an e-mail to [our mailing
-list](https://www.ietf.org/mailman/listinfo/COSE) (when we get one). This will ensure that
+sending an e-mail to cose@ietf.org (https://www.ietf.org/mailman/listinfo/COSE). This will ensure that
 the entire Working Group sees your input in a timely fashion.
 
 2. If you have **editorial** suggestions (i.e., those that do not change the
