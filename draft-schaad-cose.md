@@ -722,33 +722,44 @@ These levels would be:
 
 # Examples
 
+The examples can be found at https://github.com/cose-wg/Examples.  I am currently still in the process of getting the examples up there along with some control information for people to be albe to check and reproduce the examples.
+
 ## Direct MAC
 
 This example has some features that are in questions but not yet incorporated in the document.
 
 To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
 
-Encoded in CBOR - 118 bytes, content is 14 bytes long
+This example is uses HMAC with SHA-256 as the digest algorithm.  The key manangment is uses two static ECDH keys along with HKDF to directly derive the key used in the HMAC operation.
 
 ~~~~ CBORdiag
 
 [
   3,
+  h'a163616c67654853323536',
   null,
-  {
-    "alg": "HS256"
-  },
-  h'436f6e74656e7420537472696e67',
-  h'78956d858ee6c026ac630063627a4ce98d3003bc68e7c1e53b5b468331b69f93',
+  h'596f752063616e20747275737420757320746f20737469636b20776974682079
+    6f75207468726f75676820746869636b20616e64207468696e3f746f20746865
+    2062697474657220656e642e20416e6420796f752063616e2074727573742075
+    7320746f206b65657020616e7920736563726574206f6620796f7572733f636c
+    6f736572207468616e20796f75206b65657020697420796f757273656c662e20
+    42757420796f752063616e6e6f7420747275737420757320746f206c65742079
+    6f7520666163652074726f75626c6520616c6f6e652c20616e6420676f206f66
+    6620776974686f7574206120776f72642e2057652061726520796f7572206672
+    69656e64732c2046726f646f2e',
+  h'18adb1630f27643924f584e319b284463ef44116b5f863a5c048a546e26c804a',
   null,
-  {
-    "alg": "dir",
-    "kid": "018c0ae5-4d9b-471b-bfd6-eef314bc7037"
-  },
-  null,
-  null,
-  null
+  {"alg": "ECDH-SS",
+   "kid": "meriadoc.brandybuck@buckland.example",
+   "spk": {"kid": "peregrin.took@tuckborough.example"},
+   "apu": h'4d8553e7e74f3c6a3a9dd3ef286a8195cbf8a23d19558ccfec7d34b8
+     24f42d92bd06bd2c7f0271f0214e141fb779ae2856abf585a58368b017e7f2a
+     9e5ce4db5'},
+   null,
+   null,
+   null
 ]
+
 ~~~~
 
 
@@ -758,31 +769,73 @@ This example has some features that are in questions but not yet incorporated in
 
 To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
 
-Encoded in CBOR - 162 bytes, content is 14 bytes long
+This exmple uses AES-128-MAC trucated to 64-bits as the digest algorithm.  It uses AES-256 Key wrap for the key manangment algorithm wrapping the 128-bit key used for the digest algorthm.
 
 ~~~~ CBORdiag
 
-[
-  3,
-  null,
-  {
-    "alg": "HS256"
-  },
-  h'436f6e74656e7420537472696e67',
-  h'2ee486376b8b2a61fe526589ceb456e20919a68ebc0458431ef3e13ffe7b
-    f698',
-  null,
-  {
-    "alg": "A128KW",
-    "kid": "77c7e2b8-6e13-45cf-8672-617b5b45243a"
-  },
-  null,
-  h'4f6e9e6a3e43b79561ef602a2a9e629a437e8df90a7ff361acbdb1076c95
-    5d0f25c660a67aee1bdf',
-  null
-]
+[3, h'a163616c676e4145532d3132382d4d41432d3634', null, h'596f75206
+3616e20747275737420757320746f20737469636b207769746820796f752074687
+26f75676820746869636b20616e64207468696e3f746f207468652062697474657
+220656e642e20416e6420796f752063616e20747275737420757320746f206b656
+57020616e7920736563726574206f6620796f7572733f636c6f736572207468616
+e20796f75206b65657020697420796f757273656c662e2042757420796f7520636
+16e6e6f7420747275737420757320746f206c657420796f7520666163652074726
+f75626c6520616c6f6e652c20616e6420676f206f666620776974686f757420612
+0776f72642e2057652061726520796f757220667269656e64732c2046726f646f2
+e', h'474102be6c96d590', [[null, {"alg": "A256KW", "kid": 
+"018c0ae5-4d9b-471b-bfd6-eef314bc7037"}, null, h'711ab0dc2fc4585dc
+e27effa6781c8093eba906f227b6eb0', null]]]
+
 ~~~~
 
+##  Multi-recipient MAC message
+
+This example has some features that are in questions but not yet incorporated in the document.
+
+To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
+
+This example uses HMAC with SHA-256 for the digest algorithm.  There are three different key manangment techniques applied:
+
+* An ephemeral static ECDH key agrement operation using AES-128 key wrap on the digest key.
+
+* Key transport using RSA-OAEP with SHA-256 for the hash and the mfg function operations.
+
+*  AES 256-bit Key wrap using a pre-shared secret.
+
+~~~~ CBORdiag
+
+[3, h'a163616c67654853323536', null, h'596f752063616e2074727573742
+0757320746f20737469636b207769746820796f75207468726f756768207468696
+36b20616e64207468696e3f746f207468652062697474657220656e642e20416e6
+420796f752063616e20747275737420757320746f206b65657020616e792073656
+3726574206f6620796f7572733f636c6f736572207468616e20796f75206b65657
+020697420796f757273656c662e2042757420796f752063616e6e6f74207472757
+37420757320746f206c657420796f7520666163652074726f75626c6520616c6f6
+e652c20616e6420676f206f666620776974686f7574206120776f72642e2057652
+061726520796f757220667269656e64732c2046726f646f2e', h'87072b78b740
+be1bd34176983fea202f031675753d74978c5eb6050169766d3b', [[null, 
+{"alg": "ECDH-ES+A128KW", "kid": "bilbo.baggins@hobbiton.example",
+ "epk": {"kty": "EC", "crv": "P-521", "x": h'01b77bff3e35f9c9c3b7f
+5263911655303dd9a45d5fc6b6c629a8fb34715c73bca4f61dcf25ea57df50ad07
+269130298f8fc3476d6c077943ad08214bc0bae80b3bc', "y": h'1b366dcc649
+00a6d24fbe9a1d844baf0cfc7e0ffa11cac3ebb4dea7839fa41e244cbc148fa5de
+51ecec2d03a76f035e0f0f3d679d26fa6221552efef37e6ea7548'}}, null, 
+h'3b256a47bb9a9b84616da0165f35eec4f264a4e06dff39a899802fb0665231c2
+0f6b0d7b8fc70952', null], [null, {"alg": "RSA-OAEP-256", "kid": 
+"bilbo.baggins@hobbiton.example"}, null, h'6b9814171c92c594ab345b4
+9023e0ce9628f374f657d3fc6745ccb0fd6a367471a8ab7766e8aace7adb0f59f5
+e750f9c7c0deaa503061e46836b04ae69f8aa26cc63ef978cc03a505acccc0b9e0
+cc52f9eb82b4590aa2aa33d86da3152a6a2c3b01b33afa471298471f3018bbcd8a
+b5aa7b778cc96bc85b65752e71c06ac553661e01fd786413ba26d5d0f4a4406669
+b55db6e08af61dd92a287d0e2cd1497b28e4691ab64de9925ae7d41c7ea3015b0c
+a3e16d98caeac6828f58a696d3a767682100d13b7c6168ac94e9505eb54b77c598
+5dc86edacfd61e063b2aa6b23e24e390c83614cce27e054f0220ee4c6cd5696e2a
+237d0d86700d3d7d718b4ff6b9b', null], [null, {"alg": "A256KW", 
+"kid": "018c0ae5-4d9b-471b-bfd6-eef314bc7037"}, null, h'02a8d3017e
+57088df19104fa492ede156e6a24f7b2b11eeed0fffefcf8f3f2fcadbfbec97267
+7027', null]]]
+
+~~~~
 
 ## Direct ECDH
 
