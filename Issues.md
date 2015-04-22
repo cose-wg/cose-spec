@@ -4,21 +4,21 @@ This represents a list of issues that needs to be discussed on the mailing list 
 
 #  General Issues
 
-1.  Switch to using arrays for some maps.  Issues includes which maps are to be changed and if null types or absent values are to be used.
+1.  Switch to using arrays for some maps.  Issues includes which maps are to be changed and if null types or absent values are to be used.  **Discussion start 4/21/2015**
 
-2.  Create new top level type for MAC
+2.  Create new top level type for MAC  **Discussion start 4/21/2015**
 
 3.  CBOR encodings - use binary not base64 - criteria of decisions and indication of which is used
 
-4.  Use CBOR encoding for building octet strings to be cryptographically processed.
+4.  Use CBOR encoding for building octet strings to be cryptographically processed.  *Issue #12*
 
-4.  Indicator for which type of message we are looking at - Use integer or tagging?  This includes a question of registering for CBOR tagging of each type or just the top level type as well.  Do we even create a top level CBOR message type or group?  It would be useful for including in other specifications.
+4.  Indicator for which type of message we are looking at - Use integer or tagging?  This includes a question of registering for CBOR tagging of each type or just the top level type as well.  Do we even create a top level CBOR message type or group?  It would be useful for including in other specifications. *Issue #17*
 
-6.  Mapping of strings to integers:  Is this global to both tags and values or just for tags?  Do we need to have a policy for having assignment ranges (tags, values, private use)?  Is this a single table or is it spread over multiple registries?  IANA considerations for updating the table?
+6.  Mapping of strings to integers:  Is this global to both tags and values or just for tags?  Do we need to have a policy for having assignment ranges (tags, values, private use)?  Is this a single table or is it spread over multiple registries?  IANA considerations for updating the table?  *Issue #11*
 
-1.  Compression:  Do we keep it as is, remove it as being not useful, create a new message type just for compression?
+1.  Compression:  Do we keep it as is, remove it as being not useful, create a new message type just for compression?  *Issue #6*
 
-1.  Strict Mode encoding:  Do we only allow for strict on everything for just on some things?  Possible sub issue here is do we keep the binary wrapping on all of the maps or not?  There is a possibility to say re-encode canonically.
+1.  Strict Mode encoding:  Do we only allow for strict on everything for just on some things?  Possible sub issue here is do we keep the binary wrapping on all of the maps or not?  There is a possibility to say re-encode canonically. *Issue #19*  *Issue #18*
 
 1.  Flattened encoding:  Is there a need to do a flattened encoding or should it be eliminated?
 
@@ -34,7 +34,7 @@ This represents a list of issues that needs to be discussed on the mailing list 
 
 3.  Deal with authenticated data that is in the message and authenticated data that is parallel to the message.  (i.e. outer message headers)
 
-4.  Add authenticated data to the recipient layer.
+4.  Add authenticated data to the recipient layer.  *Issue #24*
 
 5.  Key Management section:  Needs review of all of the requirements on presence and for readability.
 
@@ -43,19 +43,19 @@ This represents a list of issues that needs to be discussed on the mailing list 
 
 1.  Adding in key management
 
-2.  IANA considerations to add mac operations to the current key_ops field.
+2.  IANA considerations to add mac operations to the current key_ops field.  *Issue #20*
 
 # Algorithm Issues
 
-1.  Are we allowing all of the JOSE algorithms across or are we going to deprecate some of them.
+1.  Are we allowing all of the JOSE algorithms across or are we going to deprecate some of them.  *Issue #14*
 
-2.  Define a key wrap mode (AES-GCM or CCM) to allow for authenticated attributes at the wrapping level.
+2.  Define a key wrap mode (AES-GCM or CCM) to allow for authenticated attributes at the wrapping level. *Issue #24*
 
 # Attribute specific issues
 
-1.  Should kid be a binary rather than a text value?
+1.  Should kid be a binary rather than a text value?  *Issue #10*
 
-5.  Dealing with COSE keys. Sub items are: 1) define a new tag for this when used in structures  (use 'epk', 'jwk', 'jku').   2) IANA registrations of mime media types.
+5.  Dealing with COSE keys. Sub items are: 1) define a new tag for this when used in structures  (use 'epk', 'jwk', 'jku').   2) IANA registrations of mime media types.   *Issue #9*  *Issue #5*
 
 1.  Presence requirements:  Need to do a general review of what fields MUST and SHOULD be present in different messages.
 
