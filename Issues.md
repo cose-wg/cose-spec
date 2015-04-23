@@ -38,6 +38,7 @@ This represents a list of issues that needs to be discussed on the mailing list 
 
 5.  Key Management section:  Needs review of all of the requirements on presence and for readability.
 
+6.  Key Management section: How distict are the different sections?  How much overlap between them is ther?  Is it possible to have only necessary ones  **Source: STF**
 
 #  MAC Message Issues
 
