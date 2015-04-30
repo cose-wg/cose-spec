@@ -6,13 +6,13 @@ This represents a list of issues that needs to be discussed on the mailing list 
 
 1.  Switch to using arrays for some maps.  Issues includes which maps are to be changed and if null types or absent values are to be used.  **Discussion start 4/21/2015**
 
-2.  Create new top level type for MAC  **Discussion start 4/21/2015**
+2.  Create new top level type for MAC  **Discussion start 4/21/2015 Discussion end 4/30/2015  Decision - Make this change **
 
 3.  CBOR encodings - use binary not base64 - criteria of decisions and indication of which is used
 
 4.  Use CBOR encoding for building octet strings to be cryptographically processed.  *Issue #12*
 
-4.  Indicator for which type of message we are looking at - Use integer or tagging?  This includes a question of registering for CBOR tagging of each type or just the top level type as well.  Do we even create a top level CBOR message type or group?  It would be useful for including in other specifications. *Issue #17*
+4.  Indicator for which type of message we are looking at - Use integer or tagging?  This includes a question of registering for CBOR tagging of each type or just the top level type as well.  Do we even create a top level CBOR message type or group?  It would be useful for including in other specifications. *Issue #17* ** Discussion start 4/30/15 **
 
 6.  Mapping of strings to integers:  Is this global to both tags and values or just for tags?  Do we need to have a policy for having assignment ranges (tags, values, private use)?  Is this a single table or is it spread over multiple registries?  IANA considerations for updating the table?  *Issue #11*
 
@@ -20,7 +20,7 @@ This represents a list of issues that needs to be discussed on the mailing list 
 
 1.  Strict Mode encoding:  Do we only allow for strict on everything for just on some things?  Possible sub issue here is do we keep the binary wrapping on all of the maps or not?  There is a possibility to say re-encode canonically. *Issue #19*  *Issue #18*
 
-1.  Flattened encoding:  Is there a need to do a flattened encoding or should it be eliminated?
+1.  Flattened encoding:  Is there a need to do a flattened encoding or should it be eliminated? ** Discussion start 4/30/15 **
 
 #  Signed Message Issues
 
@@ -28,7 +28,7 @@ This represents a list of issues that needs to be discussed on the mailing list 
 
 #  Encrypted Message Issues
 
-1.  Make Key Management more uniform:  This includes three different issues.  1) use a single structure for all of the different key management structures including direct by making a separation of layers.  2) Use the same structure as the base message.  3) deprecate use of 'enc' for 'alg' for different layers
+1.  Make Key Management more uniform:  This includes three different issues.  1) use a single structure for all of the different key management structures including direct by making a separation of layers.  2) Use the same structure as the base message.  3) deprecate use of 'enc' for 'alg' for different layers ** Discussion start 4/30/15 **
 
 2.  Roll authentication tag into encrypted value
 
@@ -38,6 +38,7 @@ This represents a list of issues that needs to be discussed on the mailing list 
 
 5.  Key Management section:  Needs review of all of the requirements on presence and for readability.
 
+6.  Key Management section: How distict are the different sections?  How much overlap between them is ther?  Is it possible to have only necessary ones  **Source: STF**
 
 #  MAC Message Issues
 
