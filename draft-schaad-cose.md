@@ -88,6 +88,8 @@ JOSE documents, two considerations are taking into account:
 
 * Remove the authentiction tag for encryption algorithms as a separate item.
 
+* Remove the flattened mode of encoding.  Forcing the use of an array of recipients at all times forces the message size to be two bytes larger, but one gets a corresponding decrease in the implementation size that should compenstate for this.
+
 ## Requirements Terminology
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
@@ -183,8 +185,7 @@ COSE_Sign = (
     protected : (bstr / nil),
     unprotected : (header_map / nil),
     payload : (bstr / nil),
-    ? signatures: ([+[COSE_signature]] / nil),
-    ? COSE_signature
+    signatures: ([+[COSE_signature]] / nil)
 )
 
 COSE_SignMessage = #6.997([ COSE_Sign ])
@@ -219,9 +220,7 @@ payload
   to ensure that it will be transported without changes.
 
 signatures
-: is either a single signature or an array of signature values.  
-  A single signature value can be represented using either data type.
-  Implementations MUST be able to parse both data types.
+: is an array of signature items.  Each of these items uses the COSE_signature structure for its representation.
 
 
 The CDDL grammar structure for a signature is:
@@ -309,8 +308,7 @@ COSE_encrypt = (
   iv : (bstr / nil),
   aad : (bstr / nil),
   ciphertext : (bstr / nil),
-  ? recipients : ([+COSE_encrypt_a] / nil) 
-  ? COSE_encrypt
+  recipients : ([+COSE_encrypt_a] / nil) 
 )
 
 COSE_encrypt_a = [COSE_encrypt]
@@ -353,12 +351,9 @@ cipherText
 
 recipients
 :   contains the recipient information.
-  The field can have one of three data types:
+  The field can have one of two data types:
 
   *  An array of COSE_encrypt elements, one for each recipient.
-
-  *  A single COSE_encrypt element, encoded as an extension to the containing COSE_encrypt element, for a single recipient.
-     Single recipients can be encoded either this way or as a single array element.
 
   *  A 'nil' value if there are no recipients.
 
@@ -525,7 +520,6 @@ COSE_mac = (
    payload : bstr,
    tag : bstr,
    ?recipients : ([+COSE_encrypt_a] / nil)
-   ? COSE_encrypt
 )
 
 ~~~~
@@ -748,16 +742,17 @@ This example is uses HMAC with SHA-256 as the digest algorithm.  The key manangm
     6620776974686f7574206120776f72642e2057652061726520796f7572206672
     69656e64732c2046726f646f2e',
   h'18adb1630f27643924f584e319b284463ef44116b5f863a5c048a546e26c804a',
-  null,
-  {"alg": "ECDH-SS",
-   "kid": "meriadoc.brandybuck@buckland.example",
-   "spk": {"kid": "peregrin.took@tuckborough.example"},
-   "apu": h'4d8553e7e74f3c6a3a9dd3ef286a8195cbf8a23d19558ccfec7d34b8
-     24f42d92bd06bd2c7f0271f0214e141fb779ae2856abf585a58368b017e7f2a
-     9e5ce4db5'},
-   null,
-   null,
-   null
+  [[null,
+   {"alg": "ECDH-SS",
+    "kid": "meriadoc.brandybuck@buckland.example",
+    "spk": {"kid": "peregrin.took@tuckborough.example"},
+    "apu": h'4d8553e7e74f3c6a3a9dd3ef286a8195cbf8a23d19558ccfec7d34b8
+      24f42d92bd06bd2c7f0271f0214e141fb779ae2856abf585a58368b017e7f2a
+      9e5ce4db5'},
+    null,
+    null,
+    null
+  ]]
 ]
 
 ~~~~
@@ -853,21 +848,22 @@ Encoded in CBOR - 216 bytes, content is 14 bytes long
   {"alg": "A128GCM"},
   h'656d6a73ccf1b35fb99044e1',
   h'd7b27b67a81b212ee513b148454fe2d571d51bb679239769f5d2299bb96b',
-  null,
-  {
-    "alg": "ECDH-ES",
-    "epk": {
-      "kty": "EC",
-      "crv": "P-256",
-      "x": h'00b81ff1de0eeba27613027526d83b5f4cbffaca433488e3805
-             e7a75c43bd1b966',
-      "y": h'00d142a334ac8790dc821abe9362434daeb00c1b8b076843e51
-             a4a4717b30c54ce'},
-    "kid": "meriadoc.brandybuck@buckland.example"
-  },
-  null,
-  null,
-  null
+  [[null,
+    {
+      "alg": "ECDH-ES",
+      "epk": {
+        "kty": "EC",
+        "crv": "P-256",
+        "x": h'00b81ff1de0eeba27613027526d83b5f4cbffaca433488e3805
+               e7a75c43bd1b966',
+        "y": h'00d142a334ac8790dc821abe9362434daeb00c1b8b076843e51
+               a4a4717b30c54ce'},
+      "kid": "meriadoc.brandybuck@buckland.example"
+    },
+    null,
+    null,
+    null
+  ]]
 ]
 ~~~~
 
@@ -884,11 +880,11 @@ To make it easier to read, this uses CBOR's diagnostic notation rather than a bi
   null,
   null,
   h'436f6e74656e7420537472696e67',
-  null,
-  {
-    "kid": "bilbo.baggins@hobbiton.example",
-    "alg": "PS256"
-  },
+  [[null,
+    {
+      "kid": "bilbo.baggins@hobbiton.example",
+      "alg": "PS256"
+    },
    h'5afe80ec9f208b4719a3bd688c803a3154b1ff25af86e054173ad6ddf71
      ba77a4a2b793beed077a4e1a8a69ac1277c457f636691cb4a7d3dc67b47
      ec84c067076b720236bae498bdb21deebbc0a0f525f9a24b336d51e2b3e
@@ -898,6 +894,7 @@ To make it easier to read, this uses CBOR's diagnostic notation rather than a bi
      2aae1aa391cc730b1631f020874a8a6efc77b08f027323e2c4ae85eeb3e
      5dc715e0e2fa8aec63fb828d7a2c45e361e249117bd8b41e1e12388412d
      8ce3809c9a2172afda5ca7c5839896825da66a50'
+  ]]
 ]
 ~~~~
 
