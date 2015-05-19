@@ -56,7 +56,7 @@ You may also need to install kramdown-xml2rfc, which requires Ruby and can be
 installed using the roby package manager, `gem`:
 
 ```sh
-$ gem install kramdown-xml2rfc
+$ gem install kramdown-rfc2629
 ```
 
 Other tools can be used to produce PDF files, or to provide a comparison.  These

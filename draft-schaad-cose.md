@@ -119,6 +119,8 @@ of the individual structures as a stand alone component.
 
 ~~~~ CDDL
 
+COSE_Tagged_MSG = #6.999(COSE_MSG)   # Replace 999 with TBD1
+
 COSE_MSG = [sign:1, COSE_Sign] / 
         [encrypt:2, COSE_encrypt] / 
         [mac:3, COSE_mac]
@@ -133,20 +135,6 @@ being used and thus what the syntax is for the rest of the elements in the array
 Implementations SHOULD be prepared to find an integer in the location which does not correspond to the values 0 to 2.
 If this is found then the client MUST stop attempting to parse the structure and fail.
 Clients need to recognize that the set of values could be extended at a later date, but should not provide a security service based on guesses of what is there.
-
-NOTE: Alternative syntax with tags would be
-
-~~~~  
-
-COSE_MSG = COSE_SignedMessage / 
-        #6.998([COSE_encrypt]) / 
-        #6.999([COSE_mac])
-
-~~~~
-
-Where we would need to define the latter two as tagged arrays like is currently done for COSE_SignedMessage.  
-There is no space savings in CBOR, this is strictly about using CBOR paradymes.  It is not clear what would happen if a JOSE serialization appeared, but that is probably not interesting.
-If this path is used, then there is no extensibility for new messages types.  They would need to be defined on their own.
 
 # Signing Structure
 
@@ -635,7 +623,15 @@ managed to narrow it down to the following restrictions:
 
 # IANA Considerations
 
-There are IANA considerations to be filled in.
+## CBOR Tag assignment
+
+It is requested that IANA assign a new tag from the "Concise Binary Object Represetion (CBOR) Tags" registry.  It is requested that the tag be assigned in the 0 to 23 value range.
+
+Tag Value:  TBD1
+
+Data Item: CBOR map
+
+Semantics: COSE security message.
 
 # Security Considerations
 
