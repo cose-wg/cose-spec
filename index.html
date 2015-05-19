@@ -472,6 +472,7 @@ ul.toc a:first-child {
 <link href="#rfc.section.6" rel="Chapter" title="6 Key Structure"/>
 <link href="#rfc.section.7" rel="Chapter" title="7 CBOR Encoder Restrictions"/>
 <link href="#rfc.section.8" rel="Chapter" title="8 IANA Considerations"/>
+<link href="#rfc.section.8.1" rel="Chapter" title="8.1 CBOR Tag assignment"/>
 <link href="#rfc.section.9" rel="Chapter" title="9 Security Considerations"/>
 <link href="#rfc.references" rel="Chapter" title="10 References"/>
 <link href="#rfc.references.1" rel="Chapter" title="10.1 Normative References"/>
@@ -490,12 +491,12 @@ ul.toc a:first-child {
 <link href="#rfc.authors" rel="Chapter"/>
 
 
-  <meta name="generator" content="xml2rfc version 2.4.12 - http://tools.ietf.org/tools/xml2rfc" />
+  <meta name="generator" content="xml2rfc version 2.5.0 - http://tools.ietf.org/tools/xml2rfc" />
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Schaad, J." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-schaad-cose-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2015-5-17" />
+  <meta name="dct.issued" scheme="ISO8601" content="2015-5-19" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  The work in this document is derived in part from the JSON web security documents using the same parameters and algorithm identifiers as they do." />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  The work in this document is derived in part from the JSON web security documents using the same parameters and algorithm identifiers as they do." />
 
@@ -516,10 +517,10 @@ ul.toc a:first-child {
 </tr>
 <tr>
   <td class="left">Intended status: Informational</td>
-  <td class="right">May 17, 2015</td>
+  <td class="right">May 19, 2015</td>
 </tr>
 <tr>
-  <td class="left">Expires: November 18, 2015</td>
+  <td class="left">Expires: November 20, 2015</td>
   <td class="right"></td>
 </tr>
 
@@ -540,7 +541,7 @@ ul.toc a:first-child {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on November 18, 2015.</p>
+<p>This Internet-Draft will expire on November 20, 2015.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -571,7 +572,8 @@ ul.toc a:first-child {
 <li>6.   <a href="#rfc.section.6">Key Structure</a></li>
 <li>7.   <a href="#rfc.section.7">CBOR Encoder Restrictions</a></li>
 <li>8.   <a href="#rfc.section.8">IANA Considerations</a></li>
-<li>9.   <a href="#rfc.section.9">Security Considerations</a></li>
+<ul><li>8.1.   <a href="#rfc.section.8.1">CBOR Tag assignment</a></li>
+</ul><li>9.   <a href="#rfc.section.9">Security Considerations</a></li>
 <li>10.   <a href="#rfc.references">References</a></li>
 <ul><li>10.1.   <a href="#rfc.references.1">Normative References</a></li>
 <li>10.2.   <a href="#rfc.references.2">Informative References</a></li>
@@ -621,6 +623,8 @@ ul.toc a:first-child {
 <h1 id="rfc.section.2"><a href="#rfc.section.2">2.</a> <a href="#the-cosemsg-structure" id="the-cosemsg-structure">The COSE_MSG structure</a></h1>
 <p id="rfc.section.2.p.1">The COSE_MSG structure is a top level CBOR object which corresponds to the DataContent type in <a href="#RFC5652">[RFC5652]</a>.  This structure allows for a top level message to be sent which could be any of the different security services, where the security service is identified.  The presence of this structure does not preclude a protocol to use one of the individual structures as a stand alone component.</p>
 <pre>
+COSE_Tagged_MSG = #6.999(COSE_MSG)   # Replace 999 with TBD1
+
 COSE_MSG = [sign:1, COSE_Sign] / 
         [encrypt:2, COSE_encrypt] / 
         [mac:3, COSE_mac]
@@ -628,14 +632,6 @@ COSE_MSG = [sign:1, COSE_Sign] /
 </pre>
 <p id="rfc.section.2.p.2">The top level of each of the COSE message structures are encoded as arrays.<br/> We use an integer to distingish bettwen the different security message types.  By looking at the integer in the first element, one can determine which security message is being used and thus what the syntax is for the rest of the elements in the array.</p>
 <p id="rfc.section.2.p.3">Implementations SHOULD be prepared to find an integer in the location which does not correspond to the values 0 to 2.  If this is found then the client MUST stop attempting to parse the structure and fail.  Clients need to recognize that the set of values could be extended at a later date, but should not provide a security service based on guesses of what is there.</p>
-<p id="rfc.section.2.p.4">NOTE: Alternative syntax with tags would be</p>
-<pre>
-COSE_MSG = COSE_SignedMessage / 
-        #6.998([COSE_encrypt]) / 
-        #6.999([COSE_mac])
-
-</pre>
-<p id="rfc.section.2.p.5">Where we would need to define the latter two as tagged arrays like is currently done for COSE_SignedMessage.<br/> There is no space savings in CBOR, this is strictly about using CBOR paradymes.  It is not clear what would happen if a JOSE serialization appeared, but that is probably not interesting.  If this path is used, then there is no extensibility for new messages types.  They would need to be defined on their own.</p>
 <h1 id="rfc.section.3"><a href="#rfc.section.3">3.</a> <a href="#signing-structure" id="signing-structure">Signing Structure</a></h1>
 <p id="rfc.section.3.p.1">The signature structure allows for one or more signatures to be applied to a message payload.  There are provisions for  attributes about the content and attributes about the signature to be carried along with the signature itself.  These attributes may be authenticated by the signature, or just present.  Examples of attributes about the content would be the type of content, when the content was created, and who created the content.  Examples of attributes about the signature would be the algorithm and key used to create the signature, when the signature was created, and counter-signatures.</p>
 <p id="rfc.section.3.p.2">When more than one signature is present, the successful validation of one signature associated with a given signer is usually treated as a successful signature by that signer.  However, there are some application environments where other rules are needed.  An application that employs a rule other than one valid signature for each signer must specify those rules.  Also, where simple matching of the signer identifier is not sufficient to determine whether the signatures were generated by the same signer, the application specification must describe how to determine which signatures were generated by the same signer.  Support of different communities of recipients is the primary reason that signers choose to include more than one signature.  For example, the COSE_Sign structure might include signatures generated with the RSA signature algorithm and with the Elliptic Curve Digital Signature Algorithm (ECDSA) signature algorithm.  This allows recipients to verify the signature associated with one algorithm or the other. (Source of text is <a href="#RFC5652">[RFC5652]</a>.) More detailed information on multiple signature evaluation can be found in <a href="#RFC5752">[RFC5752]</a>.</p>
@@ -917,7 +913,11 @@ COSE_KeySet = [+COSE_Key]
   <li>All parsers used SHOULD fail on both parsing and generation if the same key is used twice in a map.</li>
 </ul>
 <h1 id="rfc.section.8"><a href="#rfc.section.8">8.</a> <a href="#iana-considerations" id="iana-considerations">IANA Considerations</a></h1>
-<p id="rfc.section.8.p.1">There are IANA considerations to be filled in.</p>
+<h1 id="rfc.section.8.1"><a href="#rfc.section.8.1">8.1.</a> <a href="#cbor-tag-assignment" id="cbor-tag-assignment">CBOR Tag assignment</a></h1>
+<p id="rfc.section.8.1.p.1">It is requested that IANA assign a new tag from the &#8220;Concise Binary Object Represetion (CBOR) Tags&#8221; registry.  It is requested that the tag be assigned in the 0 to 23 value range.</p>
+<p id="rfc.section.8.1.p.2">Tag Value:  TBD1</p>
+<p id="rfc.section.8.1.p.3">Data Item: CBOR map</p>
+<p id="rfc.section.8.1.p.4">Semantics: COSE security message.</p>
 <h1 id="rfc.section.9"><a href="#rfc.section.9">9.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a></h1>
 <p id="rfc.section.9.p.1">There are security considerations:</p>
 <p/>
