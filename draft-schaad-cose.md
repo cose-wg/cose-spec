@@ -17,12 +17,12 @@ author:
   email: ietf@augustcellars.com
 normative:
   I-D.greevenbosch-appsawg-cbor-cddl:
-  I-D.ietf-jose-json-web-algorithms:
+  RFC7518:
   RFC7049:
 informative:
-  I-D.ietf-jose-json-web-encryption:
-  I-D.ietf-jose-json-web-signature:
-  I-D.ietf-jose-json-web-key:
+  RFC7516:
+  RFC7515:
+  RFC7517:
   I-D.mcgrew-aead-aes-cbc-hmac-sha2:
   RFC2119:
   RFC3394:
@@ -272,7 +272,7 @@ doing an encryption in COSE.
 In COSE, we use the same techniques and structures for encrypting both
 the plain text and the keys used to protect the text.
 This is different from the approach used by both {{RFC5652}} and
-{{I-D.ietf-jose-json-web-encryption}} where different structures are
+{{RFC7516}} where different structures are
 used for the plain text and for the different key management
 techniques.
 
@@ -353,11 +353,11 @@ In this section we will discuss each of the key management methods and
 what fields need to be specified to deal with each of them.
 
 The names of the key management methods used here are the same as are
-defined in {{I-D.ietf-jose-json-web-key}}.
+defined in {{RFC7517}}.
 Other specifications use different terms for the key management
 methods or do not support some of the key management methods.
 
-At the moment we do not have any key management methods that allow for the use of protected headers.  This may be changed in the future if, for example, the AES-GCM Key wrap method defined in {{I-D.ietf-jose-json-web-algorithms}} were extended to allow for authenticated data.  In that event the use of the 'protected' field, which is current forbidden below, would be permitted.
+At the moment we do not have any key management methods that allow for the use of protected headers.  This may be changed in the future if, for example, the AES-GCM Key wrap method defined in {{RFC7518}} were extended to allow for authenticated data.  In that event the use of the 'protected' field, which is current forbidden below, would be permitted.
 
 ### Direct Encryption
 
@@ -568,7 +568,7 @@ As with JOSE, COSE uses a map to contain the elements of a key.
 Those values, which in JOSE, are base64url encoded because they are binary values, are encoded as bstr values in COSE.
 
 For COSE we use the same set of fields that were defined in
-{{I-D.ietf-jose-json-web-key}}.
+{{RFC7517}}.
 
 ~~~~ CDDL
 
@@ -586,11 +586,11 @@ COSE_KeySet = [+COSE_Key]
 ~~~~
 
 The element "kty" is a required element in a COSE_Key map.  
-All other elements are optional and not all of the elements listed in {{I-D.ietf-jose-json-web-key}} or {{I-D.ietf-jose-json-web-algorithms}} have been listed here even though they can all appear in a COSE_Key map.
+All other elements are optional and not all of the elements listed in {{RFC7517}} or {{RFC7518}} have been listed here even though they can all appear in a COSE_Key map.
 
 The "key_ops" element is prefered over the "use" element as the information provided that way is more finely detailed about the operations allowed.  It is strongly suggested that this element be present for all keys.
 
-The same fields defined in {{I-D.ietf-jose-json-web-key}} are used
+The same fields defined in {{RFC7517}} are used
 here with the following changes in rules:
 
 * Any item which is base64 encoded in JWK, is bstr encoded for COSE.
