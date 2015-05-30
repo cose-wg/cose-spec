@@ -119,11 +119,11 @@ of the individual structures as a stand alone component.
 
 ~~~~ CDDL
 
-COSE_Tagged_MSG = #6.999(COSE_MSG)   # Replace 999 with TBD1
+COSE_MSG = {msg_type:1, COSE_Sign} / 
+           {msg_type:2, COSE_encrypt} / 
+           {msg_type:3, COSE_mac}
 
-COSE_MSG = [sign:1, COSE_Sign] / 
-        [encrypt:2, COSE_encrypt] / 
-        [mac:3, COSE_mac]
+COSE_Tagged_MSG = #6.999(COSE_MSG)   ; Replace 999 with TBD1
 
 ~~~~
 
@@ -135,6 +135,40 @@ being used and thus what the syntax is for the rest of the elements in the array
 Implementations SHOULD be prepared to find an integer in the location which does not correspond to the values 0 to 2.
 If this is found then the client MUST stop attempting to parse the structure and fail.
 Clients need to recognize that the set of values could be extended at a later date, but should not provide a security service based on guesses of what is there.
+
+# Header Parameters
+
+The structure of COSE has been designed to have two buckets of information that are not considered to be part of the message structure itself, but are used for holding information about algorithms, keys, or evaluation hints for the  processing of the layer.
+These two buckets are available for use in all of the structures in this document except for keys.
+While these buckets can be present, they may not all be usable in all instances. For example, while the protected bucket is present for recipient structures, most of the algorithms that are-used for recipients do not provide the necessary functionality to provide the needed protection and thus the element is not used.
+
+Both buckets are implemented as CBOR maps.  The maps can be keyed by signed integers, unsigned integers and strings.  The signed and unsigned integers are used for compactness of encoding.  The value portion is dependent on the key definition. Both maps use the same set of key/value pairs.  The integer key range has been divided into several sections with a standard range, a private range, and a range that is dependent on the algorithm selected.  The tables of keys defined can be found in {{Header-Table}}.
+
+Two buckets are provided for each layer:
+
+protected
+: contains attributes about the layer which are to be cryptographically protected.  This bucket MUST NOT be used if it is not going to be included in a cryptographic computation.
+
+unprotected
+: contains attributes about the layer which are not cryptographically protected.
+
+Both of the buckets are optional and are omitted if there are no items contained in the map.  The CDDL fragment which describes the two buckets is:
+
+~~~~ CDDL
+
+keys = int / tstr
+header_map = {+ keys => any }
+
+Headers = (
+    ? protected : bstr,
+    ? unproteced : header_map
+)
+
+~~~~
+
+## COSE Headers
+
+TODO:  Do we need to repeat definitions for all or just for some and refer to the JOSE documents?
 
 # Signing Structure
 
@@ -170,18 +204,16 @@ The CDDL grammar structure for a signature message is:
 ~~~~ CDDL
 
 COSE_Sign = (
-    protected : (bstr / nil),
-    unprotected : (header_map / nil),
-    payload : (bstr / nil),
-    signatures: ([+[COSE_signature]] / nil)
+    Headers,
+    ? payload : bstr,
+    signatures: [+{COSE_signature}]
 )
 
-COSE_SignMessage = #6.997([ COSE_Sign ])
-
-keys = int / tstr
-header_map = {+ keys => any }
-
 ~~~~
+
+The keys in the COSE_Sign map are keyed by the values in {{TOP-Level-Keys}}.  While other keys can be present in the
+map, it is not generally a recommended practice.  The other keys can be either of integer or string type, use of other types is strongly discouraged.  See the note in {{CBOR-Canonical} about options for allowing or disallowing other keys.
+
 
 The fields is the structure have the following semantics:
 
@@ -191,13 +223,14 @@ protected
   The content is a CBOR map of attributes which is encoded to a byte stream.
   This field MUST NOT contain attributes about the signature, even if
   those attributes are common across multiple signatures.
+  This fields inthis map are typically keyed  by {{Header-Table}}.  Other keys can be used either as int or tstr values.  Other types MUST NOT be present in the map as key values.  
 
 unprotected
 : contains attributes about the payload which are not protected by the signature.
   An example of such an attribute would be the content type ('cty') attribute.
   This field MUST NOT contain attributes about a signature, even if
   the attributes are common across multiple signatures.
-
+  This fields inthis map are typically keyed  by {{Header-Table}}.  Other keys can be used either as int or tstr values.  Other types MUST NOT be present in the map as key values.  
 
 payload
 : contains the serialized content to be signed.  
@@ -211,13 +244,16 @@ signatures
 : is an array of signature items.  Each of these items uses the COSE_signature structure for its representation.
 
 
+The keys in the COSE_signature map are keyed by the values in {{TOP-Level-Keys}}.  While other keys can be present in the
+map, it is not generally a recommended practice.  The other keys can be either of integer or string type, use of other types is strongly discouraged.  See the note in {{CBOR-Canonical} about options for allowing or disallowing other keys.
+
 The CDDL grammar structure for a signature is:
 
 ~~~~ CDDL
 
 COSE_signature =  (
-    protected : (bstr / nil),
-    unprotected : (header_map / nil),
+    ? protected : bstr,
+    ? unprotected : header_map,
     signature : bstr
 )
 
@@ -246,8 +282,8 @@ The COSE structure used to create the byte stream to be signed uses the followin
 ~~~~ CDDL
 
 Sig_structure = [
-    body_protected : (bstr / nil),
-    sign_protected : (bstr / nil),
+    body_protected : bstr,
+    sign_protected : bstr,
     payload : bstr
 ]
 
@@ -255,7 +291,7 @@ Sig_structure = [
 
 How to compute a signature:
 
-1. Create a Sig_structure object and populate it with the appropriate fields.
+1. Create a Sig_structure object and populate it with the appropriate fields.  For body_protected and sign_protected, if the fields are not present in their corresponding maps, an bstr of length zero should be used.
 
 2. Create the value to be hashed by encoding the Sig_structure to a byte string.
 
@@ -291,15 +327,14 @@ The CDDL grammar structure for encryption is:
 ~~~~ CDDL
 
 COSE_encrypt = (
-  protected : (bstr / nil),  ; Contains header_map
-  unprotected : (header_map / nil),
-  iv : (bstr / nil),
-  aad : (bstr / nil),
-  ciphertext : (bstr / nil),
-  recipients : ([+COSE_encrypt_a] / nil) 
+   Headers,
+   ? iv : bstr,
+   ? aad : bstr,
+   ? ciphertext : bstr,
+   ? recipients : [+COSE_encrypt_a]
 )
 
-COSE_encrypt_a = [COSE_encrypt]
+COSE_encrypt_a = {COSE_encrypt}
 
 ~~~~
 
@@ -503,11 +538,10 @@ When using MAC operations, there are two modes in which it can be used.  The fir
 ~~~~ CDDL
 
 COSE_mac = (
-   protected : (bstr / nil),
-   unprotected : (header_map / nil),
-   payload : bstr,
+   Headers,
+   ? payload : bstr,
    tag : bstr,
-   ?recipients : ([+COSE_encrypt_a] / nil)
+   ? recipients : [+COSE_encrypt_a]
 )
 
 ~~~~
@@ -544,10 +578,10 @@ recipients
 
 ~~~~ CDDL
 
-MAC_structure = {
+MAC_structure = [
    protected : (bstr / nil),
    payload : bstr
-}
+]
 
 ~~~~~
 
@@ -621,6 +655,8 @@ managed to narrow it down to the following restrictions:
 
 * All parsers used SHOULD fail on both parsing and generation if the same key is used twice in a map.
 
+While it is permitted to have key values other than those specified in this document in the outer maps (COSE_Sign, COSE_Signature, COSE_encrypt, COSE_recipient and COSE_mac), doing so is not encouraged.  Applications should make a determination if it will be permitted for that application.  In general, any needed new fields can be accomadated by the introduction of new header fields to be carried in the protected or unprotected fields.  Applications that need to have new fields in these maps should consider getting new message types assigned for these usages.  Without this change, old applications will not see and process the new fields.
+
 # IANA Considerations
 
 ## CBOR Tag assignment
@@ -632,6 +668,80 @@ Tag Value:  TBD1
 Data Item: CBOR map
 
 Semantics: COSE security message.
+
+## COSE Parameter Table
+
+
+## COSE Header Key Table
+
+It is requested that IANA create a new registry entitled "COSE Header Key".
+
+The columns of the registry are:
+name
+: The name is present to make it easier to refer to and discuss the registration entry.  The value is not used in the protocol.  Names are to be unique in the table.
+
+key
+: This is the value used for the key.  The key can be either an integer or a string.  Registration in the table is based on the value of the key requested.  Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.  Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.  Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.  Integer values in the range -1 to -65536 are delegated to the "COSE Header Algorithm Key" registry.  Integer values beyond -65536 are marked as private use.
+
+value
+: This contains the CBOR type for the value portion of the key.
+
+value registry
+: This contains a pointer to the registry used to contain values where the set is limited.
+
+description
+: This contains a brief description of the header field.
+
+specification
+: This contains a pointer to the specification defining the header field (where public).
+
+The initial contents of the registry can be found in {{Header-Table}}.  The specification column for all rows in that table should be this document.
+
+NOTE: Need to review the range assignments.  It does not necessarily make sense as specification required uses 1 byte positive integers and 2 byte strings.
+
+## COSE Header Algorithm Key Table
+
+It is requested that IANA create a new registry entitled "COSE Header Algorithm Keys".
+
+The columns of the registry are:
+name
+: The name is present to make it easier to refer to and discuss the registration entry.  The value is not used in the protocol.
+
+algorithm
+: The algorithm(s) that this registry entry is used for.  This value is taken from the "COSE Algorithm Value" registry.  Multiple algorithms can be specified in this entry.  For the table, the algorithm, key pair MUST be unique.
+
+key
+: This is the value used for the key.  The key is an integer in the range of -1 to -65536.
+
+value
+: This contains the CBOR type for the value portion of the key.
+
+value registry
+: This contains a pointer to the registry used to contain values where the set is limited.
+
+description
+: This contains a brief description of the header field.
+
+specification
+: This contains a pointer to the specification defining the header field (where public).
+
+The initial contents of the registry can be found in {{Header-Algorithm-Table}}.  The specification column for all rows in that table should be this document.
+
+## COSE Algorithm Registry
+
+It is requested that IANA create a new registry entitled "COSE Algorithm Registry".
+
+The columns of the registry are:
+key
+: The value to be used to identify this algorithm.  Algorithm keys MUST be unique. The key can be a positive integer, a negative integer or a string.  Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.  Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.  Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.  Integer values in the range -1 to -65536 are delegated to the "COSE Header Algorithm Key" registry.  Integer values beyond -65536 are marked as private use.
+
+description
+: A short description of the algorithm.
+
+specification
+: A document where the algorithm is defined (if publicly available).
+
+The initial contents of the registry can be found in {{ALG_TABLE}}.  The specification column for all rows in that table should be this document.
 
 # Security Considerations
 
@@ -843,6 +953,7 @@ Encoded in CBOR - 216 bytes, content is 14 bytes long
   null,
   {"alg": "A128GCM"},
   h'656d6a73ccf1b35fb99044e1',
+  null,
   h'd7b27b67a81b212ee513b148454fe2d571d51bb679239769f5d2299bb96b',
   [[null,
     {
@@ -856,6 +967,7 @@ Encoded in CBOR - 216 bytes, content is 14 bytes long
                a4a4717b30c54ce'},
       "kid": "meriadoc.brandybuck@buckland.example"
     },
+    null,
     null,
     null,
     null
@@ -943,34 +1055,103 @@ Encoded in CBOR - 491 bytes, content is 14 bytes long
 ]
 ~~~~
 
+# Top Level Parameter Table {#TOP-Level-Keys}
 
-# Processing Parameter Table
+This table contains the list of all key values that can ocur in the  COSE_Sign, COSE_signature, COSE_Encrypt, and COSE_MAC structures.
+
+| name | number | comments |
+| msg_type | 1 | Occurs only in top level messages |
+| protected | 2 | Occurs in all structures |
+| unprotected | 3 | Occurs in all structures |
+| payload | 4 | Contains the content of the structure |
+| signatures | 5 | For COSE_Sign - array of signatures |
+| signature | 6 | For COSE_signature only |
+| iv | 7 | For COSE_encrypt only |
+| aad | 8 | For COSE_encrypt only |
+| ciphertext | 4 | TODO: Should we re-use the same as payload or not? |
+| recipients | 9 | For COSE_encrypt and COSE_mac |
+| tag | 10 | For COSE_mac only |
+
+~~~~ CDDL
+
+message_keys = (
+   msg_type:1, protected:2, unportected:3, payload:4,
+   signatures:5, signature:6, iv:7, aad:8, ciphertext:4,
+   recipients:9, tag:10
+)
+
+~~~~
+
+M00TODO:
+1.  There is no equivalent to this table in JOSE so we need to get a name for the table and registration rules.
+2.  Initial registration rules: Number may be a positive or a negative value.  Values in the range of -24 to 24 are Standards action required.  Values in the range of -256 to -25 and 25 to 255 are specification required with expert review.  Values from 256 to 512 are designated for private use.  All other values are reserved.
+
+
+# COSE Header Key Registry {#Header-Table}
 
 This table contains a list of all of the parameters for use in signature and encryption message types defined by the JOSE document set.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
 
-| name | number | CBOR type | comments |
-| alg | * | tstr | presence is required |
-| apu | * | bstr |
-| apv | * | bstr |
-| crit | * | tstr* |
-| cty | * | tstr |
-| enc | * |  | use alg instead |
-| epk | * | map | contains a COSE key not a JWK key |
-| iv | * |  | use field in array instead |
-| jku | * | tstr |
-| jwk | * | map | contains a COSE key not a JWK key |
-| kid | * | tstr |
-| p2c | * | int |
-| p2s | * | bstr |
-| tag | * |  | tag is included in the cipher text |
-| typ | * |  | use cty for the content type, no concept of a different wrapper type |
-| x5c | * | bstr* |
-| x5t | * | bstr |
-| x5t#S256 | * | bstr |
-| x5u | * | tstr |
-| zip | * | tstr | only used at content level |
+| name | key | value | registry | description |
+| alg | 1 | int / tstr | COSE Algorithm Registry | Integers are taken from table {{ALG_TABLE}} |
+| crit | 2 | [+ (tstr/int)] | COSE Header Key Registry | integer values are from this table. |
+| cty | 3 | tstr / int | | Value is either a mime-content type or an integer from the mime-content type table |
+| epk | 4 | COSE_Key | | contains a COSE key not a JWK key |
+| jku | * | tstr | | URL to COSE key object |
+| jwk | * | COSE_Key | | contains a COSE key not a JWK key |
+| kid | * | bstr | | key identifier |
+| x5c | * | bstr* | | X.509 Certificate Chain |
+| x5t | * | bstr | | SHA-1 thumbprint of key |
+| x5t#S256 | * | bstr | | SHA-256 thumbprint of key |
+| x5u | * | tstr | | URL for X.509 certificate |
+| zip | * | int / tstr | | Integers are taken from the table {{ALG_TABLE}} |
 
-# Key Parameter Tables
+# COSE Header Algorithm Key Table {#Header-Algorithm-Table}
+
+| name | algorithm | key | CBOR type | description |
+| apu | ECDH | -1 | bstr |
+| apv | ECDH | -2 | bstr |
+| iv | * | -1 |  | bstr |
+| p2c | PBE | -1 | int |
+| p2s | PBE | -2 | bstr |
+
+# COSE Algorithm Name Values {#ALG_TABLE}
+
+This table contains all of the defined algorithms for COSE.
+
+| name | key | description |
+| HS256 | * | HMAC w/ SHA-256 |
+| HS384 | * | HMAC w/ SHA-384 |
+| HS512 | * | HMAC w/ SHA-512 |
+| RS256 | * | RSASSA-v1.5 w/ SHA-256 |
+| RS384 | * | RSASSA-v1.5 w/ SHA-384 |
+| RSA512 | * | RSASSA-v1.5 w/ SHA-256 |
+| ES256 | * | ECDSA w/ SHA-256 |
+| ES384 | * | ECDSA w/ SHA-384 |
+| ES512 | * | ECDSA w/ SHA-512 |
+| PS256 | * | RSASSA-PSS w/ SHA-256 |
+| PS384 | * | RSASSA-PSS w/ SHA-384 |
+| PS512 | * | RSASSA-PSS w/ SHA-512 |
+| RSA1_5 | * | RSAES v1.5 Key Encryption |
+| RSA-OAEP | * | RSAES OAEP w/ SHA-256 |
+| A128KW | * | AES Key Wrap w/ 128-bit key |
+| A192KW | * | AES Key Wrap w/ 192-bit key |
+| A256KW | * | AES Key Wrap w/ 256-bit key |
+| dir | * | Direct use of CEK |
+| ECDH-ES | * | ECDH ES w/ Concat KDF as CEK |
+| ECDH-ES+A128KW | * | ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key |
+| ECDH-ES+A192KW | * | ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key |
+| ECDH-ES+A256KW | * | ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key |
+| A128GCMKW | * | AES GCM Key Wrap w/ 128 bit key |
+| A192GCMKW | * | AES GCM Key Wrap w/ 192 bit key |
+| A256GCMKW | * | AES GCM Key Wrap w/ 256 bit key |
+| PBES2-HS256+A128KW | * | PBES2 w/ HMAC SHA-256 and AES Key wrap w/ 128 bit key |
+| PBES2-HS384+A192KW | * | PBES2 w/ HMAC SHA-384 and AES Key wrap w/ 192 bit key |
+| PBES2-HS512+A256KW | * | PBES2 w/ HMAC SHA-512 and AES Key wrap w/ 256 bit key |
+| A128GCM | * | AES-GCM mode w/ 128-bit key |
+| A192GCM | * | AES-GCM mode w/ 192-bit key |
+| A256GCM | * | AES-GCM mode w/ 256-bit key |
+
+# COSE Key Parameter Keys
 
 This table contains a list of all of the parameters defined for keys that were defined by the JOSE document set.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
 
@@ -997,7 +1178,7 @@ Parameters dealing with keys
 | RSA | d | * | bstr |
 | RSA | p | * | bstr |
 | RSA | q | * | bstr |
-| RSA | dp | * | bstr |
+1| RSA | dp | * | bstr |
 | RSA | dq | * | bstr |
 | RSA | qi | * | bstr |
 | RSA | oth | * | bstr |
