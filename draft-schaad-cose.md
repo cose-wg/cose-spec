@@ -69,13 +69,6 @@ JOSE documents, two considerations are taking into account:
 
 * Define a top level message structure so that encrypted, signed and MAC-ed messages can easily identified and still have a consistent view.
 
-* Switch from using a map to using an array at the message level.
-  While this change means that it is no longer possible to add new named parameters to
-  the top level message, it also means that there is not a need to define how older
-  implementations are defined to behave when new fields are present. 
-  Most of the reasons that a new field would need to be defined are adequately addressed
-  by defining a new parameter instead.
-
 * Signed messages separate the concept of protected and unprotected attributes that are for the content and the signature.
 
 * Key management has been made to be more uniform.  All key management techniques are represented as a recipient rather than only have some of them be so.
@@ -93,7 +86,7 @@ JOSE documents, two considerations are taking into account:
 ## Requirements Terminology
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
-"SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+"SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
 document are to be interpreted as described in {{RFC2119}}.
 
 When the words appear in lower case, their natural language meaning is used.
@@ -119,9 +112,9 @@ of the individual structures as a stand alone component.
 
 ~~~~ CDDL
 
-COSE_MSG = {msg_type:1, COSE_Sign} / 
-           {msg_type:2, COSE_encrypt} / 
-           {msg_type:3, COSE_mac}
+COSE_MSG = {msg_type=>1, COSE_Sign} / 
+           {msg_type=>2, COSE_encrypt} / 
+           {msg_type=>3, COSE_mac}
 
 COSE_Tagged_MSG = #6.999(COSE_MSG)   ; Replace 999 with TBD1
 
@@ -132,7 +125,7 @@ We use an integer to distingish bettwen the different security message types.
 By looking at the integer in the first element, one can determine which security message is
 being used and thus what the syntax is for the rest of the elements in the array.
 
-Implementations SHOULD be prepared to find an integer in the location which does not correspond to the values 0 to 2.
+Implementations SHOULD be prepared to find an integer in the location which does not correspond to the values 1 to 3.
 If this is found then the client MUST stop attempting to parse the structure and fail.
 Clients need to recognize that the set of values could be extended at a later date, but should not provide a security service based on guesses of what is there.
 
@@ -142,7 +135,7 @@ The structure of COSE has been designed to have two buckets of information that 
 These two buckets are available for use in all of the structures in this document except for keys.
 While these buckets can be present, they may not all be usable in all instances. For example, while the protected bucket is present for recipient structures, most of the algorithms that are-used for recipients do not provide the necessary functionality to provide the needed protection and thus the element is not used.
 
-Both buckets are implemented as CBOR maps.  The maps can be keyed by signed integers, unsigned integers and strings.  The signed and unsigned integers are used for compactness of encoding.  The value portion is dependent on the key definition. Both maps use the same set of key/value pairs.  The integer key range has been divided into several sections with a standard range, a private range, and a range that is dependent on the algorithm selected.  The tables of keys defined can be found in {{Header-Table}}.
+Both buckets are implemented as CBOR maps.  The maps can be keyed by negative integers, unsigned integers and strings.  The negative and unsigned integers are used for compactness of encoding.  The value portion is dependent on the key definition. Both maps use the same set of key/value pairs.  The integer key range has been divided into several sections with a standard range, a private range, and a range that is dependent on the algorithm selected.  The tables of keys defined can be found in {{Header-Table}}.
 
 Two buckets are provided for each layer:
 
@@ -160,8 +153,8 @@ keys = int / tstr
 header_map = {+ keys => any }
 
 Headers = (
-    ? protected : bstr,
-    ? unproteced : header_map
+    ? protected => bstr,
+    ? unprotected => header_map
 )
 
 ~~~~
@@ -169,6 +162,8 @@ Headers = (
 ## COSE Headers
 
 TODO:  Do we need to repeat definitions for all or just for some and refer to the JOSE documents?
+
+TODO:  Should we move table {{Header-Table}} to here or leave it as an appendix.  Some what redundant if we document things in text.
 
 # Signing Structure
 
@@ -205,8 +200,8 @@ The CDDL grammar structure for a signature message is:
 
 COSE_Sign = (
     Headers,
-    ? payload : bstr,
-    signatures: [+{COSE_signature}]
+    ? payload => bstr,
+    signatures=> [+{COSE_signature}]
 )
 
 ~~~~
@@ -223,14 +218,14 @@ protected
   The content is a CBOR map of attributes which is encoded to a byte stream.
   This field MUST NOT contain attributes about the signature, even if
   those attributes are common across multiple signatures.
-  This fields inthis map are typically keyed  by {{Header-Table}}.  Other keys can be used either as int or tstr values.  Other types MUST NOT be present in the map as key values.  
+  This fields in this map are typically keyed  by {{Header-Table}}.  Other keys can be used either as int or tstr values.  Other types MUST NOT be present in the map as key values.  
 
 unprotected
 : contains attributes about the payload which are not protected by the signature.
   An example of such an attribute would be the content type ('cty') attribute.
   This field MUST NOT contain attributes about a signature, even if
   the attributes are common across multiple signatures.
-  This fields inthis map are typically keyed  by {{Header-Table}}.  Other keys can be used either as int or tstr values.  Other types MUST NOT be present in the map as key values.  
+  This fields int his map are typically keyed  by {{Header-Table}}.  Other keys can be used either as int or tstr values.  Other types MUST NOT be present in the map as key values.  
 
 payload
 : contains the serialized content to be signed.  
@@ -252,9 +247,9 @@ The CDDL grammar structure for a signature is:
 ~~~~ CDDL
 
 COSE_signature =  (
-    ? protected : bstr,
-    ? unprotected : header_map,
-    signature : bstr
+    ? protected => bstr,
+    ? unprotected => header_map,
+    signature => bstr
 )
 
 ~~~~
@@ -282,16 +277,16 @@ The COSE structure used to create the byte stream to be signed uses the followin
 ~~~~ CDDL
 
 Sig_structure = [
-    body_protected : bstr,
-    sign_protected : bstr,
-    payload : bstr
+    body_protected => bstr,
+    sign_protected => bstr,
+    payload => bstr
 ]
 
 ~~~~
 
 How to compute a signature:
 
-1. Create a Sig_structure object and populate it with the appropriate fields.  For body_protected and sign_protected, if the fields are not present in their corresponding maps, an bstr of length zero should be used.
+1. Create a Sig_structure object and populate it with the appropriate fields.  For body_protected and sign_protected, if the fields are not present in their corresponding maps, an bstr of length zero is be used.
 
 2. Create the value to be hashed by encoding the Sig_structure to a byte string.
 
@@ -321,6 +316,8 @@ Encryption with Additional Data (AEAD) algorithm.  For key management,
 either AE or AEAD algorithms can be used.
 See {{AE-algo}} for more details about the different types of
 algorithms.
+{:aeds: source="Ilari"}
+I don't follow/understand this text{:aeds}
 
 The CDDL grammar structure for encryption is:
 
@@ -328,10 +325,10 @@ The CDDL grammar structure for encryption is:
 
 COSE_encrypt = (
    Headers,
-   ? iv : bstr,
-   ? aad : bstr,
-   ? ciphertext : bstr,
-   ? recipients : [+COSE_encrypt_a]
+   ? iv => bstr,
+   ? aad => bstr,
+   ? ciphertext => bstr,
+   ? recipients => [+COSE_encrypt_a]
 )
 
 COSE_encrypt_a = {COSE_encrypt}
@@ -343,8 +340,7 @@ Description of the fields:
 protected
 : contains the information about the plain text or encryption
   process that is to be integrity protected.
-  The field is encoded in CBOR as a 'bstr' if present and the value
-  'nil' if there is no data.
+  The field is encoded in CBOR as a 'bstr'.
   The contents of the protected field is a CBOR map of the protected
   data names and values.
   The map is CBOR encoded before placing it into the bstr.
@@ -352,33 +348,28 @@ protected
 
 unprotected
 : contains information about the plain text that is not integrity protected.
-  If there are no field, then the value 'nil' is used.
   Only values associated with the current cipher text are to be placed in this location even if the value would apply to multiple recipient structures.
 
 iv
 : contains the initialization vector (IV), or it's equivalent, if one
   is needed by the encryption algorithm.
-  If there is no IV, then the value 'nil' is used.
 
 aad
 : contains additional authenticated data (aad) supplied by the application.
   This field contains information about the plain text data that is
   authenticated, but not encrypted.
-  If the application does not provide this data, the value 'nil' is used.
 
 cipherText
 : contains the encrypted plain text.
   If the cipherText is to be transported independently of the control
   information about the encryption process (i.e. detached content)
-  then the value 'nil' is encoded here.
+  then the field is omitted.
 
 recipients
 :   contains the recipient information.
   The field can have one of two data types:
 
   *  An array of COSE_encrypt elements, one for each recipient.
-
-  *  A 'nil' value if there are no recipients.
 
 ## Key Management Methods
 
@@ -409,7 +400,7 @@ In COSE, all of the key management methods can be used for MAC-ed messages.
 The COSE_encrypt structure for the recipient is organized as follows:
 
 * The 'protected', 'iv', 'aad', 'ciphertext' and 'recipients' fields
-  MUST be nil.
+  MUST be absent.
 
 * At a minimum, the 'unprotected' field SHOULD contain the 'alg'
   parameter as well as a parameter identifying the shared secret.
@@ -429,7 +420,7 @@ same content.
 
 The COSE_encrypt structure for the recipient is organized as follows:
 
-* The 'protected', 'aad', and 'recipients' fields MUST be nil.
+* The 'protected', 'aad', and 'recipients' fields MUST be absent.
 
 * The plain text to be encrypted is the key from next layer down
   (usually the content layer).
@@ -450,7 +441,7 @@ The only current Key Encryption mode algorithm supported is RSAES-OAEP.
 
 The COSE_encrypt structure for the recipient is organized as follows:
 
-* The 'protected', 'aad', and 'iv' fields all use the 'nil' value.
+* The 'protected', 'aad', and 'iv' fields MUST be absent.
 
 * The plain text to be encrypted is the key from next layer down
   (usually the content layer).
@@ -468,7 +459,7 @@ on the message.  This method creates the CEK directly and that makes it difficul
 
 The COSE_encrypt structure for the recipient is organized as follows:
 
-* The 'protected', 'aad', and 'iv' fields all use the 'nil' value.
+* The 'protected', 'aad', and 'iv' fields MUST be absent.
 
 * At a minimum, the 'unprotected' field SHOULD contain the 'alg'
   parameter as well as a parameter identifying the asymmetric key.
@@ -484,7 +475,7 @@ algorithm.
 
 The COSE_encrypt structure for the recipient is organized as follows:
 
-* The 'protected', 'aad', and 'iv' fields all use the 'nil' value.
+* The 'protected', 'aad', and 'iv' fields MUST be absent.
 
 * The plain text to be encrypted is the key from next layer down
   (usually the content layer).
@@ -501,8 +492,8 @@ In order to get a consistent encoding of the data to be authenticated, the Enc_s
 ~~~~ CDDL
 
 Enc_structure = [
-   protected : (bstr / nil),
-   aad : (bstr / nil)
+   protected => bstr,
+   aad => bstr
 ]
 
 ~~~~
@@ -523,9 +514,9 @@ Enc_structure = [
 ## Encryption algorithm for AE algorithms
 
 
-1.   Verify that the 'protected' field is empty.
+1.   Verify that the 'protected' field is absent.
 
-1.   Verify that the 'aad' field is empty.
+1.   Verify that the 'aad' field is absent.
 
 1.   Encrypt the plain text and place in the 'ciphertext' field.
 
@@ -539,9 +530,9 @@ When using MAC operations, there are two modes in which it can be used.  The fir
 
 COSE_mac = (
    Headers,
-   ? payload : bstr,
-   tag : bstr,
-   ? recipients : [+COSE_encrypt_a]
+   ? payload => bstr,
+   tag => bstr,
+   ? recipients => [+COSE_encrypt_a]
 )
 
 ~~~~
@@ -579,8 +570,8 @@ recipients
 ~~~~ CDDL
 
 MAC_structure = [
-   protected : (bstr / nil),
-   payload : bstr
+   protected => bstr,
+   payload => bstr
 ]
 
 ~~~~~
@@ -607,11 +598,10 @@ For COSE we use the same set of fields that were defined in
 ~~~~ CDDL
 
 COSE_Key = {
-    "kty" : tstr,
-    ? "use" : tstr,
-    ? "key_ops" : [+tstr],
-    ? "alg" : tstr,
-    ? "kid" : tstr,
+    kty => tstr / int,
+    ? key_ops => [+tstr / int ],
+    ? alg => tstr / int,
+    ? kid => bstr,
     * keys => values
 }
 
@@ -698,6 +688,7 @@ specification
 The initial contents of the registry can be found in {{Header-Table}}.  The specification column for all rows in that table should be this document.
 
 NOTE: Need to review the range assignments.  It does not necessarily make sense as specification required uses 1 byte positive integers and 2 byte strings.
+
 ## COSE Header Algorithm Key Table
 
 It is requested that IANA create a new registry entitled "COSE Header Algorithm Keys".
@@ -742,6 +733,59 @@ specification
 
 The initial contents of the registry can be found in {{ALG_TABLE}}.  The specification column for all rows in that table should be this document.
 
+## COSE Key Map Registry
+
+It is requested that IANA create a new registry entitied "COSE Key Map Registry".
+
+The columns of the registry are:
+
+name
+: This is a descriptive name that enables easier reference to the item.  It is not used in the encoding.
+
+key
+: The value to be used to identify this algorithm.  Algorithm keys MUST be unique. The key can be a positive integer, a negative integer or a string.  Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.  Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.  Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.  Integer values in the range -1 to -65536 are used for key parameters specific to a single algoirthm delegated to the "COSE Key Parameter Key" registry.  Integer values beyond -65536 are marked as private use.
+
+CBOR Type
+: This field contains the CBOR type for the field
+
+registry
+: This field denotes the registry that values come from, if one exists.
+
+description
+: This field contains a brief description for the field
+
+specification
+: This contains a pointer to the public specification for the field if one exists
+
+This registry will be initially populated bythe values in {{COSE_KEY_KEYS}}.  The specification column for all of these entries will be this document.
+
+## COSE Key Parameter Registry
+
+It is requested that IANA create a new registry "COSE Key Parameters".
+
+The columns of the table are:
+
+key type
+: This field contains a descriptive string of a key type.  This should be a value that is in the COSE General Values table and is placed in the 'kty' field of a COSE Key structure.
+
+name
+: This is a descriptive name that enables easier reference to the item.  It is not used in the encoding.
+
+key
+: The key is to be unqiue for every value of key type.  The range of values is from -256 to -1.  Keys are expected to be re-used for different keys.
+
+CBOR type
+: This field contains the CBOR type for the field
+
+description
+: This field contains a brief description for the field
+
+specification
+: This contains a pointer to the public specification for the field if one exists
+
+This registry will be initially populated bythe values in {{COSE_KEY_PARAM_KEYS}}.  The specification column for all of these entries will be this document.
+
+
 # Security Considerations
 
 There are security considerations:
@@ -776,7 +820,7 @@ AES-GCM {{AES-GCM}}, AES-CCM {{RFC3610}}, AES-CBC-HMAC
 {{I-D.mcgrew-aead-aes-cbc-hmac-sha2}} are  examples of these composite
 modes.
 
-PKCS v1.5 RSA key transport does not qualify as an AE algorithm.
+2PKCS v1.5 RSA key transport does not qualify as an AE algorithm.
 There are only three bytes in the encoding that can be checked as
 having decrypted correctly, the rest of the content can only be
 probabilistically checked as having decrypted correctly.
@@ -833,12 +877,14 @@ This example is uses HMAC with SHA-256 as the digest algorithm.  The key manangm
 
 ~~~~ CBORdiag
 
-{1:3, 2: h'A10104', 4: h'546869732069732074686520636F6E74656E742E',
-10: h'82C136D2C8CB27356635FAFE6F2E1AB2BC23FA706A33357DB017EE51710EEDE5',
-9: [{3: {1: "ECDH-SS", 5: "meriadoc.brandybuck@buckland.example", "spk":
-{"kid": "peregrin.took@tuckborough.example"},
-"apu": h'5D7EB725D576196C213123C675944A9EA48B3262DD3B3D8902FDE5E58553A2C
-7ADEF779183DEEE72EF41088068A096D046FDF43A525D598C15A94DF165F05AA0'}}]}
+{1: 3, 2: h'A10104', 4: h'546869732069732074686520636F6E74656E742E',
+ 10: h'82C136D2C8CB27356635FAFE6F2E1AB2BC23FA706A33357DB017EE51710EEDE5',
+ 9: [
+  {3: {1: "ECDH-SS", 5: "meriadoc.brandybuck@buckland.example",
+       "spk": {"kid": "peregrin.took@tuckborough.example"},
+       "apu": h'4D8553E7E74F3C6A3A9DD3EF286A8195CBF8A23D19558CCFEC7D34
+       B824F42D92BD06BD2C7F0271F0214E141FB779AE2856ABF585A58368B017E7F2A
+       9E5CE4DB5'}}]}
 
 ~~~~
 
@@ -853,10 +899,11 @@ This exmple uses AES-128-MAC trucated to 64-bits as the digest algorithm.  It us
 
 ~~~~ CBORdiag
 
-{1:3, 2: h'A1016E4145532D3132382D4D41432D3634',
-4: h'546869732069732074686520636F6E74656E742E', 10: h'A61AE6CFB7CABCC9',
-9: [{3: {1: -5, 5: "018c0ae5-4d9b-471b-bfd6-eef314bc7037"},
-4: h'711AB0DC2FC4585DCE27EFFA6781C8093EBA906F227B6EB0'}]}
+{1: 3, 2: h'A1016E4145532D3132382D4D41432D3634', 
+ 4: h'546869732069732074686520636F6E74656E742E', 
+ 10: h'A61AE6CFB7CABCC9', 9: [
+  {3: {1: -5, 5: "018c0ae5-4d9b-471b-bfd6-eef314bc7037"}, 
+   4: h'711AB0DC2FC4585DCE27EFFA6781C8093EBA906F227B6EB0'}]}
 
 ~~~~
 
@@ -876,27 +923,32 @@ This example uses HMAC with SHA-256 for the digest algorithm.  There are three d
 
 ~~~~ CBORdiag
 
-{1:3, 2: h'A10104', 4: h'546869732069732074686520636F6E74656E742E', 
-10: h'F2CA907A87F6F170C032038FCEBB965C915AFC2321426546D2F28D9B142EFFA0',
-9: [{3: {1: "ECDH-ES+A128KW", 5: "bilbo.baggins@hobbiton.example", 
-"epk": {"kty": "EC", "crv": "P-521", "x": h'50E0DD1B0CD41D16B934FC20E9
-7A8260E5F68CEEFFA37C7AE1A505C1ACEEECD536FDA8F85528D2881E7E082AEED47BBE
-AFFFB505F5E4551ED85A2B380DA7F2E578', "y": h'01935418B14EB993FFD0DD4167
-C4028CB438E07522604A5B9758184093328433F3E610CA217E0054C89AEFC293E4A3D1
-8F7BA1368EE4F55B8B1ED85C965323B869E0'}}, 4: h'103D44DD309219979DD6A9D5
-796ACC3F44E11C5D729D273FD710450929723BC63B59B601F63216B6'},
-{3: {1: -2, 5: "bilbo.baggins@hobbiton.example"}, 
-4: h'4CF21373F42E89DDE1473BFFE88453B57E2187AE8FFC576763401CAD05B13C61B
-FBA14498309C2F3C81E158E42F657763070FBCB1E669DFDFAC4D3900B9E9C90719EAB5
-C66A23AA2FF94B77C62ED3A891919424E667D744B2574A48856188387D418CE5DF0B38
-E258E8C54FD713307C9D5EC2EF056E5E65DB31788DB27D27023248007BF0298C9FFF24
-1D882122A7D071D1C035A85941E99F8C5D947B25D1416237CDF210DB4C1DECE77E3DC5
-8F915057DFE1F7BB8344AD39391ECFFB26F9859E0DFAC0006A06B7BBC5F8EB46945DB6
-89396A18BA9A78897E3519E77C638106FB8C44E16DA9A8CDB383BE2AE303C4439C7F8C
-B14901DA145F061AC2A98316DD1'}, 
-{3: {1: -5, 5: "018c0ae5-4d9b-471b-bfd6-eef314bc7037"}, 
-4: h'9C99786947BDD0CDCB114934A6E518585E5C2341C96579F82D5FE62036D19A0D8
-3B92DA7A5256856'}]}
+{1: 3, 2: h'A10104', 4: h'546869732069732074686520636F6E74656E742E',
+ 10: h'051FA3288A39AC726B4FAE79A4B93FB17D8DC3F6E666247EE7AD40CE1665FCDE', 
+ 9: [
+   {3: {1: "ECDH-ES+A128KW", 
+        5: h'62696C626F2E62616767696E7340686F626269746F6E2E6578616D706C65', 
+        4: {1: 1, -1: 5, -2: h'43B12669ACAC3FD27898FFBA0BCD2E6C366D53BC4DB
+            71F909A759304ACFB5E18CDC7BA0B13FF8C7636271A6924B1AC63C02688075
+            B55EF2D613574E7DC242F79C3',
+            -3: h'812DD694F4EF32B11014D74010A954689C6B6E8785B333D1AB44F22B
+            9D1091AE8FC8AE40B687E5CFBE7EE6F8B47918A07BB04E9F5B1A51A334A16B
+            C09777434113'}}, 
+    4: h'1B120C848C7F2F8943E402CBDBDB58EFB281753AF4169C70D0126C0D164362771
+         60821790EF4FE3F'},
+   {3: {1: -2, 5: h'62696C626F2E62616767696E7340686F626269746F6E2E6578616D
+        706C65'},
+    4: h'46C4F88069B650909A891E84013614CD58A3668F88FA18F3852940A20B3509859
+         1D3AACF91C125A2595CDA7BEE75A490579F0E2F20FD6BC956623BFDE3029C318
+        F82C426DAC3463B261C981AB18B72FE9409412E5C7F2D8F2B5ABAF780DF6A282D
+        B033B3A863FA957408B81741878F466DCC437006CA21407181A016CA608CA8208
+        BD3C5A1DDC828531E30B89A67EC6BB97B0C3C3C92036C0CB84AA0F0CE8C3E4A21
+        5D173BFA668F116CA9F1177505AFB7629A9B0B5E096E81D37900E06F561A32B6B
+        C993FC6D0CB5D4BB81B74E6FFB0958DAC7227C2EB8856303D989F93B4A0518307
+        06A4C44E8314EC846022EAB727E16ADA628F12EE7978855550249CCB58'}, 
+   {3: {1: -5, 5: "018c0ae5-4d9b-471b-bfd6-eef314bc7037"}, 
+        4: h'0B2C7CFCE04E98276342D6476A7723C090DFDD15F9A518E7736549E99837
+        0695E6D6A83B4AE507BB'}]}
 
 ~~~~
 
@@ -911,11 +963,13 @@ Encoded in CBOR - 216 bytes, content is 14 bytes long
 ~~~~ CBORdiag
 
 {1: 2, 2: h'A10101', 7: h'C9CF4DF2FE6C632BF7886413', 
-4: h'45FCE2814311024D3A479E7D3EED063850F3F0B94EE043BAFDFA14636E632CF675A
-F2DAE', 9: [{3: {1: "ECDH-ES", 5: "meriadoc.brandybuck@buckland.example",
-"epk": {"kty": "EC", "crv": "P-256", "x": h'98F50A4FF6C05861C8860D13A638E
-A56C3F5AD7590BBFBF054E1C7B4D91D6280', "y": h'F01400B089867804B8E9FC96C393
-2161F1934F4223069170D924B7E03BF822BB'}}}]}
+ 4: h'45FCE2814311024D3A479E7D3EED063850F3F0B94EE043BAFDFA14636E632CF6
+      75AF2DAE', 
+  9: [{3: {1: "ECDH-ES", 5: "meriadoc.brandybuck@buckland.example", 
+       4: {1: 1, -1: 4, -2: h'98F50A4FF6C05861C8860D13A638EA56C3F5AD75
+           90BBFBF054E1C7B4D91D6280', 
+          -3: h'F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7
+           E03BF822BB'}}}]}
 
 ~~~~
 
@@ -927,18 +981,18 @@ To make it easier to read, this uses CBOR's diagnostic notation rather than a bi
 
 ~~~~ CBORdiag
 
-{4: h'546869732069732074686520636F6E74656E742E', 5: 
-[{2: h'A20165505333383405781E62696C626F2E62616767696E7340686F626269746F6E2
-E6578616D706C65', 
-3: {"alg": "PS384", "kid": "bilbo.baggins@hobbiton.example"}, 
-6: h'3EF249F6D18403C6DE98B7673432D3276854337FBAE38F065EC507DCF586E7D710EA7
-0CCE9612DAF72B6C461E152C8F9C5479D86504CCC9E81E2863F0AFB9B09CB3E36701290645
-7ABF718C9EE5E46E6CD3274A029FD1B4EAFD1AADB6EC9712420E761E0CA69FFAC6E05B85BD
-D195A45304BBAC7F6D71BFF90C706119A453E81EC9B8B98006D9CA6E4A6EA2D602F9EF8367
-E5ABB1BE88B3ECDDD795BBC191FA930191E88C65C7C8CC62E75F217557037D8DCDCFACBC6D
-D794DB296196A53F76CDF4E329DFC3674E74CD0DC8BE632DEBD2DA808456D41B7D1E59E69E
-D9B2461148CACD8BF4524CDA85488A6D3F69B20F5B73EFAEE803AF60A97EE435BB8F36DE9'
-}]}
+{1: 1, 4: h'546869732069732074686520636F6E74656E742E', 
+ 5: [{2: h'A20165505333383405781E62696C626F2E62616767696E7340686F626
+         269746F6E2E6578616D706C65', 
+      6: h'4D645B5FF17BCDAD7EB29ABA0EBBFFA747E72767714F26EDBC5B4C1D2
+        1CBE799B71388CCC73BDB25C4443D0EA2226B774A5B4815ABA82233B33DA
+        4C3958D08285384A854A8F7F8FA9635A1A63BAB2A5D8CF45939A7FA2D95C
+        C827EF94EF85276611B957B402BD1756D952597751C7AF5D26023012D3DC
+        BFD785F9C0BE57F60719EFB0D2F9280A8D2B18D142F76942D007B4E24087
+        DA4BE8F793B646D7B03A86C12731A8EDB36A95DFE6C281B58388380354A2
+        94CC21DBC1C1EEE2DB35293AD406F50283874475B9A7E22920BD79B3D055
+        214EE1C9D941F125548B9F23A87DCC26CBBEFD0919CF6F89E192A78130AC
+        018D1921EF5B4D0A47659E9CBC1CE58ED26'}]}
 
 ~~~~
 
@@ -952,13 +1006,23 @@ Encoded in CBOR - 491 bytes, content is 14 bytes long
 
 ~~~~ CBORdiag
 
-{1:2, 4: h'546869732069732074686520636F6E74656E742E', 
-5: [
-{2: h'A101655253323536', 3: {"alg": "RS256", 
-"kid": "bilbo.baggins@hobbiton.example", 
-5: "bilbo.baggins@hobbiton.example"}, 6: null}, 
-{3: {"alg": "ES512", "kid": "bilbo.baggins@hobbiton.example", 
-1: "ES512", 5: "bilbo.baggins@hobbiton.example"}, 6: null}]}
+{1: 1, 4: h'546869732069732074686520636F6E74656E742E', 
+ 5: [{2: h'A10129', 3: {5: "bilbo.baggins@hobbiton.example"}, 
+      6: h'1FD44A2BA1A8A0A664024E7E2AFD1D1D1159460E3C03B9BE8C8F60639CE
+        614F59AF33108B65BBDEF3C330FB97E335DA11EEA9B6CBD7E7908FB8B5F61D
+        FEB76EC6ED6A62BD9F3D338E373E1903CE2D5D3BD20086BBCA82A6F424E9F4
+        1591BD6261835A74F0C0425E88666D530B72ADC1E33C10DC1D0361922B6ADC
+        685B76E5CEA79FACA7C4CB66B1379B3F852A5ACE79A5812C6EE1CD3CC7CC88
+        F2C9D30FF89D3BD0DE2D0C9355E9712B1BA8AB2F2B065BE0A0D93BFFA27DA0
+        2221865A2B16093D92F71F9864D92C87057AE591334DB4CF881ECBEC2AC727
+        77D9C88871C10733D65566B35FBFA6BAB54078C1C73AE8758196221FB2814E
+        C283A95D191FB80D616'},
+     {3: {1: -9, 5: "bilbo.baggins@hobbiton.example"}, 
+      6: h'32247A4FD1CA2B69EEEB48CE65D07F2089D79271BB94847F8628DADB7AF
+           FC1A34C24D10DB3C5E0D00BD9CB3BFB9666BAD6E9752564D35C5CCE375B
+           A44E2FF33336008D8E07484041DBEFB179EBFFA5455E05D6B24E22DAECF
+           0D76AD041A13A9DD7E3DAED7F6B09F1831092FFC5CB8BFE7DBF5E047858
+           02A4CB741395F81E76A3A8AD61'}]}
 
 ~~~~
 
@@ -981,11 +1045,18 @@ This table contains the list of all key values that can ocur in the  COSE_Sign, 
 
 ~~~~ CDDL
 
-message_keys = (
-   msg_type:1, protected:2, unportected:3, payload:4,
-   signatures:5, signature:6, iv:7, aad:8, ciphertext:4,
-   recipients:9, tag:10
-)
+; message_keys
+msg_type=1
+protected=2
+unprotected=3
+payload=4
+signatures=5
+signature=6
+iv=7
+aad=8
+ciphertext=4
+recipients=9
+tag=10
 
 ~~~~
 
@@ -1017,7 +1088,8 @@ This table contains a list of all of the parameters for use in signature and enc
 | name | algorithm | key | CBOR type | description |
 | apu | ECDH | -1 | bstr |
 | apv | ECDH | -2 | bstr |
-| iv | * | -1 |  | bstr |
+| iv | A128GCMKW, A192GCMKW, A256GCMKW | -1 | bstr |
+| iv | A128GCM, A192GCM, A256GCM | -1 | bstr |
 | p2c | PBE | -1 | int |
 | p2s | PBE | -2 | bstr |
 
@@ -1026,24 +1098,24 @@ This table contains a list of all of the parameters for use in signature and enc
 This table contains all of the defined algorithms for COSE.
 
 | name | key | description |
-| HS256 | * | HMAC w/ SHA-256 |
-| HS384 | * | HMAC w/ SHA-384 |
-| HS512 | * | HMAC w/ SHA-512 |
+| HS256 | 4 | HMAC w/ SHA-256 |
+| HS384 | 5 | HMAC w/ SHA-384 |
+| HS512 | 6 | HMAC w/ SHA-512 |
 | RS256 | * | RSASSA-v1.5 w/ SHA-256 |
 | RS384 | * | RSASSA-v1.5 w/ SHA-384 |
 | RSA512 | * | RSASSA-v1.5 w/ SHA-256 |
-| ES256 | * | ECDSA w/ SHA-256 |
-| ES384 | * | ECDSA w/ SHA-384 |
-| ES512 | * | ECDSA w/ SHA-512 |
-| PS256 | * | RSASSA-PSS w/ SHA-256 |
+| ES256 | -7 | ECDSA w/ SHA-256 |
+| ES384 | -8 | ECDSA w/ SHA-384 |
+| ES512 | -9 | ECDSA w/ SHA-512 |
+| PS256 | -10 | RSASSA-PSS w/ SHA-256 |
 | PS384 | * | RSASSA-PSS w/ SHA-384 |
-| PS512 | * | RSASSA-PSS w/ SHA-512 |
+| PS512 | -11 | RSASSA-PSS w/ SHA-512 |
 | RSA1_5 | * | RSAES v1.5 Key Encryption |
-| RSA-OAEP | * | RSAES OAEP w/ SHA-256 |
-| A128KW | * | AES Key Wrap w/ 128-bit key |
-| A192KW | * | AES Key Wrap w/ 192-bit key |
-| A256KW | * | AES Key Wrap w/ 256-bit key |
-| dir | * | Direct use of CEK |
+| RSA-OAEP | -2 | RSAES OAEP w/ SHA-256 |
+| A128KW | -3 | AES Key Wrap w/ 128-bit key |
+| A192KW | -4 | AES Key Wrap w/ 192-bit key |
+| A256KW | -5 | AES Key Wrap w/ 256-bit key |
+| dir | -6 | Direct use of CEK |
 | ECDH-ES | * | ECDH ES w/ Concat KDF as CEK |
 | ECDH-ES+A128KW | * | ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key |
 | ECDH-ES+A192KW | * | ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key |
@@ -1054,41 +1126,64 @@ This table contains all of the defined algorithms for COSE.
 | PBES2-HS256+A128KW | * | PBES2 w/ HMAC SHA-256 and AES Key wrap w/ 128 bit key |
 | PBES2-HS384+A192KW | * | PBES2 w/ HMAC SHA-384 and AES Key wrap w/ 192 bit key |
 | PBES2-HS512+A256KW | * | PBES2 w/ HMAC SHA-512 and AES Key wrap w/ 256 bit key |
-| A128GCM | * | AES-GCM mode w/ 128-bit key |
-| A192GCM | * | AES-GCM mode w/ 192-bit key |
-| A256GCM | * | AES-GCM mode w/ 256-bit key |
+| A128GCM | 1 | AES-GCM mode w/ 128-bit key |
+| A192GCM | 2 | AES-GCM mode w/ 192-bit key |
+| A256GCM | 3 | AES-GCM mode w/ 256-bit key |
 
-# COSE Key Parameter Keys
+
+# COSE General Values
+
+| name | number | description |
+| EC | 1 | Elliptic Curve key Type |
+| RSA | 2 | RSA Key type |
+| oct | 3 | Octet Key type |
+| P256| 4 | EC Curve P256 (NIST) |
+| P521 | 5 | EC Curve P521 (NIST) |
+
+# COSE Key Map Keys {#COSE_KEY_KEYS}
 
 This table contains a list of all of the parameters defined for keys that were defined by the JOSE document set.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
 
-| name | number | CBOR type |
-| kty |  * | tstr |
-| use | * | tstr |
-| key_ops | * | tstr* |
-| alg | * | tstr |
-| kid | * | tstr |
+| name | key | CBOR type | registry | description |
+| kty |  1 | tstr / int | COSE General Values | Identification of the key type |
+| use | * | tstr | | deprecated - don't use |
+| key_ops | * | [* tstr] |
+| alg | 3 | tstr / int | COSE Algorithm Values | Key usage restriction to this algorithm |
+| kid | 2 | bstr | | Key Identification value - match to kid in message |
 | x5u | * | tstr |
 | x5c | * | bstr* |
 | x5t | * | bstr |
-| xt5#S256 | * | bstr |
+| x5t#S256 | * | bstr |
+
+~~~~ CDDL
+
+;key_keys
+kty=1
+key_kid=2
+key_alg=3
+
+~~~~
+
+
+# COSE Key Parameter Keys {#COSE_KEY_PARAM_KEYS}
 
 This table contains a list of all of the parameters that were defined by the JOSE document set for a specific key type.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
 Parameters dealing with keys
 
-| key type | name | number | CBOR type |
-| EC | d | * | bstr |
-| EC | x | * | bstr |
-| EC | y | * | bstr |
-| RSA | e | * | bstr | 
-| RSA | n | * | bstr |
-| RSA | d | * | bstr |
-| RSA | p | * | bstr |
-| RSA | q | * | bstr |
-1| RSA | dp | * | bstr |
-| RSA | dq | * | bstr |
-| RSA | qi | * | bstr |
-| RSA | oth | * | bstr |
-| RSA | r | * | bstr |
-| RSA | t | * | bstr |
-| oct | k | * | bstr |
+| key type | name | key | CBOR type | registry | description |
+| EC | crv | -1 | int / tstr | Pull from general value registry |
+| EC | x | -2 | bstr |
+| EC | y | -3 | bstr |
+| EC | d | -4 | bstr |
+| RSA | e | -1 | bstr | 
+| RSA | n | -2 | bstr |
+| RSA | d | -3 | bstr |
+| RSA | p | -4 | bstr |
+| RSA | q | -5 | bstr |
+| RSA | dp | -6 | bstr |
+| RSA | dq | -7 | bstr |
+| RSA | qi | -8 | bstr |
+| RSA | oth | -9 | bstr |
+| RSA | r | -10 | bstr |
+| RSA | t | -11 | bstr |
+| oct | k | -1 | bstr |
