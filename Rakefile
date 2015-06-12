@@ -2,7 +2,7 @@ require "rexml/document"
 require "rexml/xpath"
 include REXML
 
-XMLFILE = "draft-schaad-cose.xml"
+XMLFILE = "draft-schaad-cose-msg.xml"
 CDDLFILE = "cose-extracted.cddl"
 
 task :verify => [CDDLFILE, XMLFILE] do |t|
