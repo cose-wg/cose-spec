@@ -1,11 +1,9 @@
 # CBOR Encoded Message Syntax
 
-This is the working area for the [IETF COSE non-Working
-Group] draft of CBOR Encoded Message Syntax
+This is the working area for the expected IETF COSE draft of CBOR Encoded Message Syntax
 
 * [Editor's copy](https://cose-wg.github.io/cose-spec/)
-* [Working Group Draft] (https://tools.ietf.org/html/draft-schaad-cose)
-
+* [Working Group Draft] (https://tools.ietf.org/html/draft-schaad-cose-msg)
 
 ## Contributing
 
