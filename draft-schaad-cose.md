@@ -8,6 +8,7 @@ pi:
   symrefs: 'yes'
   sortrefs: 'yes'
   comments: 'yes'
+  inline: 'yes'
 title: CBOR Encoded Message Syntax
 area: Security
 author:
@@ -49,6 +50,8 @@ The work in this document is derived in part from the JSON web security document
 
 --- middle
 
+{:br: vspace="0"}
+
 # Introduction
 
 The JOSE working group produced a set of documents that defined how to
@@ -57,7 +60,7 @@ operations for JavaScript Object Notation (JSON) documents and then to encode th
 JSON format {{RFC7159}}.
 This document does the same work for use with the Concise Binary Object Representation (CBOR) {{RFC7049}} document format.
 While there is a strong attempt to keep the flavor of the original
-JOSE documents, two considerations are taking into account:
+JOSE documents, two considerations are taken into account:
 
 * CBOR has capabilities that are not present in JSON and should be used.
   One example of this is the fact that CBOR has a method of encoding binary directly without first converting it into a base64 encoded sting. 
@@ -79,9 +82,9 @@ JOSE documents, two considerations are taking into account:
 
 * Use binary encodings for binary data rather than base64url encodings.
 
-* Remove the authentiction tag for encryption algorithms as a separate item.
+* Remove the authentication tag for encryption algorithms as a separate item.
 
-* Remove the flattened mode of encoding.  Forcing the use of an array of recipients at all times forces the message size to be two bytes larger, but one gets a corresponding decrease in the implementation size that should compenstate for this.
+* Remove the flattened mode of encoding.  Forcing the use of an array of recipients at all times forces the message size to be two bytes larger, but one gets a corresponding decrease in the implementation size that should compensated for this.
 
 ## Requirements Terminology
 
@@ -121,7 +124,7 @@ COSE_Tagged_MSG = #6.999(COSE_MSG)   ; Replace 999 with TBD1
 ~~~~
 
 The top level of each of the COSE message structures are encoded as arrays.  
-We use an integer to distingish bettwen the different security message types.
+We use an integer to distinguish between the different security message types.
 By looking at the integer in the first element, one can determine which security message is
 being used and thus what the syntax is for the rest of the elements in the array.
 
@@ -133,12 +136,13 @@ Clients need to recognize that the set of values could be extended at a later da
 
 The structure of COSE has been designed to have two buckets of information that are not considered to be part of the message structure itself, but are used for holding information about algorithms, keys, or evaluation hints for the  processing of the layer.
 These two buckets are available for use in all of the structures in this document except for keys.
-While these buckets can be present, they may not all be usable in all instances. For example, while the protected bucket is present for recipient structures, most of the algorithms that are-used for recipients do not provide the necessary functionality to provide the needed protection and thus the element is not used.
+While these buckets can be present, they may not all be usable in all instances. For example, while the protected bucket is present for recipient structures, most of the algorithms that are used for recipients do not provide the necessary functionality to provide the needed protection and thus the element is not used.
 
 Both buckets are implemented as CBOR maps.  The maps can be keyed by negative integers, unsigned integers and strings.  The negative and unsigned integers are used for compactness of encoding.  The value portion is dependent on the key definition. Both maps use the same set of key/value pairs.  The integer key range has been divided into several sections with a standard range, a private range, and a range that is dependent on the algorithm selected.  The tables of keys defined can be found in {{Header-Table}}.
 
 Two buckets are provided for each layer:
 
+{:br}
 protected
 : contains attributes about the layer which are to be cryptographically protected.  This bucket MUST NOT be used if it is not going to be included in a cryptographic computation.
 
@@ -207,11 +211,12 @@ COSE_Sign = (
 ~~~~
 
 The keys in the COSE_Sign map are keyed by the values in {{TOP-Level-Keys}}.  While other keys can be present in the
-map, it is not generally a recommended practice.  The other keys can be either of integer or string type, use of other types is strongly discouraged.  See the note in {{CBOR-Canonical} about options for allowing or disallowing other keys.
+map, it is not generally a recommended practice.  The other keys can be either of integer or string type, use of other types is strongly discouraged.  See the note in {{CBOR-Canonical}} about options for allowing or disallowing other keys.
 
 
-The fields is the structure have the following semantics:
+The fields in the structure have the following semantics:
 
+{:br}
 protected
 : contains attributes about the payload which are to be protected by the signature.
   An example of such an attribute would be the content type ('cty') attribute.
@@ -238,9 +243,8 @@ payload
 signatures
 : is an array of signature items.  Each of these items uses the COSE_signature structure for its representation.
 
-
 The keys in the COSE_signature map are keyed by the values in {{TOP-Level-Keys}}.  While other keys can be present in the
-map, it is not generally a recommended practice.  The other keys can be either of integer or string type, use of other types is strongly discouraged.  See the note in {{CBOR-Canonical} about options for allowing or disallowing other keys.
+map, it is not generally a recommended practice.  The other keys can be either of integer or string type, use of other types is strongly discouraged.  See the note in {{CBOR-Canonical}} about options for allowing or disallowing other keys.
 
 The CDDL grammar structure for a signature is:
 
@@ -256,6 +260,7 @@ COSE_signature =  (
 
 The fields in the structure have the following semantics:
 
+{:br}
 protected
 : contains additional information to be authenticated by the signature.
   The field holds data about the signature operation.
@@ -286,11 +291,11 @@ Sig_structure = [
 
 How to compute a signature:
 
-1. Create a Sig_structure object and populate it with the appropriate fields.  For body_protected and sign_protected, if the fields are not present in their corresponding maps, an bstr of length zero is be used.
+1. Create a Sig_structure object and populate it with the appropriate fields.  For body_protected and sign_protected, if the fields are not present in their corresponding maps, a bstr of length zero is be used.
 
 2. Create the value to be hashed by encoding the Sig_structure to a byte string.
 
-1. Comput the hash value from the byte string.
+1. Compute the hash value from the byte string.
 
 3. Sign the hash
 
@@ -315,9 +320,10 @@ When encrypting the plain text, it is normal to use an Authenticated
 Encryption with Additional Data (AEAD) algorithm.  For key management,
 either AE or AEAD algorithms can be used.
 See {{AE-algo}} for more details about the different types of
-algorithms.
-{:aeds: source="Ilari"}
-I don't follow/understand this text{:aeds}
+algorithms.[^1]
+
+[^1]: I don't follow/understand this text
+{: source="Ilari"}
 
 The CDDL grammar structure for encryption is:
 
@@ -337,6 +343,7 @@ COSE_encrypt_a = {COSE_encrypt}
 
 Description of the fields:
 
+{:br}
 protected
 : contains the information about the plain text or encryption
   process that is to be integrity protected.
@@ -539,6 +546,7 @@ COSE_mac = (
 
 Field descriptions:
 
+{:br}
 protected
 : contains attributes about the payload which are to be protected by the MAC.
   An example of such an attribute would be the content type ('cty') attribute.
@@ -612,7 +620,7 @@ COSE_KeySet = [+COSE_Key]
 The element "kty" is a required element in a COSE_Key map.  
 All other elements are optional and not all of the elements listed in {{RFC7517}} or {{RFC7518}} have been listed here even though they can all appear in a COSE_Key map.
 
-The "key_ops" element is prefered over the "use" element as the information provided that way is more finely detailed about the operations allowed.  It is strongly suggested that this element be present for all keys.
+The "key_ops" element is preferred over the "use" element as the information provided that way is more finely detailed about the operations allowed.  It is strongly suggested that this element be present for all keys.
 
 The same fields defined in {{RFC7517}} are used
 here with the following changes in rules:
@@ -632,7 +640,7 @@ here with the following changes in rules:
 
 # CBOR Encoder Restrictions {#CBOR-Canonical}
 
-There as been an attempt to resrict the number of places where the document 
+There as been an attempt to limit the number of places where the document 
 needs to impose restrictions on how the CBOR Encoder needs to work.  We have
 managed to narrow it down to the following restrictions:
 
@@ -645,13 +653,13 @@ managed to narrow it down to the following restrictions:
 
 * All parsers used SHOULD fail on both parsing and generation if the same key is used twice in a map.
 
-While it is permitted to have key values other than those specified in this document in the outer maps (COSE_Sign, COSE_Signature, COSE_encrypt, COSE_recipient and COSE_mac), doing so is not encouraged.  Applications should make a determination if it will be permitted for that application.  In general, any needed new fields can be accomadated by the introduction of new header fields to be carried in the protected or unprotected fields.  Applications that need to have new fields in these maps should consider getting new message types assigned for these usages.  Without this change, old applications will not see and process the new fields.
+While it is permitted to have key values other than those specified in this document in the outer maps (COSE_Sign, COSE_Signature, COSE_encrypt, COSE_recipient and COSE_mac), doing so is not encouraged.  Applications should make a determination if it will be permitted for that application.  In general, any needed new fields can be accommodated by the introduction of new header fields to be carried in the protected or unprotected fields.  Applications that need to have new fields in these maps should consider getting new message types assigned for these usages.  Without this change, old applications will not see and process the new fields.
 
 # IANA Considerations
 
 ## CBOR Tag assignment
 
-It is requested that IANA assign a new tag from the "Concise Binary Object Represetion (CBOR) Tags" registry.  It is requested that the tag be assigned in the 0 to 23 value range.
+It is requested that IANA assign a new tag from the "Concise Binary Object Representation (CBOR) Tags" registry.  It is requested that the tag be assigned in the 0 to 23 value range.
 
 Tag Value:  TBD1
 
@@ -667,6 +675,8 @@ Semantics: COSE security message.
 It is requested that IANA create a new registry entitled "COSE Header Key".
 
 The columns of the registry are:
+
+{:br}
 name
 : The name is present to make it easier to refer to and discuss the registration entry.  The value is not used in the protocol.  Names are to be unique in the table.
 
@@ -722,6 +732,8 @@ The initial contents of the registry can be found in {{Header-Algorithm-Table}}.
 It is requested that IANA create a new registry entitled "COSE Algorithm Registry".
 
 The columns of the registry are:
+
+{:br}
 key
 : The value to be used to identify this algorithm.  Algorithm keys MUST be unique. The key can be a positive integer, a negative integer or a string.  Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.  Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.  Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.  Integer values in the range -1 to -65536 are delegated to the "COSE Header Algorithm Key" registry.  Integer values beyond -65536 are marked as private use.
 
@@ -735,10 +747,11 @@ The initial contents of the registry can be found in {{ALG_TABLE}}.  The specifi
 
 ## COSE Key Map Registry
 
-It is requested that IANA create a new registry entitied "COSE Key Map Registry".
+It is requested that IANA create a new registry entitled "COSE Key Map Registry".
 
 The columns of the registry are:
 
+{:br}
 name
 : This is a descriptive name that enables easier reference to the item.  It is not used in the encoding.
 
@@ -765,6 +778,7 @@ It is requested that IANA create a new registry "COSE Key Parameters".
 
 The columns of the table are:
 
+{:br}
 key type
 : This field contains a descriptive string of a key type.  This should be a value that is in the COSE General Values table and is placed in the 'kty' field of a COSE Key structure.
 
@@ -772,7 +786,7 @@ name
 : This is a descriptive name that enables easier reference to the item.  It is not used in the encoding.
 
 key
-: The key is to be unqiue for every value of key type.  The range of values is from -256 to -1.  Keys are expected to be re-used for different keys.
+: The key is to be unique for every value of key type.  The range of values is from -256 to -1.  Keys are expected to be re-used for different keys.
 
 CBOR type
 : This field contains the CBOR type for the field
@@ -783,7 +797,7 @@ description
 specification
 : This contains a pointer to the public specification for the field if one exists
 
-This registry will be initially populated bythe values in {{COSE_KEY_PARAM_KEYS}}.  The specification column for all of these entries will be this document.
+This registry will be initially populated by the values in {{COSE_KEY_PARAM_KEYS}}.  The specification column for all of these entries will be this document.
 
 
 # Security Considerations
@@ -796,7 +810,7 @@ There are security considerations:
 
 3.  Use of direct key with other recipient structures hands the key to other recipients.
 
-4.  Use of direcct ECDH direct encryption is easy for people to leak information on if there are other recipients in the message.
+4.  Use of direct ECDH direct encryption is easy for people to leak information on if there are other recipients in the message.
 
 5.  Considerations about protected vs unprotected header fields.
 
@@ -865,7 +879,7 @@ These levels would be:
 
 # Examples
 
-The examples can be found at https://github.com/cose-wg/Examples.  I am currently still in the process of getting the examples up there along with some control information for people to be albe to check and reproduce the examples.
+The examples can be found at https://github.com/cose-wg/Examples.  I am currently still in the process of getting the examples up there along with some control information for people to be able to check and reproduce the examples.
 
 ## Direct MAC {#Mac-01}
 
@@ -873,7 +887,7 @@ This example has some features that are in questions but not yet incorporated in
 
 To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
 
-This example is uses HMAC with SHA-256 as the digest algorithm.  The key manangment is uses two static ECDH keys along with HKDF to directly derive the key used in the HMAC operation.
+This example is uses HMAC with SHA-256 as the digest algorithm.  The key management is uses two static ECDH keys along with HKDF to directly derive the key used in the HMAC operation.
 
 ~~~~ CBORdiag
 
@@ -895,7 +909,7 @@ This example has some features that are in questions but not yet incorporated in
 
 To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
 
-This exmple uses AES-128-MAC trucated to 64-bits as the digest algorithm.  It uses AES-256 Key wrap for the key manangment algorithm wrapping the 128-bit key used for the digest algorthm.
+This example uses AES-128-MAC truncated to 64-bits as the digest algorithm.  It uses AES-256 Key wrap for the key management algorithm wrapping the 128-bit key used for the digest algorithm.
 
 ~~~~ CBORdiag
 
@@ -913,9 +927,9 @@ This example has some features that are in questions but not yet incorporated in
 
 To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
 
-This example uses HMAC with SHA-256 for the digest algorithm.  There are three different key manangment techniques applied:
+This example uses HMAC with SHA-256 for the digest algorithm.  There are three different key management techniques applied:
 
-* An ephemeral static ECDH key agrement operation using AES-128 key wrap on the digest key.
+* An ephemeral static ECDH key agreement operation using AES-128 key wrap on the digest key.
 
 * Key transport using RSA-OAEP with SHA-256 for the hash and the mfg function operations.
 
