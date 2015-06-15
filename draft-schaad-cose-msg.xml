@@ -1,752 +1,1543 @@
-<?xml version='1.0' encoding='ascii'?>
-<!DOCTYPE rfc SYSTEM "rfc2629.dtd">
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="rfc2629.xslt" ?>
+<!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
+  <!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml" >
+  <!ENTITY RFC3394 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3394.xml" >
+  <!ENTITY RFC3447 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3447.xml" >
+  <!ENTITY RFC3610 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3610.xml" >
+  <!ENTITY RFC5652 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5652.xml" >
+  <!ENTITY RFC5752 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5752.xml" >
+  <!ENTITY RFC5990 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5990.xml" >
+  <!ENTITY RFC7049 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7049.xml" >
+  <!ENTITY RFC7159 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7159.xml" >
+  <!ENTITY RFC7515 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7515.xml" >
+  <!ENTITY RFC7516 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7516.xml" >
+  <!ENTITY RFC7517 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7517.xml" >
+  <!ENTITY RFC7518 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7518.xml" >
+  <!ENTITY CDDL SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.greevenbosch-appsawg-cbor-cddl.xml" >
+  <!ENTITY CBCMAC SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.mcgrew-aead-aes-cbc-hmac-sha2.xml" >
+]>
+
 <?rfc toc="yes"?>
 <?rfc symrefs="yes"?>
 <?rfc sortrefs="yes"?>
 <?rfc comments="yes"?>
-<rfc ipr="trust200902" docName="draft-schaad-cose-msg-00" category="info" obsoletes="" updates="" submissionType="IETF" xml:lang="en">
+
+<rfc ipr="trust200902" docName="draft-schaad-cose-msg-latest" category="info">
   <front>
     <title>CBOR Encoded Message Syntax</title>
+
     <author initials="J." surname="Schaad" fullname="Jim Schaad">
       <organization>August Cellars</organization>
       <address>
         <email>ietf@augustcellars.com</email>
       </address>
     </author>
+
     <date/>
+
     <area>Security</area>
     <abstract>
-      <t>Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  The work in this document is derived in part from the JSON web security documents using the same parameters and algorithm identifiers as they do.</t>
+      <t>
+        Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.
+        There is a need for the ability to have the basic security services defined for this data format.
+        This document specifies how to do signatures, message authentication codes and encryption using this data format.
+      </t>
     </abstract>
   </front>
+
   <middle>
-    <section anchor="introduction" title="Introduction" toc="default">
-      <t>The JOSE working group produced a set of documents that defined how to perform encryption, signatures and message authentication (MAC) operations for JavaScript Object Notation (JSON) documents and then to encode the results using the JSON format <xref target="RFC7159" pageno="false" format="default"/>.  This document does the same work for use with the Concise Binary Object Representation (CBOR) <xref target="RFC7049" pageno="false" format="default"/> document format.  While there is a strong attempt to keep the flavor of the original JOSE documents, two considerations are taking into account:</t>
+
+    <section anchor="introduction" title="Introduction">
+
+      <t>
+        There has been an increased focus on the small, constrained devices that make up the Internet of Things (IOT). 
+        One of the standards that has come of of this process is the Concise Binary Object Representation (CBOR). 
+        This standard extends the data model of the JavaScript Object Notation (JSON) by allowing for binary data among other changes. 
+        CBOR is being adopted by several of the IETF working groups dealing with the IOT world to do their encoding of data structures. 
+        CBOR was designed specifically to be both small in terms of messages transport and implementation size. 
+        A need exists to provide basic message security services for IOT and using CBOR as the message encoding format makes sense.
+      </t>
+
+      <t>
+        The JOSE working group produced a set of documents <xref target="RFC7515"/><xref target="RFC7516"/><xref target="RFC7517"/><xref target="RFC7518"/> that defined how to perform encryption, signatures and message authentication (MAC) operations for JavaScript Object Notation (JSON) documents and then to encode the results using the JSON format <xref target="RFC7159"/>.
+        This document does the same work for use with the Concise Binary Object Representation (CBOR) <xref target="RFC7049"/> document format.
+        While there is a strong attempt to keep the flavor of the original JOSE documents, two considerations are taken into account:
+      </t>
+
       <t>
         <list style="symbols">
-          <t>CBOR has capabilities that are not present in JSON and should be used.  One example of this is the fact that CBOR has a method of encoding binary directly without first converting it into a base64 encoded sting.</t>
-          <t>The authors did not always agree with some of the decisions made by the JOSE working group.  Many of these decisions have been re-examined, and where it seems to the authors to be superior or simpler, replaced.</t>
+          <t>
+            CBOR has capabilities that are not present in JSON and should be used. 
+            One example of this is the fact that CBOR has a method of encoding binary directly without first converting it into a base64 encoded string.
+          </t>
+          <t>
+            The author did not always agree with some of the decisions made by the JOSE working group. 
+            Many of these decisions have been re-examined, and where it seems to the author to be superior or simpler, replaced.
+          </t>
         </list>
       </t>
-      <section anchor="design-changes-from-jose" title="Design changes from JOSE" toc="default">
+
+      <section anchor="design-changes-from-jose" title="Design changes from JOSE">
+
         <t>
           <list style="symbols">
-            <t>Define a top level message structure so that encrypted, signed and MAC-ed messages can easily identified and still have a consistent view.</t>
-            <t>Signed messages separate the concept of protected and unprotected attributes that are for the content and the signature.</t>
-            <t>Key management has been made to be more uniform.  All key management techniques are represented as a recipient rather than only have some of them be so.</t>
-            <t>MAC messages are separated from signed messages.</t>
-            <t>MAC messages have the ability to do key management on the MAC key.</t>
-            <t>Use binary encodings for binary data rather than base64url encodings.</t>
-            <t>Remove the authentiction tag for encryption algorithms as a separate item.</t>
-            <t>Remove the flattened mode of encoding.  Forcing the use of an array of recipients at all times forces the message size to be two bytes larger, but one gets a corresponding decrease in the implementation size that should compenstate for this.</t>
+            <t>
+              Define a top level message structure so that encrypted, signed and MAC-ed messages can easily identified and still have a consistent view.
+            </t>
+            <t>
+              Signed messages separate the concept of protected and unprotected attributes that are for the content and the signature.
+            </t>
+            <t>
+              Key management has been made to be more uniform. 
+              All key management techniques are represented as a recipient rather than only have some of them be so.
+            </t>
+            <t>
+              MAC messages are separated from signed messages.
+            </t>
+            <t>
+              MAC messages have the ability to do key management on the MAC key.
+            </t>
+            <t>
+              Use binary encodings for binary data rather than base64url encodings.
+            </t>
+            <t>
+              Combine the authentication tag for encryption algorithms with the ciphertext.
+            </t>
+            <t>
+              Remove the flattened mode of encoding. 
+              Forcing the use of an array of recipients at all times forces the message size to be two bytes larger, but one gets a corresponding decrease in the implementation size that should compensate for this.
+              <cref source="JLS">Need to check this list for correctness before publishing.</cref>
+            </t>
           </list>
         </t>
+
       </section>
-      <section anchor="requirements-terminology" title="Requirements Terminology" toc="default">
-        <t>The key words &#8220;MUST&#8221;, &#8220;MUST NOT&#8221;, &#8220;REQUIRED&#8221;, &#8220;SHALL&#8221;, &#8220;SHALL NOT&#8221;, &#8220;SHOULD&#8221;, &#8220;SHOULD NOT&#8221;, &#8220;RECOMMENDED&#8221;, &#8220;NOT RECOMMENDED&#8221;, &#8220;MAY&#8221;, and &#8220;OPTIONAL&#8221; in this document are to be interpreted as described in <xref target="RFC2119" pageno="false" format="default"/>.</t>
-        <t>When the words appear in lower case, their natural language meaning is used.</t>
+
+      
+      <section anchor="requirements-terminology" title="Requirements Terminology">
+
+        <t>
+          The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL NOT”, “SHOULD”, “SHOULD NOT”, “RECOMMENDED”, “NOT RECOMMENDED”, “MAY”, and “OPTIONAL” in this document are to be interpreted as described in <xref target="RFC2119"/>.
+        </t>
+
+        <t>
+          When the words appear in lower case, their natural language meaning is used.
+        </t>
+
       </section>
-      <section anchor="cbor-grammar" title="CBOR Grammar" toc="default">
-        <t>There currently is no standard CBOR grammar available for use by specifications.  In this document, we use the grammar defined in the CBOR data definition language (CDDL) <xref target="I-D.greevenbosch-appsawg-cbor-cddl" pageno="false" format="default"/>.</t>
+      
+      <section anchor="cbor-grammar" title="CBOR Grammar">
+
+        <t>
+          There currently is no standard CBOR grammar available for use by specifications.
+          In this document, we use the grammar defined in the CBOR data definition language (CDDL) <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>.
+        </t>
+
+        <t>
+          NOTE:  At some point we need to make some decisions about how we are using CDDL in this document.
+          Since this draft has not been moving forward at a great rate, changing all references on it to informational is a good idea.
+          On the other hand, having some type of syntax that can be examined by a machine to do syntax checking is a big win.
+          The build system for this draft is currently using the latest version of CDDL to check that the syntax of the examples is correct.
+          Doing this has found problems in both the syntax checker, the syntax and the examples.
+        </t>
+
       </section>
     </section>
-    <section anchor="the-cosemsg-structure" title="The COSE_MSG structure" toc="default">
-      <t>The COSE_MSG structure is a top level CBOR object which corresponds to the DataContent type in <xref target="RFC5652" pageno="false" format="default"/>.  This structure allows for a top level message to be sent which could be any of the different security services, where the security service is identified.  The presence of this structure does not preclude a protocol to use one of the individual structures as a stand alone component.</t>
-      <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-        <artwork type="CDDL" xml:space="preserve" name="" align="left" alt="" width="" height="">
-COSE_MSG = {msg_type=&gt;1, COSE_Sign} / 
-           {msg_type=&gt;2, COSE_encrypt} / 
-           {msg_type=&gt;3, COSE_mac}
+    
+    <section anchor="the-cosemsg-structure" title="The COSE_MSG structure">
+
+      <t>
+        The COSE_MSG structure is a top level CBOR object which corresponds to the DataContent type in the Cryptographic Message Syntax (CMS)<xref target="RFC5652"/>.
+        This structure allows for a top level message to be sent which could be any of the different security services.
+        The security service is identified within the message.
+      </t>
+
+      <t>
+        The COSE_Tagged_MSG CBOR type takes the COSE_MSG and prepends a CBOR tag of TBD1 to the encoding of COSE_MSG.
+        By having both a tagged and untagged version of the COSE_MSG structure, it becomes easy to either use COSE_MSG as a top level object or embedded in another object.
+        The tagged version allows for a method of placing the COSE_MSG structure into a choice, using a consistent tag value to determine that this is a COSE object.
+      </t>
+
+      <t>
+        The existence of the COSE_MSG and COSE_Tagged_MSG CBOR data types are not intended to prevent protocols from using the individual security primitives directly.
+        Where only a single service is required, that structure can be used directly.
+      </t>
+
+      <t>
+        Each of the top-level security objects use a CBOR map as the base structure.
+        The map at the top level is keyed by either an integer key or a string key.
+        This document defines a number of keys in the IANA “COSE Object Keys Registry” (defined in <xref target="IANA-Top-Level-Keys"/>).
+      </t>
+
+      <t>
+        The set of keys present in a security object is not restricted to those defined in this document.
+        However, it is not recommended that additional fields be added to a structure unless this is going to be done in a closed environment.
+        When new fields need to be added, it is recommended that a new message type be created so that processing of the field can be ensured.
+        Using an older structure with a new field means that any security properties of the new field will not be enforced.
+        Before a new field is added at the outer level, strong consideration needs to be given to defining a new header field and placing it into the protected headers.
+        Applications should make a determination if non-standardized fields are going to be permitted.
+        It is suggested that libraries allow for an option to fail parsing if non-standardized fields exist, this is especially true if they do not allow for access to the fields in other ways.
+      </t>
+
+      <t>
+        A field 'msg_type' is defined to distinguish between the different structures when they appear as part of a COSE_MSG object.
+        <cref source="JLS">
+          I have moved msg_type into the individual structures.
+          However, they would not be necessary in the cases where a) the security service is known and b) security libraries can setup to take individual structures.
+          Should they be moved back to just appearing if used in a COSE_MSG rather than on the individual structure?
+        </cref>
+        <cref source="JLS">Should we create an IANA registries for the values of msg_type?</cref>
+        This field is indexed by an integer value 1, the key values defined in this document are:
+      </t>
+
+      <t>
+        <list style="none">
+          <t>0 - Reserved.</t>
+          <t>1 - Signed Message.</t>
+          <t>2 - Encrypted Message</t>
+          <t>3 - Authenticated Message (MAC-ed message)</t>
+        </list>
+      </t>
+
+      <t>
+        Implementations MUST be prepared to find an integer in the location which does not correspond to the values 1 to 3.
+        If this is found then the client MUST stop attempting to parse the structure and fail.
+        The value of 0 is reserved and not to be used.
+        If the value of 0 is found, then clients MUST fail processing the structure.
+        Implementations need to recognize that the set of values might be extended at a later date, but they should not provide a security service based on guesses of what is there.
+      </t>
+
+      <t>
+        NOTE:  Is the any reason to allow for a marker of a COSE_Key structure and all it to be a COSE_MSG, doing so does allow for a security risk, but may simplify the code.
+        <cref source="JLS">OPEN ISSUE</cref>
+      </t>
+
+      <t>
+        The CDDL grammar that corresponds to the above is:
+      </t>
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_MSG = COSE_Sign / 
+    COSE_encrypt / 
+    COSE_mac
 
 COSE_Tagged_MSG = #6.999(COSE_MSG)   ; Replace 999 with TBD1
 
-</artwork>
-      </figure>
-      <t>The top level of each of the COSE message structures are encoded as arrays.<vspace blankLines="0"/> We use an integer to distingish bettwen the different security message types.  By looking at the integer in the first element, one can determine which security message is being used and thus what the syntax is for the rest of the elements in the array.</t>
-      <t>Implementations SHOULD be prepared to find an integer in the location which does not correspond to the values 1 to 3.  If this is found then the client MUST stop attempting to parse the structure and fail.  Clients need to recognize that the set of values could be extended at a later date, but should not provide a security service based on guesses of what is there.</t>
-    </section>
-    <section anchor="header-parameters" title="Header Parameters" toc="default">
-      <t>The structure of COSE has been designed to have two buckets of information that are not considered to be part of the message structure itself, but are used for holding information about algorithms, keys, or evaluation hints for the  processing of the layer.  These two buckets are available for use in all of the structures in this document except for keys.  While these buckets can be present, they may not all be usable in all instances. For example, while the protected bucket is present for recipient structures, most of the algorithms that are-used for recipients do not provide the necessary functionality to provide the needed protection and thus the element is not used.</t>
-      <t>Both buckets are implemented as CBOR maps.  The maps can be keyed by negative integers, unsigned integers and strings.  The negative and unsigned integers are used for compactness of encoding.  The value portion is dependent on the key definition. Both maps use the same set of key/value pairs.  The integer key range has been divided into several sections with a standard range, a private range, and a range that is dependent on the algorithm selected.  The tables of keys defined can be found in <xref target="Header-Table" pageno="false" format="default"/>.</t>
-      <t>Two buckets are provided for each layer:</t>
+; msg_type values
+reserved=0
+msg_type_signed=1
+msg_type_encrypted=2
+msg_type_mac=3
+
+]]></artwork></figure>
+
       <t>
-        <list style="hanging">
-          <t hangText="protected">contains attributes about the layer which are to be cryptographically protected.  This bucket MUST NOT be used if it is not going to be included in a cryptographic computation.</t>
-          <t hangText="unprotected">contains attributes about the layer which are not cryptographically protected.</t>
-        </list>
+        The top level of each of the COSE message structures are encoded as maps.
+        We use an integer to distinguish between the different security message types.
+        By looking at the integer in the first element, one can determine which security message is being used and thus what the syntax is for the rest of the elements in the array.
       </t>
-      <t>Both of the buckets are optional and are omitted if there are no items contained in the map.  The CDDL fragment which describes the two buckets is:</t>
-      <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-        <artwork type="CDDL" xml:space="preserve" name="" align="left" alt="" width="" height="">
+
+      <texttable anchor="TOP-Level-Keys" title="COSE Map Keys">
+        <ttcol align='left'>name</ttcol>
+        <ttcol align='left'>number</ttcol>
+        <ttcol align='left'>comments</ttcol>
+        
+        <c>msg_type</c>         <c>1</c>        <c>Occurs only in top level messages</c>
+        <c>protected</c>        <c>2</c>        <c>Occurs in all structures</c>
+        <c>unprotected</c>      <c>3</c>        <c>Occurs in all structures</c>
+        <c>payload</c>          <c>4</c>        <c>Contains the content of the structure</c>
+        <c>signatures</c>       <c>5</c>        <c>For COSE_Sign - array of signatures</c>
+        <c>signature</c>        <c>6</c>        <c>For COSE_signature only</c>
+        <c>ciphertext</c>       <c>4</c>        <c>TODO: Should we re-use the same as payload or not?</c>
+        <c>recipients</c>       <c>9</c>        <c>For COSE_encrypt and COSE_mac</c>
+        <c>tag</c>              <c>10</c>       <c>For COSE_mac only</c>
+      </texttable>
+
+      <t>
+        The CDDL grammar that provides the key values is:
+      </t>
+      <figure><artwork type="CDDL"><![CDATA[
+; message_keys
+msg_type=1
+protected=2
+unprotected=3
+payload=4
+signatures=5
+signature=6
+ciphertext=4
+recipients=9
+tag=10
+
+]]></artwork></figure>
+      
+    </section>
+
+    <section anchor="header-parameters" title="Header Parameters">
+
+      <t>
+        The structure of COSE has been designed to have two buckets of information that are not considered to be part of the payload itself, but are used for holding information about algorithms, keys, or evaluation hints for the  processing of the layer.
+        These two buckets are available for use in all of the structures in this document except for keys.
+        While these buckets can be present, they may not all be usable in all instances.
+        For example, while the protected bucket is present for recipient structures, most of the algorithms that are used for recipients do not provide the necessary functionality to provide the needed protection and thus the element is not used.
+      </t>
+
+      <t>
+        Both buckets are implemented as CBOR maps. 
+        The maps can be keyed by negative integers, unsigned integers and strings. 
+        The negative and unsigned integers are used for compactness of encoding. 
+        The value portion is dependent on the key definition. 
+        Both maps use the same set of key/value pairs. 
+        The integer key range has been divided into several sections with a standard range, a private range, and a range that is dependent on the algorithm selected. 
+        The tables of keys defined in this document can be found in <xref target="Header-Table"/>.
+      </t>
+
+      <t>
+        Two buckets are provided for each layer:
+        <cref source="JLS">
+          A completest version of this grammar would list the options available in the protected and unprotected headers.
+          Do we want to head that direction?
+        </cref>
+
+        <list style="hanging">
+          <t hangText='protected'>
+            contains attributes about the layer which are to be cryptographically protected. 
+            This bucket MUST NOT be used if it is not going to be included in a cryptographic computation.
+          </t>
+          <t hangText='unprotected'>
+            contains attributes about the layer which are not cryptographically protected.
+          </t>
+        </list>
+
+        Both of the buckets are optional and are omitted if there are no items contained in the map.  The CDDL fragment which describes the two buckets is:
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
 keys = int / tstr
-header_map = {+ keys =&gt; any }
+header_map = {+ keys => any }
 
 Headers = (
-    ? protected =&gt; bstr,
-    ? unprotected =&gt; header_map
+    ? protected => bstr,
+    ? unprotected => header_map
 )
+]]></artwork></figure>
 
-</artwork>
-      </figure>
-      <section anchor="cose-headers" title="COSE Headers" toc="default">
-        <t>TODO:  Do we need to repeat definitions for all or just for some and refer to the JOSE documents?</t>
-        <t>TODO:  Should we move table <xref target="Header-Table" pageno="false" format="default"/> to here or leave it as an appendix.  Some what redundant if we document things in text.</t>
+      <section anchor="cose-headers" title="COSE Headers">
+        <t>
+          The set of header fields defined in this document are:
+        </t>
+
+        <t>
+          <list style="hanging">
+            <t hangText='alg'>
+              This field is used to indicate the algorithm used for the security processing.
+              This field MUST be present at each level of a signed, encrypted or authenticated message.
+              This field using the integer '1' for the key value.
+              The value is taken from the 'COSE Algorithm Registry' (see <xref target="IANA-Alg-Registry"/>).
+            </t>
+            <t hangText='crit'>
+              This field is used to ensure that applications will take appropriate action based on the values found.
+              This field uses the integer '2' for the key value. 
+              The value is an array of COSE Header key values. 
+              The field is used to indicate which protected header keys an application which is processing a message is required to understand.
+              <list style="bullets">
+                <t>Integer keys in the range of 0 to 10 SHOULD be omitted.</t>
+                <t>
+                  Integer keys in the range -1 to -255 can be omitted as they are algorithm dependent.
+                  If an application can correctly process an algorithm, it can be assumed that it will correctly process all of the parameters associated with that algorithm.
+                </t>
+              </list>
+              The header values indicated by 'crit' can be processed by either the security library code or by an application using a security library, the only requirement is that the field is processed.
+            </t>
+            <t hangText='cty'>
+              This field is used to indicate the content type of the data in the payload or ciphertext fields.
+              The field uses the integer of '3' for the key value. 
+              The value can be either an integer or a string.
+              Integers are from the XXXXX<cref source="JLS">Need to figure out how we are going to go about creating this registry -or are we going to modify the current mime-content table?</cref> IANA registry table.
+              Strings are from the IANA 'mime-content types' registry.
+              Applications SHOULD provide this field if the content structure is potentially ambiguous.
+            </t>
+            <t hangText='kid'>
+              This field one of the ways that can be used to find the key to be used.
+              This value can be matched against the 'kid' field in a COSE_Key structure.
+              Applications MUST NOT assume that 'kid' values are unique.
+              There may be more than one key with the same 'kid' value, it may be required that all of the keys need to be checked to find the correct one.
+              This field uses the integer value of '4' for the key value.
+              The value of field is the CBOR 'bstr' type.
+              The internal structure of 'kid' is not defined and generally cannot be relied on by applications.
+            </t>
+          </list>
+        </t>
+
+              <t>
+        This table contains a list of all of the parameters for use in signature and encryption message types defined by the JOSE document set.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
+      </t>
+
+      <texttable anchor="Header-Table" title="Header Keys">
+        <ttcol align='left'>name</ttcol>
+        <ttcol align='left'>key</ttcol>
+        <ttcol align='left'>value</ttcol>
+        <ttcol align='left'>registry</ttcol>
+        <ttcol align='left'>description</ttcol>
+        
+        <c>alg</c>        <c>1</c>        <c>int / tstr</c>        <c>COSE Algorithm Registry</c>       <c>Integers are taken from table <xref target="ALG_TABLE"/></c>
+        <c>crit</c>       <c>2</c>        <c>[+ (tstr/int)]</c>    <c>COSE Header Key Registry</c>      <c>integer values are from this table.</c>
+        <c>cty</c>        <c>3</c>        <c>tstr / int</c>        <c></c>                              <c>Value is either a mime-content type or an integer from the mime-content type table</c>
+        <c>jku</c>        <c>*</c>        <c>tstr</c>              <c></c>                              <c>URL to COSE key object</c>
+        <c>jwk</c>        <c>*</c>        <c>COSE_Key</c>          <c></c>                              <c>contains a COSE key not a JWK key</c>
+        <c>kid</c>        <c>4</c>        <c>bstr</c>              <c></c>                              <c>key identifier</c>
+        <c>x5c</c>        <c>*</c>        <c>bstr*</c>             <c></c>                              <c>X.509 Certificate Chain</c>
+        <c>x5t</c>        <c>*</c>        <c>bstr</c>              <c></c>                              <c>SHA-1 thumbprint of key</c>
+        <c>x5t#S256</c>   <c>*</c>        <c>bstr</c>              <c></c>                              <c>SHA-256 thumbprint of key</c>
+        <c>x5u</c>        <c>*</c>        <c>tstr</c>              <c></c>                              <c>URL for X.509 certificate</c>
+        <c>zip</c>        <c>*</c>        <c>int / tstr</c>        <c></c>                              <c>Integers are taken from the table <xref target="ALG_TABLE"/></c>
+      </texttable>
+
+      <t>
+        OPEN ISSUES:
+        <list style="numbers">
+          <t>Which of the following items do we want to have standardized in this document: jku, jwk, x5c, x5t, x5t#S256, x5u, zip</t>
+          <t>
+            I am currently torn on the question "Should epk and iv/nonce be algorithm specific or generic headers?"
+            They are really specific to an algorithm and can potentially be defined in different ways for different algorithms.
+            As an example, it would make sense to defined nonce for CCM and GCM modes that can have the leading zero bytes stripped, while for other algorithms this might be undesirable.
+          </t>
+          <t>
+            We might want to define some additional items.  What are they?  A possible example would be a sequence number as this might be common.  On the other hand, this is the type of things that is frequently used as the nonce in some places and thus should not be used in the same way.  Other items might be challenge/response fields for freshness as these are likely to be common.
+          </t>
+        </list>
+      </t>
+
       </section>
     </section>
-    <section anchor="signing-structure" title="Signing Structure" toc="default">
-      <t>The signature structure allows for one or more signatures to be applied to a message payload.  There are provisions for  attributes about the content and attributes about the signature to be carried along with the signature itself.  These attributes may be authenticated by the signature, or just present.  Examples of attributes about the content would be the type of content, when the content was created, and who created the content.  Examples of attributes about the signature would be the algorithm and key used to create the signature, when the signature was created, and counter-signatures.</t>
-      <t>When more than one signature is present, the successful validation of one signature associated with a given signer is usually treated as a successful signature by that signer.  However, there are some application environments where other rules are needed.  An application that employs a rule other than one valid signature for each signer must specify those rules.  Also, where simple matching of the signer identifier is not sufficient to determine whether the signatures were generated by the same signer, the application specification must describe how to determine which signatures were generated by the same signer.  Support of different communities of recipients is the primary reason that signers choose to include more than one signature.  For example, the COSE_Sign structure might include signatures generated with the RSA signature algorithm and with the Elliptic Curve Digital Signature Algorithm (ECDSA) signature algorithm.  This allows recipients to verify the signature associated with one algorithm or the other. (Source of text is <xref target="RFC5652" pageno="false" format="default"/>.) More detailed information on multiple signature evaluation can be found in <xref target="RFC5752" pageno="false" format="default"/>.</t>
-      <t>The CDDL grammar structure for a signature message is:</t>
-      <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-        <artwork type="CDDL" xml:space="preserve" name="" align="left" alt="" width="" height="">
-COSE_Sign = (
+
+    
+    <section anchor="signing-structure" title="Signing Structure">
+
+      <t>
+        The signature structure allows for one or more signatures to be applied to a message payload.
+        There are provisions for attributes about the content and attributes about the signature to be carried along with the signature itself.
+        These attributes may be authenticated by the signature, or just present.
+        Examples of attributes about the content would be the type of content, when the content was created, and who created the content.
+        Examples of attributes about the signature would be the algorithm and key used to create the signature, when the signature was created, and counter-signatures.
+      </t>
+
+      <t>
+        When more than one signature is present, the successful validation of one signature associated with a given signer is usually treated as a successful signature by that signer.
+        However, there are some application environments where other rules are needed.
+        An application that employs a rule other than one valid signature for each signer must specify those rules.
+        Also, where simple matching of the signer identifier is not sufficient to determine whether the signatures were generated by the same signer, the application specification must describe how to determine which signatures were generated by the same signer.
+        Support of different communities of recipients is the primary reason that signers choose to include more than one signature.
+        For example, the COSE_Sign structure might include signatures generated with the RSA signature algorithm and with the Elliptic Curve Digital Signature Algorithm (ECDSA) signature algorithm.
+        This allows recipients to verify the signature associated with one algorithm or the other.
+        (The original source of this text is <xref target="RFC5652"/>.)
+        <!-- RFC Editor: This is not a direct quote from RFC 5652, but the basic text has come from there.  I want to acknowledge the original source of the quote but am not sure what is the correct way to go about this.-->
+        More detailed information on multiple signature evaluation can be found in <xref target="RFC5752"/>.
+      </t>
+
+      <t>
+        The CDDL grammar for a signature message is:
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Sign = {
+    msg_type => msg_type_signed,
     Headers,
-    ? payload =&gt; bstr,
-    signatures=&gt; [+{COSE_signature}]
-)
+    ? payload => bstr,
+    signatures => [+ COSE_signature]
+}
+]]></artwork></figure>
 
-</artwork>
-      </figure>
-      <t>The keys in the COSE_Sign map are keyed by the values in <xref target="TOP-Level-Keys" pageno="false" format="default"/>.  While other keys can be present in the map, it is not generally a recommended practice.  The other keys can be either of integer or string type, use of other types is strongly discouraged.  See the note in {{CBOR-Canonical} about options for allowing or disallowing other keys.</t>
-      <t>The fields is the structure have the following semantics:</t>
+      <t>
+        The fields is the structure have the following semantics:
+      </t>
       <t>
         <list style="hanging">
-          <t hangText="protected">contains attributes about the payload which are to be protected by the signature.  An example of such an attribute would be the content type (&#8216;cty&#8217;) attribute.  The content is a CBOR map of attributes which is encoded to a byte stream.  This field MUST NOT contain attributes about the signature, even if those attributes are common across multiple signatures.  This fields in this map are typically keyed  by <xref target="Header-Table" pageno="false" format="default"/>.  Other keys can be used either as int or tstr values.  Other types MUST NOT be present in the map as key values.</t>
-          <t hangText="unprotected">contains attributes about the payload which are not protected by the signature.  An example of such an attribute would be the content type (&#8216;cty&#8217;) attribute.  This field MUST NOT contain attributes about a signature, even if the attributes are common across multiple signatures.  This fields int his map are typically keyed  by <xref target="Header-Table" pageno="false" format="default"/>.  Other keys can be used either as int or tstr values.  Other types MUST NOT be present in the map as key values.</t>
-          <t hangText="payload">contains the serialized content to be signed.<vspace blankLines="0"/> If the payload is not present in the message, the application is required to supply the payload separately.<vspace blankLines="0"/> The payload is wrapped in a bstr to ensure that it is transported without changes, if the payload is transported separately it is the responsibility of the application to ensure that it will be transported without changes.</t>
-          <t hangText="signatures">is an array of signature items.  Each of these items uses the COSE_signature structure for its representation.</t>
+          <t hangText='msg_type'>
+            identifies this as providing the signed security service.
+            The value MUST be msg_type_signed (1).
+          </t>
+          <t hangText='protected'>
+            contains attributes about the payload which are to be protected by the signature.
+            An example of such an attribute would be the content type ('cty') attribute.
+            The content is a CBOR map of attributes which is encoded to a byte stream.
+            This field MUST NOT contain attributes about the signature, even if
+            those attributes are common across multiple signatures.
+            This fields in this map are typically keyed  by <xref target="Header-Table"/>.
+            Other keys can be used either as int or tstr values.  Other types MUST NOT be present in the map as key values.
+          </t>
+          <t hangText='unprotected'>
+            contains attributes about the payload which are not protected by the signature.
+            An example of such an attribute would be the content type ('cty') attribute.
+            This field MUST NOT contain attributes about a signature, even if
+            the attributes are common across multiple signatures.
+            This fields int his map are typically keyed  by <xref target="Header-Table"/>.
+            Other keys can be used either as int or tstr values.
+            Other types MUST NOT be present in the map as key values.
+          </t>
+          <t hangText='payload'>
+            contains the serialized content to be signed.<vspace />
+            If the payload is not present in the message, the application is required to 
+            supply the payload separately.<vspace />
+            The payload is wrapped in a bstr to ensure that it is transported without changes, 
+            if the payload is transported separately it is the responsibility of the application
+            to ensure that it will be transported without changes.
+          </t>
+          <t hangText='signatures'>
+            is an array of signature items.  Each of these items uses the COSE_signature structure for its representation.
+          </t>
         </list>
       </t>
-      <t>The keys in the COSE_signature map are keyed by the values in <xref target="TOP-Level-Keys" pageno="false" format="default"/>.  While other keys can be present in the map, it is not generally a recommended practice.  The other keys can be either of integer or string type, use of other types is strongly discouraged.  See the note in {{CBOR-Canonical} about options for allowing or disallowing other keys.</t>
-      <t>The CDDL grammar structure for a signature is:</t>
-      <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-        <artwork type="CDDL" xml:space="preserve" name="" align="left" alt="" width="" height="">
-COSE_signature =  (
-    ? protected =&gt; bstr,
-    ? unprotected =&gt; header_map,
-    signature =&gt; bstr
-)
 
-</artwork>
-      </figure>
-      <t>The fields in the structure have the following semantics:</t>
+      <t>
+        The keys in the COSE_signature map are keyed by the values in <xref target="TOP-Level-Keys"/>.
+        While other keys can be present in the map, it is not generally a recommended practice. 
+        The other keys can be either of integer or string type, use of other types SHOULD be treated as an error.
+      </t>
+
+      <t>
+        The CDDL grammar structure for a signature is:
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_signature =  {
+    Headers,      
+    signature => bstr
+}
+]]></artwork></figure>
+
+      <t>
+        The fields in the structure have the following semantics:
+      </t>
+
       <t>
         <list style="hanging">
-          <t hangText="protected">contains additional information to be authenticated by the signature.  The field holds data about the signature operation.  The field MUST NOT hold attributes about the payload being signed.  The content is a CBOR map of attributes which is encoded to a byte stream.  At least one of protected and unprotected MUST be present.</t>
-          <t hangText="unprotected">contains attributes about the signature which are not protected by the signature.  This field MUST NOT contain attributes about the payload being signed.  At least one of protected and unprotected MUST be present.</t>
-          <t hangText="signature">contains the computed signature value.</t>
+          <t hangText='protected'>
+            contains additional information to be authenticated by the signature.
+            The field holds data about the signature operation.
+            The field MUST NOT hold attributes about the payload being signed.
+            The content is a CBOR map of attributes which is encoded to a byte stream.
+            At least one of protected and unprotected MUST be present.
+          </t>
+          <t hangText='unprotected'>
+            contains attributes about the signature which are not protected by the signature.
+            This field MUST NOT contain attributes about the payload being signed.
+            At least one of protected and unprotected MUST be present.
+          </t>
+          <t hangText='signature'>
+            contains the computed signature value.
+          </t>
         </list>
       </t>
-      <t>The COSE structure used to create the byte stream to be signed uses the following CDDL grammar structure:</t>
-      <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-        <artwork type="CDDL" xml:space="preserve" name="" align="left" alt="" width="" height="">
+
+      <t>
+        The COSE structure used to create the byte stream to be signed uses the following CDDL grammar structure:
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
 Sig_structure = [
-    body_protected =&gt; bstr,
-    sign_protected =&gt; bstr,
-    payload =&gt; bstr
+    body_protected: bstr,
+    sign_protected: bstr,
+    payload: bstr
 ]
+]]></artwork></figure>
 
-</artwork>
-      </figure>
-      <t>How to compute a signature:</t>
       <t>
+        How to compute a signature:
+
         <list style="numbers">
-          <t>Create a Sig_structure object and populate it with the appropriate fields.  For body_protected and sign_protected, if the fields are not present in their corresponding maps, an bstr of length zero is be used.</t>
-          <t>Create the value to be hashed by encoding the Sig_structure to a byte string.</t>
-          <t>Comput the hash value from the byte string.</t>
-          <t>Sign the hash</t>
-          <t>Place the signature value into the appropriate signature field.</t>
+          <t>
+            Create a Sig_structure object and populate it with the appropriate fields.  For body_protected and sign_protected, if the fields are not present in their corresponding maps, an bstr of length zero is used.
+          </t>
+          <t>
+            Create the value ToBeSigned by encoding the Sig_structure to a byte string.
+          </t>
+          <t>
+            Call the signature creation algorithm passing in K (the key to sign with), alg (the algorithm to sign with) and ToBeSigned (the value to sign).
+          </t>
+          <t>
+            Place the resulting signature value in the 'signature' field of the map.
+          </t>
         </list>
       </t>
+
+      <t>
+        How to verify a signature:
+
+        <list style="numbers">
+          <t>
+            Create a Sig_structure object and populate it with the appropriate fields.  For body_protected and sign_protected, if the fields are not present in their corresponding maps, an bstr of length zero is used.
+          </t>
+          <t>
+            Create the value ToBeSigned by encoding the Sig_structure to a byte string.
+          </t>
+          <t>
+            Call the signature verification algorithm passing in K (the key to verify with), alg (the algorithm to sign with), ToBeSigned (the value to sign), and sig (the signature to be verified).
+          </t>
+        </list>
+      </t>
+
+      <t>
+        In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the appropriated authorization is done.
+      </t>
+
     </section>
-    <section anchor="encryption-object" title="Encryption object" toc="default">
-      <t>In this section we describe the structure and methods to be used when doing an encryption in COSE.  In COSE, we use the same techniques and structures for encrypting both the plain text and the keys used to protect the text.  This is different from the approach used by both <xref target="RFC5652" pageno="false" format="default"/> and <xref target="RFC7516" pageno="false" format="default"/> where different structures are used for the plain text and for the different key management techniques.</t>
-      <t>One of the byproducts of using the same technique for encrypting and encoding both the content and the keys using the various key management techniques, is a requirement that all of the key management techniques use an Authenticated Encryption (AE) algorithm.  (For the purpose of this document we use a slightly loose definition of AE algorithms.) When encrypting the plain text, it is normal to use an Authenticated Encryption with Additional Data (AEAD) algorithm.  For key management, either AE or AEAD algorithms can be used.  See <xref target="AE-algo" pageno="false" format="default"/> for more details about the different types of algorithms.</t>
-      <t>I don&#8217;t follow/understand this text{:aeds}</t>
-      <t>The CDDL grammar structure for encryption is:</t>
-      <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-        <artwork type="CDDL" xml:space="preserve" name="" align="left" alt="" width="" height="">
-COSE_encrypt = (
-   Headers,
-   ? iv =&gt; bstr,
-   ? aad =&gt; bstr,
-   ? ciphertext =&gt; bstr,
-   ? recipients =&gt; [+COSE_encrypt_a]
+
+    <section anchor="encryption-object" title="Encryption object">
+
+      <t>
+        In this section we describe the structure and methods to be used when
+        doing an encryption in COSE.
+        In COSE, we use the same techniques and structures for encrypting both
+        the plain text and the keys used to protect the text.
+        This is different from the approach used by both <xref target="RFC5652"/> and
+        <xref target="RFC7516"/> where different structures are
+        used for the plain text and for the different key management
+        techniques.
+      </t>
+
+      <t>
+        One of the byproducts of using the same technique for encrypting and
+        encoding both the content and the keys using the various key management
+        techniques, is a requirement that all of the key management techniques
+        use an Authenticated Encryption (AE) algorithm.  (For the purpose of this document we use a slightly loose definition of AE algorithms.)
+        When encrypting the plain text, it is normal to use an Authenticated
+        Encryption with Additional Data (AEAD) algorithm.  For key management,
+        either AE or AEAD algorithms can be used.
+        See <xref target="AE-algo"/> for more details about the different types of
+        algorithms.
+        <cref source="Ilari">I don't follow/understand this text</cref>
+      </t>
+
+      <t>
+        The CDDL grammar structure for encryption is:
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_encrypt = {
+    msg_type=>msg_type_encrypted,
+    COSE_encrypt_fields
+}
+
+COSE_encrypt_fields = (
+    Headers,
+    ? ciphertext => bstr,
+    ? recipients => [+{COSE_encrypt_fields}]
 )
+]]></artwork></figure>
 
-COSE_encrypt_a = {COSE_encrypt}
+      <t>
+        Description of the fields:
+      </t>
 
-</artwork>
-      </figure>
-      <t>Description of the fields:</t>
       <t>
         <list style="hanging">
-          <t hangText="protected">contains the information about the plain text or encryption process that is to be integrity protected.  The field is encoded in CBOR as a &#8216;bstr&#8217;.  The contents of the protected field is a CBOR map of the protected data names and values.  The map is CBOR encoded before placing it into the bstr.  Only values associated with the current cipher text are to be placed in this location even if the value would apply to multiple recipient structures.</t>
-          <t hangText="unprotected">contains information about the plain text that is not integrity protected.  Only values associated with the current cipher text are to be placed in this location even if the value would apply to multiple recipient structures.</t>
-          <t hangText="iv">contains the initialization vector (IV), or it&#8217;s equivalent, if one is needed by the encryption algorithm.</t>
-          <t hangText="aad">contains additional authenticated data (aad) supplied by the application.  This field contains information about the plain text data that is authenticated, but not encrypted.</t>
-          <t hangText="cipherText">contains the encrypted plain text.  If the cipherText is to be transported independently of the control information about the encryption process (i.e. detached content) then the field is omitted.</t>
-          <t hangText="recipients">contains the recipient information.  The field can have one of two data types:</t>
+          <t hangText='msg_type'>
+            identifies this as providing the encrypted security service.
+            The value MUST be msg_type_encrypted (2).
+          </t>
+          <t hangText='protected'>
+            contains the information about the plain text or encryption
+            process that is to be integrity protected.
+            The field is encoded in CBOR as a 'bstr'.
+            The contents of the protected field is a CBOR map of the protected
+            data names and values.
+            The map is CBOR encoded before placing it into the bstr.
+            Only values associated with the current cipher text are to be placed in this location even if the value would apply to multiple recipient structures.
+          </t>
+          <t hangText='unprotected'>
+            contains information about the plain text that is not integrity protected.
+            Only values associated with the current cipher text are to be placed in this location even if the value would apply to multiple recipient structures.
+          </t>
+          <t hangText='cipherText'>
+            contains the encrypted plain text.
+            If the cipherText is to be transported independently of the control
+            information about the encryption process (i.e. detached content)
+            then the field is omitted.
+          </t>
+          <t hangText='recipients'>
+            contains the recipient information.
+            It is required that at least one recipient MUST be present for the content encryption layer.
+          </t>
         </list>
       </t>
-      <t>
-        <list style="symbols">
-          <t>An array of COSE_encrypt elements, one for each recipient.</t>
-        </list>
-      </t>
-      <section anchor="key-management-methods" title="Key Management Methods" toc="default">
-        <t>There are a number of different key management methods that can be used in the COSE encryption system.  In this section we will discuss each of the key management methods and what fields need to be specified to deal with each of them.</t>
-        <t>The names of the key management methods used here are the same as are defined in <xref target="RFC7517" pageno="false" format="default"/>.  Other specifications use different terms for the key management methods or do not support some of the key management methods.</t>
-        <t>At the moment we do not have any key management methods that allow for the use of protected headers.  This may be changed in the future if, for example, the AES-GCM Key wrap method defined in <xref target="RFC7518" pageno="false" format="default"/> were extended to allow for authenticated data.  In that event the use of the &#8216;protected&#8217; field, which is current forbidden below, would be permitted.</t>
-        <section anchor="direct-encryption" title="Direct Encryption" toc="default">
-          <t>In direct encryption mode, a shared secret between the sender and the recipient is used as the CEK.  When direct encryption mode is used, it MUST be the only mode used on the message.  It is a massive security leak to have both direct encryption and a different key management mode on the same message.</t>
-          <t>For JOSE, direct encryption key management is the only key management method allowed for doing MAC-ed messages.  In COSE, all of the key management methods can be used for MAC-ed messages.</t>
-          <t>The COSE_encrypt structure for the recipient is organized as follows:</t>
+
+      <section anchor="key-management-methods" title="Key Management Methods">
+
+        <t>
+          There are a number of different key management methods that can be
+          used in the COSE encryption system.
+          In this section we will discuss each of the key management methods and
+          what fields need to be specified to deal with each of them.
+        </t>
+
+        <t>
+          The names of the key management methods used here are the same as are
+          defined in <xref target="RFC7517"/>.
+          Other specifications use different terms for the key management
+          methods or do not support some of the key management methods.
+        </t>
+
+        <t>
+          At the moment we do not have any key management methods that allow for the use of protected headers.  This may be changed in the future if, for example, the AES-GCM Key wrap method defined in <xref target="RFC7518"/> were extended to allow for authenticated data.  In that event the use of the 'protected' field, which is current forbidden below, would be permitted.
+        </t>
+
+        <section anchor="direct-encryption" title="Direct Encryption">
+
+          <t>
+            In direct encryption mode, a shared secret between the sender and the
+            recipient is used as the CEK.
+            When direct encryption mode is used, it MUST be the only mode used on the message.
+            It is a massive security leak to have both direct encryption and a
+            different key management mode on the same message.
+          </t>
+
+          <t>
+            For JOSE, direct encryption key management is the only key management
+            method allowed for doing MAC-ed messages.
+            In COSE, all of the key management methods can be used for MAC-ed messages.
+          </t>
+
+          <t>
+            The COSE_encrypt structure for the recipient is organized as follows:
+          </t>
+
           <t>
             <list style="symbols">
-              <t>The &#8216;protected&#8217;, &#8216;iv&#8217;, &#8216;aad&#8217;, &#8216;ciphertext&#8217; and &#8216;recipients&#8217; fields MUST be absent.</t>
-              <t>At a minimum, the &#8216;unprotected&#8217; field SHOULD contain the &#8216;alg&#8217; parameter as well as a parameter identifying the shared secret.</t>
+              <t>
+                The 'protected', 'ciphertext' and 'recipients' fields
+                MUST be absent.
+              </t>
+              <t>
+                At a minimum, the 'unprotected' field MUST contain the 'alg'
+                parameter and SHOULD contain a parameter identifying the shared secret.
+              </t>
             </list>
           </t>
+
         </section>
-        <section anchor="key-wrapping" title="Key Wrapping" toc="default">
-          <t>In key wrapping mode, the CEK is randomly generated and that key is then encrypted by a shared secret between the sender and the recipient.  All of the currently defined key wrapping algorithms for JOSE (and thus for COSE) are AE algorithms.  Key wrapping mode is considered to be superior to direct encryption if the system has any capability for doing random key generation.  This is because the shared key is used to wrap random data rather than data  has some degree of organization and may in fact be repeating the same content.</t>
-          <t>The COSE_encrypt structure for the recipient is organized as follows:</t>
+        <section anchor="key-wrapping" title="Key Wrapping">
+
+          <t>
+            In key wrapping mode, the CEK is randomly generated and that key is
+            then encrypted by a shared secret between the sender and the
+            recipient.
+            All of the currently defined key wrapping algorithms for JOSE (and
+            thus for COSE) are AE algorithms.
+            Key wrapping mode is considered to be superior to direct encryption if
+            the system has any capability for doing random key generation.
+            This is because the shared key is used to wrap random data rather than
+            data  has some degree of organization and may in fact be repeating the
+            same content.
+          </t>
+
+          <t>
+            The COSE_encrypt structure for the recipient is organized as follows:
+          </t>
+
           <t>
             <list style="symbols">
-              <t>The &#8216;protected&#8217;, &#8216;aad&#8217;, and &#8216;recipients&#8217; fields MUST be absent.</t>
-              <t>The plain text to be encrypted is the key from next layer down (usually the content layer).</t>
-              <t>At a minimum, the &#8216;unprotected&#8217; field SHOULD contain the &#8216;alg&#8217; parameter as well as a parameter identifying the shared secret.</t>
-              <t>Use of the &#8216;iv&#8217; field will depend on the key wrap algorithm.</t>
+              <t>
+                The 'protected', and 'recipients' fields MUST be absent.
+              </t>
+              <t>
+                The plain text to be encrypted is the key from next layer down
+                (usually the content layer).
+              </t>
+              <t>
+                At a minimum, the 'unprotected' field MUST contain the 'alg'
+                parameter and SHOULD contain a parameter identifying the shared secret.
+              </t>
             </list>
           </t>
+
         </section>
-        <section anchor="key-encryption" title="Key Encryption" toc="default">
-          <t>Key Encryption mode is also called key transport mode in some standards.  Key Encryption mode differs from Key Wrap mode in that it uses an asymmetric encryption algorithm rather than a symmetric encryption algorithm to protect the key.  The only current Key Encryption mode algorithm supported is RSAES-OAEP.</t>
-          <t>The COSE_encrypt structure for the recipient is organized as follows:</t>
+        <section anchor="key-encryption" title="Key Encryption">
+
+          <t>
+            Key Encryption mode is also called key transport mode in some
+            standards.
+            Key Encryption mode differs from Key Wrap mode in that it uses an
+            asymmetric encryption algorithm rather than a symmetric encryption
+            algorithm to protect the key.
+            The only current Key Encryption mode algorithm supported is RSAES-OAEP.
+          </t>
+
+          <t>
+            The COSE_encrypt structure for the recipient is organized as follows:
+          </t>
+
           <t>
             <list style="symbols">
-              <t>The &#8216;protected&#8217;, &#8216;aad&#8217;, and &#8216;iv&#8217; fields MUST be absent.</t>
-              <t>The plain text to be encrypted is the key from next layer down (usually the content layer).</t>
-              <t>At a minimum, the &#8216;unprotected&#8217; field SHOULD contain the &#8216;alg&#8217; parameter as well as a parameter identifying the asymmetric key.</t>
+              <t>
+                The 'protected' field MUST be absent.
+              </t>
+              <t>
+                The plain text to be encrypted is the key from next layer down
+                (usually the content layer).
+              </t>
+              <t>
+                At a minimum, the 'unprotected' field MUST contain the 'alg'
+                parameter and SHOULD contain a parameter identifying the asymmetric key.
+              </t>
             </list>
           </t>
+
         </section>
-        <section anchor="direct-key-agreement" title="Direct Key Agreement" toc="default">
-          <t>Direct Key Agreement derives the CEK from the shared secret computed by the key agreement operation.</t>
-          <t>When direct key agreement mode is used, it SHOULD be the only mode used on the message.  This method creates the CEK directly and that makes it difficult to mix with additional recipients.</t>
-          <t>The COSE_encrypt structure for the recipient is organized as follows:</t>
+        <section anchor="direct-key-agreement" title="Direct Key Agreement">
+
+          <t>
+            Direct Key Agreement derives the CEK from the shared secret computed
+            by the key agreement operation.
+          </t>
+
+          <t>
+            When direct key agreement mode is used, it SHOULD be the only mode used
+            on the message.  This method creates the CEK directly and that makes it difficult to mix with additional recipients.
+          </t>
+
+          <t>
+            The COSE_encrypt structure for the recipient is organized as follows:
+          </t>
+
           <t>
             <list style="symbols">
-              <t>The &#8216;protected&#8217;, &#8216;aad&#8217;, and &#8216;iv&#8217; fields MUST be absent.</t>
-              <t>At a minimum, the &#8216;unprotected&#8217; field SHOULD contain the &#8216;alg&#8217; parameter as well as a parameter identifying the asymmetric key.</t>
-              <t>The &#8216;unprotected&#8217; field MUST contain the &#8216;epk&#8217; parameter.</t>
+              <t>
+                The 'protected' field MUST be absent.
+              </t>
+              <t>
+                At a minimum, the 'unprotected' field MUST contain the 'alg'
+                parameter and SHOULD contain a parameter identifying the asymmetric key.
+              </t>
+              <t>
+                The 'unprotected' field MUST contain the 'epk' parameter.
+              </t>
             </list>
           </t>
+
         </section>
-        <section anchor="key-agreement-with-key-wrapping" title="Key Agreement with Key Wrapping" toc="default">
-          <t>Key Agreement with Key Wrapping uses a randomly generated CEK.  The CEK is then encrypted using a Key Wrapping algorithm and a key derived from the shared secret computed by the key agreement algorithm.</t>
-          <t>The COSE_encrypt structure for the recipient is organized as follows:</t>
+        <section anchor="key-agreement-with-key-wrapping" title="Key Agreement with Key Wrapping">
+
+          <t>
+            Key Agreement with Key Wrapping uses a randomly generated CEK.
+            The CEK is then encrypted using a Key Wrapping algorithm and a key
+            derived from the shared secret computed by the key agreement
+            algorithm.
+          </t>
+
+          <t>
+            The COSE_encrypt structure for the recipient is organized as follows:
+          </t>
+
           <t>
             <list style="symbols">
-              <t>The &#8216;protected&#8217;, &#8216;aad&#8217;, and &#8216;iv&#8217; fields MUST be absent.</t>
-              <t>The plain text to be encrypted is the key from next layer down (usually the content layer).</t>
-              <t>At a minimum, the &#8216;unprotected&#8217; field SHOULD contain the &#8216;alg&#8217; parameter, a parameter identifying the recipient asymmetric key, and a parameter with the sender&#8217;s asymmetric public key.</t>
+              <t>
+                The 'protected' field MUST be absent.
+              </t>
+              <t>
+                The plain text to be encrypted is the key from next layer down
+                (usually the content layer).
+              </t>
+              <t>
+                At a minimum, the 'unprotected' field MUST contain the 'alg'
+                parameter, a parameter identifying the recipient asymmetric key, and
+                a parameter with the sender's asymmetric public key.
+              </t>
             </list>
           </t>
+
         </section>
       </section>
-      <section anchor="encryption-algorithm-for-aead-algorithms" title="Encryption Algorithm for AEAD algorithms" toc="default">
-        <t>The encryption algorithm for AEAD algorithms is fairly simple.<vspace blankLines="0"/> In order to get a consistent encoding of the data to be authenticated, the Enc_structure is used to have canonical form of the AAD.</t>
-        <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-          <artwork type="CDDL" xml:space="preserve" name="" align="left" alt="" width="" height="">
+      <section anchor="encryption-algorithm-for-aead-algorithms" title="Encryption Algorithm for AEAD algorithms">
+
+        <t>
+          The encryption algorithm for AEAD algorithms is fairly simple.<vspace />
+          In order to get a consistent encoding of the data to be authenticated, the Enc_structure is used to have canonical form of the AAD.
+        </t>
+
+        <figure><artwork type="CDDL"><![CDATA[
 Enc_structure = [
-   protected =&gt; bstr,
-   aad =&gt; bstr
+    protected: bstr,
+    external_aad: bstr
 ]
 
-</artwork>
-        </figure>
+]]></artwork></figure>
+
         <t>
           <list style="numbers">
-            <t>If there is protected data, CBOR encode the map to a byte string and place in the protected field of the Enc_structure and the COSE_Encrypt structure.</t>
-            <t>Copy the &#8216;aad&#8217; field from the COSE_Encrypt structure to the Enc_Structure.</t>
-            <t>Encode the Enc_structure using a CBOR Canonical encoding <xref target="CBOR-Canonical" pageno="false" format="default"/> to get the AAD value.</t>
-            <t>Encrypt the plain text and place it in the &#8216;ciphertext&#8217; field.  The AAD value is passed in as part of the encryption process.</t>
-            <t>For recipient of the message, recursively perform the encryption algorithm for that recipient using the encryption key as the plain text.</t>
+            <t>
+              Copy the protected header field from the message to be sent.
+            </t>
+
+            <t>
+              If the application has supplied external additional authenticated data to be included in the computation, then it is placed in the 'external_aad' field.
+              If no data was supplied, then a zero length binary value is used.
+            </t>
+
+            <t>
+              Encode the Enc_structure using a CBOR Canonical encoding <xref target="CBOR-Canonical"/> to get the AAD value.
+            </t>
+
+            <t>
+              Determine the encryption key.  This step is dependent on the key management method being used:
+              For:
+              <list style="hanging">
+                <t hangText="No Recipients:">
+                  The key to be used is determined by the algorithm and key at the current level.
+                </t>
+                <t hangText="Direct and Direct Key Agreement:">
+                  The key is determined by the key and algorithm in the recipient structure.
+                  The encryption algorithm and size of the key to be used are inputs into the KDF used for the recipient.
+                  (For direct, the KDF can be thought of as the identity operation.)
+                </t>
+                <t hangText="Other:">
+                  The key is randomly generated.
+                </t>
+              </list>
+            </t>
+            
+            <t>
+              Call the encryption algorithm with K (the encryption key to use), P (the plain text) and AAD (the additional authenticated data).
+              Place the returned cipher text into the 'ciphertext' field of the structure.
+            </t>
+
+            <t>
+              For recipients of the message, recursively perform the encryption algorithm for that recipient using the encryption key as the plain text.
+            </t>
           </list>
         </t>
+
       </section>
-      <section anchor="encryption-algorithm-for-ae-algorithms" title="Encryption algorithm for AE algorithms" toc="default">
+      <section anchor="encryption-algorithm-for-ae-algorithms" title="Encryption algorithm for AE algorithms">
+
         <t>
           <list style="numbers">
-            <t>Verify that the &#8216;protected&#8217; field is absent.</t>
-            <t>Verify that the &#8216;aad&#8217; field is absent.</t>
-            <t>Encrypt the plain text and place in the &#8216;ciphertext&#8217; field.</t>
+            <t>
+              Verify that the 'protected' field is absent.
+            </t>
+            <t>
+              Verify that there was no external additional authenticated data supplied for this operation.
+            </t>
+            <t>
+              Determine the encryption key.  This step is dependent on the key management method being used:
+              For:
+              <list style="hanging">
+                <t hangText="No Recipients:">
+                  The key to be used is determined by the algorithm and key at the current level.
+                </t>
+                <t hangText="Direct and Direct Key Agreement:">
+                  The key is determined by the key and algorithm in the recipient structure.
+                  The encryption algorithm and size of the key to be used are inputs into the KDF used for the recipient.
+                  (For direct, the KDF can be thought of as the identity operation.)
+                </t>
+                <t hangText="Other:">
+                  The key is randomly generated.
+                </t>
+              </list>
+            </t>
+            
+            <t>
+              Call the encryption algorithm with K (the encryption key to use) and the P (the plain text).
+              Place the returned cipher text into the 'ciphertext' field of the structure.
+            </t>
+
+            <t>
+              For recipients of the message, recursively perform the encryption algorithm for that recipient using the encryption key as the plain text.
+            </t>
           </list>
         </t>
+
       </section>
     </section>
-    <section anchor="mac-objects" title="MAC objects" toc="default">
-      <t>In this section we describe the structure and methods to be used when doing MAC authentication in COSE.  JOSE used a variant of the signature structure for doing MAC operations and it is restricted to using a single pre-shared secret to do the authentication.  This document allows for the use of all of the same methods of key management as are allowed for encryption.</t>
-      <t>When using MAC operations, there are two modes in which it can be used.  The first is just a check that the content has not been changed since the MAC was computed.  Any of the key management methods can be used for this purpose.  The second mode is to both check that the content has not been changed since the MAC was computed, and to use key management to verify who sent it.  The key management modes that support this are ones that either use a pre-shared secret, or do static-static key agreement.  In both of these cases the entity MAC-ing the message can be validated by a key binding.  (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.)</t>
-      <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-        <artwork type="CDDL" xml:space="preserve" name="" align="left" alt="" width="" height="">
-COSE_mac = (
-   Headers,
-   ? payload =&gt; bstr,
-   tag =&gt; bstr,
-   ? recipients =&gt; [+COSE_encrypt_a]
-)
+    
+    <section anchor="mac-objects" title="MAC objects">
 
-</artwork>
-      </figure>
-      <t>Field descriptions:</t>
+      <t>
+        In this section we describe the structure and methods to be used when doing MAC authentication in COSE.  JOSE used a variant of the signature structure for doing MAC operations and it is restricted to using a single pre-shared secret to do the authentication.  This document allows for the use of all of the same methods of key management as are allowed for encryption.
+      </t>
+
+      <t>
+        When using MAC operations, there are two modes in which it can be used.  The first is just a check that the content has not been changed since the MAC was computed.  Any of the key management methods can be used for this purpose.  The second mode is to both check that the content has not been changed since the MAC was computed, and to use key management to verify who sent it.  The key management modes that support this are ones that either use a pre-shared secret, or do static-static key agreement.  In both of these cases the entity MAC-ing the message can be validated by a key binding.  (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.)
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_mac = {
+   msg_type=>msg_type_mac, 
+   Headers,
+   ? payload => bstr,
+   tag => bstr,
+   recipients => [+{COSE_encrypt_fields}]
+}
+
+]]></artwork></figure>
+
+      <t>
+        Field descriptions:
+      </t>
+
       <t>
         <list style="hanging">
-          <t hangText="protected">contains attributes about the payload which are to be protected by the MAC.  An example of such an attribute would be the content type (&#8216;cty&#8217;) attribute.  The content is a CBOR map of attributes which is encoded to a byte stream.  This field MUST NOT contain attributes about the recipient, even if those attributes are common across multiple recipients.  At least one of protected and unprotected MUST be present.</t>
-          <t hangText="unprotected">contains attributes about the payload which are not protected by the MAC.  An example of such an attribute would be the content type (&#8216;cty&#8217;) attribute.  This field MUST NOT contain attributes about a recipient, even if the attributes are common across multiple recipients.  At least one of protected and unprotected MUST be present.</t>
-          <t hangText="payload">contains the serialized content to be MAC-ed.<vspace blankLines="0"/> If the payload is not present in the message, the application is required to supply the payload separately.<vspace blankLines="0"/> The payload is wrapped in a bstr to ensure that it is transported without changes, if the payload is transported separately it is the responsibility of the application to ensure that it will be transported without changes.</t>
-          <t hangText="tag">contains the MAC value.</t>
-          <t hangText="recipients">contains the recipient information.  See the description under COSE_Encryption for more info.</t>
+          <t hangText='msg_type'>
+            identifies this as providing the encrypted security service.
+            The value MUST be msg_type_mac (3).
+          </t>
+          <t hangText='protected'>
+            contains attributes about the payload which are to be protected by the MAC.
+            An example of such an attribute would be the content type ('cty') attribute.
+            The content is a CBOR map of attributes which is encoded to a byte stream.
+            This field MUST NOT contain attributes about the recipient, even if
+            those attributes are common across multiple recipients.
+            At least one of protected and unprotected MUST be present.
+          </t>
+          <t hangText='unprotected'>
+            contains attributes about the payload which are not protected by the MAC.
+            An example of such an attribute would be the content type ('cty') attribute.
+            This field MUST NOT contain attributes about a recipient, even if
+            the attributes are common across multiple recipients.
+            At least one of protected and unprotected MUST be present.
+          </t>
+          <t hangText='payload'>
+            contains the serialized content to be MAC-ed.<vspace />
+            If the payload is not present in the message, the application is required to supply the payload separately.<vspace />
+            The payload is wrapped in a bstr to ensure that it is transported without changes, if the payload is transported separately it is the responsibility of the application to ensure that it will be transported without changes.
+          </t>
+          <t hangText='tag'>
+            contains the MAC value.
+          </t>
+          <t hangText='recipients'>
+            contains the recipient information.  See the description under COSE_Encryption for more info.
+          </t>
         </list>
       </t>
-      <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-        <artwork type="CDDL" xml:space="preserve" name="" align="left" alt="" width="" height="">
-MAC_structure = [
-   protected =&gt; bstr,
-   payload =&gt; bstr
-]
 
-</artwork>
-      </figure>
-      <t>How to compute a MAC:</t>
+      <figure><artwork type="CDDL"><![CDATA[
+ MAC_structure = [
+     protected: bstr,
+     external_aad: bstr,
+     payload: bstr
+]
+]]></artwork></figure>
+
+      <t>
+        How to compute a MAC:
+      </t>
+
       <t>
         <list style="numbers">
-          <t>Create a MAC_structure and copy the protected and payload elements from the COSE_mac structure.</t>
-          <t>Encode the MAC_structure using a canonical CBOR encoder.  The resulting bytes is the value to compute the MAC on.</t>
-          <t>Compute the MAC and place the result in the &#8216;tag&#8217; field of the COSE_mac structure.</t>
-          <t>Encrypt and encode the MAC key for each recipient of the message.</t>
+          <t>
+            Create a MAC_structure and copy the protected and payload elements from the COSE_mac structure.
+          </t>
+          <t>
+            If the application has supplied external authenticated data, encode it as a binary value and place in the MAC_structure.
+            If there is no external authenticated data, then use a zero length 'bstr'.
+          </t>
+          <t>
+            Encode the MAC_structure using a canonical CBOR encoder.  The resulting bytes is the value to compute the MAC on.
+          </t>
+          <t>
+            Compute the MAC and place the result in the 'tag' field of the COSE_mac structure.
+          </t>
+          <t>
+            Encrypt and encode the MAC key for each recipient of the message.
+          </t>
         </list>
       </t>
+
     </section>
-    <section anchor="key-structure" title="Key Structure" toc="default">
-      <t>There are only a few changes between JOSE and COSE for how keys are formatted.  As with JOSE, COSE uses a map to contain the elements of a key.  Those values, which in JOSE, are base64url encoded because they are binary values, are encoded as bstr values in COSE.</t>
-      <t>For COSE we use the same set of fields that were defined in <xref target="RFC7517" pageno="false" format="default"/>.</t>
-      <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-        <artwork type="CDDL" xml:space="preserve" name="" align="left" alt="" width="" height="">
+    <section anchor="key-structure" title="Key Structure">
+
+      <t>
+        There are only a few changes between JOSE and COSE for how keys are formatted.
+        As with JOSE, COSE uses a map to contain the elements of a key.
+        Those values, which in JOSE, are base64url encoded because they are binary values, are encoded as bstr values in COSE.
+      </t>
+
+      <t>
+        For COSE we use the same set of fields that were defined in
+        <xref target="RFC7517"/>.
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
 COSE_Key = {
-    kty =&gt; tstr / int,
-    ? key_ops =&gt; [+tstr / int ],
-    ? alg =&gt; tstr / int,
-    ? kid =&gt; bstr,
-    * keys =&gt; values
+    kty => tstr / int,
+    ? key_ops => [+tstr / int ],
+    ? alg => tstr / int,
+    ? kid => bstr,
+    * keys => values
 }
 
 COSE_KeySet = [+COSE_Key]
 
-</artwork>
-      </figure>
-      <t>The element &#8220;kty&#8221; is a required element in a COSE_Key map.<vspace blankLines="0"/> All other elements are optional and not all of the elements listed in <xref target="RFC7517" pageno="false" format="default"/> or <xref target="RFC7518" pageno="false" format="default"/> have been listed here even though they can all appear in a COSE_Key map.</t>
-      <t>The &#8220;key_ops&#8221; element is prefered over the &#8220;use&#8221; element as the information provided that way is more finely detailed about the operations allowed.  It is strongly suggested that this element be present for all keys.</t>
-      <t>The same fields defined in <xref target="RFC7517" pageno="false" format="default"/> are used here with the following changes in rules:</t>
+]]></artwork></figure>
+
       <t>
+        The element “kty” is a required element in a COSE_Key map.<vspace />
+        All other elements are optional and not all of the elements listed in <xref target="RFC7517"/> or <xref target="RFC7518"/> have been listed here even though they can all appear in a COSE_Key map.
+      </t>
+
+      <t>
+        The “key_ops” element is preferred over the “use” element as the information provided that way is more finely detailed about the operations allowed.  It is strongly suggested that this element be present for all keys.
+      </t>
+
+      <t>
+        The same fields defined in <xref target="RFC7517"/> are used
+        here with the following changes in rules:
+
         <list style="symbols">
-          <t>Any item which is base64 encoded in JWK, is bstr encoded for COSE.</t>
-          <t>Any item which is integer encoded in JWK, is int encoded for COSE.</t>
           <t>
+            Any item which is base64 encoded in JWK, is bstr encoded for COSE.
+          </t>
+          <t>
+            Any item which is integer encoded in JWK, is int encoded for COSE.
+          </t>
+          <t>
+            Any item which is string (but not base64) encoded in JWK, is tstr encoded for COSE.
+          </t>
+          <t>
+            Exceptions to this are the following fields:
             <list style="hanging">
-              <t hangText="Any item which is string (but not base64) encoded in JWK, is tstr encoded for COSE."></t>
-              <t hangText="Exceptions to this are the following fields:"></t>
-              <t hangText="kid">is always bstr encoded rather than tstr encoded.  This change in encoded is due to the fact that frequently, values such as a hash of the public key is used for a kid value.  Since the field is defined as not having a specific structure, making it binary rather than textual makes sense.</t>
+              <t hangText='kid'>
+                is always bstr encoded rather than tstr encoded.
+                This change in encoded is due to the fact that frequently, values
+                such as a hash of the public key is used for a kid value.
+                Since the field is defined as not having a specific structure,
+                making it binary rather than textual makes sense.
+              </t>
             </list>
           </t>
         </list>
       </t>
+
     </section>
-    <section anchor="CBOR-Canonical" title="CBOR Encoder Restrictions" toc="default">
-      <t>There as been an attempt to resrict the number of places where the document needs to impose restrictions on how the CBOR Encoder needs to work.  We have managed to narrow it down to the following restrictions:</t>
+    <section anchor="CBOR-Canonical" title="CBOR Encoder Restrictions">
+
+      <t>
+        There as been an attempt to limit the number of places where the document 
+        needs to impose restrictions on how the CBOR Encoder needs to work.  We have
+        managed to narrow it down to the following restrictions:
+      </t>
+
       <t>
         <list style="symbols">
-          <t>The restriction applies to the encoding the Sig_structure, the Enc_structure, and the MAC_structure.</t>
-          <t>The rules for Canonical CBOR (Section 3.9 of RFC 7049) MUST be used in these locations.  The main rule that needs to be enforced is that all lengths in these structures MUST be encoded such that they are encoded using definite lengths and the minimum length encoding is used.</t>
-          <t>All parsers used SHOULD fail on both parsing and generation if the same key is used twice in a map.</t>
+          <t>
+            The restriction applies to the encoding the Sig_structure, the Enc_structure, and the MAC_structure.
+          </t>
+          <t>
+            The rules for Canonical CBOR (Section 3.9 of RFC 7049) MUST be used in these
+            locations.  The main rule that needs to be enforced is that all lengths
+            in these structures MUST be encoded such that they are encoded using definite lengths 
+            and the minimum length encoding is used.
+          </t>
+          <t>
+            All parsers used SHOULD fail on both parsing and generation if the same key is used twice in a map.
+          </t>
         </list>
       </t>
-      <t>While it is permitted to have key values other than those specified in this document in the outer maps (COSE_Sign, COSE_Signature, COSE_encrypt, COSE_recipient and COSE_mac), doing so is not encouraged.  Applications should make a determination if it will be permitted for that application.  In general, any needed new fields can be accomadated by the introduction of new header fields to be carried in the protected or unprotected fields.  Applications that need to have new fields in these maps should consider getting new message types assigned for these usages.  Without this change, old applications will not see and process the new fields.</t>
+
     </section>
-    <section anchor="iana-considerations" title="IANA Considerations" toc="default">
-      <section anchor="cbor-tag-assignment" title="CBOR Tag assignment" toc="default">
-        <t>It is requested that IANA assign a new tag from the &#8220;Concise Binary Object Represetion (CBOR) Tags&#8221; registry.  It is requested that the tag be assigned in the 0 to 23 value range.</t>
-        <t>Tag Value:  TBD1</t>
-        <t>Data Item: CBOR map</t>
-        <t>Semantics: COSE security message.</t>
+    <section anchor="iana-considerations" title="IANA Considerations">
+
+      <section anchor="cbor-tag-assignment" title="CBOR Tag assignment">
+
+        <t>
+          It is requested that IANA assign a new tag from the “Concise Binary Object Representation (CBOR) Tags” registry.  It is requested that the tag be assigned in the 0 to 23 value range.
+        </t>
+
+        <t>
+          Tag Value:  TBD1
+        </t>
+
+        <t>
+          Data Item: CBOR map
+        </t>
+
+        <t>
+          Semantics: COSE security message.
+        </t>
+
       </section>
-      <section anchor="cose-parameter-table" title="COSE Parameter Table" toc="default"/>
-      <section anchor="cose-header-key-table" title="COSE Header Key Table" toc="default">
-        <t>It is requested that IANA create a new registry entitled &#8220;COSE Header Key&#8221;.</t>
+      <section anchor="IANA-Top-Level-Keys" title="COSE Parameter Table">
+
+        <t>
+          It is requested that IANA create a new registry entitled “COSE Object Keys Registry”.
+        </t>
+
+        <t>
+          This table is initially populated by the table in <xref target="TOP-Level-Keys"/>.
+        </t>
+
+      </section>
+      <section anchor="cose-header-key-table" title="COSE Header Key Table">
+
+        <t>
+          It is requested that IANA create a new registry entitled “COSE Header Key”.
+        </t>
+
         <t>
           <list style="hanging">
-            <t hangText="The columns of the registry are:"></t>
-            <t hangText="name">The name is present to make it easier to refer to and discuss the registration entry.  The value is not used in the protocol.  Names are to be unique in the table.</t>
-            <t hangText="key">This is the value used for the key.  The key can be either an integer or a string.  Registration in the table is based on the value of the key requested.  Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.  Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.  Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.  Integer values in the range -1 to -65536 are delegated to the &#8220;COSE Header Algorithm Key&#8221; registry.  Integer values beyond -65536 are marked as private use.</t>
-            <t hangText="value">This contains the CBOR type for the value portion of the key.</t>
-            <t hangText="value registry">This contains a pointer to the registry used to contain values where the set is limited.</t>
-            <t hangText="description">This contains a brief description of the header field.</t>
-            <t hangText="specification">This contains a pointer to the specification defining the header field (where public).</t>
+            <t hangText='The columns of the registry are:'>
+              
+            </t>
+            <t hangText='name'>
+              The name is present to make it easier to refer to and discuss the registration entry.  The value is not used in the protocol.  Names are to be unique in the table.
+            </t>
+            <t hangText='key'>
+              This is the value used for the key.  The key can be either an integer or a string.  Registration in the table is based on the value of the key requested.  Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.  Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.  Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.  Integer values in the range -1 to -65536 are delegated to the “COSE Header Algorithm Key” registry.  Integer values beyond -65536 are marked as private use.
+            </t>
+            <t hangText='value'>
+              This contains the CBOR type for the value portion of the key.
+            </t>
+            <t hangText='value registry'>
+              This contains a pointer to the registry used to contain values where the set is limited.
+            </t>
+            <t hangText='description'>
+              This contains a brief description of the header field.
+            </t>
+            <t hangText='specification'>
+              This contains a pointer to the specification defining the header field (where public).
+            </t>
           </list>
         </t>
-        <t>The initial contents of the registry can be found in <xref target="Header-Table" pageno="false" format="default"/>.  The specification column for all rows in that table should be this document.</t>
-        <t>NOTE: Need to review the range assignments.  It does not necessarily make sense as specification required uses 1 byte positive integers and 2 byte strings.</t>
+
+        <t>
+          The initial contents of the registry can be found in <xref target="Header-Table"/>.  The specification column for all rows in that table should be this document.
+        </t>
+
+        <t>
+          NOTE: Need to review the range assignments.  It does not necessarily make sense as specification required uses 1 byte positive integers and 2 byte strings.
+        </t>
+
       </section>
-      <section anchor="cose-header-algorithm-key-table" title="COSE Header Algorithm Key Table" toc="default">
-        <t>It is requested that IANA create a new registry entitled &#8220;COSE Header Algorithm Keys&#8221;.</t>
+      <section anchor="IANA-Alg-Registry" title="COSE Header Algorithm Key Table">
+
+        <t>
+          It is requested that IANA create a new registry entitled “COSE Header Algorithm Keys”.
+        </t>
+
         <t>
           <list style="hanging">
-            <t hangText="The columns of the registry are:"></t>
-            <t hangText="name">The name is present to make it easier to refer to and discuss the registration entry.  The value is not used in the protocol.</t>
-            <t hangText="algorithm">The algorithm(s) that this registry entry is used for.  This value is taken from the &#8220;COSE Algorithm Value&#8221; registry.  Multiple algorithms can be specified in this entry.  For the table, the algorithm, key pair MUST be unique.</t>
-            <t hangText="key">This is the value used for the key.  The key is an integer in the range of -1 to -65536.</t>
-            <t hangText="value">This contains the CBOR type for the value portion of the key.</t>
-            <t hangText="value registry">This contains a pointer to the registry used to contain values where the set is limited.</t>
-            <t hangText="description">This contains a brief description of the header field.</t>
-            <t hangText="specification">This contains a pointer to the specification defining the header field (where public).</t>
+            <t hangText='The columns of the registry are:'>
+              
+            </t>
+            <t hangText='name'>
+              The name is present to make it easier to refer to and discuss the registration entry.  The value is not used in the protocol.
+            </t>
+            <t hangText='algorithm'>
+              The algorithm(s) that this registry entry is used for.  This value is taken from the “COSE Algorithm Value” registry.  Multiple algorithms can be specified in this entry.  For the table, the algorithm, key pair MUST be unique.
+            </t>
+            <t hangText='key'>
+              This is the value used for the key.  The key is an integer in the range of -1 to -65536.
+            </t>
+            <t hangText='value'>
+              This contains the CBOR type for the value portion of the key.
+            </t>
+            <t hangText='value registry'>
+              This contains a pointer to the registry used to contain values where the set is limited.
+            </t>
+            <t hangText='description'>
+              This contains a brief description of the header field.
+            </t>
+            <t hangText='specification'>
+              This contains a pointer to the specification defining the header field (where public).
+            </t>
           </list>
         </t>
-        <t>The initial contents of the registry can be found in <xref target="Header-Algorithm-Table" pageno="false" format="default"/>.  The specification column for all rows in that table should be this document.</t>
+
+        <t>
+          The initial contents of the registry can be found in <xref target="Header-Algorithm-Table"/>.  The specification column for all rows in that table should be this document.
+        </t>
+
       </section>
-      <section anchor="cose-algorithm-registry" title="COSE Algorithm Registry" toc="default">
-        <t>It is requested that IANA create a new registry entitled &#8220;COSE Algorithm Registry&#8221;.</t>
+      <section anchor="cose-algorithm-registry" title="COSE Algorithm Registry">
+
+        <t>
+          It is requested that IANA create a new registry entitled “COSE Algorithm Registry”.
+        </t>
+
         <t>
           <list style="hanging">
-            <t hangText="The columns of the registry are:"></t>
-            <t hangText="key">The value to be used to identify this algorithm.  Algorithm keys MUST be unique. The key can be a positive integer, a negative integer or a string.  Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.  Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.  Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.  Integer values in the range -1 to -65536 are delegated to the &#8220;COSE Header Algorithm Key&#8221; registry.  Integer values beyond -65536 are marked as private use.</t>
-            <t hangText="description">A short description of the algorithm.</t>
-            <t hangText="specification">A document where the algorithm is defined (if publicly available).</t>
+            <t hangText='The columns of the registry are:'>
+              
+            </t>
+            <t hangText='key'>
+              The value to be used to identify this algorithm.  Algorithm keys MUST be unique. The key can be a positive integer, a negative integer or a string.  Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.  Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.  Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.  Integer values in the range -1 to -65536 are delegated to the “COSE Header Algorithm Key” registry.  Integer values beyond -65536 are marked as private use.
+            </t>
+            <t hangText='description'>
+              A short description of the algorithm.
+            </t>
+            <t hangText='specification'>
+              A document where the algorithm is defined (if publicly available).
+            </t>
           </list>
         </t>
-        <t>The initial contents of the registry can be found in <xref target="ALG_TABLE" pageno="false" format="default"/>.  The specification column for all rows in that table should be this document.</t>
+
+        <t>
+          The initial contents of the registry can be found in <xref target="ALG_TABLE"/>.  The specification column for all rows in that table should be this document.
+        </t>
+
       </section>
-      <section anchor="cose-key-map-registry" title="COSE Key Map Registry" toc="default">
-        <t>It is requested that IANA create a new registry entitied &#8220;COSE Key Map Registry&#8221;.</t>
-        <t>The columns of the registry are:</t>
+      <section anchor="cose-key-map-registry" title="COSE Key Map Registry">
+
+        <t>
+          It is requested that IANA create a new registry entitled “COSE Key Map Registry”.
+        </t>
+
+        <t>
+          The columns of the registry are:
+        </t>
+
         <t>
           <list style="hanging">
-            <t hangText="name">This is a descriptive name that enables easier reference to the item.  It is not used in the encoding.</t>
-            <t hangText="key">The value to be used to identify this algorithm.  Algorithm keys MUST be unique. The key can be a positive integer, a negative integer or a string.  Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.  Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.  Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.  Integer values in the range -1 to -65536 are used for key parameters specific to a single algoirthm delegated to the &#8220;COSE Key Parameter Key&#8221; registry.  Integer values beyond -65536 are marked as private use.</t>
-            <t hangText="CBOR Type">This field contains the CBOR type for the field</t>
-            <t hangText="registry">This field denotes the registry that values come from, if one exists.</t>
-            <t hangText="description">This field contains a brief description for the field</t>
-            <t hangText="specification">This contains a pointer to the public specification for the field if one exists</t>
+            <t hangText='name'>
+              This is a descriptive name that enables easier reference to the item.  It is not used in the encoding.
+            </t>
+            <t hangText='key'>
+              The value to be used to identify this algorithm.  Algorithm keys MUST be unique. The key can be a positive integer, a negative integer or a string.  Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.  Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.  Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.  Integer values in the range -1 to -65536 are used for key parameters specific to a single algoirthm delegated to the “COSE Key Parameter Key” registry.  Integer values beyond -65536 are marked as private use.
+            </t>
+            <t hangText='CBOR Type'>
+              This field contains the CBOR type for the field
+            </t>
+            <t hangText='registry'>
+              This field denotes the registry that values come from, if one exists.
+            </t>
+            <t hangText='description'>
+              This field contains a brief description for the field
+            </t>
+            <t hangText='specification'>
+              This contains a pointer to the public specification for the field if one exists
+            </t>
           </list>
         </t>
-        <t>This registry will be initially populated bythe values in <xref target="COSE_KEY_KEYS" pageno="false" format="default"/>.  The specification column for all of these entries will be this document.</t>
+
+        <t>
+          This registry will be initially populated bythe values in <xref target="COSE_KEY_KEYS"/>.  The specification column for all of these entries will be this document.
+        </t>
+
       </section>
-      <section anchor="cose-key-parameter-registry" title="COSE Key Parameter Registry" toc="default">
-        <t>It is requested that IANA create a new registry &#8220;COSE Key Parameters&#8221;.</t>
-        <t>The columns of the table are:</t>
+      <section anchor="cose-key-parameter-registry" title="COSE Key Parameter Registry">
+
+        <t>
+          It is requested that IANA create a new registry “COSE Key Parameters”.
+        </t>
+
+        <t>
+          The columns of the table are:
+        </t>
+
         <t>
           <list style="hanging">
-            <t hangText="key type">This field contains a descriptive string of a key type.  This should be a value that is in the COSE General Values table and is placed in the &#8216;kty&#8217; field of a COSE Key structure.</t>
-            <t hangText="name">This is a descriptive name that enables easier reference to the item.  It is not used in the encoding.</t>
-            <t hangText="key">The key is to be unqiue for every value of key type.  The range of values is from -256 to -1.  Keys are expected to be re-used for different keys.</t>
-            <t hangText="CBOR type">This field contains the CBOR type for the field</t>
-            <t hangText="description">This field contains a brief description for the field</t>
-            <t hangText="specification">This contains a pointer to the public specification for the field if one exists</t>
+            <t hangText='key type'>
+              This field contains a descriptive string of a key type.  This should be a value that is in the COSE General Values table and is placed in the 'kty' field of a COSE Key structure.
+            </t>
+            <t hangText='name'>
+              This is a descriptive name that enables easier reference to the item.  It is not used in the encoding.
+            </t>
+            <t hangText='key'>
+              The key is to be unique for every value of key type.  The range of values is from -256 to -1.  Keys are expected to be re-used for different keys.
+            </t>
+            <t hangText='CBOR type'>
+              This field contains the CBOR type for the field
+            </t>
+            <t hangText='description'>
+              This field contains a brief description for the field
+            </t>
+            <t hangText='specification'>
+              This contains a pointer to the public specification for the field if one exists
+            </t>
           </list>
         </t>
-        <t>This registry will be initially populated bythe values in <xref target="COSE_KEY_PARAM_KEYS" pageno="false" format="default"/>.  The specification column for all of these entries will be this document.</t>
+
+        <t>
+          This registry will be initially populated by the values in <xref target="COSE_KEY_PARAM_KEYS"/>.  The specification column for all of these entries will be this document.
+        </t>
+
+      </section>
+
+      <section title="Media Type Registration">
+
+        <section title="COSE Security Message">
+
+          <t>
+            This section registers the "application/cose" and "application/cose+cbor" media types in the "Media Types" registry.
+            <cref source="JLS">Should we register both or just the cose+cbor one?</cref>
+            These media types are used to indicate that the content is a COSE_MSG.
+          </t>
+
+          <t>
+          <list style="none">
+            <t>Type name: application</t>
+            <t>Subtype name: cose</t>
+            <t>Required parameters: N/A</t>
+            <t>Optional parameters: N/A</t>
+            <t>Encoding considerations: binary</t>
+            <t>Security considerations: See the Security Considerations section of RFC TBD.</t>
+            <t>Interoperability considerations: N/A</t>
+            <t>Published specification: RFC TBD</t>
+            <t>Applications that use this media type: To be identified</t>
+            <t>Fragment identifier considerations: N/A</t>
+            <t>Additional information:
+            <list style="symbols">
+              <t>Magic number(s): N/A</t>
+              <t>File extension(s): cbor</t>
+              <t>Macintosh file type code(s): N/A</t>
+            </list>
+            </t>
+            <t>Person &amp; email address to contact for further information: iesg@ietf.org</t>
+            <t>Intended usage: COMMON</t>
+            <t>Restrictions on usage: N/A</t>
+            <t>Author: Jim Schaad, ietf@augustcellars.com</t>
+            <t>Change Controller: IESG</t>
+            <t>Provisional registration?  No</t>
+          </list>
+          </t>
+
+          <t>
+          <list style="non">
+            <t>Type name: application</t>
+            <t>Subtype name: cose+cbor</t>
+            <t>Required parameters: N/A</t>
+            <t>Optional parameters: N/A</t>
+            <t>Encoding considerations: binary</t>
+            <t>Security considerations: See the Security Considerations section of RFC TBD.</t>
+            <t>Interoperability considerations: N/A</t>
+            <t>Published specification: RFC TBD</t>
+            <t>Applications that use this media type: To be identified</t>
+            <t>Fragment identifier considerations: N/A</t>
+            <t>Additional information:
+            <list style="symbols">
+              <t>Magic number(s): N/A</t>
+              <t>File extension(s): cbor</t>
+              <t>Macintosh file type code(s): N/A</t>
+            </list>
+            </t>
+            <t>Person &amp; email address to contact for further information: iesg@ietf.org</t>
+            <t>Intended usage: COMMON</t>
+            <t>Restrictions on usage: N/A</t>
+            <t>Author: Jim Schaad, ietf@augustcellars.com</t>
+            <t>Change Controller: IESG</t>
+            <t>Provisional registration?  No</t>
+          </list>
+          </t>
+
+        </section>
+        <section title="COSE Key media type">
+
+          <t>
+            This section registers the "application/jwk+json" and "application/jwk-set+json" media typesin the "Media Types" registry.
+            These media types are used to indicate, respectively, that content is a COSE_Key or COSE_KeySet object.
+          </t>
+
+          <t>
+          <list style="non">
+            <t>Type name: application</t>
+            <t>Subtype name: cose-key+cbor</t>
+            <t>Required parameters: N/A</t>
+            <t>Optional parameters: N/A</t>
+            <t>Encoding considerations: binary</t>
+            <t>Security considerations: See the Security Considerations section of RFC TBD.</t>
+            <t>Interoperability considerations: N/A</t>
+            <t>Published specification: RFC TBD</t>
+            <t>Applications that use this media type: To be identified</t>
+            <t>Fragment identifier considerations: N/A</t>
+            <t>Additional information:
+            <list style="symbols">
+              <t>Magic number(s): N/A</t>
+              <t>File extension(s): cbor</t>
+              <t>Macintosh file type code(s): N/A</t>
+            </list>
+            </t>
+            <t>Person &amp; email address to contact for further information: iesg@ietf.org</t>
+            <t>Intended usage: COMMON</t>
+            <t>Restrictions on usage: N/A</t>
+            <t>Author: Jim Schaad, ietf@augustcellars.com</t>
+            <t>Change Controller: IESG</t>
+            <t>Provisional registration?  No</t>
+          </list>
+          </t>
+
+          <t>
+          <list style="none">
+            <t>Type name: application</t>
+            <t>Subtype name: cose-key-set+cbor</t>
+            <t>Required parameters: N/A</t>
+            <t>Optional parameters: N/A</t>
+            <t>Encoding considerations: binary</t>
+            <t>Security considerations: See the Security Considerations section of RFC TBD.</t>
+            <t>Interoperability considerations: N/A</t>
+            <t>Published specification: RFC TBD</t>
+            <t>Applications that use this media type: To be identified</t>
+            <t>Fragment identifier considerations: N/A</t>
+            <t>Additional information:
+            <list style="symbols">
+              <t>Magic number(s): N/A</t>
+              <t>File extension(s): cbor</t>
+              <t>Macintosh file type code(s): N/A</t>
+            </list>
+            </t>
+            <t>Person &amp; email address to contact for further information: iesg@ietf.org</t>
+            <t>Intended usage: COMMON</t>
+            <t>Restrictions on usage: N/A</t>
+            <t>Author: Jim Schaad, ietf@augustcellars.com</t>
+            <t>Change Controller: IESG</t>
+            <t>Provisional registration?  No</t>
+          </list>
+          </t>
+        </section>
       </section>
     </section>
-    <section anchor="security-considerations" title="Security Considerations" toc="default">
-      <t>There are security considerations:</t>
+    <section anchor="security-considerations" title="Security Considerations">
+
+      <t>
+        There are security considerations:
+      </t>
+
       <t>
         <list style="numbers">
-          <t>Protect private keys</t>
-          <t>MAC messages with more than one recipient means one cannot figure out who sent the message</t>
-          <t>Use of direct key with other recipient structures hands the key to other recipients.</t>
-          <t>Use of direcct ECDH direct encryption is easy for people to leak information on if there are other recipients in the message.</t>
-          <t>Considerations about protected vs unprotected header fields.</t>
+          <t>
+            Protect private keys
+          </t>
+          <t>
+            MAC messages with more than one recipient means one cannot figure out who sent the message
+          </t>
+          <t>
+            Use of direct key with other recipient structures hands the key to other recipients.
+          </t>
+          <t>
+            Use of direct ECDH direct encryption is easy for people to leak information on if there are other recipients in the message.
+          </t>
+          <t>
+            Considerations about protected vs unprotected header fields.
+          </t>
         </list>
       </t>
+
     </section>
+
+
   </middle>
+
   <back>
-    <references title="Normative References">
-      <reference anchor="I-D.greevenbosch-appsawg-cbor-cddl">
-        <front>
-          <title>CBOR data definition language: a notational convention to express CBOR data structures.</title>
-          <author initials="C" surname="Vigano" fullname="Christoph Vigano">
-            <organization/>
-          </author>
-          <author initials="H" surname="Birkholz" fullname="Henk Birkholz">
-            <organization/>
-          </author>
-          <author initials="R" surname="Sun" fullname="Ruinan Sun">
-            <organization/>
-          </author>
-          <date month="March" day="9" year="2015"/>
-          <abstract>
-            <t>This document proposes a notational convention to express CBOR data structures (RFC 7049).  Its main goal is to provide an easy and unambiguous way to express structures for protocol messages and data formats that use CBOR.</t>
-          </abstract>
-        </front>
-        <seriesInfo name="Internet-Draft" value="draft-greevenbosch-appsawg-cbor-cddl-05"/>
-        <format type="TXT" target="http://www.ietf.org/internet-drafts/draft-greevenbosch-appsawg-cbor-cddl-05.txt"/>
-      </reference>
-      <reference anchor="RFC7518">
-        <front>
-          <title>JSON Web Algorithms (JWA)</title>
-          <author initials="M." surname="Jones" fullname="M. Jones">
-            <organization/>
-          </author>
-          <date year="2015" month="May"/>
-          <abstract>
-            <t>This specification registers cryptographic algorithms and identifiers to be used with the JSON Web Signature (JWS), JSON Web Encryption (JWE), and JSON Web Key (JWK) specifications.  It defines several IANA registries for these identifiers.</t>
-          </abstract>
-        </front>
-        <seriesInfo name="RFC" value="7518"/>
-        <format type="TXT" octets="155905" target="http://www.rfc-editor.org/rfc/rfc7518.txt"/>
-      </reference>
-      <reference anchor="RFC7049">
-        <front>
-          <title>Concise Binary Object Representation (CBOR)</title>
-          <author initials="C." surname="Bormann" fullname="C. Bormann">
-            <organization/>
-          </author>
-          <author initials="P." surname="Hoffman" fullname="P. Hoffman">
-            <organization/>
-          </author>
-          <date year="2013" month="October"/>
-          <abstract>
-            <t>The Concise Binary Object Representation (CBOR) is a data format whose design goals include the possibility of extremely small code size, fairly small message size, and extensibility without the need for version negotiation.  These design goals make it different from earlier binary serializations such as ASN.1 and MessagePack.</t>
-          </abstract>
-        </front>
-        <seriesInfo name="RFC" value="7049"/>
-        <format type="TXT" octets="134062" target="http://www.rfc-editor.org/rfc/rfc7049.txt"/>
-      </reference>
+
+    <references title='Normative References'>
+      &CDDL;
+      &RFC7049;
     </references>
-    <references title="Informative References">
-      <reference anchor="RFC7516">
-        <front>
-          <title>JSON Web Encryption (JWE)</title>
-          <author initials="M." surname="Jones" fullname="M. Jones">
-            <organization/>
-          </author>
-          <author initials="J." surname="Hildebrand" fullname="J. Hildebrand">
-            <organization/>
-          </author>
-          <date year="2015" month="May"/>
-          <abstract>
-            <t>JSON Web Encryption (JWE) represents encrypted content using JSON-based data structures.  Cryptographic algorithms and identifiers for use with this specification are described in the separate JSON Web Algorithms (JWA) specification and IANA registries defined by that specification.  Related digital signature and Message Authentication Code (MAC) capabilities are described in the separate JSON Web Signature (JWS) specification.</t>
-          </abstract>
-        </front>
-        <seriesInfo name="RFC" value="7516"/>
-        <format type="TXT" octets="108322" target="http://www.rfc-editor.org/rfc/rfc7516.txt"/>
-      </reference>
-      <reference anchor="RFC7515">
-        <front>
-          <title>JSON Web Signature (JWS)</title>
-          <author initials="M." surname="Jones" fullname="M. Jones">
-            <organization/>
-          </author>
-          <author initials="J." surname="Bradley" fullname="J. Bradley">
-            <organization/>
-          </author>
-          <author initials="N." surname="Sakimura" fullname="N. Sakimura">
-            <organization/>
-          </author>
-          <date year="2015" month="May"/>
-          <abstract>
-            <t>JSON Web Signature (JWS) represents content secured with digital signatures or Message Authentication Codes (MACs) using JSON-based data structures.  Cryptographic algorithms and identifiers for use with this specification are described in the separate JSON Web Algorithms (JWA) specification and an IANA registry defined by that specification.  Related encryption capabilities are described in the separate JSON Web Encryption (JWE) specification.</t>
-          </abstract>
-        </front>
-        <seriesInfo name="RFC" value="7515"/>
-        <format type="TXT" octets="131110" target="http://www.rfc-editor.org/rfc/rfc7515.txt"/>
-      </reference>
-      <reference anchor="RFC7517">
-        <front>
-          <title>JSON Web Key (JWK)</title>
-          <author initials="M." surname="Jones" fullname="M. Jones">
-            <organization/>
-          </author>
-          <date year="2015" month="May"/>
-          <abstract>
-            <t>A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) data structure that represents a cryptographic key.  This specification also defines a JWK Set JSON data structure that represents a set of JWKs.  Cryptographic algorithms and identifiers for use with this specification are described in the separate JSON Web Algorithms (JWA) specification and IANA registries established by that specification.</t>
-          </abstract>
-        </front>
-        <seriesInfo name="RFC" value="7517"/>
-        <format type="TXT" octets="93906" target="http://www.rfc-editor.org/rfc/rfc7517.txt"/>
-      </reference>
-      <reference anchor="I-D.mcgrew-aead-aes-cbc-hmac-sha2">
-        <front>
-          <title>Authenticated Encryption with AES-CBC and HMAC-SHA</title>
-          <author initials="D" surname="McGrew" fullname="David McGrew">
-            <organization/>
-          </author>
-          <author initials="J" surname="Foley" fullname="John Foley">
-            <organization/>
-          </author>
-          <author initials="K" surname="Paterson" fullname="Kenny Paterson">
-            <organization/>
-          </author>
-          <date month="July" day="4" year="2014"/>
-          <abstract>
-            <t>This document specifies algorithms for authenticated encryption with associated data (AEAD) that are based on the composition of the Advanced Encryption Standard (AES) in the Cipher Block Chaining (CBC) mode of operation for encryption, and the HMAC-SHA message authentication code (MAC).  These are randomized encryption algorithms, and thus are suitable for use with applications that cannot provide distinct nonces to each invocation of the AEAD encrypt operation.</t>
-          </abstract>
-        </front>
-        <seriesInfo name="Internet-Draft" value="draft-mcgrew-aead-aes-cbc-hmac-sha2-05"/>
-        <format type="TXT" target="http://www.ietf.org/internet-drafts/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt"/>
-      </reference>
-      <reference anchor="RFC2119">
-        <front>
-          <title abbrev="RFC Key Words">Key words for use in RFCs to Indicate Requirement Levels</title>
-          <author initials="S." surname="Bradner" fullname="Scott Bradner">
-            <organization>Harvard University</organization>
-            <address>
-              <postal>
-                <street>1350 Mass. Ave.</street>
-                <street>Cambridge</street>
-                <street>MA 02138</street>
-              </postal>
-              <phone>- +1 617 495 3864</phone>
-              <email>sob@harvard.edu</email>
-            </address>
-          </author>
-          <date year="1997" month="March"/>
-          <area>General</area>
-          <keyword>keyword</keyword>
-          <abstract>
-            <t>In many standards track documents several words are used to signify the requirements in the specification.  These words are often capitalized.  This document defines these words as they should be interpreted in IETF documents.  Authors who follow these guidelines should incorporate this phrase near the beginning of their document: <list><t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119.  </t></list></t>
-            <t>Note that the force of these words is modified by the requirement level of the document in which they are used.  </t>
-          </abstract>
-        </front>
-        <seriesInfo name="BCP" value="14"/>
-        <seriesInfo name="RFC" value="2119"/>
-        <format type="TXT" octets="4723" target="http://www.rfc-editor.org/rfc/rfc2119.txt"/>
-        <format type="HTML" octets="17970" target="http://xml.resource.org/public/rfc/html/rfc2119.html"/>
-        <format type="XML" octets="5777" target="http://xml.resource.org/public/rfc/xml/rfc2119.xml"/>
-      </reference>
-      <reference anchor="RFC3394">
-        <front>
-          <title>Advanced Encryption Standard (AES) Key Wrap Algorithm</title>
-          <author initials="J." surname="Schaad" fullname="J. Schaad">
-            <organization/>
-          </author>
-          <author initials="R." surname="Housley" fullname="R. Housley">
-            <organization/>
-          </author>
-          <date year="2002" month="September"/>
-        </front>
-        <seriesInfo name="RFC" value="3394"/>
-        <format type="TXT" octets="73072" target="http://www.rfc-editor.org/rfc/rfc3394.txt"/>
-      </reference>
-      <reference anchor="RFC3447">
-        <front>
-          <title>Public-Key Cryptography Standards (PKCS) #1: RSA Cryptography Specifications Version 2.1</title>
-          <author initials="J." surname="Jonsson" fullname="J. Jonsson">
-            <organization/>
-          </author>
-          <author initials="B." surname="Kaliski" fullname="B. Kaliski">
-            <organization/>
-          </author>
-          <date year="2003" month="February"/>
-          <abstract>
-            <t>This memo represents a republication of PKCS #1 v2.1 from RSA Laboratories' Public-Key Cryptography Standards (PKCS) series, and change control is retained within the PKCS process.  The body of this document is taken directly from the PKCS #1 v2.1 document, with certain corrections made during the publication process.  This memo provides information for the Internet community.</t>
-          </abstract>
-        </front>
-        <seriesInfo name="RFC" value="3447"/>
-        <format type="TXT" octets="143173" target="http://www.rfc-editor.org/rfc/rfc3447.txt"/>
-      </reference>
-      <reference anchor="RFC3610">
-        <front>
-          <title>Counter with CBC-MAC (CCM)</title>
-          <author initials="D." surname="Whiting" fullname="D. Whiting">
-            <organization/>
-          </author>
-          <author initials="R." surname="Housley" fullname="R. Housley">
-            <organization/>
-          </author>
-          <author initials="N." surname="Ferguson" fullname="N. Ferguson">
-            <organization/>
-          </author>
-          <date year="2003" month="September"/>
-          <abstract>
-            <t>Counter with CBC-MAC (CCM) is a generic authenticated encryption block cipher mode.  CCM is defined for use with 128-bit block ciphers, such as the Advanced Encryption Standard (AES).</t>
-          </abstract>
-        </front>
-        <seriesInfo name="RFC" value="3610"/>
-        <format type="TXT" octets="64509" target="http://www.rfc-editor.org/rfc/rfc3610.txt"/>
-      </reference>
-      <reference anchor="RFC5752">
-        <front>
-          <title>Multiple Signatures in Cryptographic Message Syntax (CMS)</title>
-          <author initials="S." surname="Turner" fullname="S. Turner">
-            <organization/>
-          </author>
-          <author initials="J." surname="Schaad" fullname="J. Schaad">
-            <organization/>
-          </author>
-          <date year="2010" month="January"/>
-          <abstract>
-            <t>Cryptographic Message Syntax (CMS) SignedData includes the SignerInfo structure to convey per-signer information.  SignedData supports multiple signers and multiple signature algorithms per signer with multiple SignerInfo structures.  If a signer attaches more than one SignerInfo, there are concerns that an attacker could perform a downgrade attack by removing the SignerInfo(s) with the \'strong' algorithm(s).  This document defines the multiple-signatures attribute, its generation rules, and its processing rules to allow signers to convey multiple SignerInfo objects while protecting against downgrade attacks.  Additionally, this attribute may assist during periods of algorithm migration. [STANDARDS-TRACK]</t>
-          </abstract>
-        </front>
-        <seriesInfo name="RFC" value="5752"/>
-        <format type="TXT" octets="34502" target="http://www.rfc-editor.org/rfc/rfc5752.txt"/>
-      </reference>
-      <reference anchor="RFC5990">
-        <front>
-          <title>Use of the RSA-KEM Key Transport Algorithm in the Cryptographic Message Syntax (CMS)</title>
-          <author initials="J." surname="Randall" fullname="J. Randall">
-            <organization/>
-          </author>
-          <author initials="B." surname="Kaliski" fullname="B. Kaliski">
-            <organization/>
-          </author>
-          <author initials="J." surname="Brainard" fullname="J. Brainard">
-            <organization/>
-          </author>
-          <author initials="S." surname="Turner" fullname="S. Turner">
-            <organization/>
-          </author>
-          <date year="2010" month="September"/>
-          <abstract>
-            <t>The RSA-KEM Key Transport Algorithm is a one-pass (store-and-forward) mechanism for transporting keying data to a recipient using the recipient's RSA public key. ("KEM" stands for "key encapsulation mechanism".) This document specifies the conventions for using the RSA-KEM Key Transport Algorithm with the Cryptographic Message Syntax (CMS).  The ASN.1 syntax is aligned with an expected forthcoming change to American National Standard (ANS) X9.44.</t>
-          </abstract>
-        </front>
-        <seriesInfo name="RFC" value="5990"/>
-        <format type="TXT" octets="52579" target="http://www.rfc-editor.org/rfc/rfc5990.txt"/>
-      </reference>
-      <reference anchor="RFC5652">
-        <front>
-          <title>Cryptographic Message Syntax (CMS)</title>
-          <author initials="R." surname="Housley" fullname="R. Housley">
-            <organization/>
-          </author>
-          <date year="2009" month="September"/>
-          <abstract>
-            <t>This document describes the Cryptographic Message Syntax (CMS).  This syntax is used to digitally sign, digest, authenticate, or encrypt arbitrary message content. [STANDARDS-TRACK]</t>
-          </abstract>
-        </front>
-        <seriesInfo name="STD" value="70"/>
-        <seriesInfo name="RFC" value="5652"/>
-        <format type="TXT" octets="126813" target="http://www.rfc-editor.org/rfc/rfc5652.txt"/>
-      </reference>
-      <reference anchor="RFC7159">
-        <front>
-          <title>The JavaScript Object Notation (JSON) Data Interchange Format</title>
-          <author initials="T." surname="Bray" fullname="T. Bray">
-            <organization/>
-          </author>
-          <date year="2014" month="March"/>
-          <abstract>
-            <t>JavaScript Object Notation (JSON) is a lightweight, text-based, language-independent data interchange format. It was derived from the ECMAScript Programming Language Standard. JSON defines a small set of formatting rules for the portable representation of structured data.&lt;/t&gt;&lt;t&gt; This document removes inconsistencies with other specifications of JSON, repairs specification errors, and offers experience-based interoperability guidance.</t>
-          </abstract>
-        </front>
-        <seriesInfo name="RFC" value="7159"/>
-        <format type="TXT" octets="27451" target="http://www.rfc-editor.org/rfc/rfc7159.txt"/>
-      </reference>
-      <reference anchor="AES-GCM">
+
+    <references title='Informative References'>
+      &RFC7516;
+      &RFC7515;
+      &RFC7517;
+      &RFC7518;
+      &CBCMAC;
+      &RFC2119;
+      &RFC3394;
+      &RFC3447;
+      &RFC3610;
+      &RFC5652;
+      &RFC5752;
+      &RFC5990;
+      &RFC7159;
+
+      <reference anchor="AES-GCM" >
         <front>
           <title>NIST Special Publication 800-38D: Recommendation for Block Cipher Modes of Operation: Galois/Counter Mode (GCM) and GMAC.</title>
           <author initials="M." surname="Dworkin">
@@ -755,135 +1546,256 @@ COSE_KeySet = [+COSE_Key]
           <date year="2015" month="June"/>
         </front>
       </reference>
+
+
     </references>
-    <section anchor="AE-algo" title="AEAD and AE algorithms" toc="default">
-      <t>The set of encryption algorithms that can be used with this specification is restricted to authenticated encryption (AE) and authenticated encryption with additional data (AEAD) algorithms.  This means that there is a strong check that the data decrypted by the recipient is the same as what was encrypted by the sender.  Encryption modes such as counter have no check on this at all.  The CBC encryption mode had a weak check that the data is correct, given a random key and random data, the CBC padding check will pass one out of 256 times.  There have been several times that a normal encryption mode has been combined with an integrity check to provide a content encryption mode that does provide the necessary authentication.  AES-GCM <xref target="AES-GCM" pageno="false" format="default"/>, AES-CCM <xref target="RFC3610" pageno="false" format="default"/>, AES-CBC-HMAC <xref target="I-D.mcgrew-aead-aes-cbc-hmac-sha2" pageno="false" format="default"/> are  examples of these composite modes.</t>
-      <t>2PKCS v1.5 RSA key transport does not qualify as an AE algorithm.  There are only three bytes in the encoding that can be checked as having decrypted correctly, the rest of the content can only be probabilistically checked as having decrypted correctly.  For this reason, PKCS v1.5 RSA key transport MUST NOT be used with this specification.  RSA-OAEP was designed to have the necessary checks that that content correctly decrypted and does qualify as an AE algorithm.</t>
-      <t>When dealing with authenticated encryption algorithms, there is always some type of value that needs to be checked to see if the authentication level has passed.  This authentication value may be:</t>
+
+
+    <section anchor="AE-algo" title="AEAD and AE algorithms">
+
+      <t>
+        The set of encryption algorithms that can be used with this
+        specification is restricted to authenticated encryption (AE) and
+        authenticated encryption with additional data (AEAD) algorithms.
+        This means that there is a strong check that the data decrypted by the
+        recipient is the same as what was encrypted by the sender.
+        Encryption modes such as counter have no check on this at all.
+        The CBC encryption mode had a weak check that the data is correct,
+        given a random key and random data, the CBC padding check will pass
+        one out of 256 times.
+        There have been several times that a normal encryption mode has been
+        combined with an integrity check to provide a content encryption mode
+        that does provide the necessary authentication.
+        AES-GCM <xref target="AES-GCM"/>, AES-CCM <xref target="RFC3610"/>, AES-CBC-HMAC
+        <xref target="I-D.mcgrew-aead-aes-cbc-hmac-sha2"/> are  examples of these composite
+        modes.
+      </t>
+
+      <t>
+        2PKCS v1.5 RSA key transport does not qualify as an AE algorithm.
+        There are only three bytes in the encoding that can be checked as
+        having decrypted correctly, the rest of the content can only be
+        probabilistically checked as having decrypted correctly.
+        For this reason, PKCS v1.5 RSA key transport MUST NOT be used with
+        this specification.
+        RSA-OAEP was designed to have the necessary checks that that content
+        correctly decrypted and does qualify as an AE algorithm.
+      </t>
+
+      <t>
+        When dealing with authenticated encryption algorithms, there is always
+        some type of value that needs to be checked to see if the
+        authentication level has passed.
+        This authentication value may be:
+      </t>
+
       <t>
         <list style="symbols">
-          <t>A separately generated tag computed by both the encrypter and decrypter and then compared by the decryptor.  This tag value may be either placed at the end of the cipher text (the decision we made) or kept separately (the decision made by the JOSE working group).  This is the approach followed by AES-GCM <xref target="AES-GCM" pageno="false" format="default"/> and AES-CCM <xref target="RFC3610" pageno="false" format="default"/>.</t>
-          <t>A fixed value which is part of the encoded plain text.  This is the approach followed by the AES key wrap algorithm <xref target="RFC3394" pageno="false" format="default"/>.</t>
-          <t>A computed value is included as part of the encoded plain text.  The computed value is then checked by the decryptor using the same computation path.  This is the approach followed by RSAES-OAEP <xref target="RFC3447" pageno="false" format="default"/>.</t>
+          <t>
+            A separately generated tag computed by both the encrypter and
+            decrypter and then compared by the decryptor.
+            This tag value may be either placed at the end of the cipher text
+            (the decision we made) or kept separately (the decision made by the
+            JOSE working group).
+            This is the approach followed by AES-GCM <xref target="AES-GCM"/> and AES-CCM <xref target="RFC3610"/>.
+          </t>
+          <t>
+            A fixed value which is part of the encoded plain text.
+            This is the approach followed by the AES key wrap algorithm <xref target="RFC3394"/>.
+          </t>
+          <t>
+            A computed value is included as part of the encoded plain text.
+            The computed value is then checked by the decryptor using the same computation path.
+            This is the approach followed by RSAES-OAEP <xref target="RFC3447"/>.
+          </t>
         </list>
       </t>
+
     </section>
-    <section anchor="three-levels-of-recipient-information" title="Three Levels of Recipient Information" toc="default">
-      <t>All of the currently defined Key Management methods only use two levels of the COSE_Encrypt structure.  The first level is the message content and the second level is the content key encryption.  However, if one uses a key management technique such as RSA-KEM (see Appendix A of RSA-KEM <xref target="RFC5990" pageno="false" format="default"/>, then it make sense to have three levels of the COSE_Encrypt structure.</t>
-      <t>These levels would be:</t>
+    <section anchor="three-levels-of-recipient-information" title="Three Levels of Recipient Information">
+
       <t>
+        All of the currently defined Key Management methods only use two levels of the COSE_Encrypt structure.
+        The first level is the message content and the second level is the content key encryption.
+        However, if one uses a key management technique such as RSA-KEM (see Appendix A of RSA-KEM <xref target="RFC5990"/>, then
+        it make sense to have three levels of the COSE_Encrypt structure.
+      </t>
+
+      <t>
+        These levels would be:
+
         <list style="symbols">
-          <t>Level 0: The content encryption level.  This level contains the payload of the message.</t>
-          <t>Level 1: The encryption of the CEK by a KEK.</t>
-          <t>Level 2: The encryption of a long random secret using an RSA key and a key derivation function to convert that secret into the KEK.</t>
+          <t>
+            Level 0: The content encryption level.  This level contains the payload of the message.
+          </t>
+          <t>
+            Level 1: The encryption of the CEK by a KEK.
+          </t>
+          <t>
+            Level 2: The encryption of a long random secret using an RSA key and a key derivation function to convert that secret into the KEK.
+          </t>
         </list>
       </t>
+
     </section>
-    <section anchor="examples" title="Examples" toc="default">
-      <t>The examples can be found at https://github.com/cose-wg/Examples.  I am currently still in the process of getting the examples up there along with some control information for people to be albe to check and reproduce the examples.</t>
-      <section anchor="Mac-01" title="Direct MAC" toc="default">
-        <t>This example has some features that are in questions but not yet incorporated in the document.</t>
-        <t>To make it easier to read, this uses CBOR&#8217;s diagnostic notation rather than a binary dump.</t>
-        <t>This example is uses HMAC with SHA-256 as the digest algorithm.  The key manangment is uses two static ECDH keys along with HKDF to directly derive the key used in the HMAC operation.</t>
-        <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-          <artwork type="CBORdiag" xml:space="preserve" name="" align="left" alt="" width="" height="">
-{1: 3, 2: h'A10104', 4: h'546869732069732074686520636F6E74656E742E',
- 10: h'82C136D2C8CB27356635FAFE6F2E1AB2BC23FA706A33357DB017EE51710EEDE5',
- 9: [
-  {3: {1: "ECDH-SS", 5: "meriadoc.brandybuck@buckland.example",
-       "spk": {"kid": "peregrin.took@tuckborough.example"},
-       "apu": h'4D8553E7E74F3C6A3A9DD3EF286A8195CBF8A23D19558CCFEC7D34
-       B824F42D92BD06BD2C7F0271F0214E141FB779AE2856ABF585A58368B017E7F2A
-       9E5CE4DB5'}}]}
+    <section anchor="examples" title="Examples">
 
-</artwork>
-        </figure>
-      </section>
-      <section anchor="Mac-02" title="Wrapped MAC" toc="default">
-        <t>This example has some features that are in questions but not yet incorporated in the document.</t>
-        <t>To make it easier to read, this uses CBOR&#8217;s diagnostic notation rather than a binary dump.</t>
-        <t>This exmple uses AES-128-MAC trucated to 64-bits as the digest algorithm.  It uses AES-256 Key wrap for the key manangment algorithm wrapping the 128-bit key used for the digest algorthm.</t>
-        <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-          <artwork type="CBORdiag" xml:space="preserve" name="" align="left" alt="" width="" height="">
-{1: 3, 2: h'A1016E4145532D3132382D4D41432D3634', 
- 4: h'546869732069732074686520636F6E74656E742E', 
- 10: h'A61AE6CFB7CABCC9', 9: [
-  {3: {1: -5, 5: "018c0ae5-4d9b-471b-bfd6-eef314bc7037"}, 
-   4: h'711AB0DC2FC4585DCE27EFFA6781C8093EBA906F227B6EB0'}]}
+      <t>
+        The examples can be found at https://github.com/cose-wg/Examples.  I am currently still in the process of getting the examples up there along with some control information for people to be able to check and reproduce the examples.
+      </t>
 
-</artwork>
-        </figure>
+      <section anchor="Mac-01" title="Direct MAC">
+
+        <t>
+          This example has some features that are in questions but not yet incorporated in the document.
+        </t>
+
+        <t>
+          To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
+        </t>
+
+        <t>
+          This example is uses HMAC with SHA-256 as the digest algorithm.  The key management is uses two static ECDH keys along with HKDF to directly derive the key used in the HMAC operation.
+        </t>
+
+        <figure><artwork type="CBORdiag"><![CDATA[
+        {1: 3, 2: h'A10104', 4: h'546869732069732074686520636F6E74656E742E',
+        10: h'82C136D2C8CB27356635FAFE6F2E1AB2BC23FA706A33357DB017EE51710EEDE5',
+        9: [
+        {3: {1: "ECDH-SS", 5: "meriadoc.brandybuck@buckland.example",
+        "spk": {"kid": "peregrin.took@tuckborough.example"},
+        "apu": h'4D8553E7E74F3C6A3A9DD3EF286A8195CBF8A23D19558CCFEC7D34
+        B824F42D92BD06BD2C7F0271F0214E141FB779AE2856ABF585A58368B017E7F2A
+        9E5CE4DB5'}}]}
+
+        ]]></artwork></figure>
+
       </section>
-      <section anchor="Mac-03" title="Multi-recipient MAC message" toc="default">
-        <t>This example has some features that are in questions but not yet incorporated in the document.</t>
-        <t>To make it easier to read, this uses CBOR&#8217;s diagnostic notation rather than a binary dump.</t>
-        <t>This example uses HMAC with SHA-256 for the digest algorithm.  There are three different key manangment techniques applied:</t>
+      <section anchor="Mac-02" title="Wrapped MAC">
+
+        <t>
+          This example has some features that are in questions but not yet incorporated in the document.
+        </t>
+
+        <t>
+          To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
+        </t>
+
+        <t>
+          This example uses AES-128-MAC truncated to 64-bits as the digest algorithm.  It uses AES-256 Key wrap for the key management algorithm wrapping the 128-bit key used for the digest algorithm.
+        </t>
+
+        <figure><artwork type="CBORdiag"><![CDATA[
+        {1: 3, 2: h'A1016E4145532D3132382D4D41432D3634', 
+        4: h'546869732069732074686520636F6E74656E742E', 
+        10: h'A61AE6CFB7CABCC9', 9: [
+        {3: {1: -5, 5: "018c0ae5-4d9b-471b-bfd6-eef314bc7037"}, 
+        4: h'711AB0DC2FC4585DCE27EFFA6781C8093EBA906F227B6EB0'}]}
+
+        ]]></artwork></figure>
+
+      </section>
+      <section anchor="Mac-03" title="Multi-recipient MAC message">
+
+        <t>
+          This example has some features that are in questions but not yet incorporated in the document.
+        </t>
+
+        <t>
+          To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
+        </t>
+
+        <t>
+          This example uses HMAC with SHA-256 for the digest algorithm.  There are three different key management techniques applied:
+        </t>
+
         <t>
           <list style="symbols">
-            <t>An ephemeral static ECDH key agrement operation using AES-128 key wrap on the digest key.</t>
-            <t>Key transport using RSA-OAEP with SHA-256 for the hash and the mfg function operations.</t>
-            <t>AES 256-bit Key wrap using a pre-shared secret.</t>
+            <t>
+              An ephemeral static ECDH key agreement operation using AES-128 key wrap on the digest key.
+            </t>
+            <t>
+              Key transport using RSA-OAEP with SHA-256 for the hash and the mfg function operations.
+            </t>
+            <t>
+              AES 256-bit Key wrap using a pre-shared secret.
+            </t>
           </list>
         </t>
-        <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-          <artwork type="CBORdiag" xml:space="preserve" name="" align="left" alt="" width="" height="">
-{1: 3, 2: h'A10104', 4: h'546869732069732074686520636F6E74656E742E',
- 10: h'051FA3288A39AC726B4FAE79A4B93FB17D8DC3F6E666247EE7AD40CE1665FCDE', 
- 9: [
-   {3: {1: "ECDH-ES+A128KW", 
+
+        <figure><artwork type="CBORdiag"><![CDATA[
+        {1: 3, 2: h'A10104', 4: h'546869732069732074686520636F6E74656E742E',
+        10: h'051FA3288A39AC726B4FAE79A4B93FB17D8DC3F6E666247EE7AD40CE1665FCDE', 
+        9: [
+        {3: {1: "ECDH-ES+A128KW", 
         5: h'62696C626F2E62616767696E7340686F626269746F6E2E6578616D706C65', 
         4: {1: 1, -1: 5, -2: h'43B12669ACAC3FD27898FFBA0BCD2E6C366D53BC4DB
-            71F909A759304ACFB5E18CDC7BA0B13FF8C7636271A6924B1AC63C02688075
-            B55EF2D613574E7DC242F79C3',
-            -3: h'812DD694F4EF32B11014D74010A954689C6B6E8785B333D1AB44F22B
-            9D1091AE8FC8AE40B687E5CFBE7EE6F8B47918A07BB04E9F5B1A51A334A16B
-            C09777434113'}}, 
-    4: h'1B120C848C7F2F8943E402CBDBDB58EFB281753AF4169C70D0126C0D164362771
-         60821790EF4FE3F'},
-   {3: {1: -2, 5: h'62696C626F2E62616767696E7340686F626269746F6E2E6578616D
+        71F909A759304ACFB5E18CDC7BA0B13FF8C7636271A6924B1AC63C02688075
+        B55EF2D613574E7DC242F79C3',
+        -3: h'812DD694F4EF32B11014D74010A954689C6B6E8785B333D1AB44F22B
+        9D1091AE8FC8AE40B687E5CFBE7EE6F8B47918A07BB04E9F5B1A51A334A16B
+        C09777434113'}}, 
+        4: h'1B120C848C7F2F8943E402CBDBDB58EFB281753AF4169C70D0126C0D164362771
+        60821790EF4FE3F'},
+        {3: {1: -2, 5: h'62696C626F2E62616767696E7340686F626269746F6E2E6578616D
         706C65'},
-    4: h'46C4F88069B650909A891E84013614CD58A3668F88FA18F3852940A20B3509859
-         1D3AACF91C125A2595CDA7BEE75A490579F0E2F20FD6BC956623BFDE3029C318
+        4: h'46C4F88069B650909A891E84013614CD58A3668F88FA18F3852940A20B3509859
+        1D3AACF91C125A2595CDA7BEE75A490579F0E2F20FD6BC956623BFDE3029C318
         F82C426DAC3463B261C981AB18B72FE9409412E5C7F2D8F2B5ABAF780DF6A282D
         B033B3A863FA957408B81741878F466DCC437006CA21407181A016CA608CA8208
         BD3C5A1DDC828531E30B89A67EC6BB97B0C3C3C92036C0CB84AA0F0CE8C3E4A21
         5D173BFA668F116CA9F1177505AFB7629A9B0B5E096E81D37900E06F561A32B6B
         C993FC6D0CB5D4BB81B74E6FFB0958DAC7227C2EB8856303D989F93B4A0518307
         06A4C44E8314EC846022EAB727E16ADA628F12EE7978855550249CCB58'}, 
-   {3: {1: -5, 5: "018c0ae5-4d9b-471b-bfd6-eef314bc7037"}, 
+        {3: {1: -5, 5: "018c0ae5-4d9b-471b-bfd6-eef314bc7037"}, 
         4: h'0B2C7CFCE04E98276342D6476A7723C090DFDD15F9A518E7736549E99837
         0695E6D6A83B4AE507BB'}]}
 
-</artwork>
-        </figure>
-      </section>
-      <section anchor="Enc-01" title="Direct ECDH" toc="default">
-        <t>This example has some features that are in questions but not yet incorporated in the document.</t>
-        <t>To make it easier to read, this uses CBOR&#8217;s diagnostic notation rather than a binary dump.</t>
-        <t>Encoded in CBOR - 216 bytes, content is 14 bytes long</t>
-        <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-          <artwork type="CBORdiag" xml:space="preserve" name="" align="left" alt="" width="" height="">
-{1: 2, 2: h'A10101', 7: h'C9CF4DF2FE6C632BF7886413', 
- 4: h'45FCE2814311024D3A479E7D3EED063850F3F0B94EE043BAFDFA14636E632CF6
-      75AF2DAE', 
-  9: [{3: {1: "ECDH-ES", 5: "meriadoc.brandybuck@buckland.example", 
-       4: {1: 1, -1: 4, -2: h'98F50A4FF6C05861C8860D13A638EA56C3F5AD75
-           90BBFBF054E1C7B4D91D6280', 
-          -3: h'F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7
-           E03BF822BB'}}}]}
+        ]]></artwork></figure>
 
-</artwork>
-        </figure>
       </section>
-      <section anchor="Sig-01" title="Single Signature" toc="default">
-        <t>This example has some features that are in questions but not yet cooperated in the document.</t>
-        <t>To make it easier to read, this uses CBOR&#8217;s diagnostic notation rather than a binary dump.</t>
-        <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-          <artwork type="CBORdiag" xml:space="preserve" name="" align="left" alt="" width="" height="">
-{1: 1, 4: h'546869732069732074686520636F6E74656E742E', 
- 5: [{2: h'A20165505333383405781E62696C626F2E62616767696E7340686F626
-         269746F6E2E6578616D706C65', 
-      6: h'4D645B5FF17BCDAD7EB29ABA0EBBFFA747E72767714F26EDBC5B4C1D2
+      <section anchor="Enc-01" title="Direct ECDH">
+
+        <t>
+          This example has some features that are in questions but not yet incorporated in the document.
+        </t>
+
+        <t>
+          To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
+        </t>
+
+        <t>
+          Encoded in CBOR - 216 bytes, content is 14 bytes long
+        </t>
+
+        <figure><artwork type="CBORdiag"><![CDATA[
+        {1: 2, 2: h'A10101', 3: {-1: h'C9CF4DF2FE6C632BF7886413'}, 
+        4: h'45FCE2814311024D3A479E7D3EED063850F3F0B94EE043BAFDFA14636E632CF6
+        75AF2DAE', 
+        9: [{3: {1: "ECDH-ES", 5: "meriadoc.brandybuck@buckland.example", 
+        4: {1: 1, -1: 4, -2: h'98F50A4FF6C05861C8860D13A638EA56C3F5AD75
+        90BBFBF054E1C7B4D91D6280', 
+        -3: h'F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7
+        E03BF822BB'}}}]}
+
+        ]]></artwork></figure>
+
+      </section>
+      <section anchor="Sig-01" title="Single Signature">
+
+        <t>
+          This example has some features that are in questions but not yet cooperated in the document.
+        </t>
+
+        <t>
+          To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
+        </t>
+
+        <figure><artwork type="CBORdiag"><![CDATA[
+        {1: 1, 4: h'546869732069732074686520636F6E74656E742E', 
+        5: [{2: h'A20165505333383405781E62696C626F2E62616767696E7340686F626
+        269746F6E2E6578616D706C65', 
+        6: h'4D645B5FF17BCDAD7EB29ABA0EBBFFA747E72767714F26EDBC5B4C1D2
         1CBE799B71388CCC73BDB25C4443D0EA2226B774A5B4815ABA82233B33DA
         4C3958D08285384A854A8F7F8FA9635A1A63BAB2A5D8CF45939A7FA2D95C
         C827EF94EF85276611B957B402BD1756D952597751C7AF5D26023012D3DC
@@ -893,18 +1805,27 @@ COSE_KeySet = [+COSE_Key]
         214EE1C9D941F125548B9F23A87DCC26CBBEFD0919CF6F89E192A78130AC
         018D1921EF5B4D0A47659E9CBC1CE58ED26'}]}
 
-</artwork>
-        </figure>
+        ]]></artwork></figure>
+
       </section>
-      <section anchor="Sig-02" title="Multiple Signers" toc="default">
-        <t>This example has some features that are in questions but not yet cooperated in the document.</t>
-        <t>To make it easier to read, this uses CBOR&#8217;s diagnostic notation rather than a binary dump.</t>
-        <t>Encoded in CBOR - 491 bytes, content is 14 bytes long</t>
-        <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-          <artwork type="CBORdiag" xml:space="preserve" name="" align="left" alt="" width="" height="">
-{1: 1, 4: h'546869732069732074686520636F6E74656E742E', 
- 5: [{2: h'A10129', 3: {5: "bilbo.baggins@hobbiton.example"}, 
-      6: h'1FD44A2BA1A8A0A664024E7E2AFD1D1D1159460E3C03B9BE8C8F60639CE
+      <section anchor="Sig-02" title="Multiple Signers">
+
+        <t>
+          This example has some features that are in questions but not yet cooperated in the document.
+        </t>
+
+        <t>
+          To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
+        </t>
+
+        <t>
+          Encoded in CBOR - 491 bytes, content is 14 bytes long
+        </t>
+
+        <figure><artwork type="CBORdiag"><![CDATA[
+        {1: 1, 4: h'546869732069732074686520636F6E74656E742E', 
+        5: [{2: h'A10129', 3: {5: "bilbo.baggins@hobbiton.example"}, 
+        6: h'1FD44A2BA1A8A0A664024E7E2AFD1D1D1159460E3C03B9BE8C8F60639CE
         614F59AF33108B65BBDEF3C330FB97E335DA11EEA9B6CBD7E7908FB8B5F61D
         FEB76EC6ED6A62BD9F3D338E373E1903CE2D5D3BD20086BBCA82A6F424E9F4
         1591BD6261835A74F0C0425E88666D530B72ADC1E33C10DC1D0361922B6ADC
@@ -913,478 +1834,163 @@ COSE_KeySet = [+COSE_Key]
         2221865A2B16093D92F71F9864D92C87057AE591334DB4CF881ECBEC2AC727
         77D9C88871C10733D65566B35FBFA6BAB54078C1C73AE8758196221FB2814E
         C283A95D191FB80D616'},
-     {3: {1: -9, 5: "bilbo.baggins@hobbiton.example"}, 
-      6: h'32247A4FD1CA2B69EEEB48CE65D07F2089D79271BB94847F8628DADB7AF
-           FC1A34C24D10DB3C5E0D00BD9CB3BFB9666BAD6E9752564D35C5CCE375B
-           A44E2FF33336008D8E07484041DBEFB179EBFFA5455E05D6B24E22DAECF
-           0D76AD041A13A9DD7E3DAED7F6B09F1831092FFC5CB8BFE7DBF5E047858
-           02A4CB741395F81E76A3A8AD61'}]}
+        {3: {1: -9, 5: "bilbo.baggins@hobbiton.example"}, 
+        6: h'32247A4FD1CA2B69EEEB48CE65D07F2089D79271BB94847F8628DADB7AF
+        FC1A34C24D10DB3C5E0D00BD9CB3BFB9666BAD6E9752564D35C5CCE375B
+        A44E2FF33336008D8E07484041DBEFB179EBFFA5455E05D6B24E22DAECF
+        0D76AD041A13A9DD7E3DAED7F6B09F1831092FFC5CB8BFE7DBF5E047858
+        02A4CB741395F81E76A3A8AD61'}]}
 
-</artwork>
-        </figure>
+        ]]></artwork></figure>
+
       </section>
     </section>
-    <section anchor="TOP-Level-Keys" title="Top Level Parameter Table" toc="default">
-      <t>This table contains the list of all key values that can ocur in the  COSE_Sign, COSE_signature, COSE_Encrypt, and COSE_MAC structures.</t>
-      <texttable title="" suppress-title="false" align="center" style="full">
-        <ttcol align="left">name</ttcol>
-        <ttcol align="left">number</ttcol>
-        <ttcol align="left">comments</ttcol>
-        <c>msg_type</c>
-        <c>1</c>
-        <c>Occurs only in top level messages</c>
-        <c>protected</c>
-        <c>2</c>
-        <c>Occurs in all structures</c>
-        <c>unprotected</c>
-        <c>3</c>
-        <c>Occurs in all structures</c>
-        <c>payload</c>
-        <c>4</c>
-        <c>Contains the content of the structure</c>
-        <c>signatures</c>
-        <c>5</c>
-        <c>For COSE_Sign - array of signatures</c>
-        <c>signature</c>
-        <c>6</c>
-        <c>For COSE_signature only</c>
-        <c>iv</c>
-        <c>7</c>
-        <c>For COSE_encrypt only</c>
-        <c>aad</c>
-        <c>8</c>
-        <c>For COSE_encrypt only</c>
-        <c>ciphertext</c>
-        <c>4</c>
-        <c>TODO: Should we re-use the same as payload or not?</c>
-        <c>recipients</c>
-        <c>9</c>
-        <c>For COSE_encrypt and COSE_mac</c>
-        <c>tag</c>
-        <c>10</c>
-        <c>For COSE_mac only</c>
-      </texttable>
-      <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-        <artwork type="CDDL" xml:space="preserve" name="" align="left" alt="" width="" height="">
-; message_keys
-msg_type=1
-protected=2
-unprotected=3
-payload=4
-signatures=5
-signature=6
-iv=7
-aad=8
-ciphertext=4
-recipients=9
-tag=10
 
-</artwork>
-      </figure>
-      <t>M00TODO: 1.  There is no equivalent to this table in JOSE so we need to get a name for the table and registration rules.  2.  Initial registration rules: Number may be a positive or a negative value.  Values in the range of -24 to 24 are Standards action required.  Values in the range of -256 to -25 and 25 to 255 are specification required with expert review.  Values from 256 to 512 are designated for private use.  All other values are reserved.</t>
-    </section>
-    <section anchor="Header-Table" title="COSE Header Key Registry" toc="default">
-      <t>This table contains a list of all of the parameters for use in signature and encryption message types defined by the JOSE document set.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.</t>
-      <texttable title="" suppress-title="false" align="center" style="full">
-        <ttcol align="left">name</ttcol>
-        <ttcol align="left">key</ttcol>
-        <ttcol align="left">value</ttcol>
-        <ttcol align="left">registry</ttcol>
-        <ttcol align="left">description</ttcol>
-        <c>alg</c>
-        <c>1</c>
-        <c>int / tstr</c>
-        <c>COSE Algorithm Registry</c>
-        <c>Integers are taken from table <xref target="ALG_TABLE" pageno="false" format="default"/></c>
-        <c>crit</c>
-        <c>2</c>
-        <c>[+ (tstr/int)]</c>
-        <c>COSE Header Key Registry</c>
-        <c>integer values are from this table.</c>
-        <c>cty</c>
-        <c>3</c>
-        <c>tstr / int</c>
-        <c></c>
-        <c>Value is either a mime-content type or an integer from the mime-content type table</c>
-        <c>epk</c>
-        <c>4</c>
-        <c>COSE_Key</c>
-        <c></c>
-        <c>contains a COSE key not a JWK key</c>
-        <c>jku</c>
-        <c>*</c>
-        <c>tstr</c>
-        <c></c>
-        <c>URL to COSE key object</c>
-        <c>jwk</c>
-        <c>*</c>
-        <c>COSE_Key</c>
-        <c></c>
-        <c>contains a COSE key not a JWK key</c>
-        <c>kid</c>
-        <c>*</c>
-        <c>bstr</c>
-        <c></c>
-        <c>key identifier</c>
-        <c>x5c</c>
-        <c>*</c>
-        <c>bstr*</c>
-        <c></c>
-        <c>X.509 Certificate Chain</c>
-        <c>x5t</c>
-        <c>*</c>
-        <c>bstr</c>
-        <c></c>
-        <c>SHA-1 thumbprint of key</c>
-        <c>x5t#S256</c>
-        <c>*</c>
-        <c>bstr</c>
-        <c></c>
-        <c>SHA-256 thumbprint of key</c>
-        <c>x5u</c>
-        <c>*</c>
-        <c>tstr</c>
-        <c></c>
-        <c>URL for X.509 certificate</c>
-        <c>zip</c>
-        <c>*</c>
-        <c>int / tstr</c>
-        <c></c>
-        <c>Integers are taken from the table <xref target="ALG_TABLE" pageno="false" format="default"/></c>
+    <section anchor="Header-Algorithm-Table" title="COSE Header Algorithm Key Table">
+
+      <texttable>
+        <ttcol align='left'>name</ttcol>
+        <ttcol align='left'>algorithm</ttcol>
+        <ttcol align='left'>key</ttcol>
+        <ttcol align='left'>CBOR type</ttcol>
+        <ttcol align='left'>description</ttcol>
+        <c>apu</c>        <c>ECDH</c>        <c>-1</c>        <c>bstr</c>        <c></c>
+        <c>apv</c>        <c>ECDH</c>        <c>-2</c>        <c>bstr</c>        <c></c>
+        <c>epk</c>        <c>ECDH</c>        <c>-3</c>        <c>COSE_Key</c>    <c>contains a COSE key not a JWK key</c>
+        <c>iv</c>         <c>A128GCMKW, A192GCMKW, A256GCMKW</c>        <c>-1</c>        <c>bstr</c>        <c></c>
+        <c>iv</c>         <c>A128GCM, A192GCM, A256GCM</c>        <c>-1</c>        <c>bstr</c>        <c></c>
+        <c>p2c</c>        <c>PBE</c>        <c>-1</c>        <c>int</c>        <c></c>
+        <c>p2s</c>        <c>PBE</c>        <c>-2</c>        <c>bstr</c>        <c></c>
       </texttable>
+
     </section>
-    <section anchor="Header-Algorithm-Table" title="COSE Header Algorithm Key Table" toc="default">
-      <texttable title="" suppress-title="false" align="center" style="full">
-        <ttcol align="left">name</ttcol>
-        <ttcol align="left">algorithm</ttcol>
-        <ttcol align="left">key</ttcol>
-        <ttcol align="left">CBOR type</ttcol>
-        <ttcol align="left">description</ttcol>
-        <c>apu</c>
-        <c>ECDH</c>
-        <c>-1</c>
-        <c>bstr</c>
-        <c></c>
-        <c>apv</c>
-        <c>ECDH</c>
-        <c>-2</c>
-        <c>bstr</c>
-        <c></c>
-        <c>iv</c>
-        <c>A128GCMKW, A192GCMKW, A256GCMKW</c>
-        <c>-1</c>
-        <c>bstr</c>
-        <c></c>
-        <c>iv</c>
-        <c>A128GCM, A192GCM, A256GCM</c>
-        <c>-1</c>
-        <c>bstr</c>
-        <c></c>
-        <c>p2c</c>
-        <c>PBE</c>
-        <c>-1</c>
-        <c>int</c>
-        <c></c>
-        <c>p2s</c>
-        <c>PBE</c>
-        <c>-2</c>
-        <c>bstr</c>
-        <c></c>
+    <section anchor="ALG_TABLE" title="COSE Algorithm Name Values">
+
+      <t>
+        This table contains all of the defined algorithms for COSE.
+      </t>
+
+      <texttable>
+        <ttcol align='left'>name</ttcol>
+        <ttcol align='left'>key</ttcol>
+        <ttcol align='left'>description</ttcol>
+        <c>HS256</c>        <c>4</c>        <c>HMAC w/ SHA-256</c>
+        <c>HS384</c>        <c>5</c>        <c>HMAC w/ SHA-384</c>
+        <c>HS512</c>        <c>6</c>        <c>HMAC w/ SHA-512</c>
+        <c>RS256</c>        <c>*</c>        <c>RSASSA-v1.5 w/ SHA-256</c>
+        <c>RS384</c>        <c>*</c>        <c>RSASSA-v1.5 w/ SHA-384</c>
+        <c>RSA512</c>       <c>*</c>        <c>RSASSA-v1.5 w/ SHA-256</c>
+        <c>ES256</c>        <c>-7</c>       <c>ECDSA w/ SHA-256</c>
+        <c>ES384</c>        <c>-8</c>       <c>ECDSA w/ SHA-384</c>
+        <c>ES512</c>        <c>-9</c>       <c>ECDSA w/ SHA-512</c>
+        <c>PS256</c>        <c>-10</c>      <c>RSASSA-PSS w/ SHA-256</c>
+        <c>PS384</c>        <c>*</c>        <c>RSASSA-PSS w/ SHA-384</c>
+        <c>PS512</c>        <c>-11</c>      <c>RSASSA-PSS w/ SHA-512</c>
+        <c>RSA1_5</c>       <c>*</c>        <c>RSAES v1.5 Key Encryption</c>
+        <c>RSA-OAEP</c>     <c>-2</c>       <c>RSAES OAEP w/ SHA-256</c>
+        <c>A128KW</c>       <c>-3</c>       <c>AES Key Wrap w/ 128-bit key</c>
+        <c>A192KW</c>       <c>-4</c>       <c>AES Key Wrap w/ 192-bit key</c>
+        <c>A256KW</c>       <c>-5</c>       <c>AES Key Wrap w/ 256-bit key</c>
+        <c>dir</c>          <c>-6</c>       <c>Direct use of CEK</c>
+        <c>ECDH-ES</c>      <c>*</c>        <c>ECDH ES w/ Concat KDF as CEK</c>
+        <c>ECDH-ES+A128KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
+        <c>ECDH-ES+A192KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
+        <c>ECDH-ES+A256KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
+        <c>A128GCMKW</c>        <c>*</c>        <c>AES GCM Key Wrap w/ 128 bit key</c>
+        <c>A192GCMKW</c>        <c>*</c>        <c>AES GCM Key Wrap w/ 192 bit key</c>
+        <c>A256GCMKW</c>        <c>*</c>        <c>AES GCM Key Wrap w/ 256 bit key</c>
+        <c>PBES2-HS256+A128KW</c>        <c>*</c>        <c>PBES2 w/ HMAC SHA-256 and AES Key wrap w/ 128 bit key</c>
+        <c>PBES2-HS384+A192KW</c>        <c>*</c>        <c>PBES2 w/ HMAC SHA-384 and AES Key wrap w/ 192 bit key</c>
+        <c>PBES2-HS512+A256KW</c>        <c>*</c>        <c>PBES2 w/ HMAC SHA-512 and AES Key wrap w/ 256 bit key</c>
+        <c>A128GCM</c>        <c>1</c>        <c>AES-GCM mode w/ 128-bit key</c>
+        <c>A192GCM</c>        <c>2</c>        <c>AES-GCM mode w/ 192-bit key</c>
+        <c>A256GCM</c>        <c>3</c>        <c>AES-GCM mode w/ 256-bit key</c>
       </texttable>
+
     </section>
-    <section anchor="ALG_TABLE" title="COSE Algorithm Name Values" toc="default">
-      <t>This table contains all of the defined algorithms for COSE.</t>
-      <texttable title="" suppress-title="false" align="center" style="full">
-        <ttcol align="left">name</ttcol>
-        <ttcol align="left">key</ttcol>
-        <ttcol align="left">description</ttcol>
-        <c>HS256</c>
-        <c>4</c>
-        <c>HMAC w/ SHA-256</c>
-        <c>HS384</c>
-        <c>5</c>
-        <c>HMAC w/ SHA-384</c>
-        <c>HS512</c>
-        <c>6</c>
-        <c>HMAC w/ SHA-512</c>
-        <c>RS256</c>
-        <c>*</c>
-        <c>RSASSA-v1.5 w/ SHA-256</c>
-        <c>RS384</c>
-        <c>*</c>
-        <c>RSASSA-v1.5 w/ SHA-384</c>
-        <c>RSA512</c>
-        <c>*</c>
-        <c>RSASSA-v1.5 w/ SHA-256</c>
-        <c>ES256</c>
-        <c>-7</c>
-        <c>ECDSA w/ SHA-256</c>
-        <c>ES384</c>
-        <c>-8</c>
-        <c>ECDSA w/ SHA-384</c>
-        <c>ES512</c>
-        <c>-9</c>
-        <c>ECDSA w/ SHA-512</c>
-        <c>PS256</c>
-        <c>-10</c>
-        <c>RSASSA-PSS w/ SHA-256</c>
-        <c>PS384</c>
-        <c>*</c>
-        <c>RSASSA-PSS w/ SHA-384</c>
-        <c>PS512</c>
-        <c>-11</c>
-        <c>RSASSA-PSS w/ SHA-512</c>
-        <c>RSA1_5</c>
-        <c>*</c>
-        <c>RSAES v1.5 Key Encryption</c>
-        <c>RSA-OAEP</c>
-        <c>-2</c>
-        <c>RSAES OAEP w/ SHA-256</c>
-        <c>A128KW</c>
-        <c>-3</c>
-        <c>AES Key Wrap w/ 128-bit key</c>
-        <c>A192KW</c>
-        <c>-4</c>
-        <c>AES Key Wrap w/ 192-bit key</c>
-        <c>A256KW</c>
-        <c>-5</c>
-        <c>AES Key Wrap w/ 256-bit key</c>
-        <c>dir</c>
-        <c>-6</c>
-        <c>Direct use of CEK</c>
-        <c>ECDH-ES</c>
-        <c>*</c>
-        <c>ECDH ES w/ Concat KDF as CEK</c>
-        <c>ECDH-ES+A128KW</c>
-        <c>*</c>
-        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
-        <c>ECDH-ES+A192KW</c>
-        <c>*</c>
-        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
-        <c>ECDH-ES+A256KW</c>
-        <c>*</c>
-        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
-        <c>A128GCMKW</c>
-        <c>*</c>
-        <c>AES GCM Key Wrap w/ 128 bit key</c>
-        <c>A192GCMKW</c>
-        <c>*</c>
-        <c>AES GCM Key Wrap w/ 192 bit key</c>
-        <c>A256GCMKW</c>
-        <c>*</c>
-        <c>AES GCM Key Wrap w/ 256 bit key</c>
-        <c>PBES2-HS256+A128KW</c>
-        <c>*</c>
-        <c>PBES2 w/ HMAC SHA-256 and AES Key wrap w/ 128 bit key</c>
-        <c>PBES2-HS384+A192KW</c>
-        <c>*</c>
-        <c>PBES2 w/ HMAC SHA-384 and AES Key wrap w/ 192 bit key</c>
-        <c>PBES2-HS512+A256KW</c>
-        <c>*</c>
-        <c>PBES2 w/ HMAC SHA-512 and AES Key wrap w/ 256 bit key</c>
-        <c>A128GCM</c>
-        <c>1</c>
-        <c>AES-GCM mode w/ 128-bit key</c>
-        <c>A192GCM</c>
-        <c>2</c>
-        <c>AES-GCM mode w/ 192-bit key</c>
-        <c>A256GCM</c>
-        <c>3</c>
-        <c>AES-GCM mode w/ 256-bit key</c>
+    <section anchor="cose-general-values" title="COSE General Values">
+
+      <texttable>
+        <ttcol align='left'>name</ttcol>
+        <ttcol align='left'>number</ttcol>
+        <ttcol align='left'>description</ttcol>
+        
+        <c>EC</c>        <c>1</c>        <c>Elliptic Curve key Type</c>
+        <c>RSA</c>        <c>2</c>        <c>RSA Key type</c>
+        <c>oct</c>        <c>3</c>        <c>Octet Key type</c>
+        <c>P256</c>        <c>4</c>        <c>EC Curve P256 (NIST)</c>
+        <c>P521</c>        <c>5</c>        <c>EC Curve P521 (NIST)</c>
       </texttable>
+      
     </section>
-    <section anchor="cose-general-values" title="COSE General Values" toc="default">
-      <texttable title="" suppress-title="false" align="center" style="full">
-        <ttcol align="left">name</ttcol>
-        <ttcol align="left">number</ttcol>
-        <ttcol align="left">description</ttcol>
-        <c>EC</c>
-        <c>1</c>
-        <c>Elliptic Curve key Type</c>
-        <c>RSA</c>
-        <c>2</c>
-        <c>RSA Key type</c>
-        <c>oct</c>
-        <c>3</c>
-        <c>Octet Key type</c>
-        <c>P256</c>
-        <c>4</c>
-        <c>EC Curve P256 (NIST)</c>
-        <c>P521</c>
-        <c>5</c>
-        <c>EC Curve P521 (NIST)</c>
+    <section anchor="COSE_KEY_KEYS" title="COSE Key Map Keys">
+
+      <t>
+        This table contains a list of all of the parameters defined for keys that were defined by the JOSE document set.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
+      </t>
+
+      <texttable>
+        <ttcol align='left'>name</ttcol>
+        <ttcol align='left'>key</ttcol>
+        <ttcol align='left'>CBOR type</ttcol>
+        <ttcol align='left'>registry</ttcol>
+        <ttcol align='left'>description</ttcol>
+        
+        <c>kty</c>        <c>1</c>        <c>tstr / int</c>        <c>COSE General Values</c>        <c>Identification of the key type</c>
+        <c>use</c>        <c>*</c>        <c>tstr</c>        <c></c>        <c>deprecated - don't use</c>
+        <c>key_ops</c>        <c>*</c>        <c>[* tstr]</c>        <c></c>        <c></c>
+        <c>alg</c>        <c>3</c>        <c>tstr / int</c>        <c>COSE Algorithm Values</c>        <c>Key usage restriction to this algorithm</c>
+        <c>kid</c>        <c>2</c>        <c>bstr</c>        <c></c>        <c>Key Identification value - match to kid in message</c>
+        <c>x5u</c>        <c>*</c>        <c>tstr</c>        <c></c>        <c></c>
+        <c>x5c</c>        <c>*</c>        <c>bstr*</c>        <c></c>        <c></c>
+        <c>x5t</c>        <c>*</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>x5t#S256</c>        <c>*</c>        <c>bstr</c>        <c></c>        <c></c>
       </texttable>
-    </section>
-    <section anchor="COSE_KEY_KEYS" title="COSE Key Map Keys" toc="default">
-      <t>This table contains a list of all of the parameters defined for keys that were defined by the JOSE document set.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.</t>
-      <texttable title="" suppress-title="false" align="center" style="full">
-        <ttcol align="left">name</ttcol>
-        <ttcol align="left">key</ttcol>
-        <ttcol align="left">CBOR type</ttcol>
-        <ttcol align="left">registry</ttcol>
-        <ttcol align="left">description</ttcol>
-        <c>kty</c>
-        <c>1</c>
-        <c>tstr / int</c>
-        <c>COSE General Values</c>
-        <c>Identification of the key type</c>
-        <c>use</c>
-        <c>*</c>
-        <c>tstr</c>
-        <c></c>
-        <c>deprecated - don&#8217;t use</c>
-        <c>key_ops</c>
-        <c>*</c>
-        <c>[* tstr]</c>
-        <c></c>
-        <c></c>
-        <c>alg</c>
-        <c>3</c>
-        <c>tstr / int</c>
-        <c>COSE Algorithm Values</c>
-        <c>Key usage restriction to this algorithm</c>
-        <c>kid</c>
-        <c>2</c>
-        <c>bstr</c>
-        <c></c>
-        <c>Key Identification value - match to kid in message</c>
-        <c>x5u</c>
-        <c>*</c>
-        <c>tstr</c>
-        <c></c>
-        <c></c>
-        <c>x5c</c>
-        <c>*</c>
-        <c>bstr*</c>
-        <c></c>
-        <c></c>
-        <c>x5t</c>
-        <c>*</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
-        <c>x5t#S256</c>
-        <c>*</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
-      </texttable>
-      <figure title="" suppress-title="false" align="left" alt="" width="" height="">
-        <artwork type="CDDL" xml:space="preserve" name="" align="left" alt="" width="" height="">
+
+      <figure><artwork type="CDDL"><![CDATA[
 ;key_keys
 kty=1
 key_kid=2
 key_alg=3
 
-</artwork>
-      </figure>
+]]></artwork></figure>
+
     </section>
-    <section anchor="COSE_KEY_PARAM_KEYS" title="COSE Key Parameter Keys" toc="default">
-      <t>This table contains a list of all of the parameters that were defined by the JOSE document set for a specific key type.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.  Parameters dealing with keys</t>
-      <texttable title="" suppress-title="false" align="center" style="full">
-        <ttcol align="left">key type</ttcol>
-        <ttcol align="left">name</ttcol>
-        <ttcol align="left">key</ttcol>
-        <ttcol align="left">CBOR type</ttcol>
-        <ttcol align="left">registry</ttcol>
-        <ttcol align="left">description</ttcol>
-        <c>EC</c>
-        <c>crv</c>
-        <c>-1</c>
-        <c>int / tstr</c>
-        <c>Pull from general value registry</c>
-        <c></c>
-        <c>EC</c>
-        <c>x</c>
-        <c>-2</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
-        <c>EC</c>
-        <c>y</c>
-        <c>-3</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
-        <c>EC</c>
-        <c>d</c>
-        <c>-4</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
-        <c>RSA</c>
-        <c>e</c>
-        <c>-1</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
-        <c>RSA</c>
-        <c>n</c>
-        <c>-2</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
-        <c>RSA</c>
-        <c>d</c>
-        <c>-3</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
-        <c>RSA</c>
-        <c>p</c>
-        <c>-4</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
-        <c>RSA</c>
-        <c>q</c>
-        <c>-5</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
-        <c>RSA</c>
-        <c>dp</c>
-        <c>-6</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
-        <c>RSA</c>
-        <c>dq</c>
-        <c>-7</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
-        <c>RSA</c>
-        <c>qi</c>
-        <c>-8</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
-        <c>RSA</c>
-        <c>oth</c>
-        <c>-9</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
-        <c>RSA</c>
-        <c>r</c>
-        <c>-10</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
-        <c>RSA</c>
-        <c>t</c>
-        <c>-11</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
-        <c>oct</c>
-        <c>k</c>
-        <c>-1</c>
-        <c>bstr</c>
-        <c></c>
-        <c></c>
+    <section anchor="COSE_KEY_PARAM_KEYS" title="COSE Key Parameter Keys">
+
+      <t>
+        This table contains a list of all of the parameters that were defined by the JOSE document set for a specific key type.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
+        Parameters dealing with keys
+      </t>
+
+      <texttable>
+        <ttcol align='left'>key type</ttcol>
+        <ttcol align='left'>name</ttcol>
+        <ttcol align='left'>key</ttcol>
+        <ttcol align='left'>CBOR type</ttcol>
+        <ttcol align='left'>registry</ttcol>
+        <ttcol align='left'>description</ttcol>
+        
+        <c>EC</c>        <c>crv</c>        <c>-1</c>        <c>int / tstr</c>        <c>Pull from general value registry</c>        <c></c>
+        <c>EC</c>        <c>x</c>        <c>-2</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>EC</c>        <c>y</c>        <c>-3</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>EC</c>        <c>d</c>        <c>-4</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>RSA</c>        <c>e</c>        <c>-1</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>RSA</c>        <c>n</c>        <c>-2</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>RSA</c>        <c>d</c>        <c>-3</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>RSA</c>        <c>p</c>        <c>-4</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>RSA</c>        <c>q</c>        <c>-5</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>RSA</c>        <c>dp</c>        <c>-6</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>RSA</c>        <c>dq</c>        <c>-7</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>RSA</c>        <c>qi</c>        <c>-8</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>RSA</c>        <c>oth</c>        <c>-9</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>RSA</c>        <c>r</c>        <c>-10</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>RSA</c>        <c>t</c>        <c>-11</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>oct</c>        <c>k</c>        <c>-1</c>        <c>bstr</c>        <c></c>        <c></c>
       </texttable>
+
     </section>
+
+
   </back>
 </rfc>
