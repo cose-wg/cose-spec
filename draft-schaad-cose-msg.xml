@@ -15,7 +15,16 @@
   <!ENTITY RFC7517 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7517.xml" >
   <!ENTITY RFC7518 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7518.xml" >
   <!ENTITY CDDL SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.greevenbosch-appsawg-cbor-cddl.xml" >
-  <!ENTITY CBCMAC SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.mcgrew-aead-aes-cbc-hmac-sha2.xml" >
+<!ENTITY CBCMAC SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.mcgrew-aead-aes-cbc-hmac-sha2.xml" >
+
+<!ENTITY Triple-01 SYSTEM "includes/Triple-01.xml">
+<!ENTITY Enc-01 SYSTEM "includes/Enc-01.xml">
+<!ENTITY Mac-01 SYSTEM "includes/Mac-01.xml">
+<!ENTITY Mac-02 SYSTEM "includes/Mac-02.xml">
+<!ENTITY Mac-03 SYSTEM "includes/Mac-03.xml">
+<!ENTITY Sig-01 SYSTEM "includes/Sig-01.xml">
+<!ENTITY Sig-02 SYSTEM "includes/Sig-02.xml">
+
 ]>
 
 <?rfc toc="yes"?>
@@ -1612,6 +1621,7 @@ COSE_KeySet = [+COSE_Key]
       </t>
 
     </section>
+    
     <section anchor="three-levels-of-recipient-information" title="Three Levels of Recipient Information">
 
       <t>
@@ -1637,7 +1647,30 @@ COSE_KeySet = [+COSE_Key]
         </list>
       </t>
 
+      <t>
+        This is an example of what a triple layer message would look like.
+        The message has the following layers:
+
+        <list style="symbols">
+          <t>
+            Level 0: Has a content encrypted with AES-GCM using a 128-bit key.
+          </t>
+          <t>
+            Level 1: Uses the AES Key wrap algorithm with a 128-bit key.
+          </t>
+          <t>
+            Level 3: Uses ECDH Ephemeral-Static direct to generate the level 1 key.
+          </t>
+        </list>
+
+        In effect this example is a decomposed version of using the ECDH-ES+A128KW algorithm.
+      </t>
+
+      &Triple-01;
+
     </section>
+
+
     <section anchor="examples" title="Examples">
 
       <t>
@@ -1658,17 +1691,7 @@ COSE_KeySet = [+COSE_Key]
           This example is uses HMAC with SHA-256 as the digest algorithm.  The key management is uses two static ECDH keys along with HKDF to directly derive the key used in the HMAC operation.
         </t>
 
-        <figure><artwork type="CBORdiag"><![CDATA[
-        {1: 3, 2: h'A10104', 4: h'546869732069732074686520636F6E74656E742E',
-        10: h'82C136D2C8CB27356635FAFE6F2E1AB2BC23FA706A33357DB017EE51710EEDE5',
-        9: [
-        {3: {1: "ECDH-SS", 5: "meriadoc.brandybuck@buckland.example",
-        "spk": {"kid": "peregrin.took@tuckborough.example"},
-        "apu": h'4D8553E7E74F3C6A3A9DD3EF286A8195CBF8A23D19558CCFEC7D34
-        B824F42D92BD06BD2C7F0271F0214E141FB779AE2856ABF585A58368B017E7F2A
-        9E5CE4DB5'}}]}
-
-        ]]></artwork></figure>
+        &Mac-01;
 
       </section>
       <section anchor="Mac-02" title="Wrapped MAC">
@@ -1685,14 +1708,7 @@ COSE_KeySet = [+COSE_Key]
           This example uses AES-128-MAC truncated to 64-bits as the digest algorithm.  It uses AES-256 Key wrap for the key management algorithm wrapping the 128-bit key used for the digest algorithm.
         </t>
 
-        <figure><artwork type="CBORdiag"><![CDATA[
-        {1: 3, 2: h'A1016E4145532D3132382D4D41432D3634', 
-        4: h'546869732069732074686520636F6E74656E742E', 
-        10: h'A61AE6CFB7CABCC9', 9: [
-        {3: {1: -5, 5: "018c0ae5-4d9b-471b-bfd6-eef314bc7037"}, 
-        4: h'711AB0DC2FC4585DCE27EFFA6781C8093EBA906F227B6EB0'}]}
-
-        ]]></artwork></figure>
+        &Mac-02;
 
       </section>
       <section anchor="Mac-03" title="Multi-recipient MAC message">
@@ -1723,37 +1739,11 @@ COSE_KeySet = [+COSE_Key]
           </list>
         </t>
 
-        <figure><artwork type="CBORdiag"><![CDATA[
-        {1: 3, 2: h'A10104', 4: h'546869732069732074686520636F6E74656E742E',
-        10: h'051FA3288A39AC726B4FAE79A4B93FB17D8DC3F6E666247EE7AD40CE1665FCDE', 
-        9: [
-        {3: {1: "ECDH-ES+A128KW", 
-        5: h'62696C626F2E62616767696E7340686F626269746F6E2E6578616D706C65', 
-        4: {1: 1, -1: 5, -2: h'43B12669ACAC3FD27898FFBA0BCD2E6C366D53BC4DB
-        71F909A759304ACFB5E18CDC7BA0B13FF8C7636271A6924B1AC63C02688075
-        B55EF2D613574E7DC242F79C3',
-        -3: h'812DD694F4EF32B11014D74010A954689C6B6E8785B333D1AB44F22B
-        9D1091AE8FC8AE40B687E5CFBE7EE6F8B47918A07BB04E9F5B1A51A334A16B
-        C09777434113'}}, 
-        4: h'1B120C848C7F2F8943E402CBDBDB58EFB281753AF4169C70D0126C0D164362771
-        60821790EF4FE3F'},
-        {3: {1: -2, 5: h'62696C626F2E62616767696E7340686F626269746F6E2E6578616D
-        706C65'},
-        4: h'46C4F88069B650909A891E84013614CD58A3668F88FA18F3852940A20B3509859
-        1D3AACF91C125A2595CDA7BEE75A490579F0E2F20FD6BC956623BFDE3029C318
-        F82C426DAC3463B261C981AB18B72FE9409412E5C7F2D8F2B5ABAF780DF6A282D
-        B033B3A863FA957408B81741878F466DCC437006CA21407181A016CA608CA8208
-        BD3C5A1DDC828531E30B89A67EC6BB97B0C3C3C92036C0CB84AA0F0CE8C3E4A21
-        5D173BFA668F116CA9F1177505AFB7629A9B0B5E096E81D37900E06F561A32B6B
-        C993FC6D0CB5D4BB81B74E6FFB0958DAC7227C2EB8856303D989F93B4A0518307
-        06A4C44E8314EC846022EAB727E16ADA628F12EE7978855550249CCB58'}, 
-        {3: {1: -5, 5: "018c0ae5-4d9b-471b-bfd6-eef314bc7037"}, 
-        4: h'0B2C7CFCE04E98276342D6476A7723C090DFDD15F9A518E7736549E99837
-        0695E6D6A83B4AE507BB'}]}
-
-        ]]></artwork></figure>
+        &Mac-03;
 
       </section>
+
+      
       <section anchor="Enc-01" title="Direct ECDH">
 
         <t>
@@ -1768,19 +1758,11 @@ COSE_KeySet = [+COSE_Key]
           Encoded in CBOR - 216 bytes, content is 14 bytes long
         </t>
 
-        <figure><artwork type="CBORdiag"><![CDATA[
-        {1: 2, 2: h'A10101', 3: {-1: h'C9CF4DF2FE6C632BF7886413'}, 
-        4: h'45FCE2814311024D3A479E7D3EED063850F3F0B94EE043BAFDFA14636E632CF6
-        75AF2DAE', 
-        9: [{3: {1: "ECDH-ES", 5: "meriadoc.brandybuck@buckland.example", 
-        4: {1: 1, -1: 4, -2: h'98F50A4FF6C05861C8860D13A638EA56C3F5AD75
-        90BBFBF054E1C7B4D91D6280', 
-        -3: h'F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7
-        E03BF822BB'}}}]}
-
-        ]]></artwork></figure>
+        &Enc-01;
 
       </section>
+
+      
       <section anchor="Sig-01" title="Single Signature">
 
         <t>
@@ -1791,23 +1773,11 @@ COSE_KeySet = [+COSE_Key]
           To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
         </t>
 
-        <figure><artwork type="CBORdiag"><![CDATA[
-        {1: 1, 4: h'546869732069732074686520636F6E74656E742E', 
-        5: [{2: h'A20165505333383405781E62696C626F2E62616767696E7340686F626
-        269746F6E2E6578616D706C65', 
-        6: h'4D645B5FF17BCDAD7EB29ABA0EBBFFA747E72767714F26EDBC5B4C1D2
-        1CBE799B71388CCC73BDB25C4443D0EA2226B774A5B4815ABA82233B33DA
-        4C3958D08285384A854A8F7F8FA9635A1A63BAB2A5D8CF45939A7FA2D95C
-        C827EF94EF85276611B957B402BD1756D952597751C7AF5D26023012D3DC
-        BFD785F9C0BE57F60719EFB0D2F9280A8D2B18D142F76942D007B4E24087
-        DA4BE8F793B646D7B03A86C12731A8EDB36A95DFE6C281B58388380354A2
-        94CC21DBC1C1EEE2DB35293AD406F50283874475B9A7E22920BD79B3D055
-        214EE1C9D941F125548B9F23A87DCC26CBBEFD0919CF6F89E192A78130AC
-        018D1921EF5B4D0A47659E9CBC1CE58ED26'}]}
-
-        ]]></artwork></figure>
+        &Sig-01;
 
       </section>
+
+
       <section anchor="Sig-02" title="Multiple Signers">
 
         <t>
@@ -1822,26 +1792,7 @@ COSE_KeySet = [+COSE_Key]
           Encoded in CBOR - 491 bytes, content is 14 bytes long
         </t>
 
-        <figure><artwork type="CBORdiag"><![CDATA[
-        {1: 1, 4: h'546869732069732074686520636F6E74656E742E', 
-        5: [{2: h'A10129', 3: {5: "bilbo.baggins@hobbiton.example"}, 
-        6: h'1FD44A2BA1A8A0A664024E7E2AFD1D1D1159460E3C03B9BE8C8F60639CE
-        614F59AF33108B65BBDEF3C330FB97E335DA11EEA9B6CBD7E7908FB8B5F61D
-        FEB76EC6ED6A62BD9F3D338E373E1903CE2D5D3BD20086BBCA82A6F424E9F4
-        1591BD6261835A74F0C0425E88666D530B72ADC1E33C10DC1D0361922B6ADC
-        685B76E5CEA79FACA7C4CB66B1379B3F852A5ACE79A5812C6EE1CD3CC7CC88
-        F2C9D30FF89D3BD0DE2D0C9355E9712B1BA8AB2F2B065BE0A0D93BFFA27DA0
-        2221865A2B16093D92F71F9864D92C87057AE591334DB4CF881ECBEC2AC727
-        77D9C88871C10733D65566B35FBFA6BAB54078C1C73AE8758196221FB2814E
-        C283A95D191FB80D616'},
-        {3: {1: -9, 5: "bilbo.baggins@hobbiton.example"}, 
-        6: h'32247A4FD1CA2B69EEEB48CE65D07F2089D79271BB94847F8628DADB7AF
-        FC1A34C24D10DB3C5E0D00BD9CB3BFB9666BAD6E9752564D35C5CCE375B
-        A44E2FF33336008D8E07484041DBEFB179EBFFA5455E05D6B24E22DAECF
-        0D76AD041A13A9DD7E3DAED7F6B09F1831092FFC5CB8BFE7DBF5E047858
-        02A4CB741395F81E76A3A8AD61'}]}
-
-        ]]></artwork></figure>
+        &Sig-02;
 
       </section>
     </section>
