@@ -88,7 +88,7 @@ foreach $ThisFile (@InFiles) {
         }
     }
 
-    print ("<figure><artwork><![CDATA[\n");
+    print ("<figure><artwork type='cborDiag'><![CDATA[\n");
     print (join("\n", @values));
     print ("]]></artwork></figure>\n");
 
