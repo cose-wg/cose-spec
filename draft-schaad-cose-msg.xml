@@ -174,8 +174,9 @@ start = COSE_MSG
       <section title="CBOR Related Terminology" anchor="label">
         <t>
         In JSON, maps are called objects and only have one kind of map key: a string.
-        In COSE, we use both strings and integers (both positive and negative integers) as map keys, as well as data items to identify specific choices.
-        The (positive and negative) integers are used for compactness of encoding and easy comparison.
+        In COSE, we use both strings and integers (both negative and non-negative integers) as map keys, as well as data items to identify specific choices.
+        The integers (both positive and negative) are used for compactness of encoding and easy comparison.
+        (Generally, in this document the value zero is going to be reserved and not used.)
         Since the work "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage of either an integer or a string to identify map keys and choice data items.
 
         <figure><artwork type='CDDL'>
@@ -298,7 +299,7 @@ msg_type_mac=3
         The CDDL grammar that provides the label values is:
       </t>
       <figure><artwork type="CDDL"><![CDATA[
-; message_keys
+; message_labels
 msg_type=1
 protected=2
 unprotected=3
@@ -377,11 +378,11 @@ Headers = (
               This field is used to ensure that applications will take appropriate action based on the values found.
               This field uses the integer '2' for the label. 
               The value is an array of COSE Header Labels. 
-              The field is used to indicate which protected header keys an application which is processing a message is required to understand.
+              The field is used to indicate which protected header labels an application which is processing a message is required to understand.
               <list style="bullets">
-                <t>Integer keys in the range of 0 to 10 SHOULD be omitted.</t>
+                <t>Integer labels in the range of 0 to 10 SHOULD be omitted.</t>
                 <t>
-                  Integer keys in the range -1 to -255 can be omitted as they are algorithm dependent.
+                  Integer labels in the range -1 to -255 can be omitted as they are algorithm dependent.
                   If an application can correctly process an algorithm, it can be assumed that it will correctly process all of the parameters associated with that algorithm.
                 </t>
               </list>
@@ -389,7 +390,7 @@ Headers = (
             </t>
             <t hangText='cty'>
               This field is used to indicate the content type of the data in the payload or ciphertext fields.
-              The field uses the integer of '3' for the key value. 
+              The field uses the integer of '3' for the label. 
               The value can be either an integer or a string.
               Integers are from the XXXXX<cref source="JLS">Need to figure out how we are going to go about creating this registry -or are we going to modify the current mime-content table?</cref> IANA registry table.
               Strings are from the IANA 'mime-content types' registry.
@@ -400,7 +401,7 @@ Headers = (
               This value can be matched against the 'kid' field in a COSE_Key structure.
               Applications MUST NOT assume that 'kid' values are unique.
               There may be more than one key with the same 'kid' value, it may be required that all of the keys need to be checked to find the correct one.
-              This field uses the integer value of '4' for the key value.
+              This field uses the integer value of '4' for the label.
               The value of field is the CBOR 'bstr' type.
               The internal structure of 'kid' is not defined and generally cannot be relied on by applications.
             </t>
@@ -411,7 +412,7 @@ Headers = (
         This table contains a list of all of the parameters for use in signature and encryption message types defined by the JOSE document set.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
       </t>
 
-      <texttable anchor="Header-Table" title="Header Keys">
+      <texttable anchor="Header-Table" title="Header Labels">
         <ttcol align='left'>name</ttcol>
         <ttcol align='left'>label</ttcol>
         <ttcol align='left'>value</ttcol>
@@ -1399,7 +1400,7 @@ COSE_KeySet = [+COSE_Key]
             <t hangText='label'>
               The label is to be unique for every value of key type. 
               The range of values is from -256 to -1.
-              Keys are expected to be re-used for different keys.
+              Labels are expected to be re-used for different keys.
             </t>
             <t hangText='CBOR type'>
               This field contains the CBOR type for the field
@@ -1958,7 +1959,7 @@ COSE_KeySet = [+COSE_Key]
       </texttable>
 
       <figure><artwork type="CDDL"><![CDATA[
-;key_keys
+;key_labels
 kty=1
 key_kid=2
 key_alg=3
