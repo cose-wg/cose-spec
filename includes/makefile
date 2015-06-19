@@ -8,7 +8,7 @@ Example_DIR = c:\projects\cose\examples\spec-examples\new
 	XmlPreparation.pl $@.txt > $@
 
 all: Triple-01.xml \
-	Mac-01.xml Mac-02.xml MAC-03.xml \
+	Mac-01.xml Mac-02.xml Mac-03.xml \
 	Enc-01.xml  \
 	Sig-01.xml Sig-02.xml
 
