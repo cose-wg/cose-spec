@@ -2,7 +2,7 @@ require "rexml/document"
 require "rexml/xpath"
 include REXML
 
-XMLFILE = "draft-schaad-cose-msg.xml"
+XMLFILE = "cose.xml"
 CDDLFILE = "cose-extracted.cddl"
 
 task :verify => [CDDLFILE, XMLFILE] do |t|
@@ -23,10 +23,6 @@ end
 file CDDLFILE => [XMLFILE] do |t|
   doc = Document.new(File.read(t.source))
   File.open(t.name, "w") do |f|
-    f.puts XPath.match(doc, "//artwork[@type='CDDL']/text()").to_a.join
+    f.puts XPath.match(doc, "//artwork[@type='CDDL']/text()").to_a.join.gsub("&gt;", ">")
   end
-end
-
-rule ".xml" => ".md" do |t|
-  sh "make #{t.name}"
 end
