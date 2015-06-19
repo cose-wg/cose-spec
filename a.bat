@@ -1,6 +1,5 @@
-call kramdown-rfc2629 draft-schaad-cose.md > draft-schaad-cose.xml
-call rake verify
+c:\tools\python27\python.exe c:\tools\python27\scripts\xml2rfc draft-schaad-cose-msg.xml -o cose.txt --text
+c:\tools\python27\python.exe c:\tools\pytho<n27\scripts\xml2rfc draft-schaad-cose-msg.xml -o cose.html --html
+c:\tools\python27\python.exe c:\tools\python27\scripts\xml2rfc draft-schaad-cose-msg.xml -o cose.xml --exp
 
-c:\python34\python.exe c:\python34\scripts\xml2rfc draft-schaad-cose.xml -o cose.txt --text
-c:\python34\python.exe c:\python34\scripts\xml2rfc draft-schaad-cose.xml -o cose.html --html
-c:\python34\python.exe c:\python34\scripts\xml2rfc draft-schaad-cose.xml -o cose.exp --exp
+call rake verify
