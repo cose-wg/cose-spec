@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="rfc2629.xslt" ?>
 <!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
-  <!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml" >
+<!ENTITY RFC2104 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2104.xml" >
+<!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml" >
+
   <!ENTITY RFC3394 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3394.xml" >
   <!ENTITY RFC3447 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3447.xml" >
   <!ENTITY RFC3610 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3610.xml" >
+  <!ENTITY RFC4231 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4231.xml" >
+  <!ENTITY RFC5480 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5480.xml" >
   <!ENTITY RFC5652 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5652.xml" >
   <!ENTITY RFC5752 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5752.xml" >
   <!ENTITY RFC5990 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5990.xml" >
+  <!ENTITY RFC6151 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6151.xml" >
   <!ENTITY RFC7049 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7049.xml" >
   <!ENTITY RFC7159 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7159.xml" >
   <!ENTITY RFC7515 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7515.xml" >
@@ -145,16 +150,19 @@
 
         <t>
           CDDL productions that together define the grammar are interspersed in the document like this:
+        </t>
 
           <figure><artwork type='CDDL'>
 <![CDATA[
 start = COSE_MSG
 ]]></artwork></figure>
+
+        <t>
+          The collected CDDL can be extracted from the XML version of this document via the following XPath expression below.
+          (Depending on the XPath evaluator one is using, it may be necessary to deal with &amp;gt; as an entity.)
         </t>
 
         <t>
-          Note that, fromthe XML version of the present document, the collected CDDL can be extracted via the following XPath expression:
-
           <figure><artwork type='XPATH'>
 <![CDATA[
 //artwork[@type='CDDL']/text()
@@ -190,7 +198,7 @@ label = int / tstr
     <section anchor="the-cosemsg-structure" title="The COSE_MSG structure">
 
       <t>
-        The COSE_MSG structure is a top level CBOR object which corresponds to the DataContent type in the Cryptographic Message Syntax (CMS)<xref target="RFC5652"/>.
+        The COSE_MSG structure is a top level CBOR object which corresponds to the DataContent type in the Cryptographic Message Syntax (CMS) <xref target="RFC5652"/>.
         This structure allows for a top level message to be sent which could be any of the different security services.
         The security service is identified within the message.
       </t>
@@ -325,7 +333,7 @@ tag=10
 
       <t>
         Both buckets are implemented as CBOR maps.
-        The map key is a 'label' <xref target="label"/>.
+        The map key is a 'label' (<xref target="label"/>).
         The value portion is dependent on the definition for the label.
         Both maps use the same set of label/value pairs. 
         The integer range for labels has been divided into several sections with a standard range, a private range, and a range that is dependent on the algorithm selected. 
@@ -374,12 +382,14 @@ Headers = (
               This field using the integer '1' for the label.
               The value is taken from the 'COSE Algorithm Registry' (see <xref target="IANA-Alg-Registry"/>).
             </t>
+            
             <t hangText='crit'>
               This field is used to ensure that applications will take appropriate action based on the values found.
-              This field uses the integer '2' for the label. 
-              The value is an array of COSE Header Labels. 
               The field is used to indicate which protected header labels an application which is processing a message is required to understand.
-              <list style="bullets">
+              This field uses the integer '2' for the label. 
+              The value is an array of COSE Header Labels.
+              When present, this MUST be placed in the protected header bucket.
+              <list style="symbols">
                 <t>Integer labels in the range of 0 to 10 SHOULD be omitted.</t>
                 <t>
                   Integer labels in the range -1 to -255 can be omitted as they are algorithm dependent.
@@ -388,6 +398,7 @@ Headers = (
               </list>
               The header values indicated by 'crit' can be processed by either the security library code or by an application using a security library, the only requirement is that the field is processed.
             </t>
+            
             <t hangText='cty'>
               This field is used to indicate the content type of the data in the payload or ciphertext fields.
               The field uses the integer of '3' for the label. 
@@ -396,6 +407,7 @@ Headers = (
               Strings are from the IANA 'mime-content types' registry.
               Applications SHOULD provide this field if the content structure is potentially ambiguous.
             </t>
+            
             <t hangText='kid'>
               This field one of the ways that can be used to find the key to be used.
               This value can be matched against the 'kid' field in a COSE_Key structure.
@@ -404,13 +416,20 @@ Headers = (
               This field uses the integer value of '4' for the label.
               The value of field is the CBOR 'bstr' type.
               The internal structure of 'kid' is not defined and generally cannot be relied on by applications.
+              Key identifier values are hints about which key to use, they are not directly a security critical field, for this reason they can normally be placed in the unprotected headers bucket.
+            </t>
+
+            <t hangText='nonce'>
+              This field holds either a nonce or Initialization Vector value.
+              This value can be used either as a counter value for a protocol or as an IV for an algorithm.
+              TODO: Talk about zero extending the value in some cases.
             </t>
           </list>
         </t>
 
-              <t>
-        This table contains a list of all of the parameters for use in signature and encryption message types defined by the JOSE document set.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
-      </t>
+        <t>
+          This table contains a list of all of the parameters for use in signature and encryption message types defined by the JOSE document set.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
+        </t>
 
       <texttable anchor="Header-Table" title="Header Labels">
         <ttcol align='left'>name</ttcol>
@@ -421,7 +440,7 @@ Headers = (
         
         <c>alg</c>        <c>1</c>        <c>int / tstr</c>        <c>COSE Algorithm Registry</c>       <c>Integers are taken from table <xref target="ALG_TABLE"/></c>
         <c>crit</c>       <c>2</c>        <c>[+ label]</c>    <c>COSE Header Label Registry</c>      <c>integer values are from this table.</c>
-        <c>cty</c>        <c>3</c>        <c>tstr / int</c>        <c></c>                              <c>Value is either a mime-content type or an integer from the mime-content type table</c>
+        <c>cty</c>        <c>3</c>        <c>tstr / int</c>        <c>media-types registry</c>          <c>Value is either a media-type or an integer from the media-type registry</c>
         <c>jku</c>        <c>*</c>        <c>tstr</c>              <c></c>                              <c>URL to COSE key object</c>
         <c>jwk</c>        <c>*</c>        <c>COSE_Key</c>          <c></c>                              <c>contains a COSE key not a JWK key</c>
         <c>kid</c>        <c>4</c>        <c>bstr</c>              <c></c>                              <c>key identifier</c>
@@ -430,6 +449,7 @@ Headers = (
         <c>x5t#S256</c>   <c>*</c>        <c>bstr</c>              <c></c>                              <c>SHA-256 thumbprint of key</c>
         <c>x5u</c>        <c>*</c>        <c>tstr</c>              <c></c>                              <c>URL for X.509 certificate</c>
         <c>zip</c>        <c>*</c>        <c>int / tstr</c>        <c></c>                              <c>Integers are taken from the table <xref target="ALG_TABLE"/></c>
+        <c>nonce</c>      <c>5</c>        <c>bstr</c>              <c></c>                              <c>Nonce or Initialization Vector (IV)</c>
       </texttable>
 
       <t>
@@ -622,26 +642,18 @@ Sig_structure = [
     <section anchor="encryption-object" title="Encryption object">
 
       <t>
-        In this section we describe the structure and methods to be used when
-        doing an encryption in COSE.
-        In COSE, we use the same techniques and structures for encrypting both
-        the plain text and the keys used to protect the text.
-        This is different from the approach used by both <xref target="RFC5652"/> and
-        <xref target="RFC7516"/> where different structures are
-        used for the plain text and for the different key management
-        techniques.
+        In this section we describe the structure and methods to be used when doing an encryption in COSE.
+        In COSE, we use the same techniques and structures for encrypting both the plain text and the keys used to protect the text.
+        This is different from the approach used by both <xref target="RFC5652"/> and <xref target="RFC7516"/> where different structures are
+        used for the plain text and for the different key management techniques.
       </t>
 
       <t>
-        One of the byproducts of using the same technique for encrypting and
-        encoding both the content and the keys using the various key management
-        techniques, is a requirement that all of the key management techniques
-        use an Authenticated Encryption (AE) algorithm.  (For the purpose of this document we use a slightly loose definition of AE algorithms.)
-        When encrypting the plain text, it is normal to use an Authenticated
-        Encryption with Additional Data (AEAD) algorithm.  For key management,
-        either AE or AEAD algorithms can be used.
-        See <xref target="AE-algo"/> for more details about the different types of
-        algorithms.
+        One of the byproducts of using the same technique for encrypting and encoding both the content and the keys using the various key management techniques, is a requirement that all of the key management techniques use an Authenticated Encryption (AE) algorithm. 
+        (For the purpose of this document we use a slightly loose definition of AE algorithms.)
+        When encrypting the plain text, it is normal to use an Authenticated Encryption with Additional Data (AEAD) algorithm. 
+        For key management, either AE or AEAD algorithms can be used.
+        See <xref target="AE-algo"/> for more details about the different types of algorithms.
         <cref source="Ilari">I don't follow/understand this text</cref>
       </t>
 
@@ -673,11 +685,9 @@ COSE_encrypt_fields = (
             The value MUST be msg_type_encrypted (2).
           </t>
           <t hangText='protected'>
-            contains the information about the plain text or encryption
-            process that is to be integrity protected.
+            contains the information about the plain text or encryption process that is to be integrity protected.
             The field is encoded in CBOR as a 'bstr'.
-            The contents of the protected field is a CBOR map of the protected
-            data names and values.
+            The contents of the protected field is a CBOR map of the protected data names and values.
             The map is CBOR encoded before placing it into the bstr.
             Only values associated with the current cipher text are to be placed in this location even if the value would apply to multiple recipient structures.
           </t>
@@ -685,11 +695,9 @@ COSE_encrypt_fields = (
             contains information about the plain text that is not integrity protected.
             Only values associated with the current cipher text are to be placed in this location even if the value would apply to multiple recipient structures.
           </t>
-          <t hangText='cipherText'>
+          <t hangText='ciphertext'>
             contains the encrypted plain text.
-            If the cipherText is to be transported independently of the control
-            information about the encryption process (i.e. detached content)
-            then the field is omitted.
+            If the ciphertext is to be transported independently of the control information about the encryption process (i.e. detached content) then the field is omitted.
           </t>
           <t hangText='recipients'>
             contains the recipient information.
@@ -699,191 +707,12 @@ COSE_encrypt_fields = (
       </t>
 
       <section anchor="key-management-methods" title="Key Management Methods">
-
         <t>
-          There are a number of different key management methods that can be
-          used in the COSE encryption system.
-          In this section we will discuss each of the key management methods and
-          what fields need to be specified to deal with each of them.
+          This section has moved.
+          Still need to make some small comments here.
         </t>
-
-        <t>
-          The names of the key management methods used here are the same as are
-          defined in <xref target="RFC7517"/>.
-          Other specifications use different terms for the key management
-          methods or do not support some of the key management methods.
-        </t>
-
-        <t>
-          At the moment we do not have any key management methods that allow for the use of protected headers.  This may be changed in the future if, for example, the AES-GCM Key wrap method defined in <xref target="RFC7518"/> were extended to allow for authenticated data.  In that event the use of the 'protected' field, which is current forbidden below, would be permitted.
-        </t>
-
-        <section anchor="direct-encryption" title="Direct Encryption">
-
-          <t>
-            In direct encryption mode, a shared secret between the sender and the
-            recipient is used as the CEK.
-            When direct encryption mode is used, it MUST be the only mode used on the message.
-            It is a massive security leak to have both direct encryption and a
-            different key management mode on the same message.
-          </t>
-
-          <t>
-            For JOSE, direct encryption key management is the only key management
-            method allowed for doing MAC-ed messages.
-            In COSE, all of the key management methods can be used for MAC-ed messages.
-          </t>
-
-          <t>
-            The COSE_encrypt structure for the recipient is organized as follows:
-          </t>
-
-          <t>
-            <list style="symbols">
-              <t>
-                The 'protected', 'ciphertext' and 'recipients' fields
-                MUST be absent.
-              </t>
-              <t>
-                At a minimum, the 'unprotected' field MUST contain the 'alg'
-                parameter and SHOULD contain a parameter identifying the shared secret.
-              </t>
-            </list>
-          </t>
-
-        </section>
-        <section anchor="key-wrapping" title="Key Wrapping">
-
-          <t>
-            In key wrapping mode, the CEK is randomly generated and that key is
-            then encrypted by a shared secret between the sender and the
-            recipient.
-            All of the currently defined key wrapping algorithms for JOSE (and
-            thus for COSE) are AE algorithms.
-            Key wrapping mode is considered to be superior to direct encryption if
-            the system has any capability for doing random key generation.
-            This is because the shared key is used to wrap random data rather than
-            data  has some degree of organization and may in fact be repeating the
-            same content.
-          </t>
-
-          <t>
-            The COSE_encrypt structure for the recipient is organized as follows:
-          </t>
-
-          <t>
-            <list style="symbols">
-              <t>
-                The 'protected', and 'recipients' fields MUST be absent.
-              </t>
-              <t>
-                The plain text to be encrypted is the key from next layer down
-                (usually the content layer).
-              </t>
-              <t>
-                At a minimum, the 'unprotected' field MUST contain the 'alg'
-                parameter and SHOULD contain a parameter identifying the shared secret.
-              </t>
-            </list>
-          </t>
-
-        </section>
-        <section anchor="key-encryption" title="Key Encryption">
-
-          <t>
-            Key Encryption mode is also called key transport mode in some
-            standards.
-            Key Encryption mode differs from Key Wrap mode in that it uses an
-            asymmetric encryption algorithm rather than a symmetric encryption
-            algorithm to protect the key.
-            The only current Key Encryption mode algorithm supported is RSAES-OAEP.
-          </t>
-
-          <t>
-            The COSE_encrypt structure for the recipient is organized as follows:
-          </t>
-
-          <t>
-            <list style="symbols">
-              <t>
-                The 'protected' field MUST be absent.
-              </t>
-              <t>
-                The plain text to be encrypted is the key from next layer down
-                (usually the content layer).
-              </t>
-              <t>
-                At a minimum, the 'unprotected' field MUST contain the 'alg'
-                parameter and SHOULD contain a parameter identifying the asymmetric key.
-              </t>
-            </list>
-          </t>
-
-        </section>
-        <section anchor="direct-key-agreement" title="Direct Key Agreement">
-
-          <t>
-            Direct Key Agreement derives the CEK from the shared secret computed
-            by the key agreement operation.
-          </t>
-
-          <t>
-            When direct key agreement mode is used, it SHOULD be the only mode used
-            on the message.  This method creates the CEK directly and that makes it difficult to mix with additional recipients.
-          </t>
-
-          <t>
-            The COSE_encrypt structure for the recipient is organized as follows:
-          </t>
-
-          <t>
-            <list style="symbols">
-              <t>
-                The 'protected' field MUST be absent.
-              </t>
-              <t>
-                At a minimum, the 'unprotected' field MUST contain the 'alg'
-                parameter and SHOULD contain a parameter identifying the asymmetric key.
-              </t>
-              <t>
-                The 'unprotected' field MUST contain the 'epk' parameter.
-              </t>
-            </list>
-          </t>
-
-        </section>
-        <section anchor="key-agreement-with-key-wrapping" title="Key Agreement with Key Wrapping">
-
-          <t>
-            Key Agreement with Key Wrapping uses a randomly generated CEK.
-            The CEK is then encrypted using a Key Wrapping algorithm and a key
-            derived from the shared secret computed by the key agreement
-            algorithm.
-          </t>
-
-          <t>
-            The COSE_encrypt structure for the recipient is organized as follows:
-          </t>
-
-          <t>
-            <list style="symbols">
-              <t>
-                The 'protected' field MUST be absent.
-              </t>
-              <t>
-                The plain text to be encrypted is the key from next layer down
-                (usually the content layer).
-              </t>
-              <t>
-                At a minimum, the 'unprotected' field MUST contain the 'alg'
-                parameter, a parameter identifying the recipient asymmetric key, and
-                a parameter with the sender's asymmetric public key.
-              </t>
-            </list>
-          </t>
-
-        </section>
       </section>
+      
       <section anchor="encryption-algorithm-for-aead-algorithms" title="Encryption Algorithm for AEAD algorithms">
 
         <t>
@@ -989,11 +818,20 @@ Enc_structure = [
     <section anchor="mac-objects" title="MAC objects">
 
       <t>
-        In this section we describe the structure and methods to be used when doing MAC authentication in COSE.  JOSE used a variant of the signature structure for doing MAC operations and it is restricted to using a single pre-shared secret to do the authentication.  This document allows for the use of all of the same methods of key management as are allowed for encryption.
+        In this section we describe the structure and methods to be used when doing MAC authentication in COSE. 
+        JOSE used a variant of the signature structure for doing MAC operations and it is restricted to using a single pre-shared secret to do the authentication.
+        <cref source="JLS">Should this sentence be removed?</cref>
+        This document allows for the use of all of the same methods of key management as are allowed for encryption.
       </t>
 
       <t>
-        When using MAC operations, there are two modes in which it can be used.  The first is just a check that the content has not been changed since the MAC was computed.  Any of the key management methods can be used for this purpose.  The second mode is to both check that the content has not been changed since the MAC was computed, and to use key management to verify who sent it.  The key management modes that support this are ones that either use a pre-shared secret, or do static-static key agreement.  In both of these cases the entity MAC-ing the message can be validated by a key binding.  (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.)
+        When using MAC operations, there are two modes in which it can be used. 
+        The first is just a check that the content has not been changed since the MAC was computed. 
+        Any of the key management methods can be used for this purpose. 
+        The second mode is to both check that the content has not been changed since the MAC was computed, and to use key management to verify who sent it. 
+        The key management modes that support this are ones that either use a pre-shared secret, or do static-static key agreement. 
+        In both of these cases the entity MAC-ing the message can be validated by a key binding. 
+        (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.)
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
@@ -1021,27 +859,26 @@ COSE_mac = {
             contains attributes about the payload which are to be protected by the MAC.
             An example of such an attribute would be the content type ('cty') attribute.
             The content is a CBOR map of attributes which is encoded to a byte stream.
-            This field MUST NOT contain attributes about the recipient, even if
-            those attributes are common across multiple recipients.
+            This field MUST NOT contain attributes about the recipient, even if those attributes are common across multiple recipients.
             At least one of protected and unprotected MUST be present.
           </t>
           <t hangText='unprotected'>
             contains attributes about the payload which are not protected by the MAC.
             An example of such an attribute would be the content type ('cty') attribute.
-            This field MUST NOT contain attributes about a recipient, even if
-            the attributes are common across multiple recipients.
+            This field MUST NOT contain attributes about a recipient, even if the attributes are common across multiple recipients.
             At least one of protected and unprotected MUST be present.
           </t>
           <t hangText='payload'>
-            contains the serialized content to be MAC-ed.<vspace />
-            If the payload is not present in the message, the application is required to supply the payload separately.<vspace />
+            contains the serialized content to be MAC-ed.
+            If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes, if the payload is transported separately it is the responsibility of the application to ensure that it will be transported without changes.
           </t>
           <t hangText='tag'>
             contains the MAC value.
           </t>
           <t hangText='recipients'>
-            contains the recipient information.  See the description under COSE_Encryption for more info.
+            contains the recipient information.  
+            See the description under COSE_Encryption for more info.
           </t>
         </list>
       </t>
@@ -1089,8 +926,13 @@ COSE_mac = {
       </t>
 
       <t>
-        For COSE we use the same set of fields that were defined in
-        <xref target="RFC7517"/>.
+        For COSE we use the same set of fields that were defined in <xref target="RFC7517"/>.
+        <cref source="JLS">Do we remove this line and just define them ourselves?</cref>
+        <cref source="JLS">
+          We can really simplify the grammar for COSE_Key to be just the kty (the one required field) and the generic item.
+          The reason to do this is that it makes things simpler.
+          The reason not to do this says that we really need to add a lot more items so that a grammar check can be done which is more tightly enforced.
+        </cref>
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
@@ -1099,11 +941,10 @@ COSE_Key = {
     ? key_ops => [+ tstr / int ],
     ? alg => tstr / int,
     ? kid => bstr,
-    * keys => values
+    * label => values
 }
 
 COSE_KeySet = [+COSE_Key]
-
 ]]></artwork></figure>
 
       <t>
@@ -1116,8 +957,7 @@ COSE_KeySet = [+COSE_Key]
       </t>
 
       <t>
-        The same fields defined in <xref target="RFC7517"/> are used
-        here with the following changes in rules:
+        The same fields defined in <xref target="RFC7517"/> are used here with the following changes in rules:
 
         <list style="symbols">
           <t>
@@ -1134,7 +974,7 @@ COSE_KeySet = [+COSE_Key]
             <list style="hanging">
               <t hangText='kid'>
                 is always bstr encoded rather than tstr encoded.
-                This change in encoded is due to the fact that frequently, values
+                This change in encoding is due to the fact that frequently, values
                 such as a hash of the public key is used for a kid value.
                 Since the field is defined as not having a specific structure,
                 making it binary rather than textual makes sense.
@@ -1144,6 +984,41 @@ COSE_KeySet = [+COSE_Key]
         </list>
       </t>
 
+
+    <section anchor="COSE_KEY_KEYS" title="COSE Key Map Labels">
+
+      <t>
+        This table contains a list of all of the parameters defined for keys that were defined by the JOSE document set.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
+      </t>
+
+      <texttable>
+        <ttcol align='left'>name</ttcol>
+        <ttcol align='left'>label</ttcol>
+        <ttcol align='left'>CBOR type</ttcol>
+        <ttcol align='left'>registry</ttcol>
+        <ttcol align='left'>description</ttcol>
+        
+        <c>kty</c>        <c>1</c>        <c>tstr / int</c>        <c>COSE General Values</c>        <c>Identification of the key type</c>
+        <c>use</c>        <c>*</c>        <c>tstr</c>        <c></c>        <c>deprecated - don't use</c>
+        <c>key_ops</c>        <c>*</c>        <c>[* tstr]</c>        <c></c>        <c></c>
+        <c>alg</c>        <c>3</c>        <c>tstr / int</c>        <c>COSE Algorithm Values</c>        <c>Key usage restriction to this algorithm</c>
+        <c>kid</c>        <c>2</c>        <c>bstr</c>        <c></c>        <c>Key Identification value - match to kid in message</c>
+        <c>x5u</c>        <c>*</c>        <c>tstr</c>        <c></c>        <c></c>
+        <c>x5c</c>        <c>*</c>        <c>bstr*</c>        <c></c>        <c></c>
+        <c>x5t</c>        <c>*</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>x5t#S256</c>        <c>*</c>        <c>bstr</c>        <c></c>        <c></c>
+      </texttable>
+
+      <figure><artwork type="CDDL"><![CDATA[
+;key_labels
+kty=1
+key_kid=2
+key_alg=3
+
+]]></artwork></figure>
+
+    </section>
+      
     </section>
     <section anchor="CBOR-Canonical" title="CBOR Encoder Restrictions">
 
@@ -1171,6 +1046,519 @@ COSE_KeySet = [+COSE_Key]
       </t>
 
     </section>
+
+
+    <section title="Signature Algorithms">
+      <section title="RSASSA-PSS">
+        <texttable>
+          <ttcol align='left'>name</ttcol>
+          <ttcol align='left'>value</ttcol>
+          <ttcol align='left'>description</ttcol>
+          <c>PS256</c>        <c>-10</c>      <c>RSASSA-PSS w/ SHA-256</c>
+          <c>PS384</c>        <c>*</c>        <c>RSASSA-PSS w/ SHA-384</c>
+          <c>PS512</c>        <c>-11</c>      <c>RSASSA-PSS w/ SHA-512</c>
+        </texttable>
+      </section>
+      
+      <section title="ECDSA">
+        <t>
+          ECDSA <xref target="DSS"/> defines a signature algorithm using ECC.
+        </t>
+
+        <t>
+          The security strength of the signature is no greater than the minimum of the security strength associated with the bit length of the key and the security strength of the hash function.
+          When a hash function is used that has greater security than is provided by the length of the key, the signature algorithm uses the leftmost keyLength bits of the hash function output.
+        </t>
+        
+        <texttable title="ECDSA Algorithm Values" anchor="table_ecdsa">
+          <ttcol align='left'>name</ttcol>
+          <ttcol align='left'>value</ttcol>
+          <ttcol align='left'>hash</ttcol>
+          <ttcol align='left'>description</ttcol>
+          <c>ES256</c>        <c>-7</c>       <c>SHA-256</c>   <c>ECDSA w/ SHA-256</c>
+          <c>ES384</c>        <c>-8</c>       <c>SHA-384</c>   <c>ECDSA w/ SHA-384</c>
+          <c>ES512</c>        <c>-9</c>       <c>SHA-512</c>   <c>ECDSA w/ SHA-512</c>
+        </texttable>
+
+        <t>
+          In order to promote interoperability, it is suggested that SHA-256 be used only with keys of length 256, SHA-384 be used only with keys of length 384 and SHA-512 be used only with keys of length 521.
+          This is aligned with the recommendation in Section 4 of <xref target="RFC5480"/>.
+        </t>
+
+        <t>
+          The signature algorithm results in a pair of integers (R, S).
+          These integers will be of the same order as length of the key used for the signature process.
+          The signature is encoded by converting the integers into byte strings of the same length as the key size.
+          The length is rounded up to the nearest byte and is left padded with zero bits to get to the correct length.
+          The two integers are then concatenated together to form a byte string that is the resulting signature.
+        </t>
+
+        <t>
+          Using the function defined in <xref target="RFC3447"/> the signature is:
+          <vspace/>
+          Signature = I2OSP(R, n) | I2OSP(S, n)
+          <vspace/>
+          where n = ceiling(key_length / 8)
+        </t>
+
+        <section title="Security Considerations">
+          <t>
+            On of the issues that needs to be discussed is substitution attacks.
+            There are two different things that can potentially be substituted in this algorithm.
+            Both of these attacks are current theoretical only.
+          </t>
+          
+          <t>
+            The first substitution attack is changing the curve used to validate the signature, the only requirement is that the order of the key match the length of R and S.
+            It is theoretically possible to use a different curve and get a different result.
+            We current do not have any way to deal with this version of the attack except to restrict the overall set of curves that can be used.
+          </t>
+
+          <t>
+            The second substitution attack is to change the hash function that is used to verify the signature.
+            This attack can be mitigated by including the signature algorithm identifier in the data to be signed.
+          </t>
+        </section>
+        
+      </section>
+    </section>
+
+    <section title="Message Authentication (MAC) Algorithms">
+      <t>
+        Message Authentication Codes (MACs) provide data authentication and integrity protection.
+        They provide either no or very limited data origination.
+        (One cannot, for example, be used to prove the identity of the sender to a third party.)
+      </t>
+
+      <t>
+        MAC algorithms can be based on either a block cipher algorithm (i.e. AES-MAC) or a hash algorithm (i.e. HMAC).
+        This document defines a MAC algorithm for each of these two constructions.
+      </t>
+
+      <section title="Hash-based Message Authentication Codes (HMAC)">
+        <t>
+          The Hash-base Message Authentication Code algorithm (HMAC) <xref target="RFC2104"/><xref target="RFC4231"/> was designed, in part, to deal with the birthday attacks on straight hash functions.
+          The algorithm was also designed to all for new hash algorithms to be directly plugged in without changes to the hash function.
+          The HMAC design process has been vindicated as, while the security of hash algorithms such as MD5 has decreased over time, the security of HMAC combined with MD5 has not yet been shown to be compromised <xref target="RFC6151"/>.
+        </t>
+
+        <t>
+          For use in constrained environments, we define a set of HMAC algorithms that are truncated.
+          There are currently no known issues when truncating, however the security strength of the message tag is correspondingly reduced in strength.
+          When truncating, the left most tag length bits are kept and transmitted.
+        </t>
+        
+        <texttable title="HMAC Algorithm Values" anchor="table-hmac">
+          <ttcol align='left'>name</ttcol>
+          <ttcol align='left'>value</ttcol>
+          <ttcol align='left'>Hash</ttcol>
+          <ttcol align='left'>Length</ttcol>
+          <ttcol align='left'>description</ttcol>
+          <c>HMAC 256/64</c>         <c>*</c>        <c>SHA-256</c>    <c>64</c>        <c>HMAC w/ SHA-256 truncated to 8 bytes</c>
+          <c>HMAC 256/256</c>        <c>4</c>        <c>SHA-256</c>    <c>256</c>       <c>HMAC w/ SHA-256</c>
+          <c>HMAC 384/384</c>        <c>5</c>        <c>SHA-384</c>    <c>384</c>       <c>HMAC w/ SHA-384</c>
+          <c>HMAC 512/512</c>        <c>6</c>        <c>SHA-512</c>    <c>512</c>       <c>HMAC w/ SHA-512</c>
+        </texttable>
+
+        <section title="Security Considerations">
+          <t>
+            TBD.
+          </t>
+        </section>
+      </section>
+
+      <section title="AES Message Authentication Code (AES-MAC)">
+        <t>
+          There are a set of different algorithms that we can specify here.  Which should it be?
+          <list>
+            <t>AES-MAC - Use standard CBC mode</t>
+            <t>AES-CMAC - RFC 4493 - has improved security over AES-CBC.  The padding is different from CBC mode and requires one extra AES block encryption step plus and xor operation.</t>
+          </list>
+        </t>
+
+          <!--
+        <texttable title="AES-MAC Algorithm Values" anchor="table-aes-mac">
+          <ttcol align='left'>name</ttcol>
+          <ttcol align='left'>value</ttcol>
+          <ttcol align='left'>key length</ttcol>
+          <ttcol align='left'>tag length</ttcol>
+          <ttcol align='left'>description</ttcol>
+          <c>AES-MAC 128/64</c>         <c>*</c>        <c>128</c>      <c>64</c>       <
+          <c>HMAC 256/64</c>         <c>*</c>        <c>SHA-256</c>    <c>64</c>        <c>HMAC w/ SHA-256 truncated to 8 bytes</c>
+          <c>HMAC 256/256</c>        <c>4</c>        <c>SHA-256</c>    <c>256</c>       <c>HMAC w/ SHA-256</c>
+          <c>HMAC 384/384</c>        <c>5</c>        <c>SHA-384</c>    <c>384</c>       <c>HMAC w/ SHA-384</c>
+          <c>HMAC 512/512</c>        <c>6</c>        <c>SHA-512</c>    <c>512</c>       <c>HMAC w/ SHA-512</c>
+        </texttable>
+-->
+      </section>
+    </section>
+
+    <section title="Content Encryption Algorithms">
+      <section title="AES GCM">
+        <texttable title="Algorithm Value for AES-GCM" anchor="table-AES-GCM">
+          <ttcol align='left'>name</ttcol>
+          <ttcol align='left'>value</ttcol>
+          <ttcol align='left'>description</ttcol>
+          <c>A128GCM</c>        <c>1</c>        <c>AES-GCM mode w/ 128-bit key</c>
+          <c>A192GCM</c>        <c>2</c>        <c>AES-GCM mode w/ 192-bit key</c>
+          <c>A256GCM</c>        <c>3</c>        <c>AES-GCM mode w/ 256-bit key</c>
+        </texttable>
+        
+      </section>
+      
+      <section title="AES CCM">
+        <t>
+          Counter with CBC-MAC (CCM) is a generic authentication encryption block cipher mode defined in <xref target="RFC3610"/>.
+          The CCM mode is combined with the AES block encryption algorithm to define a commonly used content encryption algorithm used in constrainted devices.
+        </t>
+
+        <t>
+          The CCM mode has two parameter choices.
+          The first choice is M, the size of the authentication field.
+          The choice of the value for M involves a trade-off between message expansion and the probably that an attacker can undetecably modify a message.
+          
+          The second choice is L, the size of the length field.
+          This value requires a trade-off between the maximum message size and the size of the Nonce.
+        </t>
+
+        <t>
+          It is unfortunate that the specification for CCM specified L and M as a count of bytes rather than a count of bits.
+          This leads to possible misunderstandings where AES-CCM-8 is frequently used to refer to a version of CCM mode where the size of the authentication is 64-bits and not 8-bits.
+          These values have traditionally been specified as bit counts rather than byte counts.
+          This document will follow the tradition of using bit counts so that it is easier to compare the different algorithms presented in this document.
+        </t>
+
+        <t>
+          We define a matrix of algorithms in this document over the values of L and M.
+          Constrained devices are usually operating in situations where they use short messages and want to avoid doing key management operations.
+          This favors smaller values of M and larger values of L.
+          Less constrained devices do will want to be able to user larger messages and are more willing to generate new keys for every operation.
+          This favors larger values of M and smaller values of L.
+          (The use of a large nonce means that random generation of both the key and the nonce will decrease the chances of repeating the pair on two different messages.)
+        </t>
+
+        <t>
+          The following values are used for L:
+          <list style="hanging">
+            <t hangText="16-bits (2)">
+              limits messages to 2^16 bytes in length.
+              The nonce length is 13 octets allowing for 2^(13*8) possible values of the nonce without repeating.
+            </t>
+            <t hangText="64-bits (8)"> 
+              limits messages to 2^64 byes in length.
+              The nonce length is 7 octets allowing for 2^56 possible values of the nonce without repeating.
+            </t>
+          </list>
+        </t>
+
+        <t>
+          The following values are used for M:
+          <list style="hanging">
+            <t hangText="64-bits (8)">
+              produces a 64-bit authentication tag.
+              This implies that there is a 1 in 2^64 chance that an modified message will authenticate.
+            </t>
+            <t hangText="128-bits (16)">
+              produces a 128-bit authentication tag.
+              This implies that there is a 1 in 2^128 chance that an modified message will authenticate.
+            </t>
+          </list>
+        </t>
+        
+        <texttable anchor="table-AES-CCM" title="Algorithm Values for AES-CCM">
+          <ttcol align='left'>name</ttcol>
+          <ttcol align='left'>value</ttcol>
+          <ttcol align='left'>L</ttcol>
+          <ttcol align='left'>M</ttcol>
+          <ttcol align='left'>k</ttcol>
+          <ttcol align='left'>description</ttcol>
+          <c>AES-CCM-16-64-128</c>        <c>A281C</c>    <c>16</c>       <c>64</c>       <c>128</c>      <c>AES-CCM mode 128-bit key, 64-bit tag, 13-byte nonce</c>
+          <c>AES-CCM-16-64-192</c>        <c>A282C</c>    <c>16</c>       <c>64</c>       <c>192</c>      <c>AES-CCM mode 192-bit key, 64-bit tag, 13-byte nonce</c>
+          <c>AES-CCM-16-64-256</c>        <c>A283C</c>    <c>16</c>       <c>64</c>       <c>256</c>      <c>AES-CCM mode 256-bit key, 64-bit tag, 13-byte nonce</c>
+          <c>AES-CCM-64-64-128</c>        <c>A881C</c>    <c>64</c>       <c>64</c>       <c>128</c>      <c>AES-CCM mode 128-bit key, 64-bit tag, 7-byte nonce</c>
+          <c>AES-CCM-64-64-192</c>        <c>A882C</c>    <c>64</c>       <c>64</c>       <c>192</c>      <c>AES-CCM mode 192-bit key, 64-bit tag, 7-byte nonce</c>
+          <c>AES-CCM-64-64-256</c>        <c>A883C</c>    <c>64</c>       <c>64</c>       <c>256</c>      <c>AES-CCM mode 256-bit key, 64-bit tag, 7-byte nonce</c>
+          <c>AES-CCM-16-128-128</c>       <c>A2161C</c>   <c>16</c>       <c>128</c>      <c>128</c>      <c>AES-CCM mode 128-bit key, 128-bit tag, 13-byte nonce</c>
+          <c>AES-CCM-16-128-192</c>       <c>A2162C</c>   <c>16</c>       <c>128</c>      <c>192</c>      <c>AES-CCM mode 192-bit key, 128-bit tag, 13-byte nonce</c>
+          <c>AES-CCM-16-128-256</c>       <c>A2163C</c>   <c>16</c>       <c>128</c>      <c>256</c>      <c>AES-CCM mode 256-bit key, 128-bit tag, 13-byte nonce</c>
+          <c>AES-CCM-64-128-128</c>       <c>A8161C</c>   <c>64</c>       <c>128</c>      <c>128</c>      <c>AES-CCM mode 128-bit key, 128-bit tag, 7-byte nonce</c>
+          <c>AES-CCM-64-128-192</c>       <c>A8162C</c>   <c>64</c>       <c>128</c>      <c>192</c>      <c>AES-CCM mode 192-bit key, 128-bit tag, 7-byte nonce</c>
+          <c>AES-CCM-64-128-256</c>       <c>A8163C</c>   <c>64</c>       <c>128</c>      <c>256</c>      <c>AES-CCM mode 256-bit key, 128-bit tag, 7-byte nonce</c>
+        </texttable>
+
+        <t>
+          M00TODO: Make a determination of which ones get 1-, 2- or 3-byte identifiers.
+          I.e. which ones are going to be popular.
+        </t>
+
+        <section title="Security Considerations">
+          <t>
+            When using AES-CCM the following restrictions MUST be enforced:
+            <list style="symbols">
+              <t>
+                The key and nonce pair MUST be unique for every message encrypted.
+              </t>
+              <t>
+                The total number of times the AES block cipher is used MUST NOT exceed 2^61 operations.
+                This limitation is the sum of times the block cipher is used in computing the MAC value and in performing stream encryption operations.
+                An explicit check is required only in environments where it is expected that it might be exceeded.
+              </t>
+            </list>
+          </t>
+
+          <t>
+            <xref target="RFC3610"/> additionally calls out one other consideration of note.
+            It is possible to do a pre-computation attack against the algorithm in cases where the portions encryption content is highly predictable.
+            This reduces the security of the key size by half.
+            Ways to deal with this attack include adding a random portion to the nonce value and/or increasing the key size used.
+            Using a portion of the nonce for a random value will decrease the number of messages that a single key can be used for.
+            Increasing the key size may require more resources in the constrained device.
+            See sections 5 and 10 of <xref target="RFC3610"/> for more information.
+          </t>
+          
+        </section>
+      </section>
+    </section>
+
+    <section title="Key Derivation Functions (KDF)">
+    </section>
+
+    <section title="Key Management Algorithms">
+      <t>
+        There are a number of different key management methods that can be used in the COSE encryption system.
+        In this section we will discuss each of the key management methods, what fields need to be specified, and which algorithms are defined in thisdocument to deal with each of them.
+      </t>
+
+      <t>
+        The names of the key management methods used here are the same as are defined in <xref target="RFC7517"/>.
+        Other specifications use different terms for the key management methods or do not support some of the key management methods.
+      </t>
+
+      <t>
+        At the moment we do not have any key management methods that allow for the use of protected headers. 
+        This may be changed in the future if, for example, the AES-GCM Key wrap method defined in <xref target="RFC7518"/> were extended to allow for authenticated data. 
+        In that event the use of the 'protected' field, which is current forbidden below, would be permitted.
+      </t>
+
+      <section title="Direct Encryption">
+          <t>
+            In direct encryption mode, a shared secret between the sender and the recipient is used as the key.
+            <cref source="JLS">It would be reasonable to support a shared-secret + KDF that is not PBE for when one has good randomness in the shared-secret.</cref>
+            When direct encryption mode is used, it MUST be the only mode used on the message.
+            It is a massive security leak to have both direct encryption and a different key management mode on the same message.
+          </t>
+
+          <t>
+            For JOSE, direct encryption key management is the only key management method allowed for doing MAC-ed messages.
+            In COSE, all of the key management methods can be used for MAC-ed messages.
+          </t>
+
+          <t>
+            The COSE_encrypt structure for the recipient is organized as follows:
+          </t>
+
+          <t>
+            <list style="symbols">
+              <t>
+                The 'protected', 'ciphertext' and 'recipients' fields MUST be absent.
+              </t>
+              <t>
+                At a minimum, the 'unprotected' field MUST contain the 'alg' parameter and SHOULD contain a parameter identifying the shared secret.
+              </t>
+            </list>
+          </t>
+
+          <section title="Direct Key">
+          <texttable>
+            <ttcol align='left'>name</ttcol>
+            <ttcol align='left'>value</ttcol>
+            <ttcol align='left'>description</ttcol>
+            <c>dir</c>          <c>-6</c>       <c>Direct use of CEK</c>
+          </texttable>
+        </section>
+      </section>
+    </section>
+
+    <section title="Key Wrapping">
+      <t>
+        In key wrapping mode, the CEK is randomly generated and that key is then encrypted by a shared secret between the sender and the recipient.
+        All of the currently defined key wrapping algorithms for JOSE (and thus for COSE) are AE algorithms.
+        Key wrapping mode is considered to be superior to direct encryption if the system has any capability for doing random key generation.
+        This is because the shared key is used to wrap random data rather than data  has some degree of organization and may in fact be repeating the same content.
+      </t>
+
+      <t>
+        The COSE_encrypt structure for the recipient is organized as follows:
+      </t>
+
+      <t>
+        <list style="symbols">
+          <t>
+            The 'protected' field MUST be absent if the key wrap algorithm is an AE algorithm.
+          </t>
+          <t>
+            The 'recipients' field is normally absent, but can be used.
+            Applications MUST deal with a recipients field present, not being able to decrypt that recipient is an acceptable way of dealing with it.
+            Failing to process the message is not an acceptable way of dealing with it.
+          </t>
+          <t>
+            The plain text to be encrypted is the key from next layer down
+            (usually the content layer).
+          </t>
+          <t>
+            At a minimum, the 'unprotected' field MUST contain the 'alg'
+            parameter and SHOULD contain a parameter identifying the shared secret.
+          </t>
+        </list>
+      </t>
+
+      <section title="AES Key Wrapping">
+        <texttable>
+          <ttcol align='left'>name</ttcol>
+          <ttcol align='left'>value</ttcol>
+          <ttcol align='left'>description</ttcol>
+          <c>A128KW</c>       <c>-3</c>       <c>AES Key Wrap w/ 128-bit key</c>
+          <c>A192KW</c>       <c>-4</c>       <c>AES Key Wrap w/ 192-bit key</c>
+          <c>A256KW</c>       <c>-5</c>       <c>AES Key Wrap w/ 256-bit key</c>
+        </texttable>
+      </section>
+    </section>
+
+    <section title="Key Encryption">
+      <t>
+        Key Encryption mode is also called key transport mode in some
+        standards.
+        Key Encryption mode differs from Key Wrap mode in that it uses an
+        asymmetric encryption algorithm rather than a symmetric encryption
+        algorithm to protect the key.
+        The only current Key Encryption mode algorithm supported is RSAES-OAEP.
+      </t>
+
+      <t>
+        The COSE_encrypt structure for the recipient is organized as follows:
+      </t>
+
+      <t>
+        <list style="symbols">
+          <t>
+            The 'protected' field MUST be absent.
+          </t>
+          <t>
+            The plain text to be encrypted is the key from next layer down
+            (usually the content layer).
+          </t>
+          <t>
+            At a minimum, the 'unprotected' field MUST contain the 'alg'
+            parameter and SHOULD contain a parameter identifying the asymmetric key.
+          </t>
+        </list>
+      </t>
+
+      <section title="RSA OAEP">
+        <texttable anchor="IANA-RSA-OAEP">
+          <ttcol align='left'>name</ttcol>
+          <ttcol align='left'>value</ttcol>
+          <ttcol align='left'>description</ttcol>
+          <c>RSA-OAEP</c>     <c>-2</c>       <c>RSAES OAEP w/ SHA-256</c>
+        </texttable>
+      </section>
+    </section>
+
+    <section title="Direct Key Agreement">
+      <t>
+        Direct Key Agreement derives the CEK from the shared secret computed
+        by the key agreement operation.
+      </t>
+
+      <t>
+        When direct key agreement mode is used, it SHOULD be the only mode used
+        on the message.  This method creates the CEK directly and that makes it difficult to mix with additional recipients.
+      </t>
+
+      <t>
+        The COSE_encrypt structure for the recipient is organized as follows:
+      </t>
+
+      <t>
+        <list style="symbols">
+          <t>
+            The 'protected' field MUST be absent.
+          </t>
+          <t>
+            At a minimum, the 'unprotected' field MUST contain the 'alg'
+            parameter and SHOULD contain a parameter identifying the asymmetric key.
+          </t>
+          <t>
+            The 'unprotected' field MUST contain the 'epk' parameter.
+          </t>
+        </list>
+      </t>
+
+
+      <section title="ECDH Ephemeral Static">
+        <t>
+          Key Agreement with Key Wrapping uses a randomly generated CEK.
+          The CEK is then encrypted using a Key Wrapping algorithm and a key
+          derived from the shared secret computed by the key agreement
+          algorithm.
+        </t>
+
+        <t>
+          The COSE_encrypt structure for the recipient is organized as follows:
+        </t>
+
+        <t>
+          <list style="symbols">
+            <t>
+              The 'protected' field MUST be absent if the key wrap algorithm is an AE algorithm.
+            </t>
+            <t>
+              The plain text to be encrypted is the key from next layer down
+              (usually the content layer).
+            </t>
+            <t>
+              At a minimum, the 'unprotected' field MUST contain the 'alg'
+              parameter, a parameter identifying the recipient asymmetric key, and
+              a parameter with the sender's asymmetric public key.
+            </t>
+          </list>
+        </t>
+
+        <texttable>
+          <ttcol align='left'>name</ttcol>
+          <ttcol align='left'>value</ttcol>
+          <ttcol align='left'>description</ttcol>
+          <c>ECDH-ES</c>      <c>*</c>        <c>ECDH ES w/ Concat KDF as CEK</c>
+        </texttable>
+      </section>
+    </section>
+
+    <section title="Key Agreement with KDF">
+      <section title="ECDH ES + HKDF">
+        <texttable>
+          <ttcol align='left'>name</ttcol>
+          <ttcol align='left'>value</ttcol>
+          <ttcol align='left'>description</ttcol>
+          <c>ECDH-ES+A128KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
+          <c>ECDH-ES+A192KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
+          <c>ECDH-ES+A256KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
+        </texttable>
+      </section>
+    </section>
+
+    <section title="Password with KDF">
+      <section title="PBES2">
+        <texttable>
+          <ttcol align='left'>name</ttcol>
+          <ttcol align='left'>value</ttcol>
+          <ttcol align='left'>description</ttcol>
+          <c>PBES2-HS256+A128KW</c>        <c>*</c>        <c>PBES2 w/ HMAC SHA-256 and AES Key wrap w/ 128 bit key</c>
+          <c>PBES2-HS384+A192KW</c>        <c>*</c>        <c>PBES2 w/ HMAC SHA-384 and AES Key wrap w/ 192 bit key</c>
+          <c>PBES2-HS512+A256KW</c>        <c>*</c>        <c>PBES2 w/ HMAC SHA-512 and AES Key wrap w/ 256 bit key</c>
+        </texttable>
+      </section>
+    </section>
+    
     <section anchor="iana-considerations" title="IANA Considerations">
 
       <section anchor="cbor-tag-assignment" title="CBOR Tag assignment">
@@ -1184,7 +1572,7 @@ COSE_KeySet = [+COSE_Key]
         </t>
 
         <t>
-          Data Item: CBOR map
+          Data Item: COSE_Msg
         </t>
 
         <t>
@@ -1192,6 +1580,8 @@ COSE_KeySet = [+COSE_Key]
         </t>
 
       </section>
+
+      
       <section anchor="IANA-Top-Level-Keys" title="COSE Object Labels Registry">
 
         <t>
@@ -1223,7 +1613,7 @@ COSE_KeySet = [+COSE_Key]
               This is the value used for the label.
               The label can be either an integer or a string.
               Registration in the table is based on the value of the label requested.
-              Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.
+              Integer values between 1 and 255 and strings of length 1 are designated as Standards Track Document required.
               Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.
               Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.
               Integer values in the range -1 to -65536 are delegated to the “COSE Header Algorithm Label” registry.
@@ -1245,7 +1635,12 @@ COSE_KeySet = [+COSE_Key]
         </t>
 
         <t>
-          The initial contents of the registry can be found in <xref target="Header-Table"/>.  The specification column for all rows in that table should be this document.
+          The initial contents of the registry can be found in <xref target="Header-Table"/>.
+          The specification column for all rows in that table should be this document.
+        </t>
+
+        <t>
+          Additionally, the value of 0 is to be marked as 'Reserved'.
         </t>
 
         <t>
@@ -1253,6 +1648,8 @@ COSE_KeySet = [+COSE_Key]
         </t>
 
       </section>
+
+      
       <section anchor="IANA-Alg-Registry" title="COSE Header Algorithm Label Table">
 
         <t>
@@ -1328,7 +1725,8 @@ COSE_KeySet = [+COSE_Key]
         </t>
 
         <t>
-          The initial contents of the registry can be found in <xref target="ALG_TABLE"/>.  The specification column for all rows in that table should be this document.
+          The initial contents of the registry can be found in the following: <xref target="table-AES-CCM"/>, <xref target="table-AES-GCM"/>, <xref target="table_ecdsa"/>, <xref target="table-hmac"/>.
+          The specification column for all rows in that table should be this document.
         </t>
 
       </section>
@@ -1588,23 +1986,27 @@ COSE_KeySet = [+COSE_Key]
 
     <references title='Normative References'>
       &CDDL;
+      &RFC2119;
       &RFC7049;
     </references>
 
     <references title='Informative References'>
-      &RFC7516;
-      &RFC7515;
-      &RFC7517;
-      &RFC7518;
       &CBCMAC;
-      &RFC2119;
+      &RFC2104;
       &RFC3394;
       &RFC3447;
       &RFC3610;
+      &RFC4231;
+      &RFC5480;
       &RFC5652;
       &RFC5752;
       &RFC5990;
+      &RFC6151;
       &RFC7159;
+      &RFC7515;
+      &RFC7516;
+      &RFC7517;
+      &RFC7518;
 
       <reference anchor="AES-GCM" >
         <front>
@@ -1614,6 +2016,18 @@ COSE_KeySet = [+COSE_Key]
           </author>
           <date year="2015" month="June"/>
         </front>
+        <format target="https://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf" type="PDF"/>
+      </reference>
+
+      <reference anchor="DSS">
+        <front>
+          <title>Digital Signature Standard (DSS)</title>
+          <author>
+            <organization>U.S. National Institute of Standards and Technology</organization>
+          </author>
+          <date year="2013" month="July"/>
+        </front>
+        <format target="http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf" type="PDF"/>
       </reference>
 
 
@@ -1885,37 +2299,13 @@ COSE_KeySet = [+COSE_Key]
         <ttcol align='left'>name</ttcol>
         <ttcol align='left'>value</ttcol>
         <ttcol align='left'>description</ttcol>
-        <c>HS256</c>        <c>4</c>        <c>HMAC w/ SHA-256</c>
-        <c>HS384</c>        <c>5</c>        <c>HMAC w/ SHA-384</c>
-        <c>HS512</c>        <c>6</c>        <c>HMAC w/ SHA-512</c>
         <c>RS256</c>        <c>*</c>        <c>RSASSA-v1.5 w/ SHA-256</c>
         <c>RS384</c>        <c>*</c>        <c>RSASSA-v1.5 w/ SHA-384</c>
         <c>RSA512</c>       <c>*</c>        <c>RSASSA-v1.5 w/ SHA-256</c>
-        <c>ES256</c>        <c>-7</c>       <c>ECDSA w/ SHA-256</c>
-        <c>ES384</c>        <c>-8</c>       <c>ECDSA w/ SHA-384</c>
-        <c>ES512</c>        <c>-9</c>       <c>ECDSA w/ SHA-512</c>
-        <c>PS256</c>        <c>-10</c>      <c>RSASSA-PSS w/ SHA-256</c>
-        <c>PS384</c>        <c>*</c>        <c>RSASSA-PSS w/ SHA-384</c>
-        <c>PS512</c>        <c>-11</c>      <c>RSASSA-PSS w/ SHA-512</c>
         <c>RSA1_5</c>       <c>*</c>        <c>RSAES v1.5 Key Encryption</c>
-        <c>RSA-OAEP</c>     <c>-2</c>       <c>RSAES OAEP w/ SHA-256</c>
-        <c>A128KW</c>       <c>-3</c>       <c>AES Key Wrap w/ 128-bit key</c>
-        <c>A192KW</c>       <c>-4</c>       <c>AES Key Wrap w/ 192-bit key</c>
-        <c>A256KW</c>       <c>-5</c>       <c>AES Key Wrap w/ 256-bit key</c>
-        <c>dir</c>          <c>-6</c>       <c>Direct use of CEK</c>
-        <c>ECDH-ES</c>      <c>*</c>        <c>ECDH ES w/ Concat KDF as CEK</c>
-        <c>ECDH-ES+A128KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
-        <c>ECDH-ES+A192KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
-        <c>ECDH-ES+A256KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
         <c>A128GCMKW</c>        <c>*</c>        <c>AES GCM Key Wrap w/ 128 bit key</c>
         <c>A192GCMKW</c>        <c>*</c>        <c>AES GCM Key Wrap w/ 192 bit key</c>
         <c>A256GCMKW</c>        <c>*</c>        <c>AES GCM Key Wrap w/ 256 bit key</c>
-        <c>PBES2-HS256+A128KW</c>        <c>*</c>        <c>PBES2 w/ HMAC SHA-256 and AES Key wrap w/ 128 bit key</c>
-        <c>PBES2-HS384+A192KW</c>        <c>*</c>        <c>PBES2 w/ HMAC SHA-384 and AES Key wrap w/ 192 bit key</c>
-        <c>PBES2-HS512+A256KW</c>        <c>*</c>        <c>PBES2 w/ HMAC SHA-512 and AES Key wrap w/ 256 bit key</c>
-        <c>A128GCM</c>        <c>1</c>        <c>AES-GCM mode w/ 128-bit key</c>
-        <c>A192GCM</c>        <c>2</c>        <c>AES-GCM mode w/ 192-bit key</c>
-        <c>A256GCM</c>        <c>3</c>        <c>AES-GCM mode w/ 256-bit key</c>
       </texttable>
 
     </section>
@@ -1933,39 +2323,6 @@ COSE_KeySet = [+COSE_Key]
         <c>P521</c>        <c>5</c>        <c>EC Curve P521 (NIST)</c>
       </texttable>
       
-    </section>
-    <section anchor="COSE_KEY_KEYS" title="COSE Key Map Labels">
-
-      <t>
-        This table contains a list of all of the parameters defined for keys that were defined by the JOSE document set.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
-      </t>
-
-      <texttable>
-        <ttcol align='left'>name</ttcol>
-        <ttcol align='left'>label</ttcol>
-        <ttcol align='left'>CBOR type</ttcol>
-        <ttcol align='left'>registry</ttcol>
-        <ttcol align='left'>description</ttcol>
-        
-        <c>kty</c>        <c>1</c>        <c>tstr / int</c>        <c>COSE General Values</c>        <c>Identification of the key type</c>
-        <c>use</c>        <c>*</c>        <c>tstr</c>        <c></c>        <c>deprecated - don't use</c>
-        <c>key_ops</c>        <c>*</c>        <c>[* tstr]</c>        <c></c>        <c></c>
-        <c>alg</c>        <c>3</c>        <c>tstr / int</c>        <c>COSE Algorithm Values</c>        <c>Key usage restriction to this algorithm</c>
-        <c>kid</c>        <c>2</c>        <c>bstr</c>        <c></c>        <c>Key Identification value - match to kid in message</c>
-        <c>x5u</c>        <c>*</c>        <c>tstr</c>        <c></c>        <c></c>
-        <c>x5c</c>        <c>*</c>        <c>bstr*</c>        <c></c>        <c></c>
-        <c>x5t</c>        <c>*</c>        <c>bstr</c>        <c></c>        <c></c>
-        <c>x5t#S256</c>        <c>*</c>        <c>bstr</c>        <c></c>        <c></c>
-      </texttable>
-
-      <figure><artwork type="CDDL"><![CDATA[
-;key_labels
-kty=1
-key_kid=2
-key_alg=3
-
-]]></artwork></figure>
-
     </section>
     <section anchor="COSE_KEY_PARAM_KEYS" title="COSE Key Parameter Labels">
 
