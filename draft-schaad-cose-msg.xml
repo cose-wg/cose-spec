@@ -11,6 +11,7 @@
   <!ENTITY RFC5480 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5480.xml" >
   <!ENTITY RFC5652 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5652.xml" >
   <!ENTITY RFC5752 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5752.xml" >
+  <!ENTITY RFC5869 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5869.xml" >
   <!ENTITY RFC5990 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5990.xml" >
   <!ENTITY RFC6151 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6151.xml" >
   <!ENTITY RFC7049 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7049.xml" >
@@ -58,6 +59,15 @@
         This document specifies how to do signatures, message authentication codes and encryption using this data format.
       </t>
     </abstract>
+
+    <note title="Contributing to this document">
+      <t>
+        The source for this draft is being maintained in GitHub.
+        Suggested changes should be submitted as pull requests  at https://github.com/cose-wg/cose-spec.
+        Instructions are on that page as well.
+        Editorial changes can be managed in GitHub, but any substantial issues need to be discussed on the COSE mailing list.
+      </t>
+    </note>
   </front>
 
   <middle>
@@ -1321,12 +1331,147 @@ key_alg=3
     </section>
 
     <section title="Key Derivation Functions (KDF)">
+
+      <section title="HMAC-based Extract-and-Expand Key Derivation Function (HKDF)">
+        <t> 
+          
+          See <xref target="RFC5869"/>.
+        </t>
+
+        <t>
+          Inputs:
+          <list style="none">
+            <t>
+              secret - a shared value that is secret. 
+              Secrets may be either previously shared or derived from operations like a DH key agreement.
+            </t>
+            <t>
+              salt - an optional public value that is used to change the generation process.
+              If specified, the salt is carried using the 'salt' algorithm parameter.
+              The 'salt' parameter is encoded as a binary string.
+              This parameter is protected by being included in the key computation and does not need to be separately authenticated.
+            </t>
+            <t>
+              length - the number of octets of output that need to be generated.
+            </t>
+            <t>
+              context information
+            </t>
+            <t>
+              hash function - The underlying hash function to be used in the HKDF algorithm.
+              The hash function is encoded into the HKDF algorithm selection.
+            </t>
+          </list>
+        </t>
+
+        <texttable title="HKDF algorithms" anchor="table-hkdf">
+          <ttcol>name</ttcol>
+          <ttcol>hash</ttcol>
+          <ttcol>context</ttcol>
+          <c>HKDF-256</c>       <c>SHA-256</c>  <c>XXX</c>
+          <c>HKDF-512</c>       <c>SHA-512</c>  <c>XXX</c>
+        </texttable>
+
+        <texttable title="HKDF parameters">
+          <ttcol>name</ttcol>
+          <ttcol>label</ttcol>
+          <ttcol>type</ttcol>
+          <ttcol>description</ttcol>
+          <c>salt</c>   <c>-20</c>      <c>bstr</c>     <c>Random salt</c>
+        </texttable>
+        
+
+      </section>
+
+      <section title="Content Information Structure">
+        
+        <t>
+          We encode the context specific information using a CBOR array type.
+          The fields in the array are:
+
+          <list style="hanging">
+            <t hangText="keyDataLength">
+              This is set to the number of bits of the desired output value.
+            </t>
+
+            <t hangText="AlgorithmID">
+              This field indicates how the key material will be used.
+              Unless key material is being derived for multiple items (i.e both a key and an IV)  this will be the COSE algorithm value.
+            </t>
+
+            <t hangText="PartyUInfo">
+              This field holds information about party U.
+              The ParytUInfo structure is divided into three pieces:
+              
+              <list style="hanging">
+                <t hangText="identity">
+                  This contains the identity information for party U.
+                  The identity information can be specified in one of two manners.
+                  The protocol can define a role based identity value.
+                  For example, the roles of "client" and "server" may be assigned to different entities in the protocol.
+                  Each entity would then use the correct label for the data they they send or receive.
+                  The second way is for a protocol to define a way for identification tags to be used based on a naming system (i.e. DNS, X.509 names).
+                </t>
+
+                <t hangText="nonce">
+                  This contains a one time nonce value.
+                  The nonce can either be implicit from the protocol or carried as a value in the unprotected headers.
+                </t>
+
+                <t hangText="other">
+                  This contains other information that is defined as the protocol.
+                </t>
+              </list>
+            </t>
+
+            <t hangText="PartyVInfo">
+              Copy down from PartyUInfo when that text is ready.
+            </t>
+
+            <t hangText="SuppPubInfo">
+              The size of the output in bits is placed in keyDataLength.
+              The field other is for free form data defined by the application.
+              An example is that an application could defined two different strings to be placed here to generate different keys for a data stream vs a control stream.
+            </t>
+
+            <t hangText="SuppPrivInfo">
+              This field contains private information that is mutually known information.
+              An example of this information would be a pre-existing shared secret.
+              The field is optional and will only be present if the application defines a structure for this information.
+            </t>
+          </list>
+        </t>
+
+        <figure><artwork type='CDDL'>
+<![CDATA[
+KDF = [
+    AlgorithmID : int / tstr,
+    PartyUInfo : [
+        ? nonce : bstr / int,
+        ? identity : bstr,
+        ? other : bstr
+    ],
+    PartyVInfo : [
+        ? nonce : bstr,
+        ? identity : bstr / tstr,
+        ? other : bstr
+    ],
+    SuppPubInfo : [
+        keyDataLength : uint,
+        ? other : bstr
+    ],
+    ? SuppPrivInfo : bstr
+]
+]]></artwork></figure>
+
+
+      </section>
     </section>
 
     <section title="Key Management Algorithms">
       <t>
         There are a number of different key management methods that can be used in the COSE encryption system.
-        In this section we will discuss each of the key management methods, what fields need to be specified, and which algorithms are defined in thisdocument to deal with each of them.
+        In this section we will discuss each of the key management methods, what fields need to be specified, and which algorithms are defined in this document to deal with each of them.
       </t>
 
       <t>
@@ -1369,138 +1514,27 @@ key_alg=3
           </t>
 
           <section title="Direct Key">
-          <texttable>
+          <texttable title="Direct Key" anchor="table-direct">
             <ttcol align='left'>name</ttcol>
             <ttcol align='left'>value</ttcol>
+            <ttcol align='left'>KDF</ttcol>
             <ttcol align='left'>description</ttcol>
-            <c>dir</c>          <c>-6</c>       <c>Direct use of CEK</c>
+            <c>dir</c>          <c>-6</c>       <c>N/A</c>    <c>Direct use of CEK</c>
+            <c>dir+KDF</c>      <c>*</c>        <c>HKDF</c>   <c>Shared secret w/ KDF</c>
           </texttable>
+
+          <section title="Security Considerations">
+            <t>Lifetime, Length, Compromise</t>
+          </section>
         </section>
       </section>
-    </section>
 
-    <section title="Key Wrapping">
-      <t>
-        In key wrapping mode, the CEK is randomly generated and that key is then encrypted by a shared secret between the sender and the recipient.
-        All of the currently defined key wrapping algorithms for JOSE (and thus for COSE) are AE algorithms.
-        Key wrapping mode is considered to be superior to direct encryption if the system has any capability for doing random key generation.
-        This is because the shared key is used to wrap random data rather than data  has some degree of organization and may in fact be repeating the same content.
-      </t>
-
-      <t>
-        The COSE_encrypt structure for the recipient is organized as follows:
-      </t>
-
-      <t>
-        <list style="symbols">
-          <t>
-            The 'protected' field MUST be absent if the key wrap algorithm is an AE algorithm.
-          </t>
-          <t>
-            The 'recipients' field is normally absent, but can be used.
-            Applications MUST deal with a recipients field present, not being able to decrypt that recipient is an acceptable way of dealing with it.
-            Failing to process the message is not an acceptable way of dealing with it.
-          </t>
-          <t>
-            The plain text to be encrypted is the key from next layer down
-            (usually the content layer).
-          </t>
-          <t>
-            At a minimum, the 'unprotected' field MUST contain the 'alg'
-            parameter and SHOULD contain a parameter identifying the shared secret.
-          </t>
-        </list>
-      </t>
-
-      <section title="AES Key Wrapping">
-        <texttable>
-          <ttcol align='left'>name</ttcol>
-          <ttcol align='left'>value</ttcol>
-          <ttcol align='left'>description</ttcol>
-          <c>A128KW</c>       <c>-3</c>       <c>AES Key Wrap w/ 128-bit key</c>
-          <c>A192KW</c>       <c>-4</c>       <c>AES Key Wrap w/ 192-bit key</c>
-          <c>A256KW</c>       <c>-5</c>       <c>AES Key Wrap w/ 256-bit key</c>
-        </texttable>
-      </section>
-    </section>
-
-    <section title="Key Encryption">
-      <t>
-        Key Encryption mode is also called key transport mode in some
-        standards.
-        Key Encryption mode differs from Key Wrap mode in that it uses an
-        asymmetric encryption algorithm rather than a symmetric encryption
-        algorithm to protect the key.
-        The only current Key Encryption mode algorithm supported is RSAES-OAEP.
-      </t>
-
-      <t>
-        The COSE_encrypt structure for the recipient is organized as follows:
-      </t>
-
-      <t>
-        <list style="symbols">
-          <t>
-            The 'protected' field MUST be absent.
-          </t>
-          <t>
-            The plain text to be encrypted is the key from next layer down
-            (usually the content layer).
-          </t>
-          <t>
-            At a minimum, the 'unprotected' field MUST contain the 'alg'
-            parameter and SHOULD contain a parameter identifying the asymmetric key.
-          </t>
-        </list>
-      </t>
-
-      <section title="RSA OAEP">
-        <texttable anchor="IANA-RSA-OAEP">
-          <ttcol align='left'>name</ttcol>
-          <ttcol align='left'>value</ttcol>
-          <ttcol align='left'>description</ttcol>
-          <c>RSA-OAEP</c>     <c>-2</c>       <c>RSAES OAEP w/ SHA-256</c>
-        </texttable>
-      </section>
-    </section>
-
-    <section title="Direct Key Agreement">
-      <t>
-        Direct Key Agreement derives the CEK from the shared secret computed
-        by the key agreement operation.
-      </t>
-
-      <t>
-        When direct key agreement mode is used, it SHOULD be the only mode used
-        on the message.  This method creates the CEK directly and that makes it difficult to mix with additional recipients.
-      </t>
-
-      <t>
-        The COSE_encrypt structure for the recipient is organized as follows:
-      </t>
-
-      <t>
-        <list style="symbols">
-          <t>
-            The 'protected' field MUST be absent.
-          </t>
-          <t>
-            At a minimum, the 'unprotected' field MUST contain the 'alg'
-            parameter and SHOULD contain a parameter identifying the asymmetric key.
-          </t>
-          <t>
-            The 'unprotected' field MUST contain the 'epk' parameter.
-          </t>
-        </list>
-      </t>
-
-
-      <section title="ECDH Ephemeral Static">
+      <section title="Key Wrapping">
         <t>
-          Key Agreement with Key Wrapping uses a randomly generated CEK.
-          The CEK is then encrypted using a Key Wrapping algorithm and a key
-          derived from the shared secret computed by the key agreement
-          algorithm.
+          In key wrapping mode, the CEK is randomly generated and that key is then encrypted by a shared secret between the sender and the recipient.
+          All of the currently defined key wrapping algorithms for JOSE (and thus for COSE) are AE algorithms.
+          Key wrapping mode is considered to be superior to direct encryption if the system has any capability for doing random key generation.
+          This is because the shared key is used to wrap random data rather than data  has some degree of organization and may in fact be repeating the same content.
         </t>
 
         <t>
@@ -1513,48 +1547,266 @@ key_alg=3
               The 'protected' field MUST be absent if the key wrap algorithm is an AE algorithm.
             </t>
             <t>
+              The 'recipients' field is normally absent, but can be used.
+              Applications MUST deal with a recipients field present, not being able to decrypt that recipient is an acceptable way of dealing with it.
+              Failing to process the message is not an acceptable way of dealing with it.
+            </t>
+            <t>
               The plain text to be encrypted is the key from next layer down
               (usually the content layer).
             </t>
             <t>
               At a minimum, the 'unprotected' field MUST contain the 'alg'
-              parameter, a parameter identifying the recipient asymmetric key, and
-              a parameter with the sender's asymmetric public key.
+              parameter and SHOULD contain a parameter identifying the shared secret.
             </t>
           </list>
         </t>
 
-        <texttable>
-          <ttcol align='left'>name</ttcol>
-          <ttcol align='left'>value</ttcol>
-          <ttcol align='left'>description</ttcol>
-          <c>ECDH-ES</c>      <c>*</c>        <c>ECDH ES w/ Concat KDF as CEK</c>
-        </texttable>
+        <section title="AES Key Wrapping">
+          <t>
+            The AES Key Wrapping algorithm is defined in <xref target="RFC3394"/>.
+            This algorithm uses an AES key to wrap a value that is a multiple of 64-bits, as such it can be used to wrap a key for any of the content encryption algorithms defined in this document.
+            <cref source="JLS">
+              Do we also want to document the use of RFC 5649 as well?  
+              It allows for other sizes of keys which might be used for HMAC - i.e. a 200 bit key.
+              The algorithm exists, but I do not personally know of any standard uses of it.
+            </cref>
+            The algorithm requires a single fixed parameter, the initial value.
+            This is fixed to the value specified in Section 2.2.3.1 of  <xref target="RFC3394"/>.
+            There are no public parameters that vary on a per invocation basis.
+          </t>
+          
+          <texttable title="AES Key Wrap Algorithm Values" anchor="table_aes_keywrap">
+            <ttcol align='left'>name</ttcol>
+            <ttcol align='left'>value</ttcol>
+            <ttcol align='left'>key size</ttcol>
+            <ttcol align='left'>description</ttcol>
+            <c>A128KW</c>       <c>-3</c>       <c>128</c>      <c>AES Key Wrap w/ 128-bit key</c>
+            <c>A192KW</c>       <c>-4</c>       <c>192</c>      <c>AES Key Wrap w/ 192-bit key</c>
+            <c>A256KW</c>       <c>-5</c>       <c>256</c>      <c>AES Key Wrap w/ 256-bit key</c>
+          </texttable>
+
+          <section title="Security Considerations for AES-KW">
+            <t>
+              There are no specific security considerations for this algorithm.
+            </t>
+          </section>
+        </section>
+      </section>
+
+      <section title="Key Encryption">
+        <t>
+          Key Encryption mode is also called key transport mode in some
+          standards.
+          Key Encryption mode differs from Key Wrap mode in that it uses an
+          asymmetric encryption algorithm rather than a symmetric encryption
+          algorithm to protect the key.
+          The only current Key Encryption mode algorithm supported is RSAES-OAEP.
+        </t>
+
+        <t>
+          The COSE_encrypt structure for the recipient is organized as follows:
+        </t>
+
+        <t>
+          <list style="symbols">
+            <t>
+              The 'protected' field MUST be absent.
+            </t>
+            <t>
+              The plain text to be encrypted is the key from next layer down
+              (usually the content layer).
+            </t>
+            <t>
+              At a minimum, the 'unprotected' field MUST contain the 'alg'
+              parameter and SHOULD contain a parameter identifying the asymmetric key.
+            </t>
+          </list>
+        </t>
+
+        <section title="RSA OAEP">
+          <texttable anchor="table-RSA-OAEP" title="RSA OAEP Algorithm Values">
+            <ttcol align='left'>name</ttcol>
+            <ttcol align='left'>value</ttcol>
+            <ttcol align='left'>description</ttcol>
+            <c>RSA-OAEP</c>     <c>-2</c>       <c>RSAES OAEP w/ SHA-256</c>
+          </texttable>
+
+          <section title="Security Considerations for RSA OAEP">
+            <t>
+              A key size of 2048 bits or larger MUST be used with this algorithm.
+              This key size corresponds roughly to the same strength as provided by a 128-bit symmetric encryption algorithm.
+            </t>
+
+            <t>
+              It is highly recommended that checks on the key length  be done before starting a decryption operation.
+              One potential denial of service operation is to provide encrypted objects using either abnormally long or oddly sized RSA modulus values.
+              Implementations SHOULD be able to encrypt and decrypt with modulus between 2048 and 16K bits in length.<cref source="JLS">Is this range we want to specify?</cref>
+              Applications can impose additional restrictions on the length of the modulus.
+            </t>
+          </section>
+        </section>
+
+      </section>
+
+      <section title="Direct Key Agreement">
+        <t>
+          Direct Key Agreement derives a key from the shared secret computed by the key agreement operation.
+        </t>
+
+        <t>
+          When direct key agreement mode is used, it SHOULD be the only mode used on the message. 
+          This method creates the key directly and that makes it difficult to mix with additional recipients.
+        </t>
+
+        <t>
+          The COSE_encrypt structure for the recipient is organized as follows:
+        </t>
+
+        <t>
+          <list style="symbols">
+            <t>
+              The 'protected' field MUST be absent.
+            </t>
+            <t>
+              At a minimum, the 'unprotected' field MUST contain the 'alg' parameter and SHOULD contain a parameter identifying the recipient's asymmetric key.
+            </t>
+            <t>
+              The 'unprotected' field MUST contain the 'epk' parameter.
+            </t>
+          </list>
+        </t>
+
+        <section title="ECDH Ephemeral Static">
+          <t>
+          </t>
+            
+          <texttable>
+            <ttcol align='left'>name</ttcol>
+            <ttcol align='left'>value</ttcol>
+            <ttcol align='left'>KDF</ttcol>
+            <ttcol align='left'>description</ttcol>
+            <c>ECDH-ES</c>      <c>*</c>        <c>HKDF</c>     <c>ECDH ES w/ Concat KDF as CEK</c>
+          </texttable>
+        </section>
+      </section>
+
+      <section title="Key Agreement with KDF">
+        <t>
+          Key Agreement with Key Wrapping uses a randomly generated CEK.
+          The CEK is then encrypted using a Key Wrapping algorithm and a key derived from the shared secret computed by the key agreement algorithm.
+        </t>
+
+        <t>
+          The COSE_encrypt structure for the recipient is organized as follows:
+        </t>
+
+        <t>
+          <list style="symbols">
+            <t>
+              The 'protected' field MUST be absent if the key wrap algorithm is an AE algorithm.
+            </t>
+            <t>
+              The plain text to be encrypted is the key from next layer down (usually the content layer).
+            </t>
+            <t>
+              At a minimum, the 'unprotected' field MUST contain the 'alg' parameter, a parameter identifying the recipient asymmetric key, and a parameter with the sender's asymmetric public key.
+            </t>
+          </list>
+        </t>
+
+        <section title="ECDH ES + HKDF">
+          <texttable>
+            <ttcol align='left'>name</ttcol>
+            <ttcol align='left'>value</ttcol>
+            <ttcol align='left'>description</ttcol>
+            <c>ECDH-ES+A128KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
+            <c>ECDH-ES+A192KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
+            <c>ECDH-ES+A256KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
+          </texttable>
+        </section>
+      </section>
+
+      <section title="Password">
+        <t>
+          <cref source="JLS">
+            Do we want/need to support this?
+            JOSE did it mainly to support the encryption of private keys.
+          </cref>
+        </t>
+        
+        <section title="PBES2">
+          <texttable>
+            <ttcol align='left'>name</ttcol>
+            <ttcol align='left'>value</ttcol>
+            <ttcol align='left'>description</ttcol>
+            <c>PBES2-HS256+A128KW</c>        <c>*</c>        <c>PBES2 w/ HMAC SHA-256 and AES Key wrap w/ 128 bit key</c>
+            <c>PBES2-HS384+A192KW</c>        <c>*</c>        <c>PBES2 w/ HMAC SHA-384 and AES Key wrap w/ 192 bit key</c>
+            <c>PBES2-HS512+A256KW</c>        <c>*</c>        <c>PBES2 w/ HMAC SHA-512 and AES Key wrap w/ 256 bit key</c>
+          </texttable>
+        </section>
       </section>
     </section>
 
-    <section title="Key Agreement with KDF">
-      <section title="ECDH ES + HKDF">
-        <texttable>
-          <ttcol align='left'>name</ttcol>
-          <ttcol align='left'>value</ttcol>
-          <ttcol align='left'>description</ttcol>
-          <c>ECDH-ES+A128KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
-          <c>ECDH-ES+A192KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
-          <c>ECDH-ES+A256KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
+    <section title="Keys">
+      
+      <section title="Elliptic Curve Keys">
+        <section title="Single Coordinate Curves">
+          <t>Set key type 'kty' to 'EC1'.</t>
+          <texttable title="EC Key Parameters" anchor="table-ec1-keys">
+            <ttcol>name</ttcol>
+            <ttcol>value</ttcol>
+            <ttcol>type</ttcol>
+            <ttcol>description</ttcol>
+            <c>crv</c>    <c>-1</c>       <c>int / tstr</c>       <c>EC Curve identifier - Taken from the COSE General Registry</c>
+            <c>x</c>      <c>-2</c>       <c>bstr</c>             <c>X Coordinate</c>
+            <c>d</c>      <c>-4</c>       <c>bstr</c>             <c>Private key</c>
+          </texttable>
+        </section>
+
+        <section title="Double Coordinate Curves">
+          <t>Set key type 'kty' to 'EC2'.</t>
+          <texttable title="EC Key Parameters" anchor="table-ec2-keys">
+            <ttcol>name</ttcol>
+            <ttcol>value</ttcol>
+            <ttcol>type</ttcol>
+            <ttcol>description</ttcol>
+            <c>crv</c>    <c>-1</c>       <c>int / tstr</c>       <c>EC Curve identifier - Taken from the COSE General Registry</c>
+            <c>x</c>      <c>-2</c>       <c>bstr</c>             <c>X Coordinate</c>
+            <c>y</c>      <c>-3</c>       <c>bstr / bool</c>      <c>Y Coordinate</c>
+            <c>d</c>      <c>-4</c>       <c>bstr</c>             <c>Private key</c>
+          </texttable>
+        </section>
+      </section>
+
+      <section title="RSA Keys">
+        <texttable title="RSA Key Parameters" anchor="table-rsa-keys">
+          <ttcol>name</ttcol>
+          <ttcol>value</ttcol>
+          <ttcol>type</ttcol>
+          <ttcol>description</ttcol>
+          <c>n</c>      <c>-1</c>       <c>bstr</c>             <c>Modulus Parameter</c>
+          <c>e</c>      <c>-2</c>       <c>int</c>              <c>Exponent Parameter</c>
+          <c>d</c>      <c>-3</c>       <c>bstr</c>             <c>Private Exponent Parameter</c>
+          <c>p</c>      <c>-4</c>       <c>bstr</c>             <c>First Prime Factor</c>
+          <c>q</c>      <c>-5</c>       <c>bstr</c>             <c>Second Prime Factor</c>
+          <c>dp</c>     <c>-6</c>       <c>bstr</c>             <c>First Factor CRT Exponent</c>
+          <c>dq</c>     <c>-7</c>       <c>bstr</c>             <c>Second Factor CRT Exponent</c>
+          <c>qi</c>     <c>-8</c>       <c>bstr</c>             <c>First CRT Coefficient</c>
+          <c>other</c>  <c>-9</c>       <c>array</c>            <c>Other Primes Info</c>
+          <c>r</c>      <c>-10</c>      <c>bstr</c>             <c>Prime Factor</c>
+          <c>d</c>      <c>-11</c>      <c>bstr</c>             <c>Factor CRT Exponent</c>
+          <c>t</c>      <c>-12</c>      <c>bstr</c>             <c>Factor CRT Coefficient</c>
         </texttable>
       </section>
-    </section>
 
-    <section title="Password with KDF">
-      <section title="PBES2">
-        <texttable>
-          <ttcol align='left'>name</ttcol>
-          <ttcol align='left'>value</ttcol>
-          <ttcol align='left'>description</ttcol>
-          <c>PBES2-HS256+A128KW</c>        <c>*</c>        <c>PBES2 w/ HMAC SHA-256 and AES Key wrap w/ 128 bit key</c>
-          <c>PBES2-HS384+A192KW</c>        <c>*</c>        <c>PBES2 w/ HMAC SHA-384 and AES Key wrap w/ 192 bit key</c>
-          <c>PBES2-HS512+A256KW</c>        <c>*</c>        <c>PBES2 w/ HMAC SHA-512 and AES Key wrap w/ 256 bit key</c>
+      <section title="Symmetric Keys">
+        <texttable title="Symmetric Key Parameters" anchor="table-symmetric-keys">
+          <ttcol>name</ttcol>
+          <ttcol>value</ttcol>
+          <ttcol>type</ttcol>
+          <ttcol>description</ttcol>
+          <c>k</c>      <c>-1</c>       <c>bstr</c>             <c>Key Value</c>
         </texttable>
       </section>
     </section>
@@ -1725,7 +1977,7 @@ key_alg=3
         </t>
 
         <t>
-          The initial contents of the registry can be found in the following: <xref target="table-AES-CCM"/>, <xref target="table-AES-GCM"/>, <xref target="table_ecdsa"/>, <xref target="table-hmac"/>.
+          The initial contents of the registry can be found in the following: <xref target="table-AES-CCM"/>, <xref target="table-AES-GCM"/>, <xref target="table_ecdsa"/>, <xref target="table-hmac"/>, <xref target="table-direct"/>, <xref target="table_aes_keywrap"/>, <xref target="table-RSA-OAEP"/>.
           The specification column for all rows in that table should be this document.
         </t>
 
@@ -2000,6 +2252,7 @@ key_alg=3
       &RFC5480;
       &RFC5652;
       &RFC5752;
+      &RFC5869;
       &RFC5990;
       &RFC6151;
       &RFC7159;
