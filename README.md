@@ -8,7 +8,7 @@ This is the working area for the expected IETF COSE draft of CBOR Encoded Messag
 ## Contributing
 
 Before submitting feedback, please familiarize yourself with our current issues
-list and review the [working group home page](WG-HOMEPAGE) (when and if we git one). If you're
+list and review the [COSE Working Group](https://datatracker.ietf.org/wg/cose/charter/). If you're
 new to this, you may also want to read the [Tao of the
 IETF](https://www.ietf.org/tao.html).
 
@@ -48,13 +48,6 @@ requires Python 2.7 and can be installed using `pip`:
 
 ```sh
 $ pip install xml2rfc
-```
-
-You may also need to install kramdown-xml2rfc, which requires Ruby and can be
-installed using the roby package manager, `gem`:
-
-```sh
-$ gem install kramdown-rfc2629
 ```
 
 Other tools can be used to produce PDF files, or to provide a comparison.  These
