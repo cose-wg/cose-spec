@@ -108,7 +108,7 @@
         <t>
           <list style="symbols">
             <t>
-              Define a top level message structure so that encrypted, signed and MAC-ed messages can easily identified and still have a consistent view.
+              Define a top level message structure so that encrypted, signed and MACed messages can easily identified and still have a consistent view.
             </t>
             <t>
               Signed messages separate the concept of protected and unprotected attributes that are for the content and the signature.
@@ -131,7 +131,7 @@
             </t>
             <t>
               Remove the flattened mode of encoding. 
-              Forcing the use of an array of recipients at all times forces the message size to be two bytes larger, but one gets a corresponding decrease in the implementation size that should compensate for this.
+              Forcing the use of an array of recipients at all times forces the message size to be two octets larger, but one gets a corresponding decrease in the implementation size that should compensate for this.
               <cref source="JLS">Need to check this list for correctness before publishing.</cref>
             </t>
           </list>
@@ -209,8 +209,8 @@ label = int / tstr
     <section anchor="the-cosemsg-structure" title="The COSE_MSG structure">
 
       <t>
-        The COSE_MSG structure is a top level CBOR object which corresponds to the DataContent type in the Cryptographic Message Syntax (CMS) <xref target="RFC5652"/>.
-        This structure allows for a top level message to be sent which could be any of the different security services.
+        The COSE_MSG structure is a top level CBOR object that corresponds to the DataContent type in the Cryptographic Message Syntax (CMS) <xref target="RFC5652"/>.
+        This structure allows for a top level message to be sent that could be any of the different security services.
         The security service is identified within the message.
       </t>
 
@@ -257,12 +257,12 @@ label = int / tstr
           <t>0 - Reserved.</t>
           <t>1 - Signed Message.</t>
           <t>2 - Encrypted Message</t>
-          <t>3 - Authenticated Message (MAC-ed message)</t>
+          <t>3 - Authenticated Message (MACed message)</t>
         </list>
       </t>
 
       <t>
-        Implementations MUST be prepared to find an integer under this label which does not correspond to the values 1 to 3.
+        Implementations MUST be prepared to find an integer under this label that does not correspond to the values 1 to 3.
         If this is found then the client MUST stop attempting to parse the structure and fail.
         The value of 0 is reserved and not to be used.
         If the value of 0 is found, then clients MUST fail processing the structure.
@@ -270,7 +270,8 @@ label = int / tstr
       </t>
 
       <t>
-        NOTE:  Is the any reason to allow for a marker of a COSE_Key structure and all it to be a COSE_MSG, doing so does allow for a security risk, but may simplify the code.
+        NOTE:  Is there any reason to allow for a marker of a COSE_Key structure and allow it to be a COSE_MSG?
+	Doing so does allow for a security risk, but may simplify the code.
         <cref source="JLS">OPEN ISSUE</cref>
       </t>
 
@@ -309,7 +310,7 @@ msg_type_mac=3
         <c>payload</c>          <c>4</c>        <c>Contains the content of the structure</c>
         <c>signatures</c>       <c>5</c>        <c>For COSE_Sign - array of signatures</c>
         <c>signature</c>        <c>6</c>        <c>For COSE_signature only</c>
-        <c>ciphertext</c>       <c>4</c>        <c>TODO: Should we re-use the same as payload or not?</c>
+        <c>ciphertext</c>       <c>4</c>        <c>TODO: Should we reuse the same as payload or not?</c>
         <c>recipients</c>       <c>9</c>        <c>For COSE_encrypt and COSE_mac</c>
         <c>tag</c>              <c>10</c>       <c>For COSE_mac only</c>
       </texttable>
@@ -360,15 +361,15 @@ tag=10
 
         <list style="hanging">
           <t hangText='protected'>
-            contains attributes about the layer which are to be cryptographically protected. 
+            contains attributes about the layer that are to be cryptographically protected. 
             This bucket MUST NOT be used if it is not going to be included in a cryptographic computation.
           </t>
           <t hangText='unprotected'>
-            contains attributes about the layer which are not cryptographically protected.
+            contains attributes about the layer that are not cryptographically protected.
           </t>
         </list>
 
-        Both of the buckets are optional and are omitted if there are no items contained in the map.  The CDDL fragment which describes the two buckets is:
+        Both of the buckets are optional and are omitted if there are no items contained in the map.  The CDDL fragment that describes the two buckets is:
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
@@ -396,7 +397,7 @@ Headers = (
             
             <t hangText='crit'>
               This field is used to ensure that applications will take appropriate action based on the values found.
-              The field is used to indicate which protected header labels an application which is processing a message is required to understand.
+              The field is used to indicate which protected header labels an application that is processing a message is required to understand.
               This field uses the integer '2' for the label. 
               The value is an array of COSE Header Labels.
               When present, this MUST be placed in the protected header bucket.
@@ -470,7 +471,7 @@ Headers = (
           <t>
             I am currently torn on the question "Should epk and iv/nonce be algorithm specific or generic headers?"
             They are really specific to an algorithm and can potentially be defined in different ways for different algorithms.
-            As an example, it would make sense to defined nonce for CCM and GCM modes that can have the leading zero bytes stripped, while for other algorithms this might be undesirable.
+            As an example, it would make sense to defined nonce for CCM and GCM modes that can have the leading zero octets stripped, while for other algorithms this might be undesirable.
           </t>
           <t>
             We might want to define some additional items.  What are they?  A possible example would be a sequence number as this might be common.  On the other hand, this is the type of things that is frequently used as the nonce in some places and thus should not be used in the same way.  Other items might be challenge/response fields for freshness as these are likely to be common.
@@ -528,15 +529,15 @@ COSE_Sign = {
             The value MUST be msg_type_signed (1).
           </t>
           <t hangText='protected'>
-            contains attributes about the payload which are to be protected by the signature.
+            contains attributes about the payload that are to be protected by the signature.
             An example of such an attribute would be the content type ('cty') attribute.
-            The content is a CBOR map of attributes which is encoded to a byte stream.
+            The content is a CBOR map of attributes that is encoded to an octet stream.
             This field MUST NOT contain attributes about the signature, even if
             those attributes are common across multiple signatures.
             The labels in this map are typically taken from <xref target="Header-Table"/>.
           </t>
           <t hangText='unprotected'>
-            contains attributes about the payload which are not protected by the signature.
+            contains attributes about the payload that are not protected by the signature.
             An example of such an attribute would be the content type ('cty') attribute.
             This field MUST NOT contain attributes about a signature, even if
             the attributes are common across multiple signatures.
@@ -546,8 +547,8 @@ COSE_Sign = {
             contains the serialized content to be signed.<vspace />
             If the payload is not present in the message, the application is required to 
             supply the payload separately.<vspace />
-            The payload is wrapped in a bstr to ensure that it is transported without changes, 
-            if the payload is transported separately it is the responsibility of the application
+            The payload is wrapped in a bstr to ensure that it is transported without changes.
+            If the payload is transported separately, it is the responsibility of the application
             to ensure that it will be transported without changes.
           </t>
           <t hangText='signatures'>
@@ -583,11 +584,11 @@ COSE_signature =  {
             contains additional information to be authenticated by the signature.
             The field holds data about the signature operation.
             The field MUST NOT hold attributes about the payload being signed.
-            The content is a CBOR map of attributes which is encoded to a byte stream.
+            The content is a CBOR map of attributes that is encoded to an octet stream.
             At least one of protected and unprotected MUST be present.
           </t>
           <t hangText='unprotected'>
-            contains attributes about the signature which are not protected by the signature.
+            contains attributes about the signature that are not protected by the signature.
             This field MUST NOT contain attributes about the payload being signed.
             At least one of protected and unprotected MUST be present.
           </t>
@@ -598,7 +599,7 @@ COSE_signature =  {
       </t>
 
       <t>
-        The COSE structure used to create the byte stream to be signed uses the following CDDL grammar structure:
+        The COSE structure used to create the octet stream to be signed uses the following CDDL grammar structure:
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
@@ -617,7 +618,7 @@ Sig_structure = [
             Create a Sig_structure object and populate it with the appropriate fields.  For body_protected and sign_protected, if the fields are not present in their corresponding maps, an bstr of length zero is used.
           </t>
           <t>
-            Create the value ToBeSigned by encoding the Sig_structure to a byte string.
+            Create the value ToBeSigned by encoding the Sig_structure to an octet string.
           </t>
           <t>
             Call the signature creation algorithm passing in K (the key to sign with), alg (the algorithm to sign with) and ToBeSigned (the value to sign).
@@ -636,7 +637,7 @@ Sig_structure = [
             Create a Sig_structure object and populate it with the appropriate fields.  For body_protected and sign_protected, if the fields are not present in their corresponding maps, an bstr of length zero is used.
           </t>
           <t>
-            Create the value ToBeSigned by encoding the Sig_structure to a byte string.
+            Create the value ToBeSigned by encoding the Sig_structure to an octet string.
           </t>
           <t>
             Call the signature verification algorithm passing in K (the key to verify with), alg (the algorithm to sign with), ToBeSigned (the value to sign), and sig (the signature to be verified).
@@ -645,7 +646,7 @@ Sig_structure = [
       </t>
 
       <t>
-        In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the appropriated authorization is done.
+        In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the appropriate authorization is done.
       </t>
 
     </section>
@@ -841,7 +842,7 @@ Enc_structure = [
         Any of the key management methods can be used for this purpose. 
         The second mode is to both check that the content has not been changed since the MAC was computed, and to use key management to verify who sent it. 
         The key management modes that support this are ones that either use a pre-shared secret, or do static-static key agreement. 
-        In both of these cases the entity MAC-ing the message can be validated by a key binding. 
+        In both of these cases the entity MACing the message can be validated by a key binding. 
         (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.)
       </t>
 
@@ -867,20 +868,20 @@ COSE_mac = {
             The value MUST be msg_type_mac (3).
           </t>
           <t hangText='protected'>
-            contains attributes about the payload which are to be protected by the MAC.
+            contains attributes about the payload that are to be protected by the MAC.
             An example of such an attribute would be the content type ('cty') attribute.
-            The content is a CBOR map of attributes which is encoded to a byte stream.
+            The content is a CBOR map of attributes that is encoded to an octet stream.
             This field MUST NOT contain attributes about the recipient, even if those attributes are common across multiple recipients.
             At least one of protected and unprotected MUST be present.
           </t>
           <t hangText='unprotected'>
-            contains attributes about the payload which are not protected by the MAC.
+            contains attributes about the payload that are not protected by the MAC.
             An example of such an attribute would be the content type ('cty') attribute.
             This field MUST NOT contain attributes about a recipient, even if the attributes are common across multiple recipients.
             At least one of protected and unprotected MUST be present.
           </t>
           <t hangText='payload'>
-            contains the serialized content to be MAC-ed.
+            contains the serialized content to be MACed.
             If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes, if the payload is transported separately it is the responsibility of the application to ensure that it will be transported without changes.
           </t>
@@ -916,7 +917,7 @@ COSE_mac = {
             If there is no external authenticated data, then use a zero length 'bstr'.
           </t>
           <t>
-            Encode the MAC_structure using a canonical CBOR encoder.  The resulting bytes is the value to compute the MAC on.
+            Encode the MAC_structure using a canonical CBOR encoder.  The resulting octets is the value to compute the MAC on.
           </t>
           <t>
             Compute the MAC and place the result in the 'tag' field of the COSE_mac structure.
@@ -933,7 +934,7 @@ COSE_mac = {
       <t>
         There are only a few changes between JOSE and COSE for how keys are formatted.
         As with JOSE, COSE uses a map to contain the elements of a key.
-        Those values, which in JOSE, are base64url encoded because they are binary values, are encoded as bstr values in COSE.
+        Those values, which in JOSE are base64url encoded because they are binary values, are encoded as bstr values in COSE.
       </t>
 
       <t>
@@ -942,7 +943,7 @@ COSE_mac = {
         <cref source="JLS">
           We can really simplify the grammar for COSE_Key to be just the kty (the one required field) and the generic item.
           The reason to do this is that it makes things simpler.
-          The reason not to do this says that we really need to add a lot more items so that a grammar check can be done which is more tightly enforced.
+          The reason not to do this says that we really need to add a lot more items so that a grammar check can be done that is more tightly enforced.
         </cref>
       </t>
 
@@ -972,13 +973,13 @@ COSE_KeySet = [+COSE_Key]
 
         <list style="symbols">
           <t>
-            Any item which is base64 encoded in JWK, is bstr encoded for COSE.
+            Any item that is base64url encoded in JWK, is bstr encoded for COSE.
           </t>
           <t>
-            Any item which is integer encoded in JWK, is int encoded for COSE.
+            Any item that is integer encoded in JWK, is int encoded for COSE.
           </t>
           <t>
-            Any item which is string (but not base64) encoded in JWK, is tstr encoded for COSE.
+            Any item that is string (but not base64url) encoded in JWK, is tstr encoded for COSE.
           </t>
           <t>
             Exceptions to this are the following fields:
@@ -1099,9 +1100,9 @@ key_alg=3
         <t>
           The signature algorithm results in a pair of integers (R, S).
           These integers will be of the same order as length of the key used for the signature process.
-          The signature is encoded by converting the integers into byte strings of the same length as the key size.
-          The length is rounded up to the nearest byte and is left padded with zero bits to get to the correct length.
-          The two integers are then concatenated together to form a byte string that is the resulting signature.
+          The signature is encoded by converting the integers into octet strings of the same length as the key size.
+          The length is rounded up to the nearest octet and is left padded with zero bits to get to the correct length.
+          The two integers are then concatenated together to form an octet string that is the resulting signature.
         </t>
 
         <t>
@@ -1165,7 +1166,7 @@ key_alg=3
           <ttcol align='left'>Hash</ttcol>
           <ttcol align='left'>Length</ttcol>
           <ttcol align='left'>description</ttcol>
-          <c>HMAC 256/64</c>         <c>*</c>        <c>SHA-256</c>    <c>64</c>        <c>HMAC w/ SHA-256 truncated to 8 bytes</c>
+          <c>HMAC 256/64</c>         <c>*</c>        <c>SHA-256</c>    <c>64</c>        <c>HMAC w/ SHA-256 truncated to 8 octets</c>
           <c>HMAC 256/256</c>        <c>4</c>        <c>SHA-256</c>    <c>256</c>       <c>HMAC w/ SHA-256</c>
           <c>HMAC 384/384</c>        <c>5</c>        <c>SHA-384</c>    <c>384</c>       <c>HMAC w/ SHA-384</c>
           <c>HMAC 512/512</c>        <c>6</c>        <c>SHA-512</c>    <c>512</c>       <c>HMAC w/ SHA-512</c>
@@ -1195,7 +1196,7 @@ key_alg=3
           <ttcol align='left'>tag length</ttcol>
           <ttcol align='left'>description</ttcol>
           <c>AES-MAC 128/64</c>         <c>*</c>        <c>128</c>      <c>64</c>       <
-          <c>HMAC 256/64</c>         <c>*</c>        <c>SHA-256</c>    <c>64</c>        <c>HMAC w/ SHA-256 truncated to 8 bytes</c>
+          <c>HMAC 256/64</c>         <c>*</c>        <c>SHA-256</c>    <c>64</c>        <c>HMAC w/ SHA-256 truncated to 8 octets</c>
           <c>HMAC 256/256</c>        <c>4</c>        <c>SHA-256</c>    <c>256</c>       <c>HMAC w/ SHA-256</c>
           <c>HMAC 384/384</c>        <c>5</c>        <c>SHA-384</c>    <c>384</c>       <c>HMAC w/ SHA-384</c>
           <c>HMAC 512/512</c>        <c>6</c>        <c>SHA-512</c>    <c>512</c>       <c>HMAC w/ SHA-512</c>
@@ -1233,9 +1234,9 @@ key_alg=3
         </t>
 
         <t>
-          It is unfortunate that the specification for CCM specified L and M as a count of bytes rather than a count of bits.
+          It is unfortunate that the specification for CCM specified L and M as a count of octets rather than a count of bits.
           This leads to possible misunderstandings where AES-CCM-8 is frequently used to refer to a version of CCM mode where the size of the authentication is 64-bits and not 8-bits.
-          These values have traditionally been specified as bit counts rather than byte counts.
+          These values have traditionally been specified as bit counts rather than octet counts.
           This document will follow the tradition of using bit counts so that it is easier to compare the different algorithms presented in this document.
         </t>
 
@@ -1252,7 +1253,7 @@ key_alg=3
           The following values are used for L:
           <list style="hanging">
             <t hangText="16-bits (2)">
-              limits messages to 2^16 bytes in length.
+              limits messages to 2^16 octets in length.
               The nonce length is 13 octets allowing for 2^(13*8) possible values of the nonce without repeating.
             </t>
             <t hangText="64-bits (8)"> 
@@ -1283,22 +1284,22 @@ key_alg=3
           <ttcol align='left'>M</ttcol>
           <ttcol align='left'>k</ttcol>
           <ttcol align='left'>description</ttcol>
-          <c>AES-CCM-16-64-128</c>        <c>A281C</c>    <c>16</c>       <c>64</c>       <c>128</c>      <c>AES-CCM mode 128-bit key, 64-bit tag, 13-byte nonce</c>
-          <c>AES-CCM-16-64-192</c>        <c>A282C</c>    <c>16</c>       <c>64</c>       <c>192</c>      <c>AES-CCM mode 192-bit key, 64-bit tag, 13-byte nonce</c>
-          <c>AES-CCM-16-64-256</c>        <c>A283C</c>    <c>16</c>       <c>64</c>       <c>256</c>      <c>AES-CCM mode 256-bit key, 64-bit tag, 13-byte nonce</c>
-          <c>AES-CCM-64-64-128</c>        <c>A881C</c>    <c>64</c>       <c>64</c>       <c>128</c>      <c>AES-CCM mode 128-bit key, 64-bit tag, 7-byte nonce</c>
-          <c>AES-CCM-64-64-192</c>        <c>A882C</c>    <c>64</c>       <c>64</c>       <c>192</c>      <c>AES-CCM mode 192-bit key, 64-bit tag, 7-byte nonce</c>
-          <c>AES-CCM-64-64-256</c>        <c>A883C</c>    <c>64</c>       <c>64</c>       <c>256</c>      <c>AES-CCM mode 256-bit key, 64-bit tag, 7-byte nonce</c>
-          <c>AES-CCM-16-128-128</c>       <c>A2161C</c>   <c>16</c>       <c>128</c>      <c>128</c>      <c>AES-CCM mode 128-bit key, 128-bit tag, 13-byte nonce</c>
-          <c>AES-CCM-16-128-192</c>       <c>A2162C</c>   <c>16</c>       <c>128</c>      <c>192</c>      <c>AES-CCM mode 192-bit key, 128-bit tag, 13-byte nonce</c>
-          <c>AES-CCM-16-128-256</c>       <c>A2163C</c>   <c>16</c>       <c>128</c>      <c>256</c>      <c>AES-CCM mode 256-bit key, 128-bit tag, 13-byte nonce</c>
-          <c>AES-CCM-64-128-128</c>       <c>A8161C</c>   <c>64</c>       <c>128</c>      <c>128</c>      <c>AES-CCM mode 128-bit key, 128-bit tag, 7-byte nonce</c>
-          <c>AES-CCM-64-128-192</c>       <c>A8162C</c>   <c>64</c>       <c>128</c>      <c>192</c>      <c>AES-CCM mode 192-bit key, 128-bit tag, 7-byte nonce</c>
-          <c>AES-CCM-64-128-256</c>       <c>A8163C</c>   <c>64</c>       <c>128</c>      <c>256</c>      <c>AES-CCM mode 256-bit key, 128-bit tag, 7-byte nonce</c>
+          <c>AES-CCM-16-64-128</c>        <c>A281C</c>    <c>16</c>       <c>64</c>       <c>128</c>      <c>AES-CCM mode 128-bit key, 64-bit tag, 13-octet nonce</c>
+          <c>AES-CCM-16-64-192</c>        <c>A282C</c>    <c>16</c>       <c>64</c>       <c>192</c>      <c>AES-CCM mode 192-bit key, 64-bit tag, 13-octet nonce</c>
+          <c>AES-CCM-16-64-256</c>        <c>A283C</c>    <c>16</c>       <c>64</c>       <c>256</c>      <c>AES-CCM mode 256-bit key, 64-bit tag, 13-octet nonce</c>
+          <c>AES-CCM-64-64-128</c>        <c>A881C</c>    <c>64</c>       <c>64</c>       <c>128</c>      <c>AES-CCM mode 128-bit key, 64-bit tag, 7-octet nonce</c>
+          <c>AES-CCM-64-64-192</c>        <c>A882C</c>    <c>64</c>       <c>64</c>       <c>192</c>      <c>AES-CCM mode 192-bit key, 64-bit tag, 7-octet nonce</c>
+          <c>AES-CCM-64-64-256</c>        <c>A883C</c>    <c>64</c>       <c>64</c>       <c>256</c>      <c>AES-CCM mode 256-bit key, 64-bit tag, 7-octet nonce</c>
+          <c>AES-CCM-16-128-128</c>       <c>A2161C</c>   <c>16</c>       <c>128</c>      <c>128</c>      <c>AES-CCM mode 128-bit key, 128-bit tag, 13-octet nonce</c>
+          <c>AES-CCM-16-128-192</c>       <c>A2162C</c>   <c>16</c>       <c>128</c>      <c>192</c>      <c>AES-CCM mode 192-bit key, 128-bit tag, 13-octet nonce</c>
+          <c>AES-CCM-16-128-256</c>       <c>A2163C</c>   <c>16</c>       <c>128</c>      <c>256</c>      <c>AES-CCM mode 256-bit key, 128-bit tag, 13-octet nonce</c>
+          <c>AES-CCM-64-128-128</c>       <c>A8161C</c>   <c>64</c>       <c>128</c>      <c>128</c>      <c>AES-CCM mode 128-bit key, 128-bit tag, 7-octet nonce</c>
+          <c>AES-CCM-64-128-192</c>       <c>A8162C</c>   <c>64</c>       <c>128</c>      <c>192</c>      <c>AES-CCM mode 192-bit key, 128-bit tag, 7-octet nonce</c>
+          <c>AES-CCM-64-128-256</c>       <c>A8163C</c>   <c>64</c>       <c>128</c>      <c>256</c>      <c>AES-CCM mode 256-bit key, 128-bit tag, 7-octet nonce</c>
         </texttable>
 
         <t>
-          M00TODO: Make a determination of which ones get 1-, 2- or 3-byte identifiers.
+          M00TODO: Make a determination of which ones get 1-, 2- or 3-octet identifiers.
           I.e. which ones are going to be popular.
         </t>
 
@@ -1483,7 +1484,7 @@ KDF = [
       <t>
         At the moment we do not have any key management methods that allow for the use of protected headers. 
         This may be changed in the future if, for example, the AES-GCM Key wrap method defined in <xref target="RFC7518"/> were extended to allow for authenticated data. 
-        In that event the use of the 'protected' field, which is current forbidden below, would be permitted.
+        In that event, the use of the 'protected' field, which is current forbidden below, would be permitted.
       </t>
 
       <section title="Direct Encryption">
@@ -1495,8 +1496,8 @@ KDF = [
           </t>
 
           <t>
-            For JOSE, direct encryption key management is the only key management method allowed for doing MAC-ed messages.
-            In COSE, all of the key management methods can be used for MAC-ed messages.
+            For JOSE, direct encryption key management is the only key management method allowed for doing MACed messages.
+            In COSE, all of the key management methods can be used for MACed messages.
           </t>
 
           <t>
@@ -1569,7 +1570,7 @@ KDF = [
             This algorithm uses an AES key to wrap a value that is a multiple of 64-bits, as such it can be used to wrap a key for any of the content encryption algorithms defined in this document.
             <cref source="JLS">
               Do we also want to document the use of RFC 5649 as well?  
-              It allows for other sizes of keys which might be used for HMAC - i.e. a 200 bit key.
+              It allows for other sizes of keys that might be used for HMAC - i.e. a 200 bit key.
               The algorithm exists, but I do not personally know of any standard uses of it.
             </cref>
             The algorithm requires a single fixed parameter, the initial value.
@@ -1897,7 +1898,7 @@ KDF = [
         </t>
 
         <t>
-          NOTE: Need to review the range assignments.  It does not necessarily make sense as specification required uses 1 byte positive integers and 2 byte strings.
+          NOTE: Need to review the range assignments.  It does not necessarily make sense as specification required uses 1 octet positive integers and 2 octet strings.
         </t>
 
       </section>
@@ -2000,7 +2001,7 @@ KDF = [
             </t>
             <t hangText='label'>
               The value to be used to identify this algorithm.
-              Algorithm labels MUST be unique.
+              Key map labels MUST be unique.
               The label can be a positive integer, a negative integer or a string.
               Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.
               Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.
@@ -2051,7 +2052,7 @@ KDF = [
             <t hangText='label'>
               The label is to be unique for every value of key type. 
               The range of values is from -256 to -1.
-              Labels are expected to be re-used for different keys.
+              Labels are expected to be reused for different keys.
             </t>
             <t hangText='CBOR type'>
               This field contains the CBOR type for the field
@@ -2142,7 +2143,7 @@ KDF = [
         <section title="COSE Key media type">
 
           <t>
-            This section registers the "application/jwk+json" and "application/jwk-set+json" media typesin the "Media Types" registry.
+            This section registers the "application/jwk+json" and "application/jwk-set+json" media types in the "Media Types" registry.
             These media types are used to indicate, respectively, that content is a COSE_Key or COSE_KeySet object.
           </t>
 
@@ -2310,7 +2311,7 @@ KDF = [
 
       <t>
         2PKCS v1.5 RSA key transport does not qualify as an AE algorithm.
-        There are only three bytes in the encoding that can be checked as
+        There are only three octets in the encoding that can be checked as
         having decrypted correctly, the rest of the content can only be
         probabilistically checked as having decrypted correctly.
         For this reason, PKCS v1.5 RSA key transport MUST NOT be used with
@@ -2337,7 +2338,7 @@ KDF = [
             This is the approach followed by AES-GCM <xref target="AES-GCM"/> and AES-CCM <xref target="RFC3610"/>.
           </t>
           <t>
-            A fixed value which is part of the encoded plain text.
+            A fixed value that is part of the encoded plain text.
             This is the approach followed by the AES key wrap algorithm <xref target="RFC3394"/>.
           </t>
           <t>
@@ -2483,7 +2484,7 @@ KDF = [
         </t>
 
         <t>
-          Encoded in CBOR - 216 bytes, content is 14 bytes long
+          Encoded in CBOR - 216 octets, content is 14 octets long
         </t>
 
         &Enc-01;
@@ -2517,7 +2518,7 @@ KDF = [
         </t>
 
         <t>
-          Encoded in CBOR - 491 bytes, content is 14 bytes long
+          Encoded in CBOR - 491 octets, content is 14 octets long
         </t>
 
         &Sig-02;
