@@ -13,6 +13,7 @@
   <!ENTITY RFC5752 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5752.xml" >
   <!ENTITY RFC5869 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5869.xml" >
   <!ENTITY RFC5990 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5990.xml" >
+  <!ENTITY RFC6090 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6090.xml" >
   <!ENTITY RFC6151 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6151.xml" >
   <!ENTITY RFC7049 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7049.xml" >
   <!ENTITY RFC7159 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7159.xml" >
@@ -544,7 +545,7 @@ COSE_Sign = {
             The labels in this map are typically taken from <xref target="Header-Table"/>.
           </t>
           <t hangText='payload'>
-            contains the serialized content to be signed.<vspace />
+            contains the serialized content to be signed.
             If the payload is not present in the message, the application is required to 
             supply the payload separately.<vspace />
             The payload is wrapped in a bstr to ensure that it is transported without changes.
@@ -728,7 +729,7 @@ COSE_encrypt_fields = (
       <section anchor="encryption-algorithm-for-aead-algorithms" title="Encryption Algorithm for AEAD algorithms">
 
         <t>
-          The encryption algorithm for AEAD algorithms is fairly simple.<vspace />
+          The encryption algorithm for AEAD algorithms is fairly simple.
           In order to get a consistent encoding of the data to be authenticated, the Enc_structure is used to have canonical form of the AAD.
         </t>
 
@@ -960,7 +961,7 @@ COSE_KeySet = [+COSE_Key]
 ]]></artwork></figure>
 
       <t>
-        The element “kty” is a required element in a COSE_Key map.<vspace />
+        The element “kty” is a required element in a COSE_Key map.
         All other elements are optional and not all of the elements listed in <xref target="RFC7517"/> or <xref target="RFC7518"/> have been listed here even though they can all appear in a COSE_Key map.
       </t>
 
@@ -1334,7 +1335,7 @@ key_alg=3
 
     <section title="Key Derivation Functions (KDF)">
 
-      <section title="HMAC-based Extract-and-Expand Key Derivation Function (HKDF)">
+      <section title="HMAC-based Extract-and-Expand Key Derivation Function (HKDF)" anchor="HKDF">
         <t> 
           
           See <xref target="RFC5869"/>.
@@ -1347,22 +1348,28 @@ key_alg=3
               secret - a shared value that is secret. 
               Secrets may be either previously shared or derived from operations like a DH key agreement.
             </t>
+
             <t>
               salt - an optional public value that is used to change the generation process.
               If specified, the salt is carried using the 'salt' algorithm parameter.
+              While <xref target="RFC5869"/> suggests that the length of the salt be the same as the length of the underlying hash value, any amount of salt will improve the security as different key values will be generated.
               The 'salt' parameter is encoded as a binary string.
               This parameter is protected by being included in the key computation and does not need to be separately authenticated.
             </t>
+
             <t>
               length - the number of octets of output that need to be generated.
             </t>
+
             <t>
               context information
             </t>
+
             <t>
               hash function - The underlying hash function to be used in the HKDF algorithm.
               The hash function is encoded into the HKDF algorithm selection.
             </t>
+
           </list>
         </t>
 
@@ -1385,20 +1392,40 @@ key_alg=3
 
       </section>
 
-      <section title="Content Information Structure">
+      <section title="Context Information Structure">
+        <t>
+          The context information structure is used to ensure that the derived keying material is "bound" to the context of the transaction.
+          The context information structure used here is based on that defined in <xref target="SP800-56A"/>.
+          By using CBOR for the encoding of the context information structure, we automatically get the same type of type and length separation of fields that is obtained by the use of ASN.1.
+          This means that there is no need to encode the lengths for the base elements as it is done by the CBOR encoding.
+        </t>
+
+        <t>
+          The context information structure refers to PartyU and PartyV as the two parties which are doing the key derivation.
+          Unless the application protocol defines differently, we assign PartyU to the entity that is creating the message and PartyV to the entity that is receiving the message.
+          This is because we are assuming a set of stand alone store and forward messaging processes.
+        </t>
+
+        <t>
+          Application protocols are free to define the roles differently.
+          For example, they could assign the PartyU role to the entity that initiates the connection and allow directly sending multiple messages over the line without changing the role information.
+        </t>
         
         <t>
           We encode the context specific information using a CBOR array type.
           The fields in the array are:
 
           <list style="hanging">
-            <t hangText="keyDataLength">
-              This is set to the number of bits of the desired output value.
-            </t>
-
             <t hangText="AlgorithmID">
-              This field indicates how the key material will be used.
-              Unless key material is being derived for multiple items (i.e both a key and an IV)  this will be the COSE algorithm value.
+              This field indicates the algorithm for which the key material will be used.
+              This field is required to be present and is a copy of the algorithm identifier in the message.
+              The field exists in the context information so that if the same environment is used for different algorithms, then completely different keys will be generated each of those algorithms.
+              (This practice means if algorithm A uses a shorter key than algorithm B and thus can be found easier, the key derived for algorithm B will not contain the key for algorithm A as a prefix.)
+              <cref source="JLS">
+                Unless key material is being derived for multiple items (i.e both a key and an IV) this will be the COSE algorithm value.
+                Even then it might still be the COSE algorithm value, it is just a requirement for a new algorithm.
+                Do we want to have the ability to derive both the key and a partial IV for CCM?
+              </cref>
             </t>
 
             <t hangText="PartyUInfo">
@@ -1408,45 +1435,77 @@ key_alg=3
               <list style="hanging">
                 <t hangText="identity">
                   This contains the identity information for party U.
-                  The identity information can be specified in one of two manners.
-                  The protocol can define a role based identity value.
+                  The identities can be assigned in one of two manners.
+                  Firstly, a protocol can assign identities based on roles.
                   For example, the roles of "client" and "server" may be assigned to different entities in the protocol.
                   Each entity would then use the correct label for the data they they send or receive.
-                  The second way is for a protocol to define a way for identification tags to be used based on a naming system (i.e. DNS, X.509 names).
+                  The second way is for a protocol to assign identities is to use a name based on a naming system (i.e. DNS, X.509 names).
+                  <vspace/>
+                  We define an algorithm parameter 'PartyU identity' that can be used to carry identity information in the message.
+                  However, identity information is often known as part of the protocol and can thus be inferred rather than made explicit.
+                  If identity information is carried in the message, applications SHOULD have a way of validating the supplied identity information.
+                  The identity information does not need to be specified and can be left as absent.
+                  <vspace/>
+                  The identity value supplied will be validated as part of the key derivation process.
+                  If the identity string is wrong, then the wrong key will be created.
                 </t>
 
                 <t hangText="nonce">
                   This contains a one time nonce value.
                   The nonce can either be implicit from the protocol or carried as a value in the unprotected headers.
+                  <cref source="JLS">
+                    I need to get a better justification for this item.
+                    It has to do with generating new keys for each message in a series of messages that have the same salt value.
+                  </cref>
+                  <vspace/>
+                  We define an algorithm parameter 'PartyU nonce' that can be used to carry this value in the message
+                  However, the nonce value could be determined by the application and the value determined from elsewhere.
+                  <vspace/>
+                  This item is optional and can be absent.
                 </t>
 
                 <t hangText="other">
-                  This contains other information that is defined as the protocol.
+                  This contains other information that is defined by the protocol.
+                  <vspace/>
+                  This item is optional and can be absent.
                 </t>
               </list>
             </t>
 
             <t hangText="PartyVInfo">
-              Copy down from PartyUInfo when that text is ready.
+              M00TODO: Copy down from PartyUInfo when that text is ready.
             </t>
 
             <t hangText="SuppPubInfo">
-              The size of the output in bits is placed in keyDataLength.
-              The field other is for free form data defined by the application.
-              An example is that an application could defined two different strings to be placed here to generate different keys for a data stream vs a control stream.
+              This field contains public information that is mutually known to both parties.
+              
+              <list style="hanging">
+                <t hangText="keyDataLength">
+                  This is set to the number of bits of the desired output value.
+                </t>
+
+
+                <t hangText="other">
+                  The field other is for free form data defined by the application.
+                  An example is that an application could defined two different strings to be placed here to generate different keys for a data stream vs a control stream.
+                  This field is optional and will only be present if the application defines a structure for this information.
+                  Applications that define this SHOULD use CBOR to encode the data so that types and lengths are correctly include.
+                </t>
+              </list>
             </t>
 
             <t hangText="SuppPrivInfo">
               This field contains private information that is mutually known information.
               An example of this information would be a pre-existing shared secret.
               The field is optional and will only be present if the application defines a structure for this information.
+              Applications that define this SHOULD use CBOR to encode the data so that types and lengths are correctly include.
             </t>
           </list>
         </t>
 
         <figure><artwork type='CDDL'>
 <![CDATA[
-KDF = [
+COSE_KDF_Context = [
     AlgorithmID : int / tstr,
     PartyUInfo : [
         ? nonce : bstr / int,
@@ -1466,6 +1525,18 @@ KDF = [
 ]
 ]]></artwork></figure>
 
+        <texttable title="Context Algorithm Parameters">
+          <ttcol>name</ttcol>
+          <ttcol>label</ttcol>
+          <ttcol>type</ttcol>
+          <ttcol>description</ttcol>
+          <c>PartyU identity</c>   <c>-21</c>      <c>bstr</c>          <c>Party U identity Information</c>
+          <c>PartyU nonce</c>      <c>-22</c>      <c>bstr / int</c>    <c>Party U provided nonce</c>
+          <c>PartyU other</c>      <c>-23</c>      <c>bstr</c>          <c>Party U other provided information</c>
+          <c>PartyV identity</c>   <c>-24</c>      <c>bstr</c>          <c>Party V identity Information</c>
+          <c>PartyV nonce</c>      <c>-25</c>      <c>bstr / int</c>    <c>Party V provided nonce</c>
+          <c>PartyV other</c>      <c>-26</c>      <c>bstr</c>          <c>Party V other provided information</c>
+        </texttable>
 
       </section>
     </section>
@@ -1522,7 +1593,7 @@ KDF = [
             <ttcol align='left'>KDF</ttcol>
             <ttcol align='left'>description</ttcol>
             <c>dir</c>          <c>-6</c>       <c>N/A</c>    <c>Direct use of CEK</c>
-            <c>dir+KDF</c>      <c>*</c>        <c>HKDF</c>   <c>Shared secret w/ KDF</c>
+            <c>dir+KDF</c>      <c>*</c>        <c>HKDF SHA-256</c>   <c>Shared secret w/ KDF</c>
           </texttable>
 
           <section title="Security Considerations">
@@ -1679,16 +1750,28 @@ KDF = [
           </list>
         </t>
 
-        <section title="ECDH Ephemeral Static">
+        <section title="ECDH Ephemeral-Static">
           <t>
+            This algorithm uses the key agreement algorithm specified in <xref target="RFC6090"/> combined with the KDF defined in <xref target="HKDF"/> to generate the key to be used in encrypting/decrypting the next layer down.
           </t>
-            
-          <texttable>
+
+          <texttable title="ECDH Algorithm Values" anchor="table-ecdh-es-table">
             <ttcol align='left'>name</ttcol>
             <ttcol align='left'>value</ttcol>
             <ttcol align='left'>KDF</ttcol>
             <ttcol align='left'>description</ttcol>
-            <c>ECDH-ES</c>      <c>*</c>        <c>HKDF</c>     <c>ECDH ES w/ Concat KDF as CEK</c>
+            <c>ECDH-ES</c>      <c>*</c>        <c>HKDF - SHA-256</c>     <c>ECDH ES w/ HKDF - generate key directly</c>
+            <c>ECDH-SS</c>      <c>*</c>        <c>HKDF - SHA-256</c>     <c>ECDH SS w/ HKDF - generate key directly</c>
+          </texttable>
+
+          <texttable title="ECDH Algorithm Parameters" anchor="table-ecdh-es-parameter-table">
+            <ttcol>name</ttcol>
+            <ttcol>label</ttcol>
+            <ttcol>type</ttcol>
+            <ttcol>description</ttcol>
+            <c>ephemeral key</c>        <c>-1</c>       <c>COSE_Key</c>         <c>Ephemeral Public key for the sender</c>
+            <c>static key</c>           <c>-2</c>       <c>COSE_Key</c>         <c>Static Public key for the sender</c>
+            <c>static key id </c>       <c>-3</c>       <c>bstr</c>             <c>Static Public key identifier for the sender</c>
           </texttable>
         </section>
       </section>
@@ -1707,6 +1790,10 @@ KDF = [
           <list style="symbols">
             <t>
               The 'protected' field MUST be absent if the key wrap algorithm is an AE algorithm.
+              <cref source="JLS">
+                It would be possible to include the protected field in the KDF rather than the key wrap algorithm if we wanted to.
+                This would provide the same level of security, it would not be possible to get the same key if they are different.
+              </cref>
             </t>
             <t>
               The plain text to be encrypted is the key from next layer down (usually the content layer).
@@ -1721,10 +1808,11 @@ KDF = [
           <texttable>
             <ttcol align='left'>name</ttcol>
             <ttcol align='left'>value</ttcol>
+            <ttcol>KDF</ttcol>
             <ttcol align='left'>description</ttcol>
-            <c>ECDH-ES+A128KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
-            <c>ECDH-ES+A192KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
-            <c>ECDH-ES+A256KW</c>        <c>*</c>        <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
+            <c>ECDH-ES+A128KW</c>        <c>*</c>        <c>HKDF - SHA-256</c>          <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
+            <c>ECDH-ES+A192KW</c>        <c>*</c>        <c>HKDF - SHA-256</c>          <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
+            <c>ECDH-ES+A256KW</c>        <c>*</c>        <c>HKDF - SHA-256</c>          <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
           </texttable>
         </section>
       </section>
@@ -1751,32 +1839,182 @@ KDF = [
     </section>
 
     <section title="Keys">
+      <t>
+        The COSE_Key object defines a way to hold a single key object, it is still required that the members of individual key types be defined.
+        This section of the document is where we define an initial set of members for specific key types.
+      </t>
+
+      <t>
+        For each of the key types, we define both public and private members.
+        The public members are what is transmitted to others for their usage.
+        We define private members mainly for the purpose of archival of keys by individuals.
+        However, there are some circumstances where private keys may be distributed by various entities in a protocol.
+        Examples include:  Entities which have poor random number generation.
+        Centralized key creation for multi-cast type operations.
+        Protocols where a shared secret is used as a bearer token for authorization purposes.
+      </t>
+
+      <t>
+        Keys are identified by the 'kty' member of the COSE_Key object.
+        In this document we define four values for the member.
+      </t>
+
+      <texttable title="Key Type Values" anchor="table_key_types">
+        <ttcol>name</ttcol>
+        <ttcol>value</ttcol>
+        <ttcol>description</ttcol>
+        <c>EC1</c>      <c>1</c>        <c>Elliptic Curve Keys w/ X Coordinate only</c>
+        <c>EC2</c>      <c>2</c>        <c>Elliptic Curve Keys w/ X,Y Coordinate pair</c>
+        <c>RSA</c>      <c>3</c>        <c>RSA Keys</c>
+        <c>Symmetric</c><c>4</c>        <c>Symmetric Keys</c>
+      </texttable>
       
       <section title="Elliptic Curve Keys">
+        <t>
+          Two different key structures are being defined for Elliptic Curve keys.
+          One version uses both an x and a y coordinate, potentially with point compression.
+          This is the traditional EC point representation that is used in [EC-in-PKIX].
+          The other version uses only the x coordinate as the y coordinate is either to be recomputed or not needed for the key agreement operation.
+          An example of this is [Curve25549].
+        </t>
+        
         <section title="Single Coordinate Curves">
-          <t>Set key type 'kty' to 'EC1'.</t>
+          <t>
+            NOTE: This section represents at risk work depending on the ability to get good references for Curve24559 and Goldilocks.
+          </t>
+          
+          <t>
+            New versions of ECC have been targeted at variants where only a single value of the EC Point need to be transmitted.
+            This work is currently going on in the IRTF CFRG group.
+          </t>
+          
+          <t>
+            For EC keys with both coordinates, the 'kty' member is set to 1 (EC1).
+            The members that are defined for this key type are:
+            <list style="hanging">
+              <t hangText="crv">
+                contains an identifier of the curve to be used with the key.
+                <cref source="JLS">
+                  Do we create a registry for curves?
+                  Is is the same registry for both EC1 and EC2?
+                </cref>
+                The curves defined in this document for this key type can be found in <xref target="table-ec1-curves"/>.
+                Other curves may be registered in the future and private curves can be used as well.
+              </t>
+              
+              <t hangText="x">
+                contains the x coordinate for the EC point.
+                The integer is converted to an octet string as defined in <xref target="SEC1"/>.
+                Zero byte MUST NOT be removed from the front of the octet string.
+                <cref source="JLS">
+                  Should we use the integer encoding for x, y and d instead of bstr?
+                </cref>
+              </t>
+              
+              <t hangText="y">
+                contains either the sign bit or the value of y coordinate for the EC point.
+                For the value, the integer is converted to an octet string as defined in <xref target="SEC1"/>.
+                Zero bytes MUST NOT be removed from the front of the octet string.
+                For the sign bit, the value is true if the value of y is positive.
+              </t>
+              
+              <t hangText="d">
+                contains the private key.
+              </t>
+              
+            </list>
+          </t>
+
+          <t>
+            For public keys, it is REQUIRED that 'crv' and  'x' be present in the structure.
+            For private keys, it is REQUIRED that 'crv' and 'd' be present in the structure.
+            It is RECOMMENDED that 'x'  also be present, but it can be recomputed from the required elements and omitting it saves on space.
+          </t>
+
+          <texttable title="EC Curves" anchor="table-ec1-curves">
+            <ttcol>name</ttcol>
+            <ttcol>value</ttcol>
+            <ttcol>description</ttcol>
+            <c>Curve24559</c>        <c>1</c>       <c>Provide reference</c>
+            <c>Goldilocks</c>        <c>2</c>       <c>Provide reference</c>
+          </texttable>
+          
           <texttable title="EC Key Parameters" anchor="table-ec1-keys">
             <ttcol>name</ttcol>
+            <ttcol>key type</ttcol>
             <ttcol>value</ttcol>
             <ttcol>type</ttcol>
             <ttcol>description</ttcol>
-            <c>crv</c>    <c>-1</c>       <c>int / tstr</c>       <c>EC Curve identifier - Taken from the COSE General Registry</c>
-            <c>x</c>      <c>-2</c>       <c>bstr</c>             <c>X Coordinate</c>
-            <c>d</c>      <c>-4</c>       <c>bstr</c>             <c>Private key</c>
+            <c>crv</c>    <c>1</c>      <c>-1</c>       <c>int / tstr</c>       <c>EC Curve identifier - Taken from the COSE General Registry</c>
+            <c>x</c>      <c>1</c>      <c>-2</c>       <c>bstr</c>             <c>X Coordinate</c>
+            <c>d</c>      <c>1</c>      <c>-4</c>       <c>bstr</c>             <c>Private key</c>
           </texttable>
         </section>
 
         <section title="Double Coordinate Curves">
-          <t>Set key type 'kty' to 'EC2'.</t>
+          <t>
+            The traditional way of sending EC curves has been to send either both the x and y coordinates, or the x coordinate and a sign bit for the y coordinate.
+            The latter encoding has not been recommend in the IETF due to potential IPR issues with Certicom.
+            However, for operations in constrained environments, the ability to shrink a message by not sending the y coordinate is potentially useful.
+          </t>
+          <t>
+            For EC keys with both coordinates, the 'kty' member is set to 2 (EC2).
+            The members that are defined for this key type are:
+            <list style="hanging">
+              <t hangText="crv">
+                contains an identifier of the curve to be used with the key.
+                The curves defined in this document for this key type can be found in <xref target="table-ec2-curves"/>.
+                Other curves may be registered in the future and private curves can be used as well.
+              </t>
+              
+              <t hangText="x">
+                contains the x coordinate for the EC point.
+                The integer is converted to an octet string as defined in <xref target="SEC1"/>.
+                Zero byte MUST NOT be removed from the front of the octet string.
+                <cref source="JLS">
+                  Should we use the integer encoding for x, y and d instead of bstr?
+                </cref>
+              </t>
+              
+              <t hangText="y">
+                contains either the sign bit or the value of y coordinate for the EC point.
+                For the value, the integer is converted to an octet string as defined in <xref target="SEC1"/>.
+                Zero bytes MUST NOT be removed from the front of the octet string.
+                For the sign bit, the value is true if the value of y is positive.
+              </t>
+              
+              <t hangText="d">
+                contains the private key.
+              </t>
+              
+            </list>
+          </t>
+
+          <t>
+            For public keys, it is REQUIRED that 'crv', 'x' and 'y' be present in the structure.
+            For private keys, it is REQUIRED that 'crv' and 'd' be present in the structure.
+            It is RECOMMENDED that 'x' and 'y' also be present, but they can be recomputed from the required elements and omitting them saves on space.
+          </t>
+
+          <texttable title="EC Curves" anchor="table-ec2-curves">
+            <ttcol>name</ttcol>
+            <ttcol>value</ttcol>
+            <ttcol>description</ttcol>
+            <c>P-256</c>        <c>1</c>       <c>NIST P-256 also known as ....</c>
+            <c>P-384</c>        <c>2</c>       <c>NIST P-384 also known as ....</c>
+            <c>P-521</c>        <c>3</c>       <c>NIST P-512 also known as ....</c>
+          </texttable>
+          
           <texttable title="EC Key Parameters" anchor="table-ec2-keys">
             <ttcol>name</ttcol>
+            <ttcol>key type</ttcol>
             <ttcol>value</ttcol>
             <ttcol>type</ttcol>
             <ttcol>description</ttcol>
-            <c>crv</c>    <c>-1</c>       <c>int / tstr</c>       <c>EC Curve identifier - Taken from the COSE General Registry</c>
-            <c>x</c>      <c>-2</c>       <c>bstr</c>             <c>X Coordinate</c>
-            <c>y</c>      <c>-3</c>       <c>bstr / bool</c>      <c>Y Coordinate</c>
-            <c>d</c>      <c>-4</c>       <c>bstr</c>             <c>Private key</c>
+            <c>crv</c>    <c>2</c>      <c>-1</c>       <c>int / tstr</c>       <c>EC Curve identifier - Taken from the COSE General Registry</c>
+            <c>x</c>      <c>2</c>      <c>-2</c>       <c>bstr</c>             <c>X Coordinate</c>
+            <c>y</c>      <c>2</c>      <c>-3</c>       <c>bstr / bool</c>      <c>Y Coordinate</c>
+            <c>d</c>      <c>2</c>      <c>-4</c>       <c>bstr</c>             <c>Private key</c>
           </texttable>
         </section>
       </section>
@@ -1803,6 +2041,27 @@ KDF = [
       </section>
 
       <section title="Symmetric Keys">
+        <t>
+          Occasionally it is required that a symmetric key be transported between entities.
+          This key structure allows for that to happen.
+        </t>
+
+        <t>
+          For symmetric keys, the 'kty' member is set to 3 (Symmetric).
+          The member that is defined for this key type is:
+          <list style="hanging">
+            <t hangText="k">
+              contains the value of the key.
+            </t>
+          </list>
+        </t>
+
+        <t>
+          This key structure contains only private key information, care must be taken that it is never transmitted accidentally.
+          For public keys, there are no required fields.
+          For private keys, it is REQUIRED that 'k' be present in the structure.
+        </t>
+        
         <texttable title="Symmetric Key Parameters" anchor="table-symmetric-keys">
           <ttcol>name</ttcol>
           <ttcol>value</ttcol>
@@ -2143,7 +2402,7 @@ KDF = [
         <section title="COSE Key media type">
 
           <t>
-            This section registers the "application/jwk+json" and "application/jwk-set+json" media types in the "Media Types" registry.
+            This section registers the "application/cose+json" and "application/cose-set+json" media types in the "Media Types" registry.
             These media types are used to indicate, respectively, that content is a COSE_Key or COSE_KeySet object.
           </t>
 
@@ -2239,12 +2498,12 @@ KDF = [
   <back>
 
     <references title='Normative References'>
-      &CDDL;
       &RFC2119;
       &RFC7049;
     </references>
 
     <references title='Informative References'>
+      &CDDL;
       &CBCMAC;
       &RFC2104;
       &RFC3394;
@@ -2256,6 +2515,7 @@ KDF = [
       &RFC5752;
       &RFC5869;
       &RFC5990;
+      &RFC6090;
       &RFC6151;
       &RFC7159;
       &RFC7515;
@@ -2269,7 +2529,7 @@ KDF = [
           <author initials="M." surname="Dworkin">
             <organization>U.S. National Institute of Standards and Technology</organization>
           </author>
-          <date year="2015" month="June"/>
+          <date year="2007" month="Nov"/>
         </front>
         <format target="https://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf" type="PDF"/>
       </reference>
@@ -2285,6 +2545,36 @@ KDF = [
         <format target="http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf" type="PDF"/>
       </reference>
 
+      <reference anchor="SP800-56A">
+        <front>
+          <title>NIST Special Publication 800-56A: Recommendation for Pair-Wise Key Establishment Schemes Using Discrete Logarithm Cryptography</title>
+          <author initials="E." surname="Barker">
+            <organization>U.S. National Institute of Standards and Technology</organization>
+          </author>
+          <author initials="L." surname="Chen">
+            <organization>U.S. National Institute of Standards and Technology</organization>
+          </author>
+          <author initials="A." surname="Roginsky">
+            <organization>U.S. National Institute of Standards and Technology</organization>
+          </author>
+          <author initials="M." surname="Smid">
+            <organization>Orion Security Solutions, Inc.</organization>
+          </author>
+          <date year="2013" month="May"/>
+        </front>
+        <format target="https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-56Ar2.pdf" type="PDF"/>
+      </reference>
+
+      <reference anchor="SEC1">
+        <front>
+          <title>SEC 1: Elliptic Curve Cryptography</title>
+          <author>
+            <organization>Standards for Efficient Cryptography Group</organization>
+          </author>
+          <date year="2009" month="May"/>
+        </front>
+        <format target="http://www.secg.org/sec1-v2.pdf" type="PDF"/>
+      </reference>
 
     </references>
 
@@ -2310,7 +2600,7 @@ KDF = [
       </t>
 
       <t>
-        2PKCS v1.5 RSA key transport does not qualify as an AE algorithm.
+        PKCS v1.5 RSA key transport does not qualify as an AE algorithm.
         There are only three octets in the encoding that can be checked as
         having decrypted correctly, the rest of the content can only be
         probabilistically checked as having decrypted correctly.
@@ -2321,21 +2611,17 @@ KDF = [
       </t>
 
       <t>
-        When dealing with authenticated encryption algorithms, there is always
-        some type of value that needs to be checked to see if the
-        authentication level has passed.
+        When dealing with authenticated encryption algorithms, there is always some type of value that needs to be checked to see if the authentication level has passed.
         This authentication value may be:
       </t>
 
       <t>
         <list style="symbols">
           <t>
-            A separately generated tag computed by both the encrypter and
-            decrypter and then compared by the decryptor.
-            This tag value may be either placed at the end of the cipher text
-            (the decision we made) or kept separately (the decision made by the
-            JOSE working group).
+            A separately generated tag computed by both the encrypter and decrypter and then compared by the decryptor.
+            This tag value may be either placed at the end of the cipher text (the decision we made) or kept separately (the decision made by the JOSE working group).
             This is the approach followed by AES-GCM <xref target="AES-GCM"/> and AES-CCM <xref target="RFC3610"/>.
+            <!-- Mike Jones:  Last sentence is not clear.  He is reading this as referring to ? rather than just being generating a tag. - M00TODO -->
           </t>
           <t>
             A fixed value that is part of the encoded plain text.
