@@ -132,7 +132,7 @@
             </t>
             <t>
               Remove the flattened mode of encoding. 
-              Forcing the use of an array of recipients at all times forces the message size to be two octets larger, but one gets a corresponding decrease in the implementation size that should compensate for this.
+              Forcing the use of an array of recipients at all times forces the message size to be two bytes larger, but one gets a corresponding decrease in the implementation size that should compensate for this.
               <cref source="JLS">Need to check this list for correctness before publishing.</cref>
             </t>
           </list>
@@ -472,7 +472,7 @@ Headers = (
           <t>
             I am currently torn on the question "Should epk and iv/nonce be algorithm specific or generic headers?"
             They are really specific to an algorithm and can potentially be defined in different ways for different algorithms.
-            As an example, it would make sense to defined nonce for CCM and GCM modes that can have the leading zero octets stripped, while for other algorithms this might be undesirable.
+            As an example, it would make sense to defined nonce for CCM and GCM modes that can have the leading zero bytes stripped, while for other algorithms this might be undesirable.
           </t>
           <t>
             We might want to define some additional items.  What are they?  A possible example would be a sequence number as this might be common.  On the other hand, this is the type of things that is frequently used as the nonce in some places and thus should not be used in the same way.  Other items might be challenge/response fields for freshness as these are likely to be common.
@@ -532,7 +532,7 @@ COSE_Sign = {
           <t hangText='protected'>
             contains attributes about the payload that are to be protected by the signature.
             An example of such an attribute would be the content type ('cty') attribute.
-            The content is a CBOR map of attributes that is encoded to an octet stream.
+            The content is a CBOR map of attributes that is encoded to a byte stream.
             This field MUST NOT contain attributes about the signature, even if
             those attributes are common across multiple signatures.
             The labels in this map are typically taken from <xref target="Header-Table"/>.
@@ -585,7 +585,7 @@ COSE_signature =  {
             contains additional information to be authenticated by the signature.
             The field holds data about the signature operation.
             The field MUST NOT hold attributes about the payload being signed.
-            The content is a CBOR map of attributes that is encoded to an octet stream.
+            The content is a CBOR map of attributes that is encoded to a byte stream.
             At least one of protected and unprotected MUST be present.
           </t>
           <t hangText='unprotected'>
@@ -600,7 +600,7 @@ COSE_signature =  {
       </t>
 
       <t>
-        The COSE structure used to create the octet stream to be signed uses the following CDDL grammar structure:
+        The COSE structure used to create the byte stream to be signed uses the following CDDL grammar structure:
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
@@ -619,7 +619,7 @@ Sig_structure = [
             Create a Sig_structure object and populate it with the appropriate fields.  For body_protected and sign_protected, if the fields are not present in their corresponding maps, an bstr of length zero is used.
           </t>
           <t>
-            Create the value ToBeSigned by encoding the Sig_structure to an octet string.
+            Create the value ToBeSigned by encoding the Sig_structure to a byte string.
           </t>
           <t>
             Call the signature creation algorithm passing in K (the key to sign with), alg (the algorithm to sign with) and ToBeSigned (the value to sign).
@@ -638,7 +638,7 @@ Sig_structure = [
             Create a Sig_structure object and populate it with the appropriate fields.  For body_protected and sign_protected, if the fields are not present in their corresponding maps, an bstr of length zero is used.
           </t>
           <t>
-            Create the value ToBeSigned by encoding the Sig_structure to an octet string.
+            Create the value ToBeSigned by encoding the Sig_structure to a byte string.
           </t>
           <t>
             Call the signature verification algorithm passing in K (the key to verify with), alg (the algorithm to sign with), ToBeSigned (the value to sign), and sig (the signature to be verified).
@@ -871,7 +871,7 @@ COSE_mac = {
           <t hangText='protected'>
             contains attributes about the payload that are to be protected by the MAC.
             An example of such an attribute would be the content type ('cty') attribute.
-            The content is a CBOR map of attributes that is encoded to an octet stream.
+            The content is a CBOR map of attributes that is encoded to a byte stream.
             This field MUST NOT contain attributes about the recipient, even if those attributes are common across multiple recipients.
             At least one of protected and unprotected MUST be present.
           </t>
@@ -918,7 +918,7 @@ COSE_mac = {
             If there is no external authenticated data, then use a zero length 'bstr'.
           </t>
           <t>
-            Encode the MAC_structure using a canonical CBOR encoder.  The resulting octets is the value to compute the MAC on.
+            Encode the MAC_structure using a canonical CBOR encoder.  The resulting bytes is the value to compute the MAC on.
           </t>
           <t>
             Compute the MAC and place the result in the 'tag' field of the COSE_mac structure.
@@ -1101,9 +1101,9 @@ key_alg=3
         <t>
           The signature algorithm results in a pair of integers (R, S).
           These integers will be of the same order as length of the key used for the signature process.
-          The signature is encoded by converting the integers into octet strings of the same length as the key size.
-          The length is rounded up to the nearest octet and is left padded with zero bits to get to the correct length.
-          The two integers are then concatenated together to form an octet string that is the resulting signature.
+          The signature is encoded by converting the integers into byte strings of the same length as the key size.
+          The length is rounded up to the nearest byte and is left padded with zero bits to get to the correct length.
+          The two integers are then concatenated together to form a byte string that is the resulting signature.
         </t>
 
         <t>
@@ -1167,7 +1167,7 @@ key_alg=3
           <ttcol align='left'>Hash</ttcol>
           <ttcol align='left'>Length</ttcol>
           <ttcol align='left'>description</ttcol>
-          <c>HMAC 256/64</c>         <c>*</c>        <c>SHA-256</c>    <c>64</c>        <c>HMAC w/ SHA-256 truncated to 8 octets</c>
+          <c>HMAC 256/64</c>         <c>*</c>        <c>SHA-256</c>    <c>64</c>        <c>HMAC w/ SHA-256 truncated to 8 bytes</c>
           <c>HMAC 256/256</c>        <c>4</c>        <c>SHA-256</c>    <c>256</c>       <c>HMAC w/ SHA-256</c>
           <c>HMAC 384/384</c>        <c>5</c>        <c>SHA-384</c>    <c>384</c>       <c>HMAC w/ SHA-384</c>
           <c>HMAC 512/512</c>        <c>6</c>        <c>SHA-512</c>    <c>512</c>       <c>HMAC w/ SHA-512</c>
@@ -1197,7 +1197,7 @@ key_alg=3
           <ttcol align='left'>tag length</ttcol>
           <ttcol align='left'>description</ttcol>
           <c>AES-MAC 128/64</c>         <c>*</c>        <c>128</c>      <c>64</c>       <
-          <c>HMAC 256/64</c>         <c>*</c>        <c>SHA-256</c>    <c>64</c>        <c>HMAC w/ SHA-256 truncated to 8 octets</c>
+          <c>HMAC 256/64</c>         <c>*</c>        <c>SHA-256</c>    <c>64</c>        <c>HMAC w/ SHA-256 truncated to 8 bytes</c>
           <c>HMAC 256/256</c>        <c>4</c>        <c>SHA-256</c>    <c>256</c>       <c>HMAC w/ SHA-256</c>
           <c>HMAC 384/384</c>        <c>5</c>        <c>SHA-384</c>    <c>384</c>       <c>HMAC w/ SHA-384</c>
           <c>HMAC 512/512</c>        <c>6</c>        <c>SHA-512</c>    <c>512</c>       <c>HMAC w/ SHA-512</c>
@@ -1235,9 +1235,9 @@ key_alg=3
         </t>
 
         <t>
-          It is unfortunate that the specification for CCM specified L and M as a count of octets rather than a count of bits.
+          It is unfortunate that the specification for CCM specified L and M as a count of bytes rather than a count of bits.
           This leads to possible misunderstandings where AES-CCM-8 is frequently used to refer to a version of CCM mode where the size of the authentication is 64-bits and not 8-bits.
-          These values have traditionally been specified as bit counts rather than octet counts.
+          These values have traditionally been specified as bit counts rather than byte counts.
           This document will follow the tradition of using bit counts so that it is easier to compare the different algorithms presented in this document.
         </t>
 
@@ -1254,12 +1254,12 @@ key_alg=3
           The following values are used for L:
           <list style="hanging">
             <t hangText="16-bits (2)">
-              limits messages to 2^16 octets in length.
-              The nonce length is 13 octets allowing for 2^(13*8) possible values of the nonce without repeating.
+              limits messages to 2^16 bytes in length.
+              The nonce length is 13 bytes allowing for 2^(13*8) possible values of the nonce without repeating.
             </t>
             <t hangText="64-bits (8)"> 
               limits messages to 2^64 byes in length.
-              The nonce length is 7 octets allowing for 2^56 possible values of the nonce without repeating.
+              The nonce length is 7 bytes allowing for 2^56 possible values of the nonce without repeating.
             </t>
           </list>
         </t>
@@ -1285,22 +1285,22 @@ key_alg=3
           <ttcol align='left'>M</ttcol>
           <ttcol align='left'>k</ttcol>
           <ttcol align='left'>description</ttcol>
-          <c>AES-CCM-16-64-128</c>        <c>A281C</c>    <c>16</c>       <c>64</c>       <c>128</c>      <c>AES-CCM mode 128-bit key, 64-bit tag, 13-octet nonce</c>
-          <c>AES-CCM-16-64-192</c>        <c>A282C</c>    <c>16</c>       <c>64</c>       <c>192</c>      <c>AES-CCM mode 192-bit key, 64-bit tag, 13-octet nonce</c>
-          <c>AES-CCM-16-64-256</c>        <c>A283C</c>    <c>16</c>       <c>64</c>       <c>256</c>      <c>AES-CCM mode 256-bit key, 64-bit tag, 13-octet nonce</c>
-          <c>AES-CCM-64-64-128</c>        <c>A881C</c>    <c>64</c>       <c>64</c>       <c>128</c>      <c>AES-CCM mode 128-bit key, 64-bit tag, 7-octet nonce</c>
-          <c>AES-CCM-64-64-192</c>        <c>A882C</c>    <c>64</c>       <c>64</c>       <c>192</c>      <c>AES-CCM mode 192-bit key, 64-bit tag, 7-octet nonce</c>
-          <c>AES-CCM-64-64-256</c>        <c>A883C</c>    <c>64</c>       <c>64</c>       <c>256</c>      <c>AES-CCM mode 256-bit key, 64-bit tag, 7-octet nonce</c>
-          <c>AES-CCM-16-128-128</c>       <c>A2161C</c>   <c>16</c>       <c>128</c>      <c>128</c>      <c>AES-CCM mode 128-bit key, 128-bit tag, 13-octet nonce</c>
-          <c>AES-CCM-16-128-192</c>       <c>A2162C</c>   <c>16</c>       <c>128</c>      <c>192</c>      <c>AES-CCM mode 192-bit key, 128-bit tag, 13-octet nonce</c>
-          <c>AES-CCM-16-128-256</c>       <c>A2163C</c>   <c>16</c>       <c>128</c>      <c>256</c>      <c>AES-CCM mode 256-bit key, 128-bit tag, 13-octet nonce</c>
-          <c>AES-CCM-64-128-128</c>       <c>A8161C</c>   <c>64</c>       <c>128</c>      <c>128</c>      <c>AES-CCM mode 128-bit key, 128-bit tag, 7-octet nonce</c>
-          <c>AES-CCM-64-128-192</c>       <c>A8162C</c>   <c>64</c>       <c>128</c>      <c>192</c>      <c>AES-CCM mode 192-bit key, 128-bit tag, 7-octet nonce</c>
-          <c>AES-CCM-64-128-256</c>       <c>A8163C</c>   <c>64</c>       <c>128</c>      <c>256</c>      <c>AES-CCM mode 256-bit key, 128-bit tag, 7-octet nonce</c>
+          <c>AES-CCM-16-64-128</c>        <c>A281C</c>    <c>16</c>       <c>64</c>       <c>128</c>      <c>AES-CCM mode 128-bit key, 64-bit tag, 13-byte nonce</c>
+          <c>AES-CCM-16-64-192</c>        <c>A282C</c>    <c>16</c>       <c>64</c>       <c>192</c>      <c>AES-CCM mode 192-bit key, 64-bit tag, 13-byte nonce</c>
+          <c>AES-CCM-16-64-256</c>        <c>A283C</c>    <c>16</c>       <c>64</c>       <c>256</c>      <c>AES-CCM mode 256-bit key, 64-bit tag, 13-byte nonce</c>
+          <c>AES-CCM-64-64-128</c>        <c>A881C</c>    <c>64</c>       <c>64</c>       <c>128</c>      <c>AES-CCM mode 128-bit key, 64-bit tag, 7-byte nonce</c>
+          <c>AES-CCM-64-64-192</c>        <c>A882C</c>    <c>64</c>       <c>64</c>       <c>192</c>      <c>AES-CCM mode 192-bit key, 64-bit tag, 7-byte nonce</c>
+          <c>AES-CCM-64-64-256</c>        <c>A883C</c>    <c>64</c>       <c>64</c>       <c>256</c>      <c>AES-CCM mode 256-bit key, 64-bit tag, 7-byte nonce</c>
+          <c>AES-CCM-16-128-128</c>       <c>A2161C</c>   <c>16</c>       <c>128</c>      <c>128</c>      <c>AES-CCM mode 128-bit key, 128-bit tag, 13-byte nonce</c>
+          <c>AES-CCM-16-128-192</c>       <c>A2162C</c>   <c>16</c>       <c>128</c>      <c>192</c>      <c>AES-CCM mode 192-bit key, 128-bit tag, 13-byte nonce</c>
+          <c>AES-CCM-16-128-256</c>       <c>A2163C</c>   <c>16</c>       <c>128</c>      <c>256</c>      <c>AES-CCM mode 256-bit key, 128-bit tag, 13-byte nonce</c>
+          <c>AES-CCM-64-128-128</c>       <c>A8161C</c>   <c>64</c>       <c>128</c>      <c>128</c>      <c>AES-CCM mode 128-bit key, 128-bit tag, 7-byte nonce</c>
+          <c>AES-CCM-64-128-192</c>       <c>A8162C</c>   <c>64</c>       <c>128</c>      <c>192</c>      <c>AES-CCM mode 192-bit key, 128-bit tag, 7-byte nonce</c>
+          <c>AES-CCM-64-128-256</c>       <c>A8163C</c>   <c>64</c>       <c>128</c>      <c>256</c>      <c>AES-CCM mode 256-bit key, 128-bit tag, 7-byte nonce</c>
         </texttable>
 
         <t>
-          M00TODO: Make a determination of which ones get 1-, 2- or 3-octet identifiers.
+          M00TODO: Make a determination of which ones get 1-, 2- or 3-byte identifiers.
           I.e. which ones are going to be popular.
         </t>
 
@@ -1358,7 +1358,7 @@ key_alg=3
             </t>
 
             <t>
-              length - the number of octets of output that need to be generated.
+              length - the number of bytes of output that need to be generated.
             </t>
 
             <t>
@@ -1904,8 +1904,8 @@ COSE_KDF_Context = [
               
               <t hangText="x">
                 contains the x coordinate for the EC point.
-                The integer is converted to an octet string as defined in <xref target="SEC1"/>.
-                Zero byte MUST NOT be removed from the front of the octet string.
+                The integer is converted to a byte string as defined in <xref target="SEC1"/>.
+                Zero byte MUST NOT be removed from the front of the byte string.
                 <cref source="JLS">
                   Should we use the integer encoding for x, y and d instead of bstr?
                 </cref>
@@ -1913,8 +1913,8 @@ COSE_KDF_Context = [
               
               <t hangText="y">
                 contains either the sign bit or the value of y coordinate for the EC point.
-                For the value, the integer is converted to an octet string as defined in <xref target="SEC1"/>.
-                Zero bytes MUST NOT be removed from the front of the octet string.
+                For the value, the integer is converted to a byte string as defined in <xref target="SEC1"/>.
+                Zero bytes MUST NOT be removed from the front of the byte string.
                 For the sign bit, the value is true if the value of y is positive.
               </t>
               
@@ -1969,8 +1969,8 @@ COSE_KDF_Context = [
               
               <t hangText="x">
                 contains the x coordinate for the EC point.
-                The integer is converted to an octet string as defined in <xref target="SEC1"/>.
-                Zero byte MUST NOT be removed from the front of the octet string.
+                The integer is converted to a byte string as defined in <xref target="SEC1"/>.
+                Zero byte MUST NOT be removed from the front of the byte string.
                 <cref source="JLS">
                   Should we use the integer encoding for x, y and d instead of bstr?
                 </cref>
@@ -1978,8 +1978,8 @@ COSE_KDF_Context = [
               
               <t hangText="y">
                 contains either the sign bit or the value of y coordinate for the EC point.
-                For the value, the integer is converted to an octet string as defined in <xref target="SEC1"/>.
-                Zero bytes MUST NOT be removed from the front of the octet string.
+                For the value, the integer is converted to a byte string as defined in <xref target="SEC1"/>.
+                Zero bytes MUST NOT be removed from the front of the byte string.
                 For the sign bit, the value is true if the value of y is positive.
               </t>
               
@@ -2157,7 +2157,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          NOTE: Need to review the range assignments.  It does not necessarily make sense as specification required uses 1 octet positive integers and 2 octet strings.
+          NOTE: Need to review the range assignments.  It does not necessarily make sense as specification required uses 1 byte positive integers and 2 byte strings.
         </t>
 
       </section>
@@ -2601,7 +2601,7 @@ COSE_KDF_Context = [
 
       <t>
         PKCS v1.5 RSA key transport does not qualify as an AE algorithm.
-        There are only three octets in the encoding that can be checked as
+        There are only three bytes in the encoding that can be checked as
         having decrypted correctly, the rest of the content can only be
         probabilistically checked as having decrypted correctly.
         For this reason, PKCS v1.5 RSA key transport MUST NOT be used with
@@ -2770,7 +2770,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          Encoded in CBOR - 216 octets, content is 14 octets long
+          Encoded in CBOR - 216 bytes, content is 14 bytes long
         </t>
 
         &Enc-01;
@@ -2804,7 +2804,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          Encoded in CBOR - 491 octets, content is 14 octets long
+          Encoded in CBOR - 491 bytes, content is 14 bytes long
         </t>
 
         &Sig-02;
