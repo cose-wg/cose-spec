@@ -21,8 +21,10 @@
   <!ENTITY RFC7516 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7516.xml" >
   <!ENTITY RFC7517 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7517.xml" >
   <!ENTITY RFC7518 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7518.xml" >
+
   <!ENTITY CDDL SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.greevenbosch-appsawg-cbor-cddl.xml" >
-<!ENTITY CBCMAC SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.mcgrew-aead-aes-cbc-hmac-sha2.xml" >
+  <!ENTITY CBCMAC SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.mcgrew-aead-aes-cbc-hmac-sha2.xml" >
+  <!ENTITY CFRG-EC SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.irtf-cfrg-curves.xml" >
 
 <!ENTITY Triple-01 SYSTEM "includes/Triple-01.xml">
 <!ENTITY Enc-01 SYSTEM "includes/Enc-01.xml">
@@ -1391,7 +1393,7 @@ key_alg=3
 
       </section>
 
-      <section title="Context Information Structure">
+      <section title="Context Information Structure" anchor="context">
         <t>
           The context information structure is used to ensure that the derived keying material is "bound" to the context of the transaction.
           The context information structure used here is based on that defined in <xref target="SP800-56A"/>.
@@ -1585,20 +1587,43 @@ COSE_KDF_Context = [
             </list>
           </t>
 
-          <section title="Direct Key">
-          <texttable title="Direct Key" anchor="table-direct">
-            <ttcol align='left'>name</ttcol>
-            <ttcol align='left'>value</ttcol>
-            <ttcol align='left'>KDF</ttcol>
-            <ttcol align='left'>description</ttcol>
-            <c>dir</c>          <c>-6</c>       <c>N/A</c>    <c>Direct use of CEK</c>
-            <c>dir+KDF</c>      <c>*</c>        <c>HKDF SHA-256</c>   <c>Shared secret w/ KDF</c>
-          </texttable>
+            
 
-          <section title="Security Considerations">
-            <t>Lifetime, Length, Compromise</t>
+          <section title="Direct Key">
+            <t>
+              We define two key agreement algorithms that function as direct key algorithms.
+              These algorithms are:
+              <list style="hanging">
+                <t hangText="Direct:">
+                  This key management technique is the simplest method, the supplied key is directly used as the key for the next layer down in the message.
+                  There are no algorithm parameters defined for this key management methods.
+                </t>
+
+                <t hangText="Direct KDF:">
+                  This key managment takes a common shared secret between the two parties and applies the HKDF function (<xref target="HKDF"/>) using the context structure defined in <xref target="context"/> to transform the shared secret into the necessary key.
+                  Either the 'salt' parameter of HKDF or the partyU 'nonce' parameter of the context structure MUST be present.
+                  This parameter can be generated either randomly or deterministically, the requirement is that it be a unique value for the key pair in question.
+                  <vspace/>
+                  If the salt/nonce value is generated randomly, then it is suggested that the length of the random value be the same length as the hash function underlying HKDF, i.e 256-bits.
+                  While there is no way to guarantee that it will be unique, there is a high probability that it will be unique.
+                  If the salt/nonce value is generated deterministically, it can be guaranteed to be unique and thus there is no length requirement.
+                </t>
+              </list>
+            </t>
+
+            <texttable title="Direct Key" anchor="table-direct">
+              <ttcol align='left'>name</ttcol>
+              <ttcol align='left'>value</ttcol>
+              <ttcol align='left'>KDF</ttcol>
+              <ttcol align='left'>description</ttcol>
+              <c>direct</c>          <c>-6</c>       <c>N/A</c>    <c>Direct use of CEK</c>
+              <c>direct+KDF</c>      <c>*</c>        <c>HKDF SHA-256</c>   <c>Shared secret w/ KDF</c>
+            </texttable>
+
+            <section title="Security Considerations">
+              <t>Lifetime, Length, Compromise</t>
+            </section>
           </section>
-        </section>
       </section>
 
       <section title="Key Wrapping">
@@ -1723,12 +1748,38 @@ COSE_KDF_Context = [
 
       <section title="Direct Key Agreement">
         <t>
-          Direct Key Agreement derives a key from the shared secret computed by the key agreement operation.
+          When using the 'Direct Key Agreement' key managment method, the two parties use a key agreement method to create a shared secret.
+          A KDF is then applied to the shared secret to derive a key to be used in protecting the data.
+          This key is normally used as a CEK or MAC key, but could be used for other purposes if more than two layers are in use (see <xref target="three-layer"/>).
         </t>
 
         <t>
-          When direct key agreement mode is used, it SHOULD be the only mode used on the message. 
+          The most commonly used key agreement algorithm used is Diffie-Hellman, but other variants exist.
+          Since COSE is designed for a store and forward environment rather than an on-line environment, many of the DH variants cannot be used as the receiver of the message cannot provide any key material.
+          One side-effect of this is that perfect forward security is not achievable, a static key will always be used for the receiver of the COSE message.
+        </t>
+
+        <t>
+          Two variants of DH that are easily supported are:
+          <list>
+            <t>
+              Ephemeral-Static DH: where the sender of the message creates a one time DH key and uses a static key for the recipient.
+              The use of the ephemeral sender key means that no additional random input is needed as this is randomly generated for each message.
+            </t>
+            <t>
+              Static-Static DH: where a static key is used for both the sender and the recipient.
+              The use of static keys allows for recipient to get a weak version of data origination for the message.
+              When static-static key agreement is used, then some piece of unique data is require to ensure that a different key is created for each message
+            </t>
+          </list>
+          In this specification, both variants are specified.
+          This has been done to provide the weak data origination option for use with MAC operations.
+        </t>
+
+        <t>
+          When direct key agreement mode is used, it MUST be the only key management mode used on the message and there MUST be only one recipient.
           This method creates the key directly and that makes it difficult to mix with additional recipients.
+          If multiple recipients are needed, then the version with key wrap (<xref target="ECDH-KeyWrap"/>) needs to be used.
         </t>
 
         <t>
@@ -1749,9 +1800,97 @@ COSE_KDF_Context = [
           </list>
         </t>
 
-        <section title="ECDH Ephemeral-Static">
+        <section title="ECDH">
           <t>
-            This algorithm uses the key agreement algorithm specified in <xref target="RFC6090"/> combined with the KDF defined in <xref target="HKDF"/> to generate the key to be used in encrypting/decrypting the next layer down.
+            NOTE: Curves 25519 and Goldilocks are elements at risk.
+          </t>
+          
+          <t>
+            We define one set of key agreement algorithms structured around Elliptic Curves Diffie-Hellman problem.
+            <cref source="JLS">Does anybody need pure DH?</cref>
+            We define both an ephemeral-static and a static-static version of these algorithms.
+            We allow for multiple curves to be used, it needs to be noted that the math required for the curves as well as the point representation is going to be different.
+            <cref source="JLS">
+              This could just as easily be done by specifying two different set of algorithm identifiers, one for each of the key formats.
+              I don't believe that we need to set things up by having two different sets of algorithm identifiers for the different keys as the structure of what is represented is going to be the same, just the math and point formats are going to be different.
+              The other "difference" is the question of how the octet string of the shared secret is defined. 
+              However, since we don't need to specify either in this document we can defer both of them into their respective documents.
+            </cref>
+          </t>
+          
+          <t>
+            We setup to use two different curve structures for the ECDH algorithms.
+            <list style="none">
+              <t>
+                Weierstrass Curves: These are the ones one is used to seeing from NIST.
+                We define three NIST curves for use with this document.
+                These curves are P-256, P-384 and P-512.
+                (The mathematics can be found in <xref target="RFC6090"/>.)
+                For these curves, the key type 'EC2' is used (<xref target="EC2-Keys"/>).
+              </t>
+              
+              <t>
+                Montgomery Curves:
+                These curves are Curve25519 and Goldilocks.
+                (The mathematics can be found in <xref target="I-D.irtf-cfrg-curves"/>.)
+                For these curves, the key type 'EC1' is used (<xref target="EC1-Keys"/>).
+              </t>
+            </list>
+          </t>
+
+          <t>
+            As shown in <xref target="table-ecdh-es-table"/> we define two ECDH algorithm identifiers for EC direct key agreement.
+            These identifiers are:
+            <list style="hanging">
+              <t hangText="ECDH-ES:">
+                This algorithm does a key agreement operation using a static key for the recipient and an ephemeral key for the sender.
+                The ephemeral key MUST be generated fresh for every message.
+                The HKDF function (<xref target="HKDF"/>) is used with the context structure in <xref target="context"/> to transform the key agreement secret into the necessary key.
+                Since the ephemeral key is generated freshly, the 'salt' parameter of HKDF is not needed and can be absent.
+                <vspace/>
+                One new algorithm parameter is defined for use with this algorithm.
+                This parameter is:
+                <list style="hanging">
+                  <t hangText="ephemeral key:">
+                    This parameter is used to hold and transport the ephemeral key generated by the sender of the message.
+                    This parameter has a label of -1 and a type of COSE_Key.
+                    This parameter can be placed in the unprotected bucket, if it is changed then the correct key will not be able to be generated.
+                  </t>
+                </list>
+                The parameter is summarized in <xref target="table-ecdh-es-parameter-table"/>.
+              </t>
+              <t hangText="ECDH-SS:">
+                This algorithm does a key agreement operation using two static keys, one for the recipient and one for the sender.
+                The HKDF function (<xref target="HKDF"/>) is used with the context structure in <xref target="context"/> to transform the key agreement secret into the necessary key.
+                Either the 'salt' parameter of HKDF or the partyU 'nonce' parameter of the context structure MUST be present.
+                This parameter can be generated either randomly or deterministically, the requirement is that it be a unique value for the key pair in question.
+                <vspace/>
+                If the salt/nonce value is generated randomly, then it is suggested that the length of the random value be the same length as the hash function underlying HKDF, i.e 256-bits.
+                While there is no way to guarantee that it will be unique, there is a high probability that it will be unique.
+                If the salt/nonce value is generated deterministically, it can be guaranteed to be unique and thus there is no length requirement.
+                <vspace/>
+                Two new algorithm parameters are defined for use with this algorithm.
+                These parameters are:
+
+                <list style="hanging">
+                  <t hangText="static key:">
+                    This parameter is used to hold and transport the static key used by the sender of the message.
+                    This parameter has the label of -2 and a type of COSE_Key.
+                    The parameter can be placed in the unprotected bucket, if it is changed then the correct key will not be able to be generated.
+                    If the data origination service is desired, then the message recipient needs to validate that the key in this field is associated with the sender.
+                  </t>
+
+                  <t hangText="static key identifier:">
+                    This parameter is used to hold a reference to the static key used by the sender of the message.
+                    The value is expected to match the 'kid' member of a COSE_Key structure published by the sender.
+                    The value in this field cannot be assumed to uniquely identify a single key, multiple keys may need to be found and tested.
+                    Not all of the keys identified by a kid value may be associated with the sender of the message.
+                    If the data origination service is desired, then the message recipient needs to validate that the key in this field is associated with the sender.
+                  </t>
+                </list>
+                These parameters are summarized in <xref target="table-ecdh-es-parameter-table"/>.
+              </t>
+            </list>
           </t>
 
           <texttable title="ECDH Algorithm Values" anchor="table-ecdh-es-table">
@@ -1759,23 +1898,41 @@ COSE_KDF_Context = [
             <ttcol align='left'>value</ttcol>
             <ttcol align='left'>KDF</ttcol>
             <ttcol align='left'>description</ttcol>
-            <c>ECDH-ES</c>      <c>*</c>        <c>HKDF - SHA-256</c>     <c>ECDH ES w/ HKDF - generate key directly</c>
-            <c>ECDH-SS</c>      <c>*</c>        <c>HKDF - SHA-256</c>     <c>ECDH SS w/ HKDF - generate key directly</c>
+            <c>ECDH-ES</c>      <c>ECDH-ES</c>        <c>HKDF - SHA-256</c>     <c>ECDH ES w/ HKDF - generate key directly</c>
+            <c>ECDH-SS</c>      <c>ECDH-SS</c>        <c>HKDF - SHA-256</c>     <c>ECDH SS w/ HKDF - generate key directly</c>
           </texttable>
 
           <texttable title="ECDH Algorithm Parameters" anchor="table-ecdh-es-parameter-table">
             <ttcol>name</ttcol>
             <ttcol>label</ttcol>
             <ttcol>type</ttcol>
+            <ttcol>algorithm</ttcol>
             <ttcol>description</ttcol>
-            <c>ephemeral key</c>        <c>-1</c>       <c>COSE_Key</c>         <c>Ephemeral Public key for the sender</c>
-            <c>static key</c>           <c>-2</c>       <c>COSE_Key</c>         <c>Static Public key for the sender</c>
-            <c>static key id </c>       <c>-3</c>       <c>bstr</c>             <c>Static Public key identifier for the sender</c>
+            <c>ephemeral key</c>        <c>-1</c>       <c>COSE_Key</c>         <c>ECDH-ES</c>  <c>Ephemeral Public key for the sender</c>
+            <c>static key</c>           <c>-2</c>       <c>COSE_Key</c>         <c>ECDH-ES</c>  <c>Static Public key for the sender</c>
+            <c>static key id </c>       <c>-3</c>       <c>bstr</c>             <c>ECDH-SS</c>  <c>Static Public key identifier for the sender</c>
           </texttable>
+
+          <t>
+            M00TODO: Talk about curves and point formats.
+          </t>
+
+          <texttable title="EC Curves" anchor="table-ec-curves">
+            <ttcol>name</ttcol>
+            <ttcol>key type</ttcol>
+            <ttcol>value</ttcol>
+            <ttcol>description</ttcol>
+            <c>P-256</c>        <c>EC2</c>      <c>1</c>       <c>NIST P-256 also known as ....</c>
+            <c>P-384</c>        <c>EC2</c>      <c>2</c>       <c>NIST P-384 also known as ....</c>
+            <c>P-521</c>        <c>EC2</c>      <c>3</c>       <c>NIST P-512 also known as ....</c>
+            <c>Curve25519</c>   <c>EC1</c>      <c>1</c>       <c>Provide reference</c>
+            <c>Goldilocks</c>   <c>EC1</c>      <c>2</c>       <c>Provide reference</c>
+          </texttable>
+
         </section>
       </section>
 
-      <section title="Key Agreement with KDF">
+      <section title="Key Agreement with KDF" anchor="ECDH-Direct">
         <t>
           Key Agreement with Key Wrapping uses a randomly generated CEK.
           The CEK is then encrypted using a Key Wrapping algorithm and a key derived from the shared secret computed by the key agreement algorithm.
@@ -1803,7 +1960,7 @@ COSE_KDF_Context = [
           </list>
         </t>
 
-        <section title="ECDH ES + HKDF">
+        <section title="ECDH ES + HKDF" anchor="ECDH-KeyWrap">
           <texttable>
             <ttcol align='left'>name</ttcol>
             <ttcol align='left'>value</ttcol>
@@ -1874,12 +2031,12 @@ COSE_KDF_Context = [
           One version uses both an x and a y coordinate, potentially with point compression.
           This is the traditional EC point representation that is used in [EC-in-PKIX].
           The other version uses only the x coordinate as the y coordinate is either to be recomputed or not needed for the key agreement operation.
-          An example of this is [Curve25549].
+          An example of this is [Curve25519].
         </t>
         
-        <section title="Single Coordinate Curves">
+        <section title="Single Coordinate Curves" anchor="EC1-Keys">
           <t>
-            NOTE: This section represents at risk work depending on the ability to get good references for Curve24559 and Goldilocks.
+            NOTE: This section represents at risk work depending on the ability to get good references for Curve25519 and Goldilocks.
           </t>
           
           <t>
@@ -1897,7 +2054,7 @@ COSE_KDF_Context = [
                   Do we create a registry for curves?
                   Is is the same registry for both EC1 and EC2?
                 </cref>
-                The curves defined in this document for this key type can be found in <xref target="table-ec1-curves"/>.
+                The curves defined in this document for this key type can be found in <xref target="table-ec-curves"/>.
                 Other curves may be registered in the future and private curves can be used as well.
               </t>
               
@@ -1929,14 +2086,6 @@ COSE_KDF_Context = [
             For private keys, it is REQUIRED that 'crv' and 'd' be present in the structure.
             It is RECOMMENDED that 'x'  also be present, but it can be recomputed from the required elements and omitting it saves on space.
           </t>
-
-          <texttable title="EC Curves" anchor="table-ec1-curves">
-            <ttcol>name</ttcol>
-            <ttcol>value</ttcol>
-            <ttcol>description</ttcol>
-            <c>Curve24559</c>        <c>1</c>       <c>Provide reference</c>
-            <c>Goldilocks</c>        <c>2</c>       <c>Provide reference</c>
-          </texttable>
           
           <texttable title="EC Key Parameters" anchor="table-ec1-keys">
             <ttcol>name</ttcol>
@@ -1950,7 +2099,7 @@ COSE_KDF_Context = [
           </texttable>
         </section>
 
-        <section title="Double Coordinate Curves">
+        <section title="Double Coordinate Curves" anchor="EC2-Keys">
           <t>
             The traditional way of sending EC curves has been to send either both the x and y coordinates, or the x coordinate and a sign bit for the y coordinate.
             The latter encoding has not been recommend in the IETF due to potential IPR issues with Certicom.
@@ -1962,7 +2111,7 @@ COSE_KDF_Context = [
             <list style="hanging">
               <t hangText="crv">
                 contains an identifier of the curve to be used with the key.
-                The curves defined in this document for this key type can be found in <xref target="table-ec2-curves"/>.
+                The curves defined in this document for this key type can be found in <xref target="table-ec-curves"/>.
                 Other curves may be registered in the future and private curves can be used as well.
               </t>
               
@@ -1995,14 +2144,6 @@ COSE_KDF_Context = [
             It is RECOMMENDED that 'x' and 'y' also be present, but they can be recomputed from the required elements and omitting them saves on space.
           </t>
 
-          <texttable title="EC Curves" anchor="table-ec2-curves">
-            <ttcol>name</ttcol>
-            <ttcol>value</ttcol>
-            <ttcol>description</ttcol>
-            <c>P-256</c>        <c>1</c>       <c>NIST P-256 also known as ....</c>
-            <c>P-384</c>        <c>2</c>       <c>NIST P-384 also known as ....</c>
-            <c>P-521</c>        <c>3</c>       <c>NIST P-512 also known as ....</c>
-          </texttable>
           
           <texttable title="EC Key Parameters" anchor="table-ec2-keys">
             <ttcol>name</ttcol>
@@ -2521,6 +2662,8 @@ COSE_KDF_Context = [
       &RFC7516;
       &RFC7517;
       &RFC7518;
+      
+      &CFRG-EC;
 
       <reference anchor="AES-GCM" >
         <front>
@@ -2636,7 +2779,7 @@ COSE_KDF_Context = [
 
     </section>
     
-    <section anchor="three-levels-of-recipient-information" title="Three Levels of Recipient Information">
+    <section anchor="three-layer" title="Three Levels of Recipient Information">
 
       <t>
         All of the currently defined Key Management methods only use two levels of the COSE_Encrypt structure.
