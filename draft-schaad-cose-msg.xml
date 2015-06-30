@@ -109,7 +109,7 @@
         <t>
           <list style="symbols">
             <t>
-              Define a top level message structure so that encrypted, signed and MAC-ed messages can easily identified and still have a consistent view.
+              Define a top level message structure so that encrypted, signed and MACed messages can easily identified and still have a consistent view.
             </t>
             <t>
               Signed messages separate the concept of protected and unprotected attributes that are for the content and the signature.
@@ -210,8 +210,8 @@ label = int / tstr
     <section anchor="the-cosemsg-structure" title="The COSE_MSG structure">
 
       <t>
-        The COSE_MSG structure is a top level CBOR object which corresponds to the DataContent type in the Cryptographic Message Syntax (CMS) <xref target="RFC5652"/>.
-        This structure allows for a top level message to be sent which could be any of the different security services.
+        The COSE_MSG structure is a top level CBOR object that corresponds to the DataContent type in the Cryptographic Message Syntax (CMS) <xref target="RFC5652"/>.
+        This structure allows for a top level message to be sent that could be any of the different security services.
         The security service is identified within the message.
       </t>
 
@@ -258,12 +258,12 @@ label = int / tstr
           <t>0 - Reserved.</t>
           <t>1 - Signed Message.</t>
           <t>2 - Encrypted Message</t>
-          <t>3 - Authenticated Message (MAC-ed message)</t>
+          <t>3 - Authenticated Message (MACed message)</t>
         </list>
       </t>
 
       <t>
-        Implementations MUST be prepared to find an integer under this label which does not correspond to the values 1 to 3.
+        Implementations MUST be prepared to find an integer under this label that does not correspond to the values 1 to 3.
         If this is found then the client MUST stop attempting to parse the structure and fail.
         The value of 0 is reserved and not to be used.
         If the value of 0 is found, then clients MUST fail processing the structure.
@@ -271,7 +271,8 @@ label = int / tstr
       </t>
 
       <t>
-        NOTE:  Is the any reason to allow for a marker of a COSE_Key structure and all it to be a COSE_MSG, doing so does allow for a security risk, but may simplify the code.
+        NOTE:  Is there any reason to allow for a marker of a COSE_Key structure and allow it to be a COSE_MSG?
+	Doing so does allow for a security risk, but may simplify the code.
         <cref source="JLS">OPEN ISSUE</cref>
       </t>
 
@@ -310,7 +311,7 @@ msg_type_mac=3
         <c>payload</c>          <c>4</c>        <c>Contains the content of the structure</c>
         <c>signatures</c>       <c>5</c>        <c>For COSE_Sign - array of signatures</c>
         <c>signature</c>        <c>6</c>        <c>For COSE_signature only</c>
-        <c>ciphertext</c>       <c>4</c>        <c>TODO: Should we re-use the same as payload or not?</c>
+        <c>ciphertext</c>       <c>4</c>        <c>TODO: Should we reuse the same as payload or not?</c>
         <c>recipients</c>       <c>9</c>        <c>For COSE_encrypt and COSE_mac</c>
         <c>tag</c>              <c>10</c>       <c>For COSE_mac only</c>
       </texttable>
@@ -361,15 +362,15 @@ tag=10
 
         <list style="hanging">
           <t hangText='protected'>
-            contains attributes about the layer which are to be cryptographically protected. 
+            contains attributes about the layer that are to be cryptographically protected. 
             This bucket MUST NOT be used if it is not going to be included in a cryptographic computation.
           </t>
           <t hangText='unprotected'>
-            contains attributes about the layer which are not cryptographically protected.
+            contains attributes about the layer that are not cryptographically protected.
           </t>
         </list>
 
-        Both of the buckets are optional and are omitted if there are no items contained in the map.  The CDDL fragment which describes the two buckets is:
+        Both of the buckets are optional and are omitted if there are no items contained in the map.  The CDDL fragment that describes the two buckets is:
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
@@ -397,7 +398,7 @@ Headers = (
             
             <t hangText='crit'>
               This field is used to ensure that applications will take appropriate action based on the values found.
-              The field is used to indicate which protected header labels an application which is processing a message is required to understand.
+              The field is used to indicate which protected header labels an application that is processing a message is required to understand.
               This field uses the integer '2' for the label. 
               The value is an array of COSE Header Labels.
               When present, this MUST be placed in the protected header bucket.
@@ -529,15 +530,15 @@ COSE_Sign = {
             The value MUST be msg_type_signed (1).
           </t>
           <t hangText='protected'>
-            contains attributes about the payload which are to be protected by the signature.
+            contains attributes about the payload that are to be protected by the signature.
             An example of such an attribute would be the content type ('cty') attribute.
-            The content is a CBOR map of attributes which is encoded to a byte stream.
+            The content is a CBOR map of attributes that is encoded to a byte stream.
             This field MUST NOT contain attributes about the signature, even if
             those attributes are common across multiple signatures.
             The labels in this map are typically taken from <xref target="Header-Table"/>.
           </t>
           <t hangText='unprotected'>
-            contains attributes about the payload which are not protected by the signature.
+            contains attributes about the payload that are not protected by the signature.
             An example of such an attribute would be the content type ('cty') attribute.
             This field MUST NOT contain attributes about a signature, even if
             the attributes are common across multiple signatures.
@@ -547,8 +548,8 @@ COSE_Sign = {
             contains the serialized content to be signed.
             If the payload is not present in the message, the application is required to 
             supply the payload separately.
-            The payload is wrapped in a bstr to ensure that it is transported without changes, 
-            if the payload is transported separately it is the responsibility of the application
+            The payload is wrapped in a bstr to ensure that it is transported without changes.
+            If the payload is transported separately, it is the responsibility of the application
             to ensure that it will be transported without changes.
           </t>
           <t hangText='signatures'>
@@ -584,11 +585,11 @@ COSE_signature =  {
             contains additional information to be authenticated by the signature.
             The field holds data about the signature operation.
             The field MUST NOT hold attributes about the payload being signed.
-            The content is a CBOR map of attributes which is encoded to a byte stream.
+            The content is a CBOR map of attributes that is encoded to a byte stream.
             At least one of protected and unprotected MUST be present.
           </t>
           <t hangText='unprotected'>
-            contains attributes about the signature which are not protected by the signature.
+            contains attributes about the signature that are not protected by the signature.
             This field MUST NOT contain attributes about the payload being signed.
             At least one of protected and unprotected MUST be present.
           </t>
@@ -646,7 +647,7 @@ Sig_structure = [
       </t>
 
       <t>
-        In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the appropriated authorization is done.
+        In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the appropriate authorization is done.
       </t>
 
     </section>
@@ -842,7 +843,7 @@ Enc_structure = [
         Any of the key management methods can be used for this purpose. 
         The second mode is to both check that the content has not been changed since the MAC was computed, and to use key management to verify who sent it. 
         The key management modes that support this are ones that either use a pre-shared secret, or do static-static key agreement. 
-        In both of these cases the entity MAC-ing the message can be validated by a key binding. 
+        In both of these cases the entity MACing the message can be validated by a key binding. 
         (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.)
       </t>
 
@@ -868,20 +869,20 @@ COSE_mac = {
             The value MUST be msg_type_mac (3).
           </t>
           <t hangText='protected'>
-            contains attributes about the payload which are to be protected by the MAC.
+            contains attributes about the payload that are to be protected by the MAC.
             An example of such an attribute would be the content type ('cty') attribute.
-            The content is a CBOR map of attributes which is encoded to a byte stream.
+            The content is a CBOR map of attributes that is encoded to a byte stream.
             This field MUST NOT contain attributes about the recipient, even if those attributes are common across multiple recipients.
             At least one of protected and unprotected MUST be present.
           </t>
           <t hangText='unprotected'>
-            contains attributes about the payload which are not protected by the MAC.
+            contains attributes about the payload that are not protected by the MAC.
             An example of such an attribute would be the content type ('cty') attribute.
             This field MUST NOT contain attributes about a recipient, even if the attributes are common across multiple recipients.
             At least one of protected and unprotected MUST be present.
           </t>
           <t hangText='payload'>
-            contains the serialized content to be MAC-ed.
+            contains the serialized content to be MACed.
             If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes, if the payload is transported separately it is the responsibility of the application to ensure that it will be transported without changes.
           </t>
@@ -934,7 +935,7 @@ COSE_mac = {
       <t>
         There are only a few changes between JOSE and COSE for how keys are formatted.
         As with JOSE, COSE uses a map to contain the elements of a key.
-        Those values, which in JOSE, are base64url encoded because they are binary values, are encoded as bstr values in COSE.
+        Those values, which in JOSE are base64url encoded because they are binary values, are encoded as bstr values in COSE.
       </t>
 
       <t>
@@ -943,7 +944,7 @@ COSE_mac = {
         <cref source="JLS">
           We can really simplify the grammar for COSE_Key to be just the kty (the one required field) and the generic item.
           The reason to do this is that it makes things simpler.
-          The reason not to do this says that we really need to add a lot more items so that a grammar check can be done which is more tightly enforced.
+          The reason not to do this says that we really need to add a lot more items so that a grammar check can be done that is more tightly enforced.
         </cref>
       </t>
 
@@ -973,13 +974,13 @@ COSE_KeySet = [+COSE_Key]
 
         <list style="symbols">
           <t>
-            Any item which is base64 encoded in JWK, is bstr encoded for COSE.
+            Any item that is base64url encoded in JWK, is bstr encoded for COSE.
           </t>
           <t>
-            Any item which is integer encoded in JWK, is int encoded for COSE.
+            Any item that is integer encoded in JWK, is int encoded for COSE.
           </t>
           <t>
-            Any item which is string (but not base64) encoded in JWK, is tstr encoded for COSE.
+            Any item that is string (but not base64url) encoded in JWK, is tstr encoded for COSE.
           </t>
           <t>
             Exceptions to this are the following fields:
@@ -1254,11 +1255,11 @@ key_alg=3
           <list style="hanging">
             <t hangText="16-bits (2)">
               limits messages to 2^16 bytes in length.
-              The nonce length is 13 octets allowing for 2^(13*8) possible values of the nonce without repeating.
+              The nonce length is 13 bytes allowing for 2^(13*8) possible values of the nonce without repeating.
             </t>
             <t hangText="64-bits (8)"> 
               limits messages to 2^64 byes in length.
-              The nonce length is 7 octets allowing for 2^56 possible values of the nonce without repeating.
+              The nonce length is 7 bytes allowing for 2^56 possible values of the nonce without repeating.
             </t>
           </list>
         </t>
@@ -1357,7 +1358,7 @@ key_alg=3
             </t>
 
             <t>
-              length - the number of octets of output that need to be generated.
+              length - the number of bytes of output that need to be generated.
             </t>
 
             <t>
@@ -1554,7 +1555,7 @@ COSE_KDF_Context = [
       <t>
         At the moment we do not have any key management methods that allow for the use of protected headers. 
         This may be changed in the future if, for example, the AES-GCM Key wrap method defined in <xref target="RFC7518"/> were extended to allow for authenticated data. 
-        In that event the use of the 'protected' field, which is current forbidden below, would be permitted.
+        In that event, the use of the 'protected' field, which is current forbidden below, would be permitted.
       </t>
 
       <section title="Direct Encryption">
@@ -1566,8 +1567,8 @@ COSE_KDF_Context = [
           </t>
 
           <t>
-            For JOSE, direct encryption key management is the only key management method allowed for doing MAC-ed messages.
-            In COSE, all of the key management methods can be used for MAC-ed messages.
+            For JOSE, direct encryption key management is the only key management method allowed for doing MACed messages.
+            In COSE, all of the key management methods can be used for MACed messages.
           </t>
 
           <t>
@@ -1640,7 +1641,7 @@ COSE_KDF_Context = [
             This algorithm uses an AES key to wrap a value that is a multiple of 64-bits, as such it can be used to wrap a key for any of the content encryption algorithms defined in this document.
             <cref source="JLS">
               Do we also want to document the use of RFC 5649 as well?  
-              It allows for other sizes of keys which might be used for HMAC - i.e. a 200 bit key.
+              It allows for other sizes of keys that might be used for HMAC - i.e. a 200 bit key.
               The algorithm exists, but I do not personally know of any standard uses of it.
             </cref>
             The algorithm requires a single fixed parameter, the initial value.
@@ -1904,7 +1905,7 @@ COSE_KDF_Context = [
               <t hangText="x">
                 contains the x coordinate for the EC point.
                 The integer is converted to an octet string as defined in <xref target="SEC1"/>.
-                Zero byte MUST NOT be removed from the front of the octet string.
+                Zero octets MUST NOT be removed from the front of the octet string.
                 <cref source="JLS">
                   Should we use the integer encoding for x, y and d instead of bstr?
                 </cref>
@@ -1913,7 +1914,7 @@ COSE_KDF_Context = [
               <t hangText="y">
                 contains either the sign bit or the value of y coordinate for the EC point.
                 For the value, the integer is converted to an octet string as defined in <xref target="SEC1"/>.
-                Zero bytes MUST NOT be removed from the front of the octet string.
+                Zero octets MUST NOT be removed from the front of the octet string.
                 For the sign bit, the value is true if the value of y is positive.
               </t>
               
@@ -1969,7 +1970,7 @@ COSE_KDF_Context = [
               <t hangText="x">
                 contains the x coordinate for the EC point.
                 The integer is converted to an octet string as defined in <xref target="SEC1"/>.
-                Zero byte MUST NOT be removed from the front of the octet string.
+                Zero octets MUST NOT be removed from the front of the octet string.
                 <cref source="JLS">
                   Should we use the integer encoding for x, y and d instead of bstr?
                 </cref>
@@ -1978,7 +1979,7 @@ COSE_KDF_Context = [
               <t hangText="y">
                 contains either the sign bit or the value of y coordinate for the EC point.
                 For the value, the integer is converted to an octet string as defined in <xref target="SEC1"/>.
-                Zero bytes MUST NOT be removed from the front of the octet string.
+                Zero octets MUST NOT be removed from the front of the octet string.
                 For the sign bit, the value is true if the value of y is positive.
               </t>
               
@@ -2259,7 +2260,7 @@ COSE_KDF_Context = [
             </t>
             <t hangText='label'>
               The value to be used to identify this algorithm.
-              Algorithm labels MUST be unique.
+              Key map labels MUST be unique.
               The label can be a positive integer, a negative integer or a string.
               Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.
               Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.
@@ -2310,7 +2311,7 @@ COSE_KDF_Context = [
             <t hangText='label'>
               The label is to be unique for every value of key type. 
               The range of values is from -256 to -1.
-              Labels are expected to be re-used for different keys.
+              Labels are expected to be reused for different keys.
             </t>
             <t hangText='CBOR type'>
               This field contains the CBOR type for the field
@@ -2401,7 +2402,7 @@ COSE_KDF_Context = [
         <section title="COSE Key media type">
 
           <t>
-            This section registers the "application/cose+json" and "application/cose-set+json" media typesin the "Media Types" registry.
+            This section registers the "application/cose+json" and "application/cose-set+json" media types in the "Media Types" registry.
             These media types are used to indicate, respectively, that content is a COSE_Key or COSE_KeySet object.
           </t>
 
@@ -2623,7 +2624,7 @@ COSE_KDF_Context = [
             <!-- Mike Jones:  Last sentence is not clear.  He is reading this as referring to ? rather than just being generating a tag. - M00TODO -->
           </t>
           <t>
-            A fixed value which is part of the encoded plain text.
+            A fixed value that is part of the encoded plain text.
             This is the approach followed by the AES key wrap algorithm <xref target="RFC3394"/>.
           </t>
           <t>
