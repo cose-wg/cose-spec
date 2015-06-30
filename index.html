@@ -493,7 +493,7 @@ ul.toc a:first-child {
 <link href="#rfc.section.13.3" rel="Chapter" title="13.3 Key Encryption"/>
 <link href="#rfc.section.13.3.1" rel="Chapter" title="13.3.1 RSA OAEP"/>
 <link href="#rfc.section.13.4" rel="Chapter" title="13.4 Direct Key Agreement"/>
-<link href="#rfc.section.13.4.1" rel="Chapter" title="13.4.1 ECDH Ephemeral-Static"/>
+<link href="#rfc.section.13.4.1" rel="Chapter" title="13.4.1 ECDH"/>
 <link href="#rfc.section.13.5" rel="Chapter" title="13.5 Key Agreement with KDF"/>
 <link href="#rfc.section.13.5.1" rel="Chapter" title="13.5.1 ECDH ES + HKDF"/>
 <link href="#rfc.section.13.6" rel="Chapter" title="13.6 Password"/>
@@ -641,7 +641,7 @@ ul.toc a:first-child {
 </ul><li>13.3.   <a href="#rfc.section.13.3">Key Encryption</a></li>
 <ul><li>13.3.1.   <a href="#rfc.section.13.3.1">RSA OAEP</a></li>
 </ul><li>13.4.   <a href="#rfc.section.13.4">Direct Key Agreement</a></li>
-<ul><li>13.4.1.   <a href="#rfc.section.13.4.1">ECDH Ephemeral-Static</a></li>
+<ul><li>13.4.1.   <a href="#rfc.section.13.4.1">ECDH</a></li>
 </ul><li>13.5.   <a href="#rfc.section.13.5">Key Agreement with KDF</a></li>
 <ul><li>13.5.1.   <a href="#rfc.section.13.5.1">ECDH ES + HKDF</a></li>
 </ul><li>13.6.   <a href="#rfc.section.13.6">Password</a></li>
@@ -1679,7 +1679,7 @@ key_alg=3
     </tr>
   </tbody>
 </table>
-<h1 id="rfc.section.12.2"><a href="#rfc.section.12.2">12.2.</a> Context Information Structure</h1>
+<h1 id="rfc.section.12.2"><a href="#rfc.section.12.2">12.2.</a> <a href="#context" id="context">Context Information Structure</a></h1>
 <p id="rfc.section.12.2.p.1">The context information structure is used to ensure that the derived keying material is "bound" to the context of the transaction.  The context information structure used here is based on that defined in <a href="#SP800-56A">[SP800-56A]</a>.  By using CBOR for the encoding of the context information structure, we automatically get the same type of type and length separation of fields that is obtained by the use of ASN.1.  This means that there is no need to encode the lengths for the base elements as it is done by the CBOR encoding.  </p>
 <p id="rfc.section.12.2.p.2">The context information structure refers to PartyU and PartyV as the two parties which are doing the key derivation.  Unless the application protocol defines differently, we assign PartyU to the entity that is creating the message and PartyV to the entity that is receiving the message.  This is because we are assuming a set of stand alone store and forward messaging processes.  </p>
 <p id="rfc.section.12.2.p.3">Application protocols are free to define the roles differently.  For example, they could assign the PartyU role to the entity that initiates the connection and allow directly sending multiple messages over the line without changing the role information.  </p>
@@ -1786,6 +1786,16 @@ COSE_KDF_Context = [
 
 <p> </p>
 <h1 id="rfc.section.13.1.1"><a href="#rfc.section.13.1.1">13.1.1.</a> Direct Key</h1>
+<p id="rfc.section.13.1.1.p.1">We define two key agreement algorithms that function as direct key algorithms.  These algorithms are: </p>
+
+<dl>
+  <dt>Direct:</dt>
+  <dd style="margin-left: 8">This key management technique is the simplest method, the supplied key is directly used as the key for the next layer down in the message.  There are no algorithm parameters defined for this key management methods.  </dd>
+  <dt>Direct KDF:</dt>
+  <dd style="margin-left: 8">This key managment takes a common shared secret between the two parties and applies the HKDF function (<a href="#HKDF">Section 12.1</a>) using the context structure defined in <a href="#context">Section 12.2</a> to transform the shared secret into the necessary key.  Either the 'salt' parameter of HKDF or the partyU 'nonce' parameter of the context structure MUST be present.  This parameter can be generated either randomly or deterministically, the requirement is that it be a unique value for the key pair in question.  <br/> If the salt/nonce value is generated randomly, then it is suggested that the length of the random value be the same length as the hash function underlying HKDF, i.e 256-bits.  While there is no way to guarantee that it will be unique, there is a high probability that it will be unique.  If the salt/nonce value is generated deterministically, it can be guaranteed to be unique and thus there is no length requirement.  </dd>
+</dl>
+
+<p> </p>
 <div id="rfc.table.8"/>
 <div id="table-direct"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -1800,13 +1810,13 @@ COSE_KDF_Context = [
   </thead>
   <tbody>
     <tr>
-      <td class="left">dir</td>
+      <td class="left">direct</td>
       <td class="left">-6</td>
       <td class="left">N/A</td>
       <td class="left">Direct use of CEK</td>
     </tr>
     <tr>
-      <td class="left">dir+KDF</td>
+      <td class="left">direct+KDF</td>
       <td class="left">*</td>
       <td class="left">HKDF SHA-256</td>
       <td class="left">Shared secret w/ KDF</td>
@@ -1901,9 +1911,18 @@ COSE_KDF_Context = [
 <p id="rfc.section.13.3.1.1.p.1">A key size of 2048 bits or larger MUST be used with this algorithm.  This key size corresponds roughly to the same strength as provided by a 128-bit symmetric encryption algorithm.  </p>
 <p id="rfc.section.13.3.1.1.p.2">It is highly recommended that checks on the key length  be done before starting a decryption operation.  One potential denial of service operation is to provide encrypted objects using either abnormally long or oddly sized RSA modulus values.  Implementations SHOULD be able to encrypt and decrypt with modulus between 2048 and 16K bits in length.<a id="CREF15" class="info">[CREF15]<span class="info">JLS: Is this range we want to specify?</span></a> Applications can impose additional restrictions on the length of the modulus.  </p>
 <h1 id="rfc.section.13.4"><a href="#rfc.section.13.4">13.4.</a> Direct Key Agreement</h1>
-<p id="rfc.section.13.4.p.1">Direct Key Agreement derives a key from the shared secret computed by the key agreement operation.  </p>
-<p id="rfc.section.13.4.p.2">When direct key agreement mode is used, it SHOULD be the only mode used on the message.  This method creates the key directly and that makes it difficult to mix with additional recipients.  </p>
-<p id="rfc.section.13.4.p.3">The COSE_encrypt structure for the recipient is organized as follows: </p>
+<p id="rfc.section.13.4.p.1">When using the 'Direct Key Agreement' key managment method, the two parties use a key agreement method to create a shared secret.  A KDF is then applied to the shared secret to derive a key to be used in protecting the data.  This key is normally used as a CEK or MAC key, but could be used for other purposes if more than two layers are in use (see <a href="#three-layer">Appendix B</a>).  </p>
+<p id="rfc.section.13.4.p.2">The most commonly used key agreement algorithm used is Diffie-Hellman, but other variants exist.  Since COSE is designed for a store and forward environment rather than an on-line environment, many of the DH variants cannot be used as the receiver of the message cannot provide any key material.  One side-effect of this is that perfect forward security is not achievable, a static key will always be used for the receiver of the COSE message.  </p>
+<p id="rfc.section.13.4.p.3">Two variants of DH that are easily supported are: </p>
+
+<ul class="empty">
+  <li>Ephemeral-Static DH: where the sender of the message creates a one time DH key and uses a static key for the recipient.  The use of the ephemeral sender key means that no additional random input is needed as this is randomly generated for each message.  </li>
+  <li>Static-Static DH: where a static key is used for both the sender and the recipient.  The use of static keys allows for recipient to get a weak version of data origination for the message.  When static-static key agreement is used, then some piece of unique data is require to ensure that a different key is created for each message </li>
+</ul>
+
+<p> In this specification, both variants are specified.  This has been done to provide the weak data origination option for use with MAC operations.  </p>
+<p id="rfc.section.13.4.p.4">When direct key agreement mode is used, it MUST be the only key management mode used on the message and there MUST be only one recipient.  This method creates the key directly and that makes it difficult to mix with additional recipients.  If multiple recipients are needed, then the version with key wrap (<a href="#ECDH-KeyWrap">Section 13.5.1</a>) needs to be used.  </p>
+<p id="rfc.section.13.4.p.5">The COSE_encrypt structure for the recipient is organized as follows: </p>
 <p/>
 
 <ul>
@@ -1913,8 +1932,27 @@ COSE_KDF_Context = [
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.13.4.1"><a href="#rfc.section.13.4.1">13.4.1.</a> ECDH Ephemeral-Static</h1>
-<p id="rfc.section.13.4.1.p.1">This algorithm uses the key agreement algorithm specified in <a href="#RFC6090">[RFC6090]</a> combined with the KDF defined in <a href="#HKDF">Section 12.1</a> to generate the key to be used in encrypting/decrypting the next layer down.  </p>
+<h1 id="rfc.section.13.4.1"><a href="#rfc.section.13.4.1">13.4.1.</a> ECDH</h1>
+<p id="rfc.section.13.4.1.p.1">NOTE: Curves 25519 and Goldilocks are elements at risk.  </p>
+<p id="rfc.section.13.4.1.p.2">We define one set of key agreement algorithms structured around Elliptic Curves Diffie-Hellman problem.  <a id="CREF16" class="info">[CREF16]<span class="info">JLS: Does anybody need pure DH?</span></a> We define both an ephemeral-static and a static-static version of these algorithms.  We allow for multiple curves to be used, it needs to be noted that the math required for the curves as well as the point representation is going to be different.  <a id="CREF17" class="info">[CREF17]<span class="info">JLS: This could just as easily be done by specifying two different set of algorithm identifiers, one for each of the key formats.  I don't believe that we need to set things up by having two different sets of algorithm identifiers for the different keys as the structure of what is represented is going to be the same, just the math and point formats are going to be different.  The other "difference" is the question of how the octet string of the shared secret is defined.  However, since we don't need to specify either in this document we can defer both of them into their respective documents.  </span></a> </p>
+<p id="rfc.section.13.4.1.p.3">We setup to use two different curve structures for the ECDH algorithms.  </p>
+
+<ul class="empty">
+  <li>Weierstrass Curves: These are the ones one is used to seeing from NIST.  We define three NIST curves for use with this document.  These curves are P-256, P-384 and P-512.  (The mathematics can be found in <a href="#RFC6090">[RFC6090]</a>.) For these curves, the key type 'EC2' is used (<a href="#EC2-Keys">Section 14.1.2</a>).  </li>
+  <li>Montgomery Curves: These curves are Curve25519 and Goldilocks.  (The mathematics can be found in <a href="#I-D.irtf-cfrg-curves">[I-D.irtf-cfrg-curves]</a>.) For these curves, the key type 'EC1' is used (<a href="#EC1-Keys">Section 14.1.1</a>).  </li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.13.4.1.p.4">As shown in <a href="#table-ecdh-es-table">Table 11</a> we define two ECDH algorithm identifiers for EC direct key agreement.  These identifiers are: </p>
+
+<dl>
+  <dt>ECDH-ES:</dt>
+  <dd style="margin-left: 8">This algorithm does a key agreement operation using a static key for the recipient and an ephemeral key for the sender.  The ephemeral key MUST be generated fresh for every message.  The HKDF function (<a href="#HKDF">Section 12.1</a>) is used with the context structure in <a href="#context">Section 12.2</a> to transform the key agreement secret into the necessary key.  Since the ephemeral key is generated freshly, the 'salt' parameter of HKDF is not needed and can be absent.  <br/> One new algorithm parameter is defined for use with this algorithm.  This parameter is: <dl><dt>ephemeral key:</dt><dd style="margin-left: 8">This parameter is used to hold and transport the ephemeral key generated by the sender of the message.  This parameter has a label of -1 and a type of COSE_Key.  This parameter can be placed in the unprotected bucket, if it is changed then the correct key will not be able to be generated.  </dd></dl><p> The parameter is summarized in </p><a href="#table-ecdh-es-parameter-table">Table 12</a>.  </dd>
+  <dt>ECDH-SS:</dt>
+  <dd style="margin-left: 8">This algorithm does a key agreement operation using two static keys, one for the recipient and one for the sender.  The HKDF function (<a href="#HKDF">Section 12.1</a>) is used with the context structure in <a href="#context">Section 12.2</a> to transform the key agreement secret into the necessary key.  Either the 'salt' parameter of HKDF or the partyU 'nonce' parameter of the context structure MUST be present.  This parameter can be generated either randomly or deterministically, the requirement is that it be a unique value for the key pair in question.  <br/> If the salt/nonce value is generated randomly, then it is suggested that the length of the random value be the same length as the hash function underlying HKDF, i.e 256-bits.  While there is no way to guarantee that it will be unique, there is a high probability that it will be unique.  If the salt/nonce value is generated deterministically, it can be guaranteed to be unique and thus there is no length requirement.  <br/> Two new algorithm parameters are defined for use with this algorithm.  These parameters are: <dl><dt>static key:</dt><dd style="margin-left: 8">This parameter is used to hold and transport the static key used by the sender of the message.  This parameter has the label of -2 and a type of COSE_Key.  The parameter can be placed in the unprotected bucket, if it is changed then the correct key will not be able to be generated.  If the data origination service is desired, then the message recipient needs to validate that the key in this field is associated with the sender.  </dd><dt>static key identifier:</dt><dd style="margin-left: 8">This parameter is used to hold a reference to the static key used by the sender of the message.  The value is expected to match the 'kid' member of a COSE_Key structure published by the sender.  The value in this field cannot be assumed to uniquely identify a single key, multiple keys may need to be found and tested.  Not all of the keys identified by a kid value may be associated with the sender of the message.  If the data origination service is desired, then the message recipient needs to validate that the key in this field is associated with the sender.  </dd></dl><p> These parameters are summarized in </p><a href="#table-ecdh-es-parameter-table">Table 12</a>.  </dd>
+</dl>
+
+<p> </p>
 <div id="rfc.table.11"/>
 <div id="table-ecdh-es-table"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -1930,13 +1968,13 @@ COSE_KDF_Context = [
   <tbody>
     <tr>
       <td class="left">ECDH-ES</td>
-      <td class="left">*</td>
+      <td class="left">ECDH-ES</td>
       <td class="left">HKDF - SHA-256</td>
       <td class="left">ECDH ES w/ HKDF - generate key directly</td>
     </tr>
     <tr>
       <td class="left">ECDH-SS</td>
-      <td class="left">*</td>
+      <td class="left">ECDH-SS</td>
       <td class="left">HKDF - SHA-256</td>
       <td class="left">ECDH SS w/ HKDF - generate key directly</td>
     </tr>
@@ -1951,6 +1989,7 @@ COSE_KDF_Context = [
       <th class="left">name</th>
       <th class="left">label</th>
       <th class="left">type</th>
+      <th class="left">algorithm</th>
       <th class="left">description</th>
     </tr>
   </thead>
@@ -1959,35 +1998,84 @@ COSE_KDF_Context = [
       <td class="left">ephemeral key</td>
       <td class="left">-1</td>
       <td class="left">COSE_Key</td>
+      <td class="left">ECDH-ES</td>
       <td class="left">Ephemeral Public key for the sender</td>
     </tr>
     <tr>
       <td class="left">static key</td>
       <td class="left">-2</td>
       <td class="left">COSE_Key</td>
+      <td class="left">ECDH-ES</td>
       <td class="left">Static Public key for the sender</td>
     </tr>
     <tr>
       <td class="left">static key id </td>
       <td class="left">-3</td>
       <td class="left">bstr</td>
+      <td class="left">ECDH-SS</td>
       <td class="left">Static Public key identifier for the sender</td>
     </tr>
   </tbody>
 </table>
-<h1 id="rfc.section.13.5"><a href="#rfc.section.13.5">13.5.</a> Key Agreement with KDF</h1>
+<p id="rfc.section.13.4.1.p.5">M00TODO: Talk about curves and point formats.  </p>
+<div id="rfc.table.13"/>
+<div id="table-ec-curves"/>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <caption>EC Curves</caption>
+  <thead>
+    <tr>
+      <th class="left">name</th>
+      <th class="left">key type</th>
+      <th class="left">value</th>
+      <th class="left">description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="left">P-256</td>
+      <td class="left">EC2</td>
+      <td class="left">1</td>
+      <td class="left">NIST P-256 also known as ....</td>
+    </tr>
+    <tr>
+      <td class="left">P-384</td>
+      <td class="left">EC2</td>
+      <td class="left">2</td>
+      <td class="left">NIST P-384 also known as ....</td>
+    </tr>
+    <tr>
+      <td class="left">P-521</td>
+      <td class="left">EC2</td>
+      <td class="left">3</td>
+      <td class="left">NIST P-512 also known as ....</td>
+    </tr>
+    <tr>
+      <td class="left">Curve25519</td>
+      <td class="left">EC1</td>
+      <td class="left">1</td>
+      <td class="left">Provide reference</td>
+    </tr>
+    <tr>
+      <td class="left">Goldilocks</td>
+      <td class="left">EC1</td>
+      <td class="left">2</td>
+      <td class="left">Provide reference</td>
+    </tr>
+  </tbody>
+</table>
+<h1 id="rfc.section.13.5"><a href="#rfc.section.13.5">13.5.</a> <a href="#ECDH-Direct" id="ECDH-Direct">Key Agreement with KDF</a></h1>
 <p id="rfc.section.13.5.p.1">Key Agreement with Key Wrapping uses a randomly generated CEK.  The CEK is then encrypted using a Key Wrapping algorithm and a key derived from the shared secret computed by the key agreement algorithm.  </p>
 <p id="rfc.section.13.5.p.2">The COSE_encrypt structure for the recipient is organized as follows: </p>
 <p/>
 
 <ul>
-  <li>The 'protected' field MUST be absent if the key wrap algorithm is an AE algorithm.  <a id="CREF16" class="info">[CREF16]<span class="info">JLS: It would be possible to include the protected field in the KDF rather than the key wrap algorithm if we wanted to.  This would provide the same level of security, it would not be possible to get the same key if they are different.  </span></a> </li>
+  <li>The 'protected' field MUST be absent if the key wrap algorithm is an AE algorithm.  <a id="CREF18" class="info">[CREF18]<span class="info">JLS: It would be possible to include the protected field in the KDF rather than the key wrap algorithm if we wanted to.  This would provide the same level of security, it would not be possible to get the same key if they are different.  </span></a> </li>
   <li>The plain text to be encrypted is the key from next layer down (usually the content layer).  </li>
   <li>At a minimum, the 'unprotected' field MUST contain the 'alg' parameter, a parameter identifying the recipient asymmetric key, and a parameter with the sender's asymmetric public key.  </li>
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.13.5.1"><a href="#rfc.section.13.5.1">13.5.1.</a> ECDH ES + HKDF</h1>
+<h1 id="rfc.section.13.5.1"><a href="#rfc.section.13.5.1">13.5.1.</a> <a href="#ECDH-KeyWrap" id="ECDH-KeyWrap">ECDH ES + HKDF</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -2019,7 +2107,7 @@ COSE_KDF_Context = [
   </tbody>
 </table>
 <h1 id="rfc.section.13.6"><a href="#rfc.section.13.6">13.6.</a> Password</h1>
-<p><a id="CREF17" class="info">[CREF17]<span class="info">JLS: Do we want/need to support this? JOSE did it mainly to support the encryption of private keys.  </span></a> </p>
+<p><a id="CREF19" class="info">[CREF19]<span class="info">JLS: Do we want/need to support this? JOSE did it mainly to support the encryption of private keys.  </span></a> </p>
 <h1 id="rfc.section.13.6.1"><a href="#rfc.section.13.6.1">13.6.1.</a> PBES2</h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
@@ -2051,7 +2139,7 @@ COSE_KDF_Context = [
 <p id="rfc.section.14.p.1">The COSE_Key object defines a way to hold a single key object, it is still required that the members of individual key types be defined.  This section of the document is where we define an initial set of members for specific key types.  </p>
 <p id="rfc.section.14.p.2">For each of the key types, we define both public and private members.  The public members are what is transmitted to others for their usage.  We define private members mainly for the purpose of archival of keys by individuals.  However, there are some circumstances where private keys may be distributed by various entities in a protocol.  Examples include:  Entities which have poor random number generation.  Centralized key creation for multi-cast type operations.  Protocols where a shared secret is used as a bearer token for authorization purposes.  </p>
 <p id="rfc.section.14.p.3">Keys are identified by the 'kty' member of the COSE_Key object.  In this document we define four values for the member.  </p>
-<div id="rfc.table.13"/>
+<div id="rfc.table.14"/>
 <div id="table_key_types"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>Key Type Values</caption>
@@ -2086,17 +2174,17 @@ COSE_KDF_Context = [
   </tbody>
 </table>
 <h1 id="rfc.section.14.1"><a href="#rfc.section.14.1">14.1.</a> Elliptic Curve Keys</h1>
-<p id="rfc.section.14.1.p.1">Two different key structures are being defined for Elliptic Curve keys.  One version uses both an x and a y coordinate, potentially with point compression.  This is the traditional EC point representation that is used in [EC-in-PKIX].  The other version uses only the x coordinate as the y coordinate is either to be recomputed or not needed for the key agreement operation.  An example of this is [Curve25549].  </p>
-<h1 id="rfc.section.14.1.1"><a href="#rfc.section.14.1.1">14.1.1.</a> Single Coordinate Curves</h1>
-<p id="rfc.section.14.1.1.p.1">NOTE: This section represents at risk work depending on the ability to get good references for Curve24559 and Goldilocks.  </p>
+<p id="rfc.section.14.1.p.1">Two different key structures are being defined for Elliptic Curve keys.  One version uses both an x and a y coordinate, potentially with point compression.  This is the traditional EC point representation that is used in [EC-in-PKIX].  The other version uses only the x coordinate as the y coordinate is either to be recomputed or not needed for the key agreement operation.  An example of this is [Curve25519].  </p>
+<h1 id="rfc.section.14.1.1"><a href="#rfc.section.14.1.1">14.1.1.</a> <a href="#EC1-Keys" id="EC1-Keys">Single Coordinate Curves</a></h1>
+<p id="rfc.section.14.1.1.p.1">NOTE: This section represents at risk work depending on the ability to get good references for Curve25519 and Goldilocks.  </p>
 <p id="rfc.section.14.1.1.p.2">New versions of ECC have been targeted at variants where only a single value of the EC Point need to be transmitted.  This work is currently going on in the IRTF CFRG group.  </p>
 <p id="rfc.section.14.1.1.p.3">For EC keys with both coordinates, the 'kty' member is set to 1 (EC1).  The members that are defined for this key type are: </p>
 
 <dl>
   <dt>crv</dt>
-  <dd style="margin-left: 8">contains an identifier of the curve to be used with the key.  <a id="CREF18" class="info">[CREF18]<span class="info">JLS: Do we create a registry for curves? Is is the same registry for both EC1 and EC2? </span></a> The curves defined in this document for this key type can be found in <a href="#table-ec1-curves">Table 14</a>.  Other curves may be registered in the future and private curves can be used as well.  </dd>
+  <dd style="margin-left: 8">contains an identifier of the curve to be used with the key.  <a id="CREF20" class="info">[CREF20]<span class="info">JLS: Do we create a registry for curves? Is is the same registry for both EC1 and EC2? </span></a> The curves defined in this document for this key type can be found in <a href="#table-ec-curves">Table 13</a>.  Other curves may be registered in the future and private curves can be used as well.  </dd>
   <dt>x</dt>
-  <dd style="margin-left: 8">contains the x coordinate for the EC point.  The integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  <a id="CREF19" class="info">[CREF19]<span class="info">JLS: Should we use the integer encoding for x, y and d instead of bstr? </span></a> </dd>
+  <dd style="margin-left: 8">contains the x coordinate for the EC point.  The integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  <a id="CREF21" class="info">[CREF21]<span class="info">JLS: Should we use the integer encoding for x, y and d instead of bstr? </span></a> </dd>
   <dt>y</dt>
   <dd style="margin-left: 8">contains either the sign bit or the value of y coordinate for the EC point.  For the value, the integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  For the sign bit, the value is true if the value of y is positive.  </dd>
   <dt>d</dt>
@@ -2105,30 +2193,6 @@ COSE_KDF_Context = [
 
 <p> </p>
 <p id="rfc.section.14.1.1.p.4">For public keys, it is REQUIRED that 'crv' and  'x' be present in the structure.  For private keys, it is REQUIRED that 'crv' and 'd' be present in the structure.  It is RECOMMENDED that 'x'  also be present, but it can be recomputed from the required elements and omitting it saves on space.  </p>
-<div id="rfc.table.14"/>
-<div id="table-ec1-curves"/>
-<table cellpadding="3" cellspacing="0" class="tt full center">
-  <caption>EC Curves</caption>
-  <thead>
-    <tr>
-      <th class="left">name</th>
-      <th class="left">value</th>
-      <th class="left">description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="left">Curve24559</td>
-      <td class="left">1</td>
-      <td class="left">Provide reference</td>
-    </tr>
-    <tr>
-      <td class="left">Goldilocks</td>
-      <td class="left">2</td>
-      <td class="left">Provide reference</td>
-    </tr>
-  </tbody>
-</table>
 <div id="rfc.table.15"/>
 <div id="table-ec1-keys"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -2166,15 +2230,15 @@ COSE_KDF_Context = [
     </tr>
   </tbody>
 </table>
-<h1 id="rfc.section.14.1.2"><a href="#rfc.section.14.1.2">14.1.2.</a> Double Coordinate Curves</h1>
+<h1 id="rfc.section.14.1.2"><a href="#rfc.section.14.1.2">14.1.2.</a> <a href="#EC2-Keys" id="EC2-Keys">Double Coordinate Curves</a></h1>
 <p id="rfc.section.14.1.2.p.1">The traditional way of sending EC curves has been to send either both the x and y coordinates, or the x coordinate and a sign bit for the y coordinate.  The latter encoding has not been recommend in the IETF due to potential IPR issues with Certicom.  However, for operations in constrained environments, the ability to shrink a message by not sending the y coordinate is potentially useful.  </p>
 <p id="rfc.section.14.1.2.p.2">For EC keys with both coordinates, the 'kty' member is set to 2 (EC2).  The members that are defined for this key type are: </p>
 
 <dl>
   <dt>crv</dt>
-  <dd style="margin-left: 8">contains an identifier of the curve to be used with the key.  The curves defined in this document for this key type can be found in <a href="#table-ec2-curves">Table 16</a>.  Other curves may be registered in the future and private curves can be used as well.  </dd>
+  <dd style="margin-left: 8">contains an identifier of the curve to be used with the key.  The curves defined in this document for this key type can be found in <a href="#table-ec-curves">Table 13</a>.  Other curves may be registered in the future and private curves can be used as well.  </dd>
   <dt>x</dt>
-  <dd style="margin-left: 8">contains the x coordinate for the EC point.  The integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  <a id="CREF20" class="info">[CREF20]<span class="info">JLS: Should we use the integer encoding for x, y and d instead of bstr? </span></a> </dd>
+  <dd style="margin-left: 8">contains the x coordinate for the EC point.  The integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  <a id="CREF22" class="info">[CREF22]<span class="info">JLS: Should we use the integer encoding for x, y and d instead of bstr? </span></a> </dd>
   <dt>y</dt>
   <dd style="margin-left: 8">contains either the sign bit or the value of y coordinate for the EC point.  For the value, the integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  For the sign bit, the value is true if the value of y is positive.  </dd>
   <dt>d</dt>
@@ -2184,35 +2248,6 @@ COSE_KDF_Context = [
 <p> </p>
 <p id="rfc.section.14.1.2.p.3">For public keys, it is REQUIRED that 'crv', 'x' and 'y' be present in the structure.  For private keys, it is REQUIRED that 'crv' and 'd' be present in the structure.  It is RECOMMENDED that 'x' and 'y' also be present, but they can be recomputed from the required elements and omitting them saves on space.  </p>
 <div id="rfc.table.16"/>
-<div id="table-ec2-curves"/>
-<table cellpadding="3" cellspacing="0" class="tt full center">
-  <caption>EC Curves</caption>
-  <thead>
-    <tr>
-      <th class="left">name</th>
-      <th class="left">value</th>
-      <th class="left">description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="left">P-256</td>
-      <td class="left">1</td>
-      <td class="left">NIST P-256 also known as ....</td>
-    </tr>
-    <tr>
-      <td class="left">P-384</td>
-      <td class="left">2</td>
-      <td class="left">NIST P-384 also known as ....</td>
-    </tr>
-    <tr>
-      <td class="left">P-521</td>
-      <td class="left">3</td>
-      <td class="left">NIST P-512 also known as ....</td>
-    </tr>
-  </tbody>
-</table>
-<div id="rfc.table.17"/>
 <div id="table-ec2-keys"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>EC Key Parameters</caption>
@@ -2257,7 +2292,7 @@ COSE_KDF_Context = [
   </tbody>
 </table>
 <h1 id="rfc.section.14.2"><a href="#rfc.section.14.2">14.2.</a> RSA Keys</h1>
-<div id="rfc.table.18"/>
+<div id="rfc.table.17"/>
 <div id="table-rsa-keys"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>RSA Key Parameters</caption>
@@ -2355,7 +2390,7 @@ COSE_KDF_Context = [
 
 <p> </p>
 <p id="rfc.section.14.3.p.3">This key structure contains only private key information, care must be taken that it is never transmitted accidentally.  For public keys, there are no required fields.  For private keys, it is REQUIRED that 'k' be present in the structure.  </p>
-<div id="rfc.table.19"/>
+<div id="rfc.table.18"/>
 <div id="table-symmetric-keys"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>Symmetric Key Parameters</caption>
@@ -2383,7 +2418,7 @@ COSE_KDF_Context = [
 <p id="rfc.section.15.1.p.3">Data Item: COSE_Msg </p>
 <p id="rfc.section.15.1.p.4">Semantics: COSE security message.  </p>
 <h1 id="rfc.section.15.2"><a href="#rfc.section.15.2">15.2.</a> <a href="#IANA-Top-Level-Keys" id="IANA-Top-Level-Keys">COSE Object Labels Registry</a></h1>
-<p id="rfc.section.15.2.p.1">It is requested that IANA create a new registry entitled &#8220;COSE Object Labels Registry&#8221;.  <a id="CREF21" class="info">[CREF21]<span class="info">JLS: Finish the registration process.</span></a> </p>
+<p id="rfc.section.15.2.p.1">It is requested that IANA create a new registry entitled &#8220;COSE Object Labels Registry&#8221;.  <a id="CREF23" class="info">[CREF23]<span class="info">JLS: Finish the registration process.</span></a> </p>
 <p id="rfc.section.15.2.p.2">This table is initially populated by the table in <a href="#Top-Level-Keys">Table 1</a>.  </p>
 <h1 id="rfc.section.15.3"><a href="#rfc.section.15.3">15.3.</a> <a href="#cose-header-key-table" id="cose-header-key-table">COSE Header Label Table</a></h1>
 <p id="rfc.section.15.3.p.1">It is requested that IANA create a new registry entitled &#8220;COSE Header Labels&#8221;.  </p>
@@ -2498,7 +2533,7 @@ COSE_KDF_Context = [
 <p id="rfc.section.15.7.p.4">This registry will be initially populated by the values in <a href="#COSE_KEY_PARAM_KEYS">Appendix G</a>.  The specification column for all of these entries will be this document.  </p>
 <h1 id="rfc.section.15.8"><a href="#rfc.section.15.8">15.8.</a> Media Type Registration</h1>
 <h1 id="rfc.section.15.8.1"><a href="#rfc.section.15.8.1">15.8.1.</a> COSE Security Message</h1>
-<p id="rfc.section.15.8.1.p.1">This section registers the "application/cose" and "application/cose+cbor" media types in the "Media Types" registry.  <a id="CREF22" class="info">[CREF22]<span class="info">JLS: Should we register both or just the cose+cbor one?</span></a> These media types are used to indicate that the content is a COSE_MSG.  </p>
+<p id="rfc.section.15.8.1.p.1">This section registers the "application/cose" and "application/cose+cbor" media types in the "Media Types" registry.  <a id="CREF24" class="info">[CREF24]<span class="info">JLS: Should we register both or just the cose+cbor one?</span></a> These media types are used to indicate that the content is a COSE_MSG.  </p>
 <p/>
 
 <ul class="empty">
@@ -2647,6 +2682,12 @@ COSE_KDF_Context = [
     </tr>
     <tr>
       <td class="reference">
+        <b id="I-D.irtf-cfrg-curves">[I-D.irtf-cfrg-curves]</b>
+      </td>
+      <td class="top"><a>Langley, A.</a> and <a>R. Salz</a>, "<a href="http://tools.ietf.org/html/draft-irtf-cfrg-curves-02">Elliptic Curves for Security</a>", Internet-Draft draft-irtf-cfrg-curves-02, March 2015.</td>
+    </tr>
+    <tr>
+      <td class="reference">
         <b id="I-D.mcgrew-aead-aes-cbc-hmac-sha2">[I-D.mcgrew-aead-aes-cbc-hmac-sha2]</b>
       </td>
       <td class="top"><a>McGrew, D.</a>, <a>Foley, J.</a> and <a>K. Paterson</a>, "<a href="http://tools.ietf.org/html/draft-mcgrew-aead-aes-cbc-hmac-sha2-05">Authenticated Encryption with AES-CBC and HMAC-SHA</a>", Internet-Draft draft-mcgrew-aead-aes-cbc-hmac-sha2-05, July 2014.</td>
@@ -2780,7 +2821,7 @@ COSE_KDF_Context = [
 </ul>
 
 <p> </p>
-<h1 id="rfc.appendix.B"><a href="#rfc.appendix.B">Appendix B.</a> <a href="#three-levels-of-recipient-information" id="three-levels-of-recipient-information">Three Levels of Recipient Information</a></h1>
+<h1 id="rfc.appendix.B"><a href="#rfc.appendix.B">Appendix B.</a> <a href="#three-layer" id="three-layer">Three Levels of Recipient Information</a></h1>
 <p id="rfc.section.B.p.1">All of the currently defined Key Management methods only use two levels of the COSE_Encrypt structure.  The first level is the message content and the second level is the content key encryption.  However, if one uses a key management technique such as RSA-KEM (see Appendix A of RSA-KEM <a href="#RFC5990">[RFC5990]</a>, then it make sense to have three levels of the COSE_Encrypt structure.  </p>
 <p id="rfc.section.B.p.2">These levels would be: </p>
 
