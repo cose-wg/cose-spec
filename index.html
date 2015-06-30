@@ -540,7 +540,7 @@ ul.toc a:first-child {
 
   <meta name="dct.creator" content="Schaad, J." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-schaad-cose-msg-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2015-6-28" />
+  <meta name="dct.issued" scheme="ISO8601" content="2015-6-30" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  " />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  " />
 
@@ -561,10 +561,10 @@ ul.toc a:first-child {
 </tr>
 <tr>
   <td class="left">Intended status: Informational</td>
-  <td class="right">June 28, 2015</td>
+  <td class="right">June 30, 2015</td>
 </tr>
 <tr>
-  <td class="left">Expires: December 30, 2015</td>
+  <td class="left">Expires: January 1, 2016</td>
   <td class="right"></td>
 </tr>
 
@@ -589,7 +589,7 @@ ul.toc a:first-child {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on December 30, 2015.</p>
+<p>This Internet-Draft will expire on January 1, 2016.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -700,7 +700,7 @@ ul.toc a:first-child {
 <p/>
 
 <ul>
-  <li>Define a top level message structure so that encrypted, signed and MAC-ed messages can easily identified and still have a consistent view.  </li>
+  <li>Define a top level message structure so that encrypted, signed and MACed messages can easily identified and still have a consistent view.  </li>
   <li>Signed messages separate the concept of protected and unprotected attributes that are for the content and the signature.  </li>
   <li>Key management has been made to be more uniform.  All key management techniques are represented as a recipient rather than only have some of them be so.  </li>
   <li>MAC messages are separated from signed messages.  </li>
@@ -735,7 +735,7 @@ label = int / tstr
 </pre>
 <p id="rfc.section.1.4.p.1">In JSON, maps are called objects and only have one kind of map key: a string.  In COSE, we use both strings and integers (both negative and non-negative integers) as map keys, as well as data items to identify specific choices.  The integers (both positive and negative) are used for compactness of encoding and easy comparison.  (Generally, in this document the value zero is going to be reserved and not used.) Since the work "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage of either an integer or a string to identify map keys and choice data items.  </p>
 <h1 id="rfc.section.2"><a href="#rfc.section.2">2.</a> <a href="#the-cosemsg-structure" id="the-cosemsg-structure">The COSE_MSG structure</a></h1>
-<p id="rfc.section.2.p.1">The COSE_MSG structure is a top level CBOR object which corresponds to the DataContent type in the Cryptographic Message Syntax (CMS) <a href="#RFC5652">[RFC5652]</a>.  This structure allows for a top level message to be sent which could be any of the different security services.  The security service is identified within the message.  </p>
+<p id="rfc.section.2.p.1">The COSE_MSG structure is a top level CBOR object that corresponds to the DataContent type in the Cryptographic Message Syntax (CMS) <a href="#RFC5652">[RFC5652]</a>.  This structure allows for a top level message to be sent that could be any of the different security services.  The security service is identified within the message.  </p>
 <p id="rfc.section.2.p.2">The COSE_Tagged_MSG CBOR type takes the COSE_MSG and prepends a CBOR tag of TBD1 to the encoding of COSE_MSG.  By having both a tagged and untagged version of the COSE_MSG structure, it becomes easy to either use COSE_MSG as a top level object or embedded in another object.  The tagged version allows for a method of placing the COSE_MSG structure into a choice, using a consistent tag value to determine that this is a COSE object.  </p>
 <p id="rfc.section.2.p.3">The existence of the COSE_MSG and COSE_Tagged_MSG CBOR data types are not intended to prevent protocols from using the individual security primitives directly.  Where only a single service is required, that structure can be used directly.  </p>
 <p id="rfc.section.2.p.4">Each of the top-level security objects use a CBOR map as the base structure.  Items in the map at the top level are identified by a label.  This document defines a number of labels in the IANA &#8220;COSE Object Labels Registry&#8221; (defined in <a href="#IANA-Top-Level-Keys">Section 15.2</a>).  </p>
@@ -747,12 +747,12 @@ label = int / tstr
   <li>0 - Reserved.</li>
   <li>1 - Signed Message.</li>
   <li>2 - Encrypted Message</li>
-  <li>3 - Authenticated Message (MAC-ed message)</li>
+  <li>3 - Authenticated Message (MACed message)</li>
 </ul>
 
 <p> </p>
-<p id="rfc.section.2.p.8">Implementations MUST be prepared to find an integer under this label which does not correspond to the values 1 to 3.  If this is found then the client MUST stop attempting to parse the structure and fail.  The value of 0 is reserved and not to be used.  If the value of 0 is found, then clients MUST fail processing the structure.  Implementations need to recognize that the set of values might be extended at a later date, but they should not provide a security service based on guesses of what is there.  </p>
-<p id="rfc.section.2.p.9">NOTE:  Is the any reason to allow for a marker of a COSE_Key structure and all it to be a COSE_MSG, doing so does allow for a security risk, but may simplify the code.  <a id="CREF4" class="info">[CREF4]<span class="info">JLS: OPEN ISSUE</span></a> </p>
+<p id="rfc.section.2.p.8">Implementations MUST be prepared to find an integer under this label that does not correspond to the values 1 to 3.  If this is found then the client MUST stop attempting to parse the structure and fail.  The value of 0 is reserved and not to be used.  If the value of 0 is found, then clients MUST fail processing the structure.  Implementations need to recognize that the set of values might be extended at a later date, but they should not provide a security service based on guesses of what is there.  </p>
+<p id="rfc.section.2.p.9">NOTE:  Is there any reason to allow for a marker of a COSE_Key structure and allow it to be a COSE_MSG? Doing so does allow for a security risk, but may simplify the code.  <a id="CREF4" class="info">[CREF4]<span class="info">JLS: OPEN ISSUE</span></a> </p>
 <p id="rfc.section.2.p.10">The CDDL grammar that corresponds to the above is: </p>
 <pre>
 COSE_MSG = COSE_Sign / 
@@ -814,7 +814,7 @@ msg_type_mac=3
     <tr>
       <td class="left">ciphertext</td>
       <td class="left">4</td>
-      <td class="left">TODO: Should we re-use the same as payload or not?</td>
+      <td class="left">TODO: Should we reuse the same as payload or not?</td>
     </tr>
     <tr>
       <td class="left">recipients</td>
@@ -849,12 +849,12 @@ tag=10
 
 <dl>
   <dt>protected</dt>
-  <dd style="margin-left: 8">contains attributes about the layer which are to be cryptographically protected.  This bucket MUST NOT be used if it is not going to be included in a cryptographic computation.  </dd>
+  <dd style="margin-left: 8">contains attributes about the layer that are to be cryptographically protected.  This bucket MUST NOT be used if it is not going to be included in a cryptographic computation.  </dd>
   <dt>unprotected</dt>
-  <dd style="margin-left: 8">contains attributes about the layer which are not cryptographically protected.  </dd>
+  <dd style="margin-left: 8">contains attributes about the layer that are not cryptographically protected.  </dd>
 </dl>
 
-<p> Both of the buckets are optional and are omitted if there are no items contained in the map.  The CDDL fragment which describes the two buckets is: </p>
+<p> Both of the buckets are optional and are omitted if there are no items contained in the map.  The CDDL fragment that describes the two buckets is: </p>
 <pre>
 header_map = {+ label =&gt; any }
 
@@ -871,7 +871,7 @@ Headers = (
   <dt>alg</dt>
   <dd style="margin-left: 8">This field is used to indicate the algorithm used for the security processing.  This field MUST be present at each level of a signed, encrypted or authenticated message.  This field using the integer '1' for the label.  The value is taken from the 'COSE Algorithm Registry' (see <a href="#IANA-Alg-Registry">Section 15.4</a>).  </dd>
   <dt>crit</dt>
-  <dd style="margin-left: 8">This field is used to ensure that applications will take appropriate action based on the values found.  The field is used to indicate which protected header labels an application which is processing a message is required to understand.  This field uses the integer '2' for the label.  The value is an array of COSE Header Labels.  When present, this MUST be placed in the protected header bucket.  <ul><li>Integer labels in the range of 0 to 10 SHOULD be omitted.</li><li>Integer labels in the range -1 to -255 can be omitted as they are algorithm dependent.  If an application can correctly process an algorithm, it can be assumed that it will correctly process all of the parameters associated with that algorithm.  </li></ul><p> The header values indicated by 'crit' can be processed by either the security library code or by an application using a security library, the only requirement is that the field is processed.  </p></dd>
+  <dd style="margin-left: 8">This field is used to ensure that applications will take appropriate action based on the values found.  The field is used to indicate which protected header labels an application that is processing a message is required to understand.  This field uses the integer '2' for the label.  The value is an array of COSE Header Labels.  When present, this MUST be placed in the protected header bucket.  <ul><li>Integer labels in the range of 0 to 10 SHOULD be omitted.</li><li>Integer labels in the range -1 to -255 can be omitted as they are algorithm dependent.  If an application can correctly process an algorithm, it can be assumed that it will correctly process all of the parameters associated with that algorithm.  </li></ul><p> The header values indicated by 'crit' can be processed by either the security library code or by an application using a security library, the only requirement is that the field is processed.  </p></dd>
   <dt>cty</dt>
   <dd style="margin-left: 8">This field is used to indicate the content type of the data in the payload or ciphertext fields.  The field uses the integer of '3' for the label.  The value can be either an integer or a string.  Integers are from the XXXXX<a id="CREF6" class="info">[CREF6]<span class="info">JLS: Need to figure out how we are going to go about creating this registry -or are we going to modify the current mime-content table?</span></a> IANA registry table.  Strings are from the IANA 'mime-content types' registry.  Applications SHOULD provide this field if the content structure is potentially ambiguous.  </dd>
   <dt>kid</dt>
@@ -1010,11 +1010,11 @@ COSE_Sign = {
   <dt>msg_type</dt>
   <dd style="margin-left: 8">identifies this as providing the signed security service.  The value MUST be msg_type_signed (1).  </dd>
   <dt>protected</dt>
-  <dd style="margin-left: 8">contains attributes about the payload which are to be protected by the signature.  An example of such an attribute would be the content type ('cty') attribute.  The content is a CBOR map of attributes which is encoded to a byte stream.  This field MUST NOT contain attributes about the signature, even if those attributes are common across multiple signatures.  The labels in this map are typically taken from <a href="#Header-Table">Table 2</a>.  </dd>
+  <dd style="margin-left: 8">contains attributes about the payload that are to be protected by the signature.  An example of such an attribute would be the content type ('cty') attribute.  The content is a CBOR map of attributes that is encoded to a byte stream.  This field MUST NOT contain attributes about the signature, even if those attributes are common across multiple signatures.  The labels in this map are typically taken from <a href="#Header-Table">Table 2</a>.  </dd>
   <dt>unprotected</dt>
-  <dd style="margin-left: 8">contains attributes about the payload which are not protected by the signature.  An example of such an attribute would be the content type ('cty') attribute.  This field MUST NOT contain attributes about a signature, even if the attributes are common across multiple signatures.  The labels in this map are typically taken from <a href="#Header-Table">Table 2</a>.  </dd>
+  <dd style="margin-left: 8">contains attributes about the payload that are not protected by the signature.  An example of such an attribute would be the content type ('cty') attribute.  This field MUST NOT contain attributes about a signature, even if the attributes are common across multiple signatures.  The labels in this map are typically taken from <a href="#Header-Table">Table 2</a>.  </dd>
   <dt>payload</dt>
-  <dd style="margin-left: 8">contains the serialized content to be signed.  If the payload is not present in the message, the application is required to supply the payload separately.  The payload is wrapped in a bstr to ensure that it is transported without changes, if the payload is transported separately it is the responsibility of the application to ensure that it will be transported without changes.  </dd>
+  <dd style="margin-left: 8">contains the serialized content to be signed.  If the payload is not present in the message, the application is required to supply the payload separately.  The payload is wrapped in a bstr to ensure that it is transported without changes.  If the payload is transported separately, it is the responsibility of the application to ensure that it will be transported without changes.  </dd>
   <dt>signatures</dt>
   <dd style="margin-left: 8">is an array of signature items.  Each of these items uses the COSE_signature structure for its representation.  </dd>
 </dl>
@@ -1033,9 +1033,9 @@ COSE_signature =  {
 
 <dl>
   <dt>protected</dt>
-  <dd style="margin-left: 8">contains additional information to be authenticated by the signature.  The field holds data about the signature operation.  The field MUST NOT hold attributes about the payload being signed.  The content is a CBOR map of attributes which is encoded to a byte stream.  At least one of protected and unprotected MUST be present.  </dd>
+  <dd style="margin-left: 8">contains additional information to be authenticated by the signature.  The field holds data about the signature operation.  The field MUST NOT hold attributes about the payload being signed.  The content is a CBOR map of attributes that is encoded to a byte stream.  At least one of protected and unprotected MUST be present.  </dd>
   <dt>unprotected</dt>
-  <dd style="margin-left: 8">contains attributes about the signature which are not protected by the signature.  This field MUST NOT contain attributes about the payload being signed.  At least one of protected and unprotected MUST be present.  </dd>
+  <dd style="margin-left: 8">contains attributes about the signature that are not protected by the signature.  This field MUST NOT contain attributes about the payload being signed.  At least one of protected and unprotected MUST be present.  </dd>
   <dt>signature</dt>
   <dd style="margin-left: 8">contains the computed signature value.  </dd>
 </dl>
@@ -1068,7 +1068,7 @@ Sig_structure = [
 </ol>
 
 <p> </p>
-<p id="rfc.section.4.p.13">In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the appropriated authorization is done.  </p>
+<p id="rfc.section.4.p.13">In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the appropriate authorization is done.  </p>
 <h1 id="rfc.section.5"><a href="#rfc.section.5">5.</a> <a href="#encryption-object" id="encryption-object">Encryption object</a></h1>
 <p id="rfc.section.5.p.1">In this section we describe the structure and methods to be used when doing an encryption in COSE.  In COSE, we use the same techniques and structures for encrypting both the plain text and the keys used to protect the text.  This is different from the approach used by both <a href="#RFC5652">[RFC5652]</a> and <a href="#RFC7516">[RFC7516]</a> where different structures are used for the plain text and for the different key management techniques.  </p>
 <p id="rfc.section.5.p.2">One of the byproducts of using the same technique for encrypting and encoding both the content and the keys using the various key management techniques, is a requirement that all of the key management techniques use an Authenticated Encryption (AE) algorithm.  (For the purpose of this document we use a slightly loose definition of AE algorithms.) When encrypting the plain text, it is normal to use an Authenticated Encryption with Additional Data (AEAD) algorithm.  For key management, either AE or AEAD algorithms can be used.  See <a href="#AE-algo">Appendix A</a> for more details about the different types of algorithms.  <a id="CREF7" class="info">[CREF7]<span class="info">Ilari: I don't follow/understand this text</span></a> </p>
@@ -1139,7 +1139,7 @@ Enc_structure = [
 <p> </p>
 <h1 id="rfc.section.6"><a href="#rfc.section.6">6.</a> <a href="#mac-objects" id="mac-objects">MAC objects</a></h1>
 <p id="rfc.section.6.p.1">In this section we describe the structure and methods to be used when doing MAC authentication in COSE.  JOSE used a variant of the signature structure for doing MAC operations and it is restricted to using a single pre-shared secret to do the authentication.  <a id="CREF8" class="info">[CREF8]<span class="info">JLS: Should this sentence be removed?</span></a> This document allows for the use of all of the same methods of key management as are allowed for encryption.  </p>
-<p id="rfc.section.6.p.2">When using MAC operations, there are two modes in which it can be used.  The first is just a check that the content has not been changed since the MAC was computed.  Any of the key management methods can be used for this purpose.  The second mode is to both check that the content has not been changed since the MAC was computed, and to use key management to verify who sent it.  The key management modes that support this are ones that either use a pre-shared secret, or do static-static key agreement.  In both of these cases the entity MAC-ing the message can be validated by a key binding.  (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.) </p>
+<p id="rfc.section.6.p.2">When using MAC operations, there are two modes in which it can be used.  The first is just a check that the content has not been changed since the MAC was computed.  Any of the key management methods can be used for this purpose.  The second mode is to both check that the content has not been changed since the MAC was computed, and to use key management to verify who sent it.  The key management modes that support this are ones that either use a pre-shared secret, or do static-static key agreement.  In both of these cases the entity MACing the message can be validated by a key binding.  (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.) </p>
 <pre>
 COSE_mac = {
    msg_type=&gt;msg_type_mac, 
@@ -1157,11 +1157,11 @@ COSE_mac = {
   <dt>msg_type</dt>
   <dd style="margin-left: 8">identifies this as providing the encrypted security service.  The value MUST be msg_type_mac (3).  </dd>
   <dt>protected</dt>
-  <dd style="margin-left: 8">contains attributes about the payload which are to be protected by the MAC.  An example of such an attribute would be the content type ('cty') attribute.  The content is a CBOR map of attributes which is encoded to a byte stream.  This field MUST NOT contain attributes about the recipient, even if those attributes are common across multiple recipients.  At least one of protected and unprotected MUST be present.  </dd>
+  <dd style="margin-left: 8">contains attributes about the payload that are to be protected by the MAC.  An example of such an attribute would be the content type ('cty') attribute.  The content is a CBOR map of attributes that is encoded to a byte stream.  This field MUST NOT contain attributes about the recipient, even if those attributes are common across multiple recipients.  At least one of protected and unprotected MUST be present.  </dd>
   <dt>unprotected</dt>
-  <dd style="margin-left: 8">contains attributes about the payload which are not protected by the MAC.  An example of such an attribute would be the content type ('cty') attribute.  This field MUST NOT contain attributes about a recipient, even if the attributes are common across multiple recipients.  At least one of protected and unprotected MUST be present.  </dd>
+  <dd style="margin-left: 8">contains attributes about the payload that are not protected by the MAC.  An example of such an attribute would be the content type ('cty') attribute.  This field MUST NOT contain attributes about a recipient, even if the attributes are common across multiple recipients.  At least one of protected and unprotected MUST be present.  </dd>
   <dt>payload</dt>
-  <dd style="margin-left: 8">contains the serialized content to be MAC-ed.  If the payload is not present in the message, the application is required to supply the payload separately.  The payload is wrapped in a bstr to ensure that it is transported without changes, if the payload is transported separately it is the responsibility of the application to ensure that it will be transported without changes.  </dd>
+  <dd style="margin-left: 8">contains the serialized content to be MACed.  If the payload is not present in the message, the application is required to supply the payload separately.  The payload is wrapped in a bstr to ensure that it is transported without changes, if the payload is transported separately it is the responsibility of the application to ensure that it will be transported without changes.  </dd>
   <dt>tag</dt>
   <dd style="margin-left: 8">contains the MAC value.  </dd>
   <dt>recipients</dt>
@@ -1189,8 +1189,8 @@ COSE_mac = {
 
 <p> </p>
 <h1 id="rfc.section.7"><a href="#rfc.section.7">7.</a> <a href="#key-structure" id="key-structure">Key Structure</a></h1>
-<p id="rfc.section.7.p.1">There are only a few changes between JOSE and COSE for how keys are formatted.  As with JOSE, COSE uses a map to contain the elements of a key.  Those values, which in JOSE, are base64url encoded because they are binary values, are encoded as bstr values in COSE.  </p>
-<p id="rfc.section.7.p.2">For COSE we use the same set of fields that were defined in <a href="#RFC7517">[RFC7517]</a>.  <a id="CREF9" class="info">[CREF9]<span class="info">JLS: Do we remove this line and just define them ourselves?</span></a> <a id="CREF10" class="info">[CREF10]<span class="info">JLS: We can really simplify the grammar for COSE_Key to be just the kty (the one required field) and the generic item.  The reason to do this is that it makes things simpler.  The reason not to do this says that we really need to add a lot more items so that a grammar check can be done which is more tightly enforced.  </span></a> </p>
+<p id="rfc.section.7.p.1">There are only a few changes between JOSE and COSE for how keys are formatted.  As with JOSE, COSE uses a map to contain the elements of a key.  Those values, which in JOSE are base64url encoded because they are binary values, are encoded as bstr values in COSE.  </p>
+<p id="rfc.section.7.p.2">For COSE we use the same set of fields that were defined in <a href="#RFC7517">[RFC7517]</a>.  <a id="CREF9" class="info">[CREF9]<span class="info">JLS: Do we remove this line and just define them ourselves?</span></a> <a id="CREF10" class="info">[CREF10]<span class="info">JLS: We can really simplify the grammar for COSE_Key to be just the kty (the one required field) and the generic item.  The reason to do this is that it makes things simpler.  The reason not to do this says that we really need to add a lot more items so that a grammar check can be done that is more tightly enforced.  </span></a> </p>
 <pre>
 COSE_Key = {
     kty =&gt; tstr / int,
@@ -1207,9 +1207,9 @@ COSE_KeySet = [+COSE_Key]
 <p id="rfc.section.7.p.5">The same fields defined in <a href="#RFC7517">[RFC7517]</a> are used here with the following changes in rules: </p>
 
 <ul>
-  <li>Any item which is base64 encoded in JWK, is bstr encoded for COSE.  </li>
-  <li>Any item which is integer encoded in JWK, is int encoded for COSE.  </li>
-  <li>Any item which is string (but not base64) encoded in JWK, is tstr encoded for COSE.  </li>
+  <li>Any item that is base64url encoded in JWK, is bstr encoded for COSE.  </li>
+  <li>Any item that is integer encoded in JWK, is int encoded for COSE.  </li>
+  <li>Any item that is string (but not base64url) encoded in JWK, is tstr encoded for COSE.  </li>
   <li>Exceptions to this are the following fields: <dl><dt>kid</dt><dd style="margin-left: 8">is always bstr encoded rather than tstr encoded.  This change in encoding is due to the fact that frequently, values such as a hash of the public key is used for a kid value.  Since the field is defined as not having a specific structure, making it binary rather than textual makes sense.  </dd></dl><p> </p></li>
 </ul>
 
@@ -1482,9 +1482,9 @@ key_alg=3
 
 <dl>
   <dt>16-bits (2)</dt>
-  <dd style="margin-left: 8">limits messages to 2^16 bytes in length.  The nonce length is 13 octets allowing for 2^(13*8) possible values of the nonce without repeating.  </dd>
+  <dd style="margin-left: 8">limits messages to 2^16 bytes in length.  The nonce length is 13 bytes allowing for 2^(13*8) possible values of the nonce without repeating.  </dd>
   <dt>64-bits (8)</dt>
-  <dd style="margin-left: 8">limits messages to 2^64 byes in length.  The nonce length is 7 octets allowing for 2^56 possible values of the nonce without repeating.  </dd>
+  <dd style="margin-left: 8">limits messages to 2^64 byes in length.  The nonce length is 7 bytes allowing for 2^56 possible values of the nonce without repeating.  </dd>
 </dl>
 
 <p> </p>
@@ -1630,7 +1630,7 @@ key_alg=3
 <ul class="empty">
   <li>secret - a shared value that is secret.  Secrets may be either previously shared or derived from operations like a DH key agreement.  </li>
   <li>salt - an optional public value that is used to change the generation process.  If specified, the salt is carried using the 'salt' algorithm parameter.  While <a href="#RFC5869">[RFC5869]</a> suggests that the length of the salt be the same as the length of the underlying hash value, any amount of salt will improve the security as different key values will be generated.  The 'salt' parameter is encoded as a binary string.  This parameter is protected by being included in the key computation and does not need to be separately authenticated.  </li>
-  <li>length - the number of octets of output that need to be generated.  </li>
+  <li>length - the number of bytes of output that need to be generated.  </li>
   <li>context information </li>
   <li>hash function - The underlying hash function to be used in the HKDF algorithm.  The hash function is encoded into the HKDF algorithm selection.  </li>
 </ul>
@@ -1772,10 +1772,10 @@ COSE_KDF_Context = [
 <h1 id="rfc.section.13"><a href="#rfc.section.13">13.</a> Key Management Algorithms</h1>
 <p id="rfc.section.13.p.1">There are a number of different key management methods that can be used in the COSE encryption system.  In this section we will discuss each of the key management methods, what fields need to be specified, and which algorithms are defined in this document to deal with each of them.  </p>
 <p id="rfc.section.13.p.2">The names of the key management methods used here are the same as are defined in <a href="#RFC7517">[RFC7517]</a>.  Other specifications use different terms for the key management methods or do not support some of the key management methods.  </p>
-<p id="rfc.section.13.p.3">At the moment we do not have any key management methods that allow for the use of protected headers.  This may be changed in the future if, for example, the AES-GCM Key wrap method defined in <a href="#RFC7518">[RFC7518]</a> were extended to allow for authenticated data.  In that event the use of the 'protected' field, which is current forbidden below, would be permitted.  </p>
+<p id="rfc.section.13.p.3">At the moment we do not have any key management methods that allow for the use of protected headers.  This may be changed in the future if, for example, the AES-GCM Key wrap method defined in <a href="#RFC7518">[RFC7518]</a> were extended to allow for authenticated data.  In that event, the use of the 'protected' field, which is current forbidden below, would be permitted.  </p>
 <h1 id="rfc.section.13.1"><a href="#rfc.section.13.1">13.1.</a> Direct Encryption</h1>
 <p id="rfc.section.13.1.p.1">In direct encryption mode, a shared secret between the sender and the recipient is used as the key.  <a id="CREF13" class="info">[CREF13]<span class="info">JLS: It would be reasonable to support a shared-secret + KDF that is not PBE for when one has good randomness in the shared-secret.</span></a> When direct encryption mode is used, it MUST be the only mode used on the message.  It is a massive security leak to have both direct encryption and a different key management mode on the same message.  </p>
-<p id="rfc.section.13.1.p.2">For JOSE, direct encryption key management is the only key management method allowed for doing MAC-ed messages.  In COSE, all of the key management methods can be used for MAC-ed messages.  </p>
+<p id="rfc.section.13.1.p.2">For JOSE, direct encryption key management is the only key management method allowed for doing MACed messages.  In COSE, all of the key management methods can be used for MACed messages.  </p>
 <p id="rfc.section.13.1.p.3">The COSE_encrypt structure for the recipient is organized as follows: </p>
 <p/>
 
@@ -1829,7 +1829,7 @@ COSE_KDF_Context = [
 
 <p> </p>
 <h1 id="rfc.section.13.2.1"><a href="#rfc.section.13.2.1">13.2.1.</a> AES Key Wrapping</h1>
-<p id="rfc.section.13.2.1.p.1">The AES Key Wrapping algorithm is defined in <a href="#RFC3394">[RFC3394]</a>.  This algorithm uses an AES key to wrap a value that is a multiple of 64-bits, as such it can be used to wrap a key for any of the content encryption algorithms defined in this document.  <a id="CREF14" class="info">[CREF14]<span class="info">JLS: Do we also want to document the use of RFC 5649 as well? It allows for other sizes of keys which might be used for HMAC - i.e. a 200 bit key.  The algorithm exists, but I do not personally know of any standard uses of it.  </span></a> The algorithm requires a single fixed parameter, the initial value.  This is fixed to the value specified in Section 2.2.3.1 of  <a href="#RFC3394">[RFC3394]</a>.  There are no public parameters that vary on a per invocation basis.  </p>
+<p id="rfc.section.13.2.1.p.1">The AES Key Wrapping algorithm is defined in <a href="#RFC3394">[RFC3394]</a>.  This algorithm uses an AES key to wrap a value that is a multiple of 64-bits, as such it can be used to wrap a key for any of the content encryption algorithms defined in this document.  <a id="CREF14" class="info">[CREF14]<span class="info">JLS: Do we also want to document the use of RFC 5649 as well? It allows for other sizes of keys that might be used for HMAC - i.e. a 200 bit key.  The algorithm exists, but I do not personally know of any standard uses of it.  </span></a> The algorithm requires a single fixed parameter, the initial value.  This is fixed to the value specified in Section 2.2.3.1 of  <a href="#RFC3394">[RFC3394]</a>.  There are no public parameters that vary on a per invocation basis.  </p>
 <div id="rfc.table.9"/>
 <div id="table_aes_keywrap"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -2096,9 +2096,9 @@ COSE_KDF_Context = [
   <dt>crv</dt>
   <dd style="margin-left: 8">contains an identifier of the curve to be used with the key.  <a id="CREF18" class="info">[CREF18]<span class="info">JLS: Do we create a registry for curves? Is is the same registry for both EC1 and EC2? </span></a> The curves defined in this document for this key type can be found in <a href="#table-ec1-curves">Table 14</a>.  Other curves may be registered in the future and private curves can be used as well.  </dd>
   <dt>x</dt>
-  <dd style="margin-left: 8">contains the x coordinate for the EC point.  The integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero byte MUST NOT be removed from the front of the octet string.  <a id="CREF19" class="info">[CREF19]<span class="info">JLS: Should we use the integer encoding for x, y and d instead of bstr? </span></a> </dd>
+  <dd style="margin-left: 8">contains the x coordinate for the EC point.  The integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  <a id="CREF19" class="info">[CREF19]<span class="info">JLS: Should we use the integer encoding for x, y and d instead of bstr? </span></a> </dd>
   <dt>y</dt>
-  <dd style="margin-left: 8">contains either the sign bit or the value of y coordinate for the EC point.  For the value, the integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero bytes MUST NOT be removed from the front of the octet string.  For the sign bit, the value is true if the value of y is positive.  </dd>
+  <dd style="margin-left: 8">contains either the sign bit or the value of y coordinate for the EC point.  For the value, the integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  For the sign bit, the value is true if the value of y is positive.  </dd>
   <dt>d</dt>
   <dd style="margin-left: 8">contains the private key.  </dd>
 </dl>
@@ -2174,9 +2174,9 @@ COSE_KDF_Context = [
   <dt>crv</dt>
   <dd style="margin-left: 8">contains an identifier of the curve to be used with the key.  The curves defined in this document for this key type can be found in <a href="#table-ec2-curves">Table 16</a>.  Other curves may be registered in the future and private curves can be used as well.  </dd>
   <dt>x</dt>
-  <dd style="margin-left: 8">contains the x coordinate for the EC point.  The integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero byte MUST NOT be removed from the front of the octet string.  <a id="CREF20" class="info">[CREF20]<span class="info">JLS: Should we use the integer encoding for x, y and d instead of bstr? </span></a> </dd>
+  <dd style="margin-left: 8">contains the x coordinate for the EC point.  The integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  <a id="CREF20" class="info">[CREF20]<span class="info">JLS: Should we use the integer encoding for x, y and d instead of bstr? </span></a> </dd>
   <dt>y</dt>
-  <dd style="margin-left: 8">contains either the sign bit or the value of y coordinate for the EC point.  For the value, the integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero bytes MUST NOT be removed from the front of the octet string.  For the sign bit, the value is true if the value of y is positive.  </dd>
+  <dd style="margin-left: 8">contains either the sign bit or the value of y coordinate for the EC point.  For the value, the integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  For the sign bit, the value is true if the value of y is positive.  </dd>
   <dt>d</dt>
   <dd style="margin-left: 8">contains the private key.  </dd>
 </dl>
@@ -2461,7 +2461,7 @@ COSE_KDF_Context = [
   <dt>name</dt>
   <dd style="margin-left: 8">This is a descriptive name that enables easier reference to the item.  It is not used in the encoding.  </dd>
   <dt>label</dt>
-  <dd style="margin-left: 8">The value to be used to identify this algorithm.  Algorithm labels MUST be unique.  The label can be a positive integer, a negative integer or a string.  Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.  Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.  Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.  Integer values in the range -1 to -65536 are used for key parameters specific to a single algorithm delegated to the &#8220;COSE Key Parameter Label&#8221; registry.  Integer values beyond -65536 are marked as private use.  </dd>
+  <dd style="margin-left: 8">The value to be used to identify this algorithm.  Key map labels MUST be unique.  The label can be a positive integer, a negative integer or a string.  Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.  Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.  Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.  Integer values in the range -1 to -65536 are used for key parameters specific to a single algorithm delegated to the &#8220;COSE Key Parameter Label&#8221; registry.  Integer values beyond -65536 are marked as private use.  </dd>
   <dt>CBOR Type</dt>
   <dd style="margin-left: 8">This field contains the CBOR type for the field </dd>
   <dt>registry</dt>
@@ -2485,7 +2485,7 @@ COSE_KDF_Context = [
   <dt>name</dt>
   <dd style="margin-left: 8">This is a descriptive name that enables easier reference to the item.  It is not used in the encoding.  </dd>
   <dt>label</dt>
-  <dd style="margin-left: 8">The label is to be unique for every value of key type.  The range of values is from -256 to -1.  Labels are expected to be re-used for different keys.  </dd>
+  <dd style="margin-left: 8">The label is to be unique for every value of key type.  The range of values is from -256 to -1.  Labels are expected to be reused for different keys.  </dd>
   <dt>CBOR type</dt>
   <dd style="margin-left: 8">This field contains the CBOR type for the field </dd>
   <dt>description</dt>
@@ -2546,7 +2546,7 @@ COSE_KDF_Context = [
 
 <p> </p>
 <h1 id="rfc.section.15.8.2"><a href="#rfc.section.15.8.2">15.8.2.</a> COSE Key media type</h1>
-<p id="rfc.section.15.8.2.p.1">This section registers the "application/cose+json" and "application/cose-set+json" media typesin the "Media Types" registry.  These media types are used to indicate, respectively, that content is a COSE_Key or COSE_KeySet object.  </p>
+<p id="rfc.section.15.8.2.p.1">This section registers the "application/cose+json" and "application/cose-set+json" media types in the "Media Types" registry.  These media types are used to indicate, respectively, that content is a COSE_Key or COSE_KeySet object.  </p>
 <p/>
 
 <ul class="empty">
@@ -2775,7 +2775,7 @@ COSE_KDF_Context = [
 
 <ul>
   <li>A separately generated tag computed by both the encrypter and decrypter and then compared by the decryptor.  This tag value may be either placed at the end of the cipher text (the decision we made) or kept separately (the decision made by the JOSE working group).  This is the approach followed by AES-GCM <a href="#AES-GCM">[AES-GCM]</a> and AES-CCM <a href="#RFC3610">[RFC3610]</a>.  </li>
-  <li>A fixed value which is part of the encoded plain text.  This is the approach followed by the AES key wrap algorithm <a href="#RFC3394">[RFC3394]</a>.  </li>
+  <li>A fixed value that is part of the encoded plain text.  This is the approach followed by the AES key wrap algorithm <a href="#RFC3394">[RFC3394]</a>.  </li>
   <li>A computed value is included as part of the encoded plain text.  The computed value is then checked by the decryptor using the same computation path.  This is the approach followed by RSAES-OAEP <a href="#RFC3447">[RFC3447]</a>.  </li>
 </ul>
 
