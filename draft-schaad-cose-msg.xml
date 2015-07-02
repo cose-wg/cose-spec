@@ -31,6 +31,7 @@
 <!ENTITY Mac-01 SYSTEM "includes/Mac-01.xml">
 <!ENTITY Mac-02 SYSTEM "includes/Mac-02.xml">
 <!ENTITY Mac-03 SYSTEM "includes/Mac-03.xml">
+<!ENTITY Mac-04 SYSTEM "includes/Mac-04.xml">
 <!ENTITY Sig-01 SYSTEM "includes/Sig-01.xml">
 <!ENTITY Sig-02 SYSTEM "includes/Sig-02.xml">
 
@@ -207,6 +208,38 @@ label = int / tstr
 ]]></artwork></figure>
         </t>
       </section>
+
+      <section title="Mandatory to Implement Algorithms">
+        <t>
+          One of the standard issues that is specified in IETF cryptographic algorithms is a requirement that a standard specify a set of minimal algorithms that are required to be implemented.
+          This is done to promote interoperability as it provides a minimal set of algorithms that all devices can be sure will exist at both ends.
+          However, we have elected not to specify a set of mandatory algorithms in this document.
+        </t>
+
+        <t>
+          It is expected that COSE is going to be used in a wide variety of applications and on a wide variety of devices.
+          Many of the constrained devices are going to be setup to used a small fixed set of algorithms, and this set of algorithms may not match those available on a device.
+          We therefore have deferred to the application protocols the decision of what to specify for mandatory algorithms.
+        </t>
+
+        <t>
+          Since the set of algorithms in an environment of constrained devices may depend on what the set of devices are and how long they have been in operation, we want to highlight that application protocols will need to specify some type of discovery method of algorithm capabilities.
+          The discovery method may be as simple as requiring preconfiguration of the set of algorithms to providing a discovery method built into the protocol.
+          S/MIME provided a number of different ways to approach the problem:
+          <list style="symbols">
+            <t>Advertising in the message (S/MIME capabilities)</t>
+            <t>Advertising in the certificate (capabilities extension)</t>
+            <t>Minimum requirements for the S/MIME which have been updated over time</t>
+          </list>
+        </t>
+      </section>
+
+      <!--
+          <section title="Document Terminology">
+          <t>Byte is a synonym for octet.</t>
+          
+          </section>
+      -->
     </section>
     
     <section anchor="the-cosemsg-structure" title="The COSE_MSG structure">
@@ -453,7 +486,7 @@ Headers = (
         <ttcol align='left'>registry</ttcol>
         <ttcol align='left'>description</ttcol>
         
-        <c>alg</c>        <c>1</c>        <c>int / tstr</c>        <c>COSE Algorithm Registry</c>       <c>Integers are taken from table <xref target="ALG_TABLE"/></c>
+        <c>alg</c>        <c>1</c>        <c>int / tstr</c>        <c>COSE Algorithm Registry</c>       <c>Integers are taken from table --POINT TO REGISTRY--</c>
         <c>crit</c>       <c>2</c>        <c>[+ label]</c>    <c>COSE Header Label Registry</c>      <c>integer values are from this table.</c>
         <c>cty</c>        <c>3</c>        <c>tstr / int</c>        <c>media-types registry</c>          <c>Value is either a media-type or an integer from the media-type registry</c>
         <c>jku</c>        <c>*</c>        <c>tstr</c>              <c></c>                              <c>URL to COSE key object</c>
@@ -463,7 +496,7 @@ Headers = (
         <c>x5t</c>        <c>*</c>        <c>bstr</c>              <c></c>                              <c>SHA-1 thumbprint of key</c>
         <c>x5t#S256</c>   <c>*</c>        <c>bstr</c>              <c></c>                              <c>SHA-256 thumbprint of key</c>
         <c>x5u</c>        <c>*</c>        <c>tstr</c>              <c></c>                              <c>URL for X.509 certificate</c>
-        <c>zip</c>        <c>*</c>        <c>int / tstr</c>        <c></c>                              <c>Integers are taken from the table <xref target="ALG_TABLE"/></c>
+        <c>zip</c>        <c>*</c>        <c>int / tstr</c>        <c></c>                              <c>Integers are taken from the table --POINT TO REGISTRY--</c>
         <c>nonce</c>      <c>5</c>        <c>bstr</c>              <c></c>                              <c>Nonce or Initialization Vector (IV)</c>
       </texttable>
 
@@ -1064,16 +1097,9 @@ key_alg=3
 
 
     <section title="Signature Algorithms">
-      <section title="RSASSA-PSS">
-        <texttable>
-          <ttcol align='left'>name</ttcol>
-          <ttcol align='left'>value</ttcol>
-          <ttcol align='left'>description</ttcol>
-          <c>PS256</c>        <c>-10</c>      <c>RSASSA-PSS w/ SHA-256</c>
-          <c>PS384</c>        <c>*</c>        <c>RSASSA-PSS w/ SHA-384</c>
-          <c>PS512</c>        <c>-11</c>      <c>RSASSA-PSS w/ SHA-512</c>
-        </texttable>
-      </section>
+      <t>
+        M00TODO: Put in generalities about sigature algorithms and parameters.
+      </t>
       
       <section title="ECDSA">
         <t>
@@ -1136,6 +1162,63 @@ key_alg=3
         </section>
         
       </section>
+
+      <section title="RSASSA-PSS">
+        <t>
+          The RSASSA-PSS signature algorithm is defined in <xref target="RFC3447"/>.
+        </t>
+
+        <t>
+          The RSASSA-PSS signature algorithm is parametized with a hash function, a mask generation function and a salt length (sLen).
+          For this specification, the mask generation function is fixed to be MGF1 as defined in <xref target="RFC3447"/>.
+          It has been recommended that the same hash function be used for hashing the data as well as in the mask generation function, for this specification we following this recommendation.
+          The salt length is the same length as the hash function output.
+        </t>
+
+        <t>
+          Three algorithms are defined in this document.
+          These algorithms are:
+          <list style="hanging">
+            <t hangText="PS256:">
+              This uses the hash algorithm SHA-256 for signature processing.
+              The value used for this algorithm is -10.
+              The key type used for this algorithm is 'RSA'.
+            </t>
+            <t hangText="PS384:">
+              This uses the hash algorithm SHA-384 for signature processing.
+              The value used for this algorithm is "PS384".
+              The key type used for this algorithm is 'RSA'.
+            </t>
+            <t hangText="PS512:">
+              This uses the hash algorithm SHA-512 for signature processing.
+              The value used for this algorithm is -11.
+              The key type used for this algorithm is 'RSA'.
+            </t>
+          </list>
+
+          There are no algorithm parameters defined for these signature algorithms.
+          A summary of the algorithm definitions can be found in <xref target="table-rsa-algs"/>.
+        </t>
+        
+        <texttable anchor="table-rsa-algs" title="RSA Algorithm Values">
+          <ttcol align='left'>name</ttcol>
+          <ttcol align='left'>value</ttcol>
+          <ttcol>hash</ttcol>
+          <ttcol>salt length</ttcol>
+          <ttcol align='left'>description</ttcol>
+          <c>PS256</c>        <c>-10</c>      <c>SHA-256</c>    <c>32</c>       <c>RSASSA-PSS w/ SHA-256</c>
+          <c>PS384</c>        <c>*</c>        <c>SHA-384</c>    <c>48</c>       <c>RSASSA-PSS w/ SHA-384</c>
+          <c>PS512</c>        <c>-11</c>      <c>SHA-512</c>    <c>64</c>       <c>RSASSA-PSS w/ SHA-512</c>
+        </texttable>
+
+        <section title="Security Considerations">
+          <t>
+            Key size.  is there a MUST for 2048? or do we need to specify a minimum here?
+          </t>
+        </section>
+      </section>
+      
+
     </section>
 
     <section title="Message Authentication (MAC) Algorithms">
@@ -2061,18 +2144,11 @@ COSE_KDF_Context = [
               
               <t hangText="x">
                 contains the x coordinate for the EC point.
-                The integer is converted to an octet string as defined in <xref target="SEC1"/>.
-                Zero octets MUST NOT be removed from the front of the octet string.
+                The integer is converted to an octet string use ???.
+                Note that the octet string represents a little-endian encoding of x.
                 <cref source="JLS">
-                  Should we use the integer encoding for x, y and d instead of bstr?
+                  Should we use the integer encoding for x and d instead of bstr?
                 </cref>
-              </t>
-              
-              <t hangText="y">
-                contains either the sign bit or the value of y coordinate for the EC point.
-                For the value, the integer is converted to an octet string as defined in <xref target="SEC1"/>.
-                Zero octets MUST NOT be removed from the front of the octet string.
-                For the sign bit, the value is true if the value of y is positive.
               </t>
               
               <t hangText="d">
@@ -2163,21 +2239,22 @@ COSE_KDF_Context = [
       <section title="RSA Keys">
         <texttable title="RSA Key Parameters" anchor="table-rsa-keys">
           <ttcol>name</ttcol>
+          <ttcol>key type</ttcol>
           <ttcol>value</ttcol>
           <ttcol>type</ttcol>
           <ttcol>description</ttcol>
-          <c>n</c>      <c>-1</c>       <c>bstr</c>             <c>Modulus Parameter</c>
-          <c>e</c>      <c>-2</c>       <c>int</c>              <c>Exponent Parameter</c>
-          <c>d</c>      <c>-3</c>       <c>bstr</c>             <c>Private Exponent Parameter</c>
-          <c>p</c>      <c>-4</c>       <c>bstr</c>             <c>First Prime Factor</c>
-          <c>q</c>      <c>-5</c>       <c>bstr</c>             <c>Second Prime Factor</c>
-          <c>dp</c>     <c>-6</c>       <c>bstr</c>             <c>First Factor CRT Exponent</c>
-          <c>dq</c>     <c>-7</c>       <c>bstr</c>             <c>Second Factor CRT Exponent</c>
-          <c>qi</c>     <c>-8</c>       <c>bstr</c>             <c>First CRT Coefficient</c>
-          <c>other</c>  <c>-9</c>       <c>array</c>            <c>Other Primes Info</c>
-          <c>r</c>      <c>-10</c>      <c>bstr</c>             <c>Prime Factor</c>
-          <c>d</c>      <c>-11</c>      <c>bstr</c>             <c>Factor CRT Exponent</c>
-          <c>t</c>      <c>-12</c>      <c>bstr</c>             <c>Factor CRT Coefficient</c>
+          <c>n</c>      <c>3</c>        <c>-1</c>       <c>bstr</c>             <c>Modulus Parameter</c>
+          <c>e</c>      <c>3</c>        <c>-2</c>       <c>int</c>              <c>Exponent Parameter</c>
+          <c>d</c>      <c>3</c>        <c>-3</c>       <c>bstr</c>             <c>Private Exponent Parameter</c>
+          <c>p</c>      <c>3</c>        <c>-4</c>       <c>bstr</c>             <c>First Prime Factor</c>
+          <c>q</c>      <c>3</c>        <c>-5</c>       <c>bstr</c>             <c>Second Prime Factor</c>
+          <c>dp</c>     <c>3</c>        <c>-6</c>       <c>bstr</c>             <c>First Factor CRT Exponent</c>
+          <c>dq</c>     <c>3</c>        <c>-7</c>       <c>bstr</c>             <c>Second Factor CRT Exponent</c>
+          <c>qi</c>     <c>3</c>        <c>-8</c>       <c>bstr</c>             <c>First CRT Coefficient</c>
+          <c>other</c>  <c>3</c>        <c>-9</c>       <c>array</c>            <c>Other Primes Info</c>
+          <c>r</c>      <c>3</c>        <c>-10</c>      <c>bstr</c>             <c>Prime Factor</c>
+          <c>d</c>      <c>3</c>        <c>-11</c>      <c>bstr</c>             <c>Factor CRT Exponent</c>
+          <c>t</c>      <c>3</c>        <c>-12</c>      <c>bstr</c>             <c>Factor CRT Coefficient</c>
         </texttable>
       </section>
 
@@ -2205,10 +2282,11 @@ COSE_KDF_Context = [
         
         <texttable title="Symmetric Key Parameters" anchor="table-symmetric-keys">
           <ttcol>name</ttcol>
+          <ttcol>key type</ttcol>
           <ttcol>value</ttcol>
           <ttcol>type</ttcol>
           <ttcol>description</ttcol>
-          <c>k</c>      <c>-1</c>       <c>bstr</c>             <c>Key Value</c>
+          <c>k</c>      <c>4</c>        <c>-1</c>       <c>bstr</c>             <c>Key Value</c>
         </texttable>
       </section>
     </section>
@@ -2467,8 +2545,8 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          This registry will be initially populated by the values in <xref target="COSE_KEY_PARAM_KEYS"/>.
-  The specification column for all of these entries will be this document.
+          This registry will be initially populated by the values in --Multiple Tables--.
+          The specification column for all of these entries will be this document.
         </t>
 
       </section>
@@ -2835,18 +2913,40 @@ COSE_KDF_Context = [
         The examples can be found at https://github.com/cose-wg/Examples.  I am currently still in the process of getting the examples up there along with some control information for people to be able to check and reproduce the examples.
       </t>
 
-      <section anchor="Mac-01" title="Direct MAC">
+      <t>
+        Examples may have some features that are in questions but not yet incorporated in the document.
+      </t>
 
+      <t>
+        To make it easier to read, the examples are presented using the CBOR's diagnostic notation rather than a binary dump.
+        <cref source="JLS">
+          Do we want to keep this as diagnostic notation or should we switch to having "binary" examples instead?
+        </cref>
+        Using the Ruby based CBOR diagnostic tools at ????, the diagnostic notation can be converted into binary files using the following command line:
+        (install command is?...)
+        <figure><artwork>
+<![CDATA[          
+         diag2cbor < inputfile > outputfile
+         ]]>
+        </artwork></figure>
+
+        The examples can be extracted from the XML version of this docuent via an XPath expression as all of the artwork is tagged with the attribute  type='CBORdiag'.
+      </t>
+
+      <section anchor="Mac-04" title="Shared Secret Direct MAC">
         <t>
-          This example has some features that are in questions but not yet incorporated in the document.
+          This example uses a direct shared secret for the key management.
+          The example uses AES-CMAC truncated to 64-bits for the MAC computation.
         </t>
 
-        <t>
-          To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
-        </t>
+        &Mac-04;
+      </section>
+      
+      <section anchor="Mac-01" title="ECDH Direct MAC">
 
         <t>
-          This example is uses HMAC with SHA-256 as the digest algorithm.  The key management is uses two static ECDH keys along with HKDF to directly derive the key used in the HMAC operation.
+          This example is uses HMAC with SHA-256 as the digest algorithm.  
+          The key management is uses two static ECDH keys along with HKDF to directly derive the key used in the HMAC operation.
         </t>
 
         &Mac-01;
@@ -2963,87 +3063,11 @@ COSE_KDF_Context = [
         <ttcol align='left'>label</ttcol>
         <ttcol align='left'>CBOR type</ttcol>
         <ttcol align='left'>description</ttcol>
-        <c>apu</c>        <c>ECDH</c>        <c>-1</c>        <c>bstr</c>        <c></c>
-        <c>apv</c>        <c>ECDH</c>        <c>-2</c>        <c>bstr</c>        <c></c>
-        <c>epk</c>        <c>ECDH</c>        <c>-3</c>        <c>COSE_Key</c>    <c>contains a COSE key not a JWK key</c>
-        <c>iv</c>         <c>A128GCMKW, A192GCMKW, A256GCMKW</c>        <c>-1</c>        <c>bstr</c>        <c></c>
-        <c>iv</c>         <c>A128GCM, A192GCM, A256GCM</c>        <c>-1</c>        <c>bstr</c>        <c></c>
         <c>p2c</c>        <c>PBE</c>        <c>-1</c>        <c>int</c>        <c></c>
         <c>p2s</c>        <c>PBE</c>        <c>-2</c>        <c>bstr</c>        <c></c>
       </texttable>
 
     </section>
-    <section anchor="ALG_TABLE" title="COSE Algorithm Name Values">
-
-      <t>
-        This table contains all of the defined algorithms for COSE.
-      </t>
-
-      <texttable>
-        <ttcol align='left'>name</ttcol>
-        <ttcol align='left'>value</ttcol>
-        <ttcol align='left'>description</ttcol>
-        <c>RS256</c>        <c>*</c>        <c>RSASSA-v1.5 w/ SHA-256</c>
-        <c>RS384</c>        <c>*</c>        <c>RSASSA-v1.5 w/ SHA-384</c>
-        <c>RSA512</c>       <c>*</c>        <c>RSASSA-v1.5 w/ SHA-256</c>
-        <c>RSA1_5</c>       <c>*</c>        <c>RSAES v1.5 Key Encryption</c>
-        <c>A128GCMKW</c>        <c>*</c>        <c>AES GCM Key Wrap w/ 128 bit key</c>
-        <c>A192GCMKW</c>        <c>*</c>        <c>AES GCM Key Wrap w/ 192 bit key</c>
-        <c>A256GCMKW</c>        <c>*</c>        <c>AES GCM Key Wrap w/ 256 bit key</c>
-      </texttable>
-
-    </section>
-    <section anchor="cose-general-values" title="COSE General Values">
-
-      <texttable>
-        <ttcol align='left'>name</ttcol>
-        <ttcol align='left'>number</ttcol>
-        <ttcol align='left'>description</ttcol>
-        
-        <c>EC</c>        <c>1</c>        <c>Elliptic Curve key Type</c>
-        <c>RSA</c>        <c>2</c>        <c>RSA Key type</c>
-        <c>oct</c>        <c>3</c>        <c>Octet Key type</c>
-        <c>P256</c>        <c>4</c>        <c>EC Curve P256 (NIST)</c>
-        <c>P521</c>        <c>5</c>        <c>EC Curve P521 (NIST)</c>
-      </texttable>
-      
-    </section>
-    <section anchor="COSE_KEY_PARAM_KEYS" title="COSE Key Parameter Labels">
-
-      <t>
-        This table contains a list of all of the parameters that were defined by the JOSE document set for a specific key type. 
-        In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
-        Parameters dealing with keys
-      </t>
-
-      <texttable>
-        <ttcol align='left'>key type</ttcol>
-        <ttcol align='left'>name</ttcol>
-        <ttcol align='left'>label</ttcol>
-        <ttcol align='left'>CBOR type</ttcol>
-        <ttcol align='left'>registry</ttcol>
-        <ttcol align='left'>description</ttcol>
-        
-        <c>EC</c>        <c>crv</c>        <c>-1</c>        <c>int / tstr</c>        <c>Pull from general value registry</c>        <c></c>
-        <c>EC</c>        <c>x</c>        <c>-2</c>        <c>bstr</c>        <c></c>        <c></c>
-        <c>EC</c>        <c>y</c>        <c>-3</c>        <c>bstr</c>        <c></c>        <c></c>
-        <c>EC</c>        <c>d</c>        <c>-4</c>        <c>bstr</c>        <c></c>        <c></c>
-        <c>RSA</c>        <c>e</c>        <c>-1</c>        <c>bstr</c>        <c></c>        <c></c>
-        <c>RSA</c>        <c>n</c>        <c>-2</c>        <c>bstr</c>        <c></c>        <c></c>
-        <c>RSA</c>        <c>d</c>        <c>-3</c>        <c>bstr</c>        <c></c>        <c></c>
-        <c>RSA</c>        <c>p</c>        <c>-4</c>        <c>bstr</c>        <c></c>        <c></c>
-        <c>RSA</c>        <c>q</c>        <c>-5</c>        <c>bstr</c>        <c></c>        <c></c>
-        <c>RSA</c>        <c>dp</c>        <c>-6</c>        <c>bstr</c>        <c></c>        <c></c>
-        <c>RSA</c>        <c>dq</c>        <c>-7</c>        <c>bstr</c>        <c></c>        <c></c>
-        <c>RSA</c>        <c>qi</c>        <c>-8</c>        <c>bstr</c>        <c></c>        <c></c>
-        <c>RSA</c>        <c>oth</c>        <c>-9</c>        <c>bstr</c>        <c></c>        <c></c>
-        <c>RSA</c>        <c>r</c>        <c>-10</c>        <c>bstr</c>        <c></c>        <c></c>
-        <c>RSA</c>        <c>t</c>        <c>-11</c>        <c>bstr</c>        <c></c>        <c></c>
-        <c>oct</c>        <c>k</c>        <c>-1</c>        <c>bstr</c>        <c></c>        <c></c>
-      </texttable>
-
-    </section>
-
 
   </back>
 </rfc>
