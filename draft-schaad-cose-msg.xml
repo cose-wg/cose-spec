@@ -1000,69 +1000,97 @@ COSE_KeySet = [+COSE_Key]
         All other elements are optional and not all of the elements listed in <xref target="RFC7517"/> or <xref target="RFC7518"/> have been listed here even though they can all appear in a COSE_Key map.
       </t>
 
-      <t>
-        The “key_ops” element is preferred over the “use” element as the information provided that way is more finely detailed about the operations allowed.  It is strongly suggested that this element be present for all keys.
-      </t>
-
-      <t>
-        The same fields defined in <xref target="RFC7517"/> are used here with the following changes in rules:
-
-        <list style="symbols">
-          <t>
-            Any item that is base64url encoded in JWK, is bstr encoded for COSE.
-          </t>
-          <t>
-            Any item that is integer encoded in JWK, is int encoded for COSE.
-          </t>
-          <t>
-            Any item that is string (but not base64url) encoded in JWK, is tstr encoded for COSE.
-          </t>
-          <t>
-            Exceptions to this are the following fields:
-            <list style="hanging">
-              <t hangText='kid'>
-                is always bstr encoded rather than tstr encoded.
-                This change in encoding is due to the fact that frequently, values
-                such as a hash of the public key is used for a kid value.
-                Since the field is defined as not having a specific structure,
-                making it binary rather than textual makes sense.
-              </t>
-            </list>
-          </t>
-        </list>
-      </t>
 
 
     <section anchor="COSE_KEY_KEYS" title="COSE Key Map Labels">
 
       <t>
-        This table contains a list of all of the parameters defined for keys that were defined by the JOSE document set.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
+        This document defines a set of common map elements for a COSE Key object.
+        <xref target="table-key-labels"/> provides a summary of the elements defined in this section.
+        There are also a set of map elements that are defined for a specific key type.
+        Key specific elements can be found in <xref target="Key-specific-labels"/>.
       </t>
 
-      <texttable>
+      <texttable title="Key Map Labels" anchor="table-key-labels">
         <ttcol align='left'>name</ttcol>
         <ttcol align='left'>label</ttcol>
         <ttcol align='left'>CBOR type</ttcol>
         <ttcol align='left'>registry</ttcol>
         <ttcol align='left'>description</ttcol>
         
-        <c>kty</c>        <c>1</c>        <c>tstr / int</c>        <c>COSE General Values</c>        <c>Identification of the key type</c>
-        <c>use</c>        <c>*</c>        <c>tstr</c>        <c></c>        <c>deprecated - don't use</c>
-        <c>key_ops</c>        <c>*</c>        <c>[* tstr]</c>        <c></c>        <c></c>
-        <c>alg</c>        <c>3</c>        <c>tstr / int</c>        <c>COSE Algorithm Values</c>        <c>Key usage restriction to this algorithm</c>
+        <c>kty</c>        <c>1</c>        <c>tstr / int</c>  <c>COSE General Values</c>        <c>Identification of the key type</c>
+        <c>key_ops</c>    <c>4</c>        <c>[* (tstr/int)]</c> <c></c>     <c>Restrict set of permissible operations</c>
+        <c>alg</c>        <c>3</c>        <c>tstr / int</c>  <c>COSE Algorithm Values</c>        <c>Key usage restriction to this algorithm</c>
         <c>kid</c>        <c>2</c>        <c>bstr</c>        <c></c>        <c>Key Identification value - match to kid in message</c>
         <c>x5u</c>        <c>*</c>        <c>tstr</c>        <c></c>        <c></c>
-        <c>x5c</c>        <c>*</c>        <c>bstr*</c>        <c></c>        <c></c>
+        <c>x5c</c>        <c>*</c>        <c>bstr*</c>       <c></c>        <c></c>
         <c>x5t</c>        <c>*</c>        <c>bstr</c>        <c></c>        <c></c>
-        <c>x5t#S256</c>        <c>*</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>x5t#S256</c>   <c>*</c>        <c>bstr</c>        <c></c>        <c></c>
+        <c>use</c>        <c>*</c>        <c>tstr</c>        <c></c>        <c>deprecated - don't use</c>
       </texttable>
 
+      <t>
+        <list style="hanging">
+          <t hangText="kty:">
+            This field is used to identify the family of keys for this structure, and thus the set of fields to be found.
+            The set of values can be found in <xref target="table_key_types"/>.
+          </t>
+          
+          <t hangText="alg:">
+            This field is used to restrict the algorithms that are to be used with this key.
+            If this field is present in the key structure, the application MUST verify that this algorithm matches the algorithm for which the key is being used.
+            If the algorthms do not match, then this key object MUST NOT be used to perform the cryptographic operation.
+            Note that the same key can be in a different key structure with a different or no algorithm specified, however this is considered to be a poor security practice.
+          </t>
+          
+          <t hangText="kid:">
+            This field is used to give an identifier for a key.
+            The identifier is not structured and can be anything from a user provided string to a value computed on the public portion of the key.
+            This field is intended for matching against a 'kid' field in a message in order to filter down the set of keys that need to be checked.
+          </t>
+          
+          <t hangText="key_ops:">
+            This field is defined to restrict the set of operations that a key is to be used for.
+            The value of the field is an array of values from <xref target="table-key-ops"/>.
+          </t>
+          
+        </list>
+        Only the 'kty' field MUST be present in a key object.
+        All other members may be omitted if their behavior is not needed.
+      </t>
+
+      <texttable title="Key Operation Values" anchor="table-key-ops">
+        <ttcol>name</ttcol>
+        <ttcol>value</ttcol>
+        <ttcol>description</ttcol>
+        <c>sign</c>             <c>1</c>        <c>The key is used to create signatures.  Requires private key fields.</c>
+        <c>verify</c>           <c>2</c>        <c>The key is used for verification of signatures.</c>
+        <c>encrypt</c>          <c>3</c>        <c>The key is used for key transport encryption.</c>
+        <c>decrypt</c>          <c>4</c>        <c>The key is used for key transport decryption.  Requires private key fields.</c>
+        <c>wrap key</c>         <c>5</c>        <c>The key is used for key wrapping.</c>
+        <c>unwrap key</c>       <c>6</c>        <c>The key is used for key unwrapping.  Requires private key fields.</c>
+        <c>key agree</c>        <c>7</c>        <c>The key is used for key agreement.</c>
+      </texttable>
+      
+      <t>
+        The following provides a CDDL fragment which duplicates the assignment labels from <xref target="table-key-labels"/> and <xref target="table-key-ops"/>.
+      </t>
+      
       <figure><artwork type="CDDL"><![CDATA[
 ;key_labels
-kty=1
+key_kty=1
 key_kid=2
 key_alg=3
+key_ops=4
 
+;key_ops values
+key_ops_sign=1
+key_ops_verify=2
+key_ops_encrypt=3
+key_ops_decrypt=4
+key_ops_wrap=5
+key_ops_unwrap=6
+key_ops_agree=7
 ]]></artwork></figure>
 
     </section>
@@ -2078,7 +2106,7 @@ COSE_KDF_Context = [
       </section>
     </section>
 
-    <section title="Keys">
+    <section title="Keys" anchor="Key-specific-labels">
       <t>
         The COSE_Key object defines a way to hold a single key object, it is still required that the members of individual key types be defined.
         This section of the document is where we define an initial set of members for specific key types.
