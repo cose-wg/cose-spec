@@ -42,7 +42,7 @@
 <?rfc sortrefs="yes"?>
 <?rfc comments="yes"?>
 
-<rfc ipr="trust200902" docName="draft-schaad-cose-msg-latest" category="info">
+<rfc ipr="trust200902" docName="draft-ietf-cose-msg-latest" category="info">
   <front>
     <title>CBOR Encoded Message Syntax</title>
 
@@ -68,7 +68,7 @@
     <note title="Contributing to this document">
       <t>
         The source for this draft is being maintained in GitHub.
-        Suggested changes should be submitted as pull requests  at https://github.com/cose-wg/cose-spec.
+        Suggested changes should be submitted as pull requests  at <eref target="https://github.com/cose-wg/cose-spec"/>.
         Instructions are on that page as well.
         Editorial changes can be managed in GitHub, but any substantial issues need to be discussed on the COSE mailing list.
       </t>
@@ -449,8 +449,12 @@ Headers = (
             
             <t hangText='cty'>
               This field is used to indicate the content type of the data in the payload or ciphertext fields.
-              The field uses the integer of '3' for the label. 
+              The field uses the integer of '3' for the label.
               The value can be either an integer or a string.
+              <cref source="JLS">
+                After looking at this, I am wondering if the type for this should be: [int int]/[int tstr] so that we can keep the major/minor difference of media-types.
+                This does cost a couple of bytes in the message.
+              </cref>
               Integers are from the XXXXX<cref source="JLS">Need to figure out how we are going to go about creating this registry -or are we going to modify the current mime-content table?</cref> IANA registry table.
               Strings are from the IANA 'mime-content types' registry.
               Applications SHOULD provide this field if the content structure is potentially ambiguous.
@@ -1095,32 +1099,6 @@ key_ops_agree=7
 
     </section>
       
-    </section>
-    <section anchor="CBOR-Canonical" title="CBOR Encoder Restrictions">
-
-      <t>
-        There as been an attempt to limit the number of places where the document 
-        needs to impose restrictions on how the CBOR Encoder needs to work.  We have
-        managed to narrow it down to the following restrictions:
-      </t>
-
-      <t>
-        <list style="symbols">
-          <t>
-            The restriction applies to the encoding the Sig_structure, the Enc_structure, and the MAC_structure.
-          </t>
-          <t>
-            The rules for Canonical CBOR (Section 3.9 of RFC 7049) MUST be used in these
-            locations.  The main rule that needs to be enforced is that all lengths
-            in these structures MUST be encoded such that they are encoded using definite lengths 
-            and the minimum length encoding is used.
-          </t>
-          <t>
-            All parsers used SHOULD fail on both parsing and generation if the same label is used twice as a key for the same map.
-          </t>
-        </list>
-      </t>
-
     </section>
 
 
@@ -2141,9 +2119,9 @@ COSE_KDF_Context = [
         <t>
           Two different key structures are being defined for Elliptic Curve keys.
           One version uses both an x and a y coordinate, potentially with point compression.
-          This is the traditional EC point representation that is used in [EC-in-PKIX].
+          This is the traditional EC point representation that is used in <xref target="RFC5480"/>.
           The other version uses only the x coordinate as the y coordinate is either to be recomputed or not needed for the key agreement operation.
-          An example of this is [Curve25519].
+          An example of this is Curve25519 <xref target="I-D.irtf-cfrg-curves"/>.
         </t>
         
         <section title="Single Coordinate Curves" anchor="EC1-Keys">
@@ -2319,6 +2297,33 @@ COSE_KDF_Context = [
       </section>
     </section>
     
+    <section anchor="CBOR-Canonical" title="CBOR Encoder Restrictions">
+
+      <t>
+        There as been an attempt to limit the number of places where the document 
+        needs to impose restrictions on how the CBOR Encoder needs to work.  We have
+        managed to narrow it down to the following restrictions:
+      </t>
+
+      <t>
+        <list style="symbols">
+          <t>
+            The restriction applies to the encoding the Sig_structure, the Enc_structure, and the MAC_structure.
+          </t>
+          <t>
+            The rules for Canonical CBOR (Section 3.9 of RFC 7049) MUST be used in these
+            locations.  The main rule that needs to be enforced is that all lengths
+            in these structures MUST be encoded such that they are encoded using definite lengths 
+            and the minimum length encoding is used.
+          </t>
+          <t>
+            All parsers used SHOULD fail on both parsing and generation if the same label is used twice as a key for the same map.
+          </t>
+        </list>
+      </t>
+
+    </section>
+
     <section anchor="iana-considerations" title="IANA Considerations">
 
       <section anchor="cbor-tag-assignment" title="CBOR Tag assignment">
@@ -2961,10 +2966,15 @@ COSE_KDF_Context = [
         The examples can be extracted from the XML version of this docuent via an XPath expression as all of the artwork is tagged with the attribute  type='CBORdiag'.
       </t>
 
+      <section title="Examples of MAC messages">
       <section anchor="Mac-04" title="Shared Secret Direct MAC">
         <t>
-          This example uses a direct shared secret for the key management.
-          The example uses AES-CMAC truncated to 64-bits for the MAC computation.
+          This example users the following:
+          <list style="symbols">
+            <t>MAC: AES-CMAC, 256-bit key, trucated to 64 bits</t>
+            <t>Key management: direct shared secret</t>
+            <t>File name: Mac-04</t>
+          </list>
         </t>
 
         &Mac-04;
@@ -2973,8 +2983,18 @@ COSE_KDF_Context = [
       <section anchor="Mac-01" title="ECDH Direct MAC">
 
         <t>
-          This example is uses HMAC with SHA-256 as the digest algorithm.  
-          The key management is uses two static ECDH keys along with HKDF to directly derive the key used in the HMAC operation.
+          This example uses the following:
+          
+          <list style="symbols">
+            <t>MAC: HMAC w/SHA-256, 256-bit key
+            <cref source="JLS">
+              Need to examine how this is worked out.
+              In this case the length of the key to be used is implicit rather than explicit.
+              This needs to be the case because a direct key could be any length, however it means that when the key is derived, there is currently nothing to state how long the derived key needs to be.
+            </cref>
+            </t>
+            <t>Key management: ECDH key agreement, two static keys, HKDF w/ context structure</t>
+          </list>
         </t>
 
         &Mac-01;
@@ -2983,44 +3003,32 @@ COSE_KDF_Context = [
       <section anchor="Mac-02" title="Wrapped MAC">
 
         <t>
-          This example has some features that are in questions but not yet incorporated in the document.
-        </t>
+          This example uses the following:
 
-        <t>
-          To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
-        </t>
-
-        <t>
-          This example uses AES-128-MAC truncated to 64-bits as the digest algorithm.  It uses AES-256 Key wrap for the key management algorithm wrapping the 128-bit key used for the digest algorithm.
+          <list style="symbols">
+            <t>MAC: AES-MAC, 128-bit key, truncated to 64 bits</t>
+            <t>Key management: AES keywrap w/ a pre-shared 256-bit key</t>
+          </list>
         </t>
 
         &Mac-02;
 
       </section>
+
       <section anchor="Mac-03" title="Multi-recipient MAC message">
 
         <t>
-          This example has some features that are in questions but not yet incorporated in the document.
-        </t>
+          This example uses the following:
 
-        <t>
-          To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
-        </t>
-
-        <t>
-          This example uses HMAC with SHA-256 for the digest algorithm.  There are three different key management techniques applied:
-        </t>
-
-        <t>
           <list style="symbols">
+            <t>MAC: HMAC w/ SHA-256, 128-bit key</t>
             <t>
-              An ephemeral static ECDH key agreement operation using AES-128 key wrap on the digest key.
-            </t>
-            <t>
-              Key transport using RSA-OAEP with SHA-256 for the hash and the mfg function operations.
-            </t>
-            <t>
-              AES 256-bit Key wrap using a pre-shared secret.
+              Key management: Uses three different methods
+              <list style="numbers">
+                <t>ECDH Ephemeral-Static, Curve P-521, AES-Key Wrap w/ 128-bit key</t>
+                <t>RSA-OAEP w/ SHA-256</t>
+                <t>AES-Key Wrap w/ 256-bit key</t>
+              </list>
             </t>
           </list>
         </t>
@@ -3028,63 +3036,62 @@ COSE_KDF_Context = [
         &Mac-03;
 
       </section>
-
-      
-      <section anchor="Enc-01" title="Direct ECDH">
-
-        <t>
-          This example has some features that are in questions but not yet incorporated in the document.
-        </t>
-
-        <t>
-          To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
-        </t>
-
-        <t>
-          Encoded in CBOR - 216 bytes, content is 14 bytes long
-        </t>
-
-        &Enc-01;
-
       </section>
 
-      
-      <section anchor="Sig-01" title="Single Signature">
+      <section title="Examples of Encrypted Messages">
+        
+        <section anchor="Enc-01" title="Direct ECDH">
 
-        <t>
-          This example has some features that are in questions but not yet cooperated in the document.
-        </t>
+          <t>
+            This example uses the following:
 
-        <t>
-          To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
-        </t>
+            <list style="symbols">
+              <t>CEK: AES-GCM w/ 128-bit key</t>
+              <t>Key managment: ECDH Ephemeral-Static, Curve P-256</t>
+            </list>
+          </t>
+          
+          &Enc-01;
 
-        &Sig-01;
-
+        </section>
       </section>
 
+      <section title="Examples of Signed Message">
+        <section anchor="Sig-01" title="Single Signature">
 
-      <section anchor="Sig-02" title="Multiple Signers">
+          <t>
+            This example uses the following:
 
-        <t>
-          This example has some features that are in questions but not yet cooperated in the document.
-        </t>
+            <list style="symbols">
+              <t>Signature Algorithm: RSA-PSS w/ SHA-384, MGF-1</t>
+            </list>
+          </t>
 
-        <t>
-          To make it easier to read, this uses CBOR's diagnostic notation rather than a binary dump.
-        </t>
+          &Sig-01;
 
-        <t>
-          Encoded in CBOR - 491 bytes, content is 14 bytes long
-        </t>
+        </section>
 
-        &Sig-02;
 
+        <section anchor="Sig-02" title="Multiple Signers">
+
+          <t>
+            This example uses the following:
+
+            <list style="symbols">
+              <t>Signature Algorithm: RSA-PSS w/ SHA-256, MGF-1</t>
+              <t>Signature Algorithm: ECDSA w/ SHA-512, Curve P-521</t>
+            </list>
+          </t>
+
+          &Sig-02;
+
+        </section>
       </section>
     </section>
 
     <section anchor="Header-Algorithm-Table" title="COSE Header Algorithm Label Table">
 
+      <t> This section disappears when we make a decision on password based key management.</t>
       <texttable>
         <ttcol align='left'>name</ttcol>
         <ttcol align='left'>algorithm</ttcol>
@@ -3097,5 +3104,22 @@ COSE_KDF_Context = [
 
     </section>
 
+    <section title="Document Updates">
+      <section title="Version -00 to -01">
+        <t>
+          <list style="symbols">
+            <t>Add note on where the document is being maintained and contributing notes.</t>
+            <t>Put in proposal on MTI algorithms.</t>
+            <t>Changed to use labels rather than keys when talking about what indexes a map.</t>
+            <t>Moved nonce/IV to be a common header item.</t>
+            <t>Expand section to discuss the common set of labels used in COSE_Key maps.</t>
+            <t>Add a set of straw man proposals for algorithms.  It is possible/expected that this text will be moved to a new document.</t>
+            <t>Add a set of straw man proposals for key structures.  It is possible/expected that this text will be moved to a new document.</t>
+            <t>Start marking element 0 in registries as reserved.</t>
+            <t>Update examples.</t>
+          </list>
+        </t>
+      </section>
+    </section>
   </back>
 </rfc>

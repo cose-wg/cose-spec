@@ -4,6 +4,7 @@ This is the working area for the expected IETF COSE draft of CBOR Encoded Messag
 
 * [Editor's copy](https://cose-wg.github.io/cose-spec/)
 * [Working Group Draft] (https://tools.ietf.org/html/draft-schaad-cose-msg)
+* [Compare Working Group and Editor's Drafts] (https://tools.ietf.org/rfcdiff?url1=https://www.ietf.org/id/draft-ietf-cose-msg&url2=https://cose-wg.github.io/cose-spec/draft-schaad-cose-msg.txt)
 
 ## Contributing
 
