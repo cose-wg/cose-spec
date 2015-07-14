@@ -4,12 +4,15 @@
 <!ENTITY RFC2104 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2104.xml" >
 <!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml" >
 
+  <!ENTITY RFC2633 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2633.xml" >
   <!ENTITY RFC3394 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3394.xml" >
   <!ENTITY RFC3447 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3447.xml" >
   <!ENTITY RFC3610 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3610.xml" >
   <!ENTITY RFC4231 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4231.xml" >
+  <!ENTITY RFC4262 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4262.xml" >
   <!ENTITY RFC5480 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5480.xml" >
   <!ENTITY RFC5652 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5652.xml" >
+  <!ENTITY RFC5751 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5751.xml" >
   <!ENTITY RFC5752 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5752.xml" >
   <!ENTITY RFC5869 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5869.xml" >
   <!ENTITY RFC5990 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5990.xml" >
@@ -28,6 +31,7 @@
 
 <!ENTITY Triple-01 SYSTEM "includes/Triple-01.xml">
 <!ENTITY Enc-01 SYSTEM "includes/Enc-01.xml">
+<!ENTITY Enc-02 SYSTEM "includes/Enc-02.xml">
 <!ENTITY Mac-01 SYSTEM "includes/Mac-01.xml">
 <!ENTITY Mac-02 SYSTEM "includes/Mac-02.xml">
 <!ENTITY Mac-03 SYSTEM "includes/Mac-03.xml">
@@ -82,9 +86,9 @@
       <t>
         There has been an increased focus on the small, constrained devices that make up the Internet of Things (IOT). 
         One of the standards that has come of of this process is the Concise Binary Object Representation (CBOR). 
-        This standard extends the data model of the JavaScript Object Notation (JSON) by allowing for binary data among other changes. 
-        CBOR is being adopted by several of the IETF working groups dealing with the IOT world to do their encoding of data structures. 
-        CBOR was designed specifically to be both small in terms of messages transport and implementation size. 
+        CBOR extended the data model of the JavaScript Object Notation (JSON) by allowing for binary data among other changes. 
+        CBOR is being adopted by several of the IETF working groups dealing with the IOT world as their encoding of data structures. 
+        CBOR was designed specifically to be both small in terms of messages transport and implementation size as well having a schema free decoder.
         A need exists to provide basic message security services for IOT and using CBOR as the message encoding format makes sense.
       </t>
 
@@ -185,7 +189,7 @@ start = COSE_MSG
         </t>
         
         <t>
-          NOTE:  At some point we need to make some decisions about how we are using CDDL in this document.
+          NOTE<cref source="JLS">M00TODO"</cref>:  At some point we need to make some decisions about how we are using CDDL in this document.
           Since this draft has not been moving forward at a great rate, changing all references on it to informational is a good idea.
           On the other hand, having some type of syntax that can be examined by a machine to do syntax checking is a big win.
           The build system for this draft is currently using the latest version of CDDL to check that the syntax of the examples is correct.
@@ -201,17 +205,28 @@ start = COSE_MSG
         The integers (both positive and negative) are used for compactness of encoding and easy comparison.
         (Generally, in this document the value zero is going to be reserved and not used.)
         Since the work "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage of either an integer or a string to identify map keys and choice data items.
+        </t>
 
         <figure><artwork type='CDDL'>
 <![CDATA[
 label = int / tstr
 ]]></artwork></figure>
+      </section>
+
+      <section title="Document Terminology">
+        <t>Byte is a synonym for octet.</t>
+        <t>
+          Key management is used as a term to describe how a key at level n is obtained from level n+1 in encrypted and MACed messages.
+          The term is also used to discuss key life cycle management,  this document does not discuss key life cycle operations.
         </t>
       </section>
 
       <section title="Mandatory to Implement Algorithms">
         <t>
-          One of the standard issues that is specified in IETF cryptographic algorithms is a requirement that a standard specify a set of minimal algorithms that are required to be implemented.
+          One of the issues that needs to be addressed is a requirement that a standard specify a set of algorithms that are required to be implemented.
+          <cref source="JLS">
+            It would be possible to extend this section to talk about those decisions which an application needs to think about rather than just talking about MTI algoithms.
+          </cref>
           This is done to promote interoperability as it provides a minimal set of algorithms that all devices can be sure will exist at both ends.
           However, we have elected not to specify a set of mandatory algorithms in this document.
         </t>
@@ -227,19 +242,13 @@ label = int / tstr
           The discovery method may be as simple as requiring preconfiguration of the set of algorithms to providing a discovery method built into the protocol.
           S/MIME provided a number of different ways to approach the problem:
           <list style="symbols">
-            <t>Advertising in the message (S/MIME capabilities)</t>
-            <t>Advertising in the certificate (capabilities extension)</t>
-            <t>Minimum requirements for the S/MIME which have been updated over time</t>
+            <t>Advertising in the message (S/MIME capabilities) <xref target="RFC5751"/>.</t>
+            <t>Advertising in the certificate (capabilities extension) <xref target="RFC4262"/></t>
+            <t>Minimum requirements for the S/MIME which have been updated over time <xref target="RFC2633"/><xref target="RFC5751"/></t>
           </list>
         </t>
       </section>
 
-      <!--
-          <section title="Document Terminology">
-          <t>Byte is a synonym for octet.</t>
-          
-          </section>
-      -->
     </section>
     
     <section anchor="the-cosemsg-structure" title="The COSE_MSG structure">
@@ -322,7 +331,7 @@ COSE_MSG = COSE_Sign /
 COSE_Tagged_MSG = #6.999(COSE_MSG)   ; Replace 999 with TBD1
 
 ; msg_type values
-reserved=0
+msg_type_reserved=0
 msg_type_signed=1
 msg_type_encrypted=2
 msg_type_mac=3
@@ -384,8 +393,8 @@ tag=10
         The map key is a 'label' (<xref target="label"/>).
         The value portion is dependent on the definition for the label.
         Both maps use the same set of label/value pairs. 
-        The integer range for labels has been divided into several sections with a standard range, a private range, and a range that is dependent on the algorithm selected. 
-        The tables of labels can be found in <xref target="Header-Table"/>.
+        The integer range for labels has been divided into several sections with a standard range, a private range, and a range that is dependent on the algorithm selected.
+        The defined labels can be found in the 'COSE Header Labels' IANA registry (<xref target="cose-header-key-table"/>.
       </t>
 
       <t>
@@ -399,7 +408,13 @@ tag=10
           <t hangText='protected'>
             contains attributes about the layer that are to be cryptographically protected. 
             This bucket MUST NOT be used if it is not going to be included in a cryptographic computation.
+            This bucket is encoded in the message as a binary object.
+            This value is obtained by CBOR encoding the protected map and wrapping it in a bstr object.
+            This wrapping allows for the encoding of the protected map to be transported with a greater chance that it will not be altered in transit.
+            (Badly behaved intermediates could decode and re-encode, but this will result in a failure to verify unless the re-encoded byte string is identical to the decoded byte string.)
+            This finesses the problem of all parties needing to be able to do a common connical encoding.
           </t>
+          
           <t hangText='unprotected'>
             contains attributes about the layer that are not cryptographically protected.
           </t>
@@ -420,6 +435,12 @@ Headers = (
       <section anchor="cose-headers" title="COSE Headers">
         <t>
           The set of header fields defined in this document are:
+          <!-- 
+               M00TODO: JLS
+               Refer to the table defined below and remove the label values and types from the list of elements.  
+               The table is a cleaner place to put them at.
+               Do we create a set of CDDL that give the mappings as well?
+          -->
         </t>
 
         <t>
@@ -439,9 +460,11 @@ Headers = (
               When present, this MUST be placed in the protected header bucket.
               <list style="symbols">
                 <t>Integer labels in the range of 0 to 10 SHOULD be omitted.</t>
+                
                 <t>
                   Integer labels in the range -1 to -255 can be omitted as they are algorithm dependent.
                   If an application can correctly process an algorithm, it can be assumed that it will correctly process all of the parameters associated with that algorithm.
+                  (The algorithm range is -1 to -65536, it is assumed that the higher end will deal with more optional algorithm specific items.)
                 </t>
               </list>
               The header values indicated by 'crit' can be processed by either the security library code or by an application using a security library, the only requirement is that the field is processed.
@@ -475,12 +498,14 @@ Headers = (
               This field holds either a nonce or Initialization Vector value.
               This value can be used either as a counter value for a protocol or as an IV for an algorithm.
               TODO: Talk about zero extending the value in some cases.
+              <cref source="JLS">Open to do.</cref>
             </t>
           </list>
         </t>
 
         <t>
-          This table contains a list of all of the parameters for use in signature and encryption message types defined by the JOSE document set.  In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
+          This table contains a list of all of the generic header parameters defined in document.  
+          In the table is the data value type to be used for CBOR as well as the integer value that can be used as a replacement for the name in order to further decrease the size of the sent item.
         </t>
 
       <texttable anchor="Header-Table" title="Header Labels">
@@ -491,17 +516,18 @@ Headers = (
         <ttcol align='left'>description</ttcol>
         
         <c>alg</c>        <c>1</c>        <c>int / tstr</c>        <c>COSE Algorithm Registry</c>       <c>Integers are taken from table --POINT TO REGISTRY--</c>
-        <c>crit</c>       <c>2</c>        <c>[+ label]</c>    <c>COSE Header Label Registry</c>      <c>integer values are from this table.</c>
+        <c>crit</c>       <c>2</c>        <c>[+ label]</c>         <c>COSE Header Label Registry</c>    <c>integer values are from  -- POINT TO REGISTRY --</c>
         <c>cty</c>        <c>3</c>        <c>tstr / int</c>        <c>media-types registry</c>          <c>Value is either a media-type or an integer from the media-type registry</c>
+        
         <c>jku</c>        <c>*</c>        <c>tstr</c>              <c></c>                              <c>URL to COSE key object</c>
         <c>jwk</c>        <c>*</c>        <c>COSE_Key</c>          <c></c>                              <c>contains a COSE key not a JWK key</c>
         <c>kid</c>        <c>4</c>        <c>bstr</c>              <c></c>                              <c>key identifier</c>
+        <c>nonce</c>      <c>5</c>        <c>bstr</c>              <c></c>                              <c>Nonce or Initialization Vector (IV)</c>
         <c>x5c</c>        <c>*</c>        <c>bstr*</c>             <c></c>                              <c>X.509 Certificate Chain</c>
         <c>x5t</c>        <c>*</c>        <c>bstr</c>              <c></c>                              <c>SHA-1 thumbprint of key</c>
         <c>x5t#S256</c>   <c>*</c>        <c>bstr</c>              <c></c>                              <c>SHA-256 thumbprint of key</c>
         <c>x5u</c>        <c>*</c>        <c>tstr</c>              <c></c>                              <c>URL for X.509 certificate</c>
         <c>zip</c>        <c>*</c>        <c>int / tstr</c>        <c></c>                              <c>Integers are taken from the table --POINT TO REGISTRY--</c>
-        <c>nonce</c>      <c>5</c>        <c>bstr</c>              <c></c>                              <c>Nonce or Initialization Vector (IV)</c>
       </texttable>
 
       <t>
@@ -575,6 +601,9 @@ COSE_Sign = {
             This field MUST NOT contain attributes about the signature, even if
             those attributes are common across multiple signatures.
             The labels in this map are typically taken from <xref target="Header-Table"/>.
+            <cref source="JLS">
+              Should be able to move much of this text into the headers section and just do a refer to that text from here.
+            </cref>
           </t>
           <t hangText='unprotected'>
             contains attributes about the payload that are not protected by the signature.
@@ -582,6 +611,9 @@ COSE_Sign = {
             This field MUST NOT contain attributes about a signature, even if
             the attributes are common across multiple signatures.
             The labels in this map are typically taken from <xref target="Header-Table"/>.
+            <cref source="JLS">
+              Should be able to move much of this text into the headers section and just do a refer to that text from here.
+            </cref>
           </t>
           <t hangText='payload'>
             contains the serialized content to be signed.
@@ -760,8 +792,20 @@ COSE_encrypt_fields = (
 
       <section anchor="key-management-methods" title="Key Management Methods">
         <t>
-          This section has moved.
-          Still need to make some small comments here.
+          A typical encrypted message consists of an encrypted content and an encrypted CEK for one or more recipients.
+          The content-encryption key is encrypted for each recipient.
+          The details of this encryption depends on the key management technique used, but the six generally techniques are:
+          <list style="hanging">
+            <t hangText="none:"> The CEK is the same as as the identified previously distributed symmetric key.</t>
+            <t hangText="symmetric key-encryption keys:"> The CEK is encrypted using a previously distributed symmetric key-encryption key.</t>
+            <t hangText="key agreement:"> the recipient's public key and a sender's private key are used to generate a pairwise symmetric key, then the CEK is either the derived key or encrypted by the derived key.</t>
+            <t hangText="key transport:"> the CEK is encrypted in the recipient's public key</t>
+            <t hangText="passwords:"> the CEK is encrypted in a key-encryption key that is derived from a password or other shared secret value.</t>
+          </list>
+        </t>
+
+        <t>
+          <xref target="key-management-algs"/> provides details on a number of different key management algorithms and discusses which elements need to be present for each of the key management techniques.
         </t>
       </section>
       
@@ -1104,6 +1148,7 @@ key_ops_agree=7
 
     <section title="Signature Algorithms">
       <t>
+        
         M00TODO: Put in generalities about sigature algorithms and parameters.
       </t>
       
@@ -1280,7 +1325,7 @@ key_ops_agree=7
           </list>
         </t>
 
-          <!--
+        <!--
         <texttable title="AES-MAC Algorithm Values" anchor="table-aes-mac">
           <ttcol align='left'>name</ttcol>
           <ttcol align='left'>value</ttcol>
@@ -1293,7 +1338,7 @@ key_ops_agree=7
           <c>HMAC 384/384</c>        <c>5</c>        <c>SHA-384</c>    <c>384</c>       <c>HMAC w/ SHA-384</c>
           <c>HMAC 512/512</c>        <c>6</c>        <c>SHA-512</c>    <c>512</c>       <c>HMAC w/ SHA-512</c>
         </texttable>
--->
+        -->
       </section>
     </section>
 
@@ -1632,7 +1677,7 @@ COSE_KDF_Context = [
       </section>
     </section>
 
-    <section title="Key Management Algorithms">
+    <section title="Key Management Algorithms" anchor="key-management-algs">
       <t>
         There are a number of different key management methods that can be used in the COSE encryption system.
         In this section we will discuss each of the key management methods, what fields need to be specified, and which algorithms are defined in this document to deal with each of them.
@@ -2367,32 +2412,46 @@ COSE_KDF_Context = [
         </t>
 
         <t>
+          The columns of the registry are:
+
           <list style="hanging">
-            <t hangText='The columns of the registry are:'>
-              
-            </t>
+            
             <t hangText='name'>
               The name is present to make it easier to refer to and discuss the registration entry.  The value is not used in the protocol.  Names are to be unique in the table.
             </t>
+            
             <t hangText='label'>
               This is the value used for the label.
               The label can be either an integer or a string.
               Registration in the table is based on the value of the label requested.
+              <!-- these are 1 and 2 byte items -->
               Integer values between 1 and 255 and strings of length 1 are designated as Standards Track Document required.
+
+              <!-- These are 3 byte items -->
               Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.
+
+              <!-- These are >= 4 byte items -->
               Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.
+
+              <!-- These are 1 and 3 byte items -->
               Integer values in the range -1 to -65536 are delegated to the “COSE Header Algorithm Label” registry.
+
+              <!-- These are >= 4 byte items -->
               Integer values beyond -65536 are marked as private use.
             </t>
+
             <t hangText='value'>
               This contains the CBOR type for the value portion of the label.
             </t>
+
             <t hangText='value registry'>
               This contains a pointer to the registry used to contain values where the set is limited.
             </t>
+
             <t hangText='description'>
               This contains a brief description of the header field.
             </t>
+
             <t hangText='specification'>
               This contains a pointer to the specification defining the header field (where public).
             </t>
@@ -2405,7 +2464,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          Additionally, the value of 0 is to be marked as 'Reserved'.
+          Additionally, the label of 0 is to be marked as 'Reserved'.
         </t>
 
         <t>
@@ -2422,32 +2481,36 @@ COSE_KDF_Context = [
         </t>
 
         <t>
+          The columns of the registry are:
           <list style="hanging">
-            <t hangText='The columns of the registry are:'>
-              
-            </t>
             <t hangText='name'>
               The name is present to make it easier to refer to and discuss the registration entry.  The value is not used in the protocol.
             </t>
+            
             <t hangText='algorithm'>
               The algorithm(s) that this registry entry is used for.
               This value is taken from the “COSE Algorithm Value” registry.
               Multiple algorithms can be specified in this entry.
               For the table, the algorithm, label pair MUST be unique.
             </t>
+            
             <t hangText='label'>
               This is the value used for the label.
               The label is an integer in the range of -1 to -65536.
             </t>
+            
             <t hangText='value'>
               This contains the CBOR type for the value portion of the label.
             </t>
+            
             <t hangText='value registry'>
               This contains a pointer to the registry used to contain values where the set is limited.
             </t>
+            
             <t hangText='description'>
               This contains a brief description of the header field.
             </t>
+            
             <t hangText='specification'>
               This contains a pointer to the specification defining the header field (where public).
             </t>
@@ -2490,7 +2553,8 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          The initial contents of the registry can be found in the following: <xref target="table-AES-CCM"/>, <xref target="table-AES-GCM"/>, <xref target="table_ecdsa"/>, <xref target="table-hmac"/>, <xref target="table-direct"/>, <xref target="table_aes_keywrap"/>, <xref target="table-RSA-OAEP"/>.
+          The initial contents of the registry can be found in the following:
+          <xref target="table-AES-CCM"/>, <xref target="table-AES-GCM"/>, <xref target="table_ecdsa"/>, <xref target="table-hmac"/>, <xref target="table-direct"/>, <xref target="table_aes_keywrap"/>, <xref target="table-RSA-OAEP"/>.
           The specification column for all rows in that table should be this document.
         </t>
 
@@ -2758,12 +2822,15 @@ COSE_KDF_Context = [
       &CDDL;
       &CBCMAC;
       &RFC2104;
+      &RFC2633;
       &RFC3394;
       &RFC3447;
       &RFC3610;
       &RFC4231;
+      &RFC4262;
       &RFC5480;
       &RFC5652;
+      &RFC5751;
       &RFC5752;
       &RFC5869;
       &RFC5990;
@@ -2957,85 +3024,88 @@ COSE_KDF_Context = [
         </cref>
         Using the Ruby based CBOR diagnostic tools at ????, the diagnostic notation can be converted into binary files using the following command line:
         (install command is?...)
-        <figure><artwork>
+      </t>
+      <figure><artwork>
 <![CDATA[          
          diag2cbor < inputfile > outputfile
          ]]>
-        </artwork></figure>
+      </artwork></figure>
 
+      <t>
         The examples can be extracted from the XML version of this docuent via an XPath expression as all of the artwork is tagged with the attribute  type='CBORdiag'.
       </t>
 
       <section title="Examples of MAC messages">
-      <section anchor="Mac-04" title="Shared Secret Direct MAC">
-        <t>
-          This example users the following:
-          <list style="symbols">
-            <t>MAC: AES-CMAC, 256-bit key, trucated to 64 bits</t>
-            <t>Key management: direct shared secret</t>
-            <t>File name: Mac-04</t>
-          </list>
-        </t>
+        
+        <section anchor="Mac-04" title="Shared Secret Direct MAC">
+          <t>
+            This example users the following:
+            <list style="symbols">
+              <t>MAC: AES-CMAC, 256-bit key, trucated to 64 bits</t>
+              <t>Key management: direct shared secret</t>
+              <t>File name: Mac-04</t>
+            </list>
+          </t>
 
-        &Mac-04;
-      </section>
-      
-      <section anchor="Mac-01" title="ECDH Direct MAC">
+          &Mac-04;
+        </section>
+        
+        <section anchor="Mac-01" title="ECDH Direct MAC">
 
-        <t>
-          This example uses the following:
-          
-          <list style="symbols">
-            <t>MAC: HMAC w/SHA-256, 256-bit key
-            <cref source="JLS">
-              Need to examine how this is worked out.
-              In this case the length of the key to be used is implicit rather than explicit.
-              This needs to be the case because a direct key could be any length, however it means that when the key is derived, there is currently nothing to state how long the derived key needs to be.
-            </cref>
-            </t>
-            <t>Key management: ECDH key agreement, two static keys, HKDF w/ context structure</t>
-          </list>
-        </t>
+          <t>
+            This example uses the following:
+            
+            <list style="symbols">
+              <t>MAC: HMAC w/SHA-256, 256-bit key
+              <cref source="JLS">
+                Need to examine how this is worked out.
+                In this case the length of the key to be used is implicit rather than explicit.
+                This needs to be the case because a direct key could be any length, however it means that when the key is derived, there is currently nothing to state how long the derived key needs to be.
+              </cref>
+              </t>
+              <t>Key management: ECDH key agreement, two static keys, HKDF w/ context structure</t>
+            </list>
+          </t>
 
-        &Mac-01;
+          &Mac-01;
 
-      </section>
-      <section anchor="Mac-02" title="Wrapped MAC">
+        </section>
+        <section anchor="Mac-02" title="Wrapped MAC">
 
-        <t>
-          This example uses the following:
+          <t>
+            This example uses the following:
 
-          <list style="symbols">
-            <t>MAC: AES-MAC, 128-bit key, truncated to 64 bits</t>
-            <t>Key management: AES keywrap w/ a pre-shared 256-bit key</t>
-          </list>
-        </t>
+            <list style="symbols">
+              <t>MAC: AES-MAC, 128-bit key, truncated to 64 bits</t>
+              <t>Key management: AES keywrap w/ a pre-shared 256-bit key</t>
+            </list>
+          </t>
 
-        &Mac-02;
+          &Mac-02;
 
-      </section>
+        </section>
 
-      <section anchor="Mac-03" title="Multi-recipient MAC message">
+        <section anchor="Mac-03" title="Multi-recipient MAC message">
 
-        <t>
-          This example uses the following:
+          <t>
+            This example uses the following:
 
-          <list style="symbols">
-            <t>MAC: HMAC w/ SHA-256, 128-bit key</t>
-            <t>
-              Key management: Uses three different methods
-              <list style="numbers">
-                <t>ECDH Ephemeral-Static, Curve P-521, AES-Key Wrap w/ 128-bit key</t>
-                <t>RSA-OAEP w/ SHA-256</t>
-                <t>AES-Key Wrap w/ 256-bit key</t>
-              </list>
-            </t>
-          </list>
-        </t>
+            <list style="symbols">
+              <t>MAC: HMAC w/ SHA-256, 128-bit key</t>
+              <t>
+                Key management: Uses three different methods
+                <list style="numbers">
+                  <t>ECDH Ephemeral-Static, Curve P-521, AES-Key Wrap w/ 128-bit key</t>
+                  <t>RSA-OAEP w/ SHA-256</t>
+                  <t>AES-Key Wrap w/ 256-bit key</t>
+                </list>
+              </t>
+            </list>
+          </t>
 
-        &Mac-03;
+          &Mac-03;
 
-      </section>
+        </section>
       </section>
 
       <section title="Examples of Encrypted Messages">
@@ -3053,6 +3123,25 @@ COSE_KDF_Context = [
           
           &Enc-01;
 
+        </section>
+
+        <section anchor="Enc-02" title="Direct plus Key Derivation">
+          <t>
+            This example uses the following:
+            <list style="symbols">
+              <t>CEK: AES-CCM w/128-bit key, trucate the tag to 64-bits</t>
+              <t>Key managment: Use HKDF on a shared secret with the following implicit fields as part of the context.
+              <list style="symbols">
+                <t>APU identity: "lighting-client"</t>
+                <t>APV identity: "lighting-server"</t>
+                <t>Supplimentary Public Other: "Encryption Example 02"</t>
+              </list>
+              </t>
+            </list>
+          </t>
+
+          &Enc-02;
+          
         </section>
       </section>
 
@@ -3105,6 +3194,15 @@ COSE_KDF_Context = [
     </section>
 
     <section title="Document Updates">
+      <section title="Version -01 to -02">
+        <t>
+          <list style="symbols">
+            <t>Add a set of straw man proposals for algorithms.  It is possible/expected that this text will be moved to a new document.</t>
+            <t>Add a set of straw man proposals for key structures.  It is possible/expected that this text will be moved to a new document.</t>
+          </list>
+        </t>
+      </section>
+      
       <section title="Version -00 to -01">
         <t>
           <list style="symbols">
@@ -3113,8 +3211,6 @@ COSE_KDF_Context = [
             <t>Changed to use labels rather than keys when talking about what indexes a map.</t>
             <t>Moved nonce/IV to be a common header item.</t>
             <t>Expand section to discuss the common set of labels used in COSE_Key maps.</t>
-            <t>Add a set of straw man proposals for algorithms.  It is possible/expected that this text will be moved to a new document.</t>
-            <t>Add a set of straw man proposals for key structures.  It is possible/expected that this text will be moved to a new document.</t>
             <t>Start marking element 0 in registries as reserved.</t>
             <t>Update examples.</t>
           </list>
