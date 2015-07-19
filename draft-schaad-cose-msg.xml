@@ -1148,8 +1148,44 @@ key_ops_agree=7
 
     <section title="Signature Algorithms">
       <t>
-        
-        M00TODO: Put in generalities about sigature algorithms and parameters.
+        There are two basic signature algorithm structures that can be used.
+        The first is the common signature with appendix.
+        In this structure, the message content is processed and a signature is produced, the signature is called the appendix.
+        This is the message structure used by our common algorithms such as ECDSA and RSASSA-PSS.
+        (In fact two of the letters in RSASSA-PSS are signature appendix.)
+        The basic structure becomes:
+      </t>
+      <figure><artwork>
+        <![CDATA[
+                 signature = Sign(message content, key)
+
+valid = Verification(message content, key, signature)
+]]>
+      </artwork></figure>
+      
+      <t>
+        The second is a signature with message recovery.
+        (An example of such an algorithm is [TBD].)
+        In this structure, the message content is processed, but part of is included in the siguature.
+        Moving bytes of the message content into the signature allows for an effectively smaller signature, the signature size is still potentially large, but the message content is shrunk.
+        This has implications for systems implementing these algoritms and for applications that use them.
+        The first is that the message content is not fully available until after a signature has been validated.
+        Until that point the part of the message contained inside of the signature is unrecoverable.
+        The second is that the security analysis of the strength of the signature is very much based on the structure of the message content.
+        Messages which are highly predictable require additional randomness to be supplied as part of the signature process, in the worst case it because the same as doing a singature with appendix.
+        Thirdly, in the event that multple signatures are applied to a message, all of the signature algorithms are going to be required to consume the same number of bytes of message content.
+      </t>
+      <figure><artwork>
+        <![CDATA[
+signature, message sent = Sign(message content, key)
+
+valid, message content = Verification(message sent, key, signature)
+]]>
+      </artwork></figure>
+
+      <t>
+        At this time, only signatures with appendixes are defined for use with COSE, however considerable interest has been expressed in using a signature with message recovery algorithm due to the effective size reduction that is possible.
+        Implementations will need to keep this in mind for later possible integration.
       </t>
       
       <section title="ECDSA">
@@ -1517,7 +1553,7 @@ key_ops_agree=7
           <c>HKDF-512</c>       <c>SHA-512</c>  <c>XXX</c>
         </texttable>
 
-        <texttable title="HKDF parameters">
+        <texttable title="HKDF parameters" anchor="HKDF_Alg_Params">
           <ttcol>name</ttcol>
           <ttcol>label</ttcol>
           <ttcol>type</ttcol>
@@ -1661,7 +1697,7 @@ COSE_KDF_Context = [
 ]
 ]]></artwork></figure>
 
-        <texttable title="Context Algorithm Parameters">
+        <texttable title="Context Algorithm Parameters" anchor="KDF_Context_Alg_Params">
           <ttcol>name</ttcol>
           <ttcol>label</ttcol>
           <ttcol>type</ttcol>
@@ -2430,13 +2466,13 @@ COSE_KDF_Context = [
               <!-- These are 3 byte items -->
               Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.
 
-              <!-- These are >= 4 byte items -->
+              <!-- These are >= 5 byte items -->
               Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.
 
-              <!-- These are 1 and 3 byte items -->
+              <!-- These are 1, 2 and 3 byte items -->
               Integer values in the range -1 to -65536 are delegated to the “COSE Header Algorithm Label” registry.
 
-              <!-- These are >= 4 byte items -->
+              <!-- These are >= 5 byte items -->
               Integer values beyond -65536 are marked as private use.
             </t>
 
@@ -2465,10 +2501,6 @@ COSE_KDF_Context = [
 
         <t>
           Additionally, the label of 0 is to be marked as 'Reserved'.
-        </t>
-
-        <t>
-          NOTE: Need to review the range assignments.  It does not necessarily make sense as specification required uses 1 byte positive integers and 2 byte strings.
         </t>
 
       </section>
@@ -2518,7 +2550,8 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          The initial contents of the registry can be found in <xref target="Header-Algorithm-Table"/>.  The specification column for all rows in that table should be this document.
+          The initial contents of the registry can be found in: <xref target="HKDF_Alg_Params"/>,  <xref target="KDF_Context_Alg_Params"/>, <xref target="table-ecdh-es-parameter-table"/>, and <xref target="Header-Algorithm-Table"/>.
+          The specification column for all rows in that table should be this document.
         </t>
 
       </section>
@@ -2642,7 +2675,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          This registry will be initially populated by the values in --Multiple Tables--.
+          This registry will be initially populated by the values in <xref target="table-ec1-keys"/>, <xref target="table-ec2-keys"/>, <xref target="table-rsa-keys"/>, and <xref target="table-symmetric-keys"/>.
           The specification column for all of these entries will be this document.
         </t>
 
