@@ -164,7 +164,10 @@
 
         <t>
           There currently is no standard CBOR grammar available for use by specifications.
-          In this document, we use the grammar defined in the CBOR data definition language (CDDL) <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>.
+          While we describe the CBOR structures in prose, they are agumented in the text by the use of the CBOR Data Definition Language (CDDL) <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>.
+          The use of CDDL is intended to be explanitory.
+          In the event of a conflict between the text and the CDDL grammar, the text is authorative.
+          (Problems may be introduced at a later point because the CDDL grammar is not yet fixed.)
         </t>
 
         <t>
@@ -188,32 +191,37 @@ start = COSE_MSG
 ]]></artwork></figure>         
         </t>
         
-        <t>
-          NOTE<cref source="JLS">M00TODO"</cref>:  At some point we need to make some decisions about how we are using CDDL in this document.
-          Since this draft has not been moving forward at a great rate, changing all references on it to informational is a good idea.
-          On the other hand, having some type of syntax that can be examined by a machine to do syntax checking is a big win.
-          The build system for this draft is currently using the latest version of CDDL to check that the syntax of the examples is correct.
-          Doing this has found problems in both the syntax checker, the syntax and the examples.
-        </t>
-
       </section>
 
       <section title="CBOR Related Terminology" anchor="label">
         <t>
-        In JSON, maps are called objects and only have one kind of map key: a string.
-        In COSE, we use both strings and integers (both negative and non-negative integers) as map keys, as well as data items to identify specific choices.
-        The integers (both positive and negative) are used for compactness of encoding and easy comparison.
-        (Generally, in this document the value zero is going to be reserved and not used.)
-        Since the work "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage of either an integer or a string to identify map keys and choice data items.
+          In JSON, maps are called objects and only have one kind of map key: a string.
+          In COSE, we use both strings and integers (both negative and non-negative integers) as map keys, as well as data items to identify specific choices.
+          The integers (both positive and negative) are used for compactness of encoding and easy comparison.
+          (Generally, in this document the value zero is going to be reserved and not used.)
+          Since the work "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage of either an integer or a string to identify map keys and choice data items.
         </t>
 
+        <t>
+          The CDLL grammar that defines a type that represents a label is given below:
+        </t>
+        
         <figure><artwork type='CDDL'>
 <![CDATA[
 label = int / tstr
 ]]></artwork></figure>
+
       </section>
 
       <section title="Document Terminology">
+        <t>
+          In this document we use the following terminology:
+          <cref source="JLS">
+            I have not gone through the document to determine what needs to be here yet.
+            We mostly want to grab terms which are used in unusual ways or are not generally understood.
+          </cref>
+        </t>
+        
         <t>Byte is a synonym for octet.</t>
         <t>
           Key management is used as a term to describe how a key at level n is obtained from level n+1 in encrypted and MACed messages.
@@ -273,7 +281,15 @@ label = int / tstr
       <t>
         Each of the top-level security objects use a CBOR map as the base structure.
         Items in the map at the top level are identified by a label.
-        This document defines a number of labels in the IANA “COSE Object Labels Registry” (defined in <xref target="IANA-Top-Level-Keys"/>).
+        The type of the value associated with the label is determined by the definition of the label.
+        
+        <!-- M00TODO:
+             JLS:  While I want to point to the registry at some point, I don't think this is the correct sentence and place to do it.
+             Figure out where it needs to go and move the following sentence into the correct location. 
+             Also need to determine if anything needs to be done to keep a pointer in this paragraph.
+             
+             This document defines a number of labels in the IANA “COSE Object Labels Registry” (defined in <xref target="IANA-Top-Level-Keys"/>).
+        -->
       </t>
 
       <t>
@@ -287,14 +303,13 @@ label = int / tstr
       </t>
 
       <t>
-        A field 'msg_type' is defined to distinguish between the different structures when they appear as part of a COSE_MSG object.
+        A label 'msg_type' is defined to distinguish between the different structures when they appear as part of a COSE_MSG object.
         <cref source="JLS">
           I have moved msg_type into the individual structures.
           However, they would not be necessary in the cases where a) the security service is known and b) security libraries can setup to take individual structures.
           Should they be moved back to just appearing if used in a COSE_MSG rather than on the individual structure?
         </cref>
         <cref source="JLS">Should we create an IANA registries for the values of msg_type?</cref>
-        This field is indexed by an integer value 1, the values defined in this document are:
       </t>
 
       <t>
