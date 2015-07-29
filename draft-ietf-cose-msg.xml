@@ -120,7 +120,7 @@
               Define a top level message structure so that encrypted, signed and MACed messages can easily identified and still have a consistent view.
             </t>
             <t>
-              Signed messages separate the concept of protected and unprotected attributes that are for the content and the signature.
+              Signed messages separate the concept of protected and unprotected parameters that are for the content and the signature.
             </t>
             <t>
               Key management has been made to be more uniform. 
@@ -401,7 +401,7 @@ tag=10
         The structure of COSE has been designed to have two buckets of information that are not considered to be part of the payload itself, but are used for holding information about algorithms, keys, or evaluation hints for the  processing of the layer.
         These two buckets are available for use in all of the structures in this document except for keys.
         While these buckets can be present, they may not all be usable in all instances.
-        For example, while the protected bucket is present for recipient structures, most of the algorithms that are used for recipients do not provide the necessary functionality to provide the needed protection and thus the element is not used.
+        For example, while the protected bucket is defined as part of recipient structures, most of the algorithms that are used for recipients do not provide the necessary functionality to provide the needed protection and thus the bucket should not be used.
       </t>
 
       <t>
@@ -410,7 +410,7 @@ tag=10
         The value portion is dependent on the definition for the label.
         Both maps use the same set of label/value pairs. 
         The integer range for labels has been divided into several sections with a standard range, a private range, and a range that is dependent on the algorithm selected.
-        The defined labels can be found in the 'COSE Header Labels' IANA registry (<xref target="cose-header-key-table"/>.
+        The defined labels can be found in the 'COSE Header Parameters' IANA registry (<xref target="cose-header-key-table"/>).
       </t>
 
       <t>
@@ -422,7 +422,7 @@ tag=10
 
         <list style="hanging">
           <t hangText='protected'>
-            contains attributes about the current layer that are to be cryptographically protected.
+            contains parameters about the current layer that are to be cryptographically protected.
             This bucket MUST NOT be used if it is not going to be included in a cryptographic computation.
             This bucket is encoded in the message as a binary object.
             This value is obtained by CBOR encoding the protected map and wrapping it in a bstr object.
@@ -432,21 +432,21 @@ tag=10
           </t>
           
           <t hangText='unprotected'>
-            contains attributes about the current layer that are not cryptographically protected.
+            contains parameters about the current layer that are not cryptographically protected.
           </t>
         </list>
 
-        Only attributes that deal with the current layer are to be placed at that layer.
-        As an example of this, the attribute content type ('cty') describes the content of the message being carried in the message.
-        As such this attribute is placed only the the content layer and is not placed in the key managment or signature layers.
+        Only parameters that deal with the current layer are to be placed at that layer.
+        As an example of this, the parameter 'content type' describes the content of the message being carried in the message.
+        As such this parameter is placed only the the content layer and is not placed in the key managment or signature layers.
         In principle, one should be able to process any given layer without reference to any other layer.
-        (The only data that should need to cross layers is a cryptographic key.)
+        (The only data that should need to cross layers is the cryptographic key.)
       </t>
 
       <t>
-        The presence of both buckets is optional, however the requirement that the 'alg' parameter be present at each level effectively imposes a requirement that one of the buckets always be present.
-        The parameters that go into the buckets come from the IANA "COSE Header Labels" (<xref target="cose-header-key-table"/>).
-        The common parameters are defined in the next section, but a number of parameters are defined throughout this document.
+        The presence of both buckets is optional, however the requirement that the 'alg' parameter be present at each level effectively imposes a requirement that one of the buckets will always be present.
+        The parameters that go into the buckets come from the IANA "COSE Header Parameters" (<xref target="cose-header-key-table"/>).
+        Some common parameters are defined in the next section, but a number of parameters are defined throughout this document.
         
       </t>
 
@@ -471,23 +471,22 @@ Headers = (
         </t>
 
         <t>
-          The set of header fields defined in this section are:
+          The set of header parameters defined in this section are:
         </t>
 
         <t>
           <list style="hanging">
             <t hangText='alg'>
-              This field is used to indicate the algorithm used for the security processing.
-              This field MUST be present at each level of a signed, encrypted or authenticated message.
+              This parameter is used to indicate the algorithm used for the security processing.
+              This parameter MUST be present at each level of a signed, encrypted or authenticated message.
               The value is taken from the 'COSE Algorithm Registry' (see <xref target="IANA-Alg-Registry"/>).
             </t>
             
             <t hangText='crit'>
-              This field is used to ensure that applications will take appropriate action based on the values found.
-              The field is used to indicate which protected header labels an application that is processing a message is required to understand.
-              This field uses the integer '2' for the label. 
+              This parameter is used to ensure that applications will take appropriate action based on the values found.
+              The parameter is used to indicate which protected header labels an application that is processing a message is required to understand.
               The value is an array of COSE Header Labels.
-              When present, this MUST be placed in the protected header bucket.
+              When present, this parameter MUST be placed in the protected header bucket.
               <vspace/>
               <list style="symbols">
                 <t>Integer labels in the range of 0 to 10 SHOULD be omitted.</t>
@@ -498,32 +497,32 @@ Headers = (
                   (The algorithm range is -1 to -65536, it is assumed that the higher end will deal with more optional algorithm specific items.)
                 </t>
               </list>
-              The header values indicated by 'crit' can be processed by either the security library code or by an application using a security library, the only requirement is that the field is processed.
+              The header parameter values indicated by 'crit' can be processed by either the security library code or by an application using a security library, the only requirement is that the parameter is processed.
             </t>
             
-            <t hangText='cty'>
-              This field is used to indicate the content type of the data in the payload or ciphertext fields.
+            <t hangText='content type'>
+              This parameter is used to indicate the content type of the data in the payload or ciphertext fields.
               <cref source="JLS">
                 After looking at this, I am wondering if the type for this should be: [int int]/[int tstr] so that we can keep the major/minor difference of media-types.
                 This does cost a couple of bytes in the message.
               </cref>
               Integers are from the XXXXX<cref source="JLS">Need to figure out how we are going to go about creating this registry -or are we going to modify the current mime-content table?</cref> IANA registry table.
               Strings are from the IANA 'mime-content types' registry.
-              Applications SHOULD provide this field if the content structure is potentially ambiguous.
+              Applications SHOULD provide this parameter if the content structure is potentially ambiguous.
             </t>
             
             <t hangText='kid'>
-              This field one of the ways that can be used to find the key to be used.
-              This value can be matched against the 'kid' field in a COSE_Key structure.
+              This parameter one of the ways that can be used to find the key to be used.
+              The value of this parameter is matched against the 'kid' field in a COSE_Key structure.
               Applications MUST NOT assume that 'kid' values are unique.
               There may be more than one key with the same 'kid' value, it may be required that all of the keys need to be checked to find the correct one.
-              The internal structure of 'kid' is not defined and generally cannot be relied on by applications.
+              The internal structure of 'kid' values is not defined and generally cannot be relied on by applications.
               Key identifier values are hints about which key to use, they are not directly a security critical field, for this reason they can normally be placed in the unprotected headers bucket.
             </t>
 
             <t hangText='nonce'>
-              This field holds either a nonce or Initialization Vector value.
-              This value can be used either as a counter value for a protocol or as an IV for an algorithm.
+              This parameter holds either a nonce or Initialization Vector value.
+              The value can be used either as a counter value for a protocol or as an IV for an algorithm.
               TODO: Talk about zero extending the value in some cases.
               <cref source="JLS">Open to do.</cref>
             </t>
@@ -531,16 +530,16 @@ Headers = (
         </t>
 
 
-      <texttable anchor="Header-Table" title="Header Labels">
+      <texttable anchor="Header-Table" title="Common Header Parameters">
         <ttcol align='left'>name</ttcol>
         <ttcol align='left'>label</ttcol>
-        <ttcol align='left'>value</ttcol>
-        <ttcol align='left'>registry</ttcol>
+        <ttcol align='left'>value type</ttcol>
+        <ttcol align='left'>value registry</ttcol>
         <ttcol align='left'>description</ttcol>
         
         <c>alg</c>        <c>1</c>        <c>int / tstr</c>        <c>COSE Algorithm Registry</c>       <c>Integers are taken from table --POINT TO REGISTRY--</c>
         <c>crit</c>       <c>2</c>        <c>[+ label]</c>         <c>COSE Header Label Registry</c>    <c>integer values are from  -- POINT TO REGISTRY --</c>
-        <c>cty</c>        <c>3</c>        <c>tstr / int</c>        <c>media-types registry</c>          <c>Value is either a media-type or an integer from the media-type registry</c>
+        <c>content type</c>        <c>3</c>        <c>tstr / int</c>        <c>media-types registry</c>          <c>Value is either a media-type or an integer from the media-type registry</c>
         
         <c>jku</c>        <c>*</c>        <c>tstr</c>              <c></c>                              <c>URL to COSE key object</c>
         <c>jwk</c>        <c>*</c>        <c>COSE_Key</c>          <c></c>                              <c>contains a COSE key not a JWK key</c>
@@ -576,10 +575,10 @@ Headers = (
 
       <t>
         The signature structure allows for one or more signatures to be applied to a message payload.
-        There are provisions for attributes about the content and attributes about the signature to be carried along with the signature itself.
-        These attributes may be authenticated by the signature, or just present.
-        Examples of attributes about the content would be the type of content, when the content was created, and who created the content.
-        Examples of attributes about the signature would be the algorithm and key used to create the signature, when the signature was created, and counter-signatures.
+        There are provisions for parameters about the content and parameters about the signature to be carried along with the signature itself.
+        These parameters may be authenticated by the signature, or just present.
+        Examples of parameters about the content would be the type of content, when the content was created, and who created the content.
+        Examples of parameters about the signature would be the algorithm and key used to create the signature, when the signature was created, and counter-signatures.
       </t>
 
       <t>
@@ -770,8 +769,7 @@ Sig_structure = [
       <t>
         In this section we describe the structure and methods to be used when doing an encryption in COSE.
         In COSE, we use the same techniques and structures for encrypting both the plain text and the keys used to protect the text.
-        This is different from the approach used by both <xref target="RFC5652"/> and <xref target="RFC7516"/> where different structures are
-        used for the plain text and for the different key management techniques.
+        This is different from the approach used by both <xref target="RFC5652"/> and <xref target="RFC7516"/> where different structures are used for the plain text and for the different key management techniques.
       </t>
 
       <t>
@@ -842,7 +840,7 @@ COSE_encrypt_fields = (
         </t>
 
         <t>
-          <xref target="key-management-algs"/> provides details on a number of different key management algorithms and discusses which elements need to be present for each of the key management techniques.
+          <xref target="key-management-algs"/> provides details on a number of different key management algorithms and discusses which parameters need to be present for each of the key management techniques.
         </t>
       </section>
       
@@ -1009,7 +1007,7 @@ COSE_mac = {
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
- MAC_structure = [
+MAC_structure = [
      protected: bstr,
      external_aad: bstr,
      payload: bstr
@@ -1023,7 +1021,7 @@ COSE_mac = {
       <t>
         <list style="numbers">
           <t>
-            Create a MAC_structure and copy the protected and payload elements from the COSE_mac structure.
+            Create a MAC_structure and copy the protected and payload fields from the COSE_mac structure.
           </t>
           <t>
             If the application has supplied external authenticated data, encode it as a binary value and place in the MAC_structure.
@@ -1047,14 +1045,17 @@ COSE_mac = {
 
       <t>
         A COSE Key structure is built on a CBOR map object.
-        The set of common attributes that can appear in a COSE Key can be found in the IANA registry 'COSE Key Map Registry' (<xref target="cose-key-map-registry"/>).
-        Additional attributes defined for different key types can be found in the IANA registry 'COSE Key Parameters' (<xref target="cose-key-parameter-registry"/>).
+        The set of common parameters that can appear in a COSE Key can be found in the IANA registry 'COSE Key Common Parameter Registry' (<xref target="cose-key-map-registry"/>).
+        Additional parameters defined for different key types can be found in the IANA registry 'COSE Key Type Parameters' (<xref target="cose-key-parameter-registry"/>).
       </t>
 
       <t>
         A COSE Key Set uses a CBOR array object as it's underlying type.
         The values of the array elements are COSE Keys.
         A Key Set MUST have at least one element in the array.
+        <cref source="JLS">
+          Is there a reason to assign a CBOR tag to identify keys and/or key sets?
+        </cref>
       </t>
 
       <t>
@@ -1084,13 +1085,13 @@ COSE_KeySet = [+COSE_Key]
 
 
 
-    <section anchor="COSE_KEY_KEYS" title="COSE Key Map Labels">
+    <section anchor="COSE_KEY_KEYS" title="COSE Key Common Parameters">
 
       <t>
-        This document defines a set of common map elements for a COSE Key object.
-        <xref target="table-key-labels"/> provides a summary of the elements defined in this section.
-        There are also a set of map elements that are defined for a specific key type.
-        Key specific elements can be found in <xref target="Key-specific-labels"/>.
+        This document defines a set of common parameters for a COSE Key object.
+        <xref target="table-key-labels"/> provides a summary of the parameters defined in this section.
+        There are also a set of parameters that are defined for a specific key type.
+        Key type specific parameters can be found in <xref target="Key-specific-labels"/>.
       </t>
 
       <texttable title="Key Map Labels" anchor="table-key-labels">
@@ -1114,31 +1115,31 @@ COSE_KeySet = [+COSE_Key]
       <t>
         <list style="hanging">
           <t hangText="kty:">
-            This field is used to identify the family of keys for this structure, and thus the set of fields to be found.
+            This parameter is used to identify the family of keys for this structure, and thus the set of key type specific parameters to be found.
             The set of values can be found in <xref target="table_key_types"/>.
           </t>
           
           <t hangText="alg:">
-            This field is used to restrict the algorithms that are to be used with this key.
-            If this field is present in the key structure, the application MUST verify that this algorithm matches the algorithm for which the key is being used.
+            This parameter is used to restrict the algorithms that are to be used with this key.
+            If this parameter is present in the key structure, the application MUST verify that this algorithm matches the algorithm for which the key is being used.
             If the algorthms do not match, then this key object MUST NOT be used to perform the cryptographic operation.
             Note that the same key can be in a different key structure with a different or no algorithm specified, however this is considered to be a poor security practice.
           </t>
           
           <t hangText="kid:">
-            This field is used to give an identifier for a key.
+            This parameter is used to give an identifier for a key.
             The identifier is not structured and can be anything from a user provided string to a value computed on the public portion of the key.
-            This field is intended for matching against a 'kid' field in a message in order to filter down the set of keys that need to be checked.
+            This field is intended for matching against a 'kid' parameter in a message in order to filter down the set of keys that need to be checked.
           </t>
           
           <t hangText="key_ops:">
-            This field is defined to restrict the set of operations that a key is to be used for.
+            This parameter is defined to restrict the set of operations that a key is to be used for.
             The value of the field is an array of values from <xref target="table-key-ops"/>.
           </t>
           
         </list>
         Only the 'kty' field MUST be present in a key object.
-        All other members may be omitted if their behavior is not needed.
+        All other parameters can be omitted if their behavior is not needed.
       </t>
 
       <texttable title="Key Operation Values" anchor="table-key-ops">
@@ -1191,7 +1192,7 @@ key_ops_agree=7
       </t>
       <figure><artwork>
         <![CDATA[
-                 signature = Sign(message content, key)
+signature = Sign(message content, key)
 
 valid = Verification(message content, key, signature)
 ]]>
@@ -1200,7 +1201,7 @@ valid = Verification(message content, key, signature)
       <t>
         The second is a signature with message recovery.
         (An example of such an algorithm is [TBD].)
-        In this structure, the message content is processed, but part of is included in the siguature.
+        In this structure, the message content is processed, but part of is included in the signature.
         Moving bytes of the message content into the signature allows for an effectively smaller signature, the signature size is still potentially large, but the message content is shrunk.
         This has implications for systems implementing these algoritms and for applications that use them.
         The first is that the message content is not fully available until after a signature has been validated.
@@ -1209,6 +1210,7 @@ valid = Verification(message content, key, signature)
         Messages which are highly predictable require additional randomness to be supplied as part of the signature process, in the worst case it because the same as doing a singature with appendix.
         Thirdly, in the event that multple signatures are applied to a message, all of the signature algorithms are going to be required to consume the same number of bytes of message content.
       </t>
+
       <figure><artwork>
         <![CDATA[
 signature, message sent = Sign(message content, key)
@@ -1229,7 +1231,7 @@ valid, message content = Verification(message sent, key, signature)
 
         <t>
           The security strength of the signature is no greater than the minimum of the security strength associated with the bit length of the key and the security strength of the hash function.
-          When a hash function is used that has greater security than is provided by the length of the key, the signature algorithm uses the leftmost keyLength bits of the hash function output.
+          When a hash function is used that has greater security than is provided by the length of the key, the signature algorithm uses the leftmost key length bits of the hash function output.
         </t>
         
         <texttable title="ECDSA Algorithm Values" anchor="table_ecdsa">
@@ -1584,7 +1586,7 @@ valid, message content = Verification(message sent, key, signature)
           <c>HKDF-512</c>       <c>SHA-512</c>  <c>XXX</c>
         </texttable>
 
-        <texttable title="HKDF parameters" anchor="HKDF_Alg_Params">
+        <texttable title="HKDF Algorithm Parameters" anchor="HKDF_Alg_Params">
           <ttcol>name</ttcol>
           <ttcol>label</ttcol>
           <ttcol>type</ttcol>
@@ -1764,7 +1766,6 @@ COSE_KDF_Context = [
       <section title="Direct Encryption">
           <t>
             In direct encryption mode, a shared secret between the sender and the recipient is used as the key.
-            <cref source="JLS">It would be reasonable to support a shared-secret + KDF that is not PBE for when one has good randomness in the shared-secret.</cref>
             When direct encryption mode is used, it MUST be the only mode used on the message.
             It is a massive security leak to have both direct encryption and a different key management mode on the same message.
           </t>
@@ -2472,10 +2473,10 @@ COSE_KDF_Context = [
 
       </section>
       
-      <section anchor="cose-header-key-table" title="COSE Header Label Table">
+      <section anchor="cose-header-key-table" title="COSE Header Parameter Registry">
 
         <t>
-          It is requested that IANA create a new registry entitled “COSE Header Labels”.
+          It is requested that IANA create a new registry entitled “COSE Header Parameters”.
         </t>
 
         <t>
@@ -2484,7 +2485,9 @@ COSE_KDF_Context = [
           <list style="hanging">
             
             <t hangText='name'>
-              The name is present to make it easier to refer to and discuss the registration entry.  The value is not used in the protocol.  Names are to be unique in the table.
+              The name is present to make it easier to refer to and discuss the registration entry. 
+              The value is not used in the protocol. 
+              Names are to be unique in the table.
             </t>
             
             <t hangText='label'>
@@ -2623,10 +2626,10 @@ COSE_KDF_Context = [
         </t>
 
       </section>
-      <section anchor="cose-key-map-registry" title="COSE Key Map Registry">
+      <section anchor="cose-key-map-registry" title="COSE Key Common Parameter Registry">
 
         <t>
-          It is requested that IANA create a new registry entitled “COSE Key Map Registry”.
+          It is requested that IANA create a new registry entitled “COSE Key Common Parameter" Registry.
         </t>
 
         <t>
@@ -2669,10 +2672,10 @@ COSE_KDF_Context = [
         </t>
 
       </section>
-      <section anchor="cose-key-parameter-registry" title="COSE Key Parameter Registry">
+      <section anchor="cose-key-parameter-registry" title="COSE Key Type Parameter Registry">
 
         <t>
-          It is requested that IANA create a new registry “COSE Key Parameters”.
+          It is requested that IANA create a new registry “COSE Key Type Parameters”.
         </t>
 
         <t>

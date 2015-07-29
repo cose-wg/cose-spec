@@ -6,6 +6,12 @@ This is the working area for the expected IETF COSE draft of CBOR Encoded Messag
 * [Working Group Draft] (https://tools.ietf.org/html/draft-ietf-cose-msg)
 * [Compare Working Group and Editor's Drafts] (https://tools.ietf.org/rfcdiff?url1=https://www.ietf.org/id/draft-ietf-cose-msg&url2=https://cose-wg.github.io/cose-spec/draft-ietf-cose-msg.txt)
 
+## Document Status
+
+This document is under active developement.
+
+Current list of open issues can be found at [cose-wg/cose-issues](https://github.com/cose-wg/cose-issues).
+
 ## Contributing
 
 Before submitting feedback, please familiarize yourself with our current issues
@@ -28,7 +34,8 @@ meaning of the specification), you can either:
 
   b) Submit a new issue to Github, and mention that you believe it is editorial
   in the issue body. It is not necessary to notify the mailing list for
-  editorial issues.
+  editorial issues.  The correct Github issue tracker is at
+  [cose-wg/cose-issues](https://github.com/cose-wg/cose-issues).
 
   c) Make comments on individual commits in Github. Note that this feedback is
   processed only with best effort by the editors, so it should only be used for
