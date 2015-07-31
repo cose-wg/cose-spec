@@ -1292,46 +1292,25 @@ valid, message content = Verification(message sent, key, signature)
         </t>
 
         <t>
-          The RSASSA-PSS signature algorithm is parametized with a hash function, a mask generation function and a salt length (sLen).
+          The RSASSA-PSS (RSA Signature Scheme with Appendix - Probabilistic Signature Scheme) signature algorithm is parametized with a hash function (h), a mask generation function (mgf) and a salt length (sLen).
           For this specification, the mask generation function is fixed to be MGF1 as defined in <xref target="RFC3447"/>.
           It has been recommended that the same hash function be used for hashing the data as well as in the mask generation function, for this specification we following this recommendation.
           The salt length is the same length as the hash function output.
         </t>
 
         <t>
-          Three algorithms are defined in this document.
-          These algorithms are:
-          <list style="hanging">
-            <t hangText="PS256:">
-              This uses the hash algorithm SHA-256 for signature processing.
-              The value used for this algorithm is -10.
-              The key type used for this algorithm is 'RSA'.
-            </t>
-            <t hangText="PS384:">
-              This uses the hash algorithm SHA-384 for signature processing.
-              The value used for this algorithm is "PS384".
-              The key type used for this algorithm is 'RSA'.
-            </t>
-            <t hangText="PS512:">
-              This uses the hash algorithm SHA-512 for signature processing.
-              The value used for this algorithm is -11.
-              The key type used for this algorithm is 'RSA'.
-            </t>
-          </list>
-
-          There are no algorithm parameters defined for these signature algorithms.
-          A summary of the algorithm definitions can be found in <xref target="table-rsa-algs"/>.
+          The algorithms defined in this document can be found in <xref target="table-rsa-algs"/>.
         </t>
         
-        <texttable anchor="table-rsa-algs" title="RSA Algorithm Values">
+        <texttable anchor="table-rsa-algs" title="RSASSA-PSS Algorithm Values">
           <ttcol align='left'>name</ttcol>
           <ttcol align='left'>value</ttcol>
           <ttcol>hash</ttcol>
           <ttcol>salt length</ttcol>
           <ttcol align='left'>description</ttcol>
-          <c>PS256</c>        <c>-10</c>      <c>SHA-256</c>    <c>32</c>       <c>RSASSA-PSS w/ SHA-256</c>
-          <c>PS384</c>        <c>*</c>        <c>SHA-384</c>    <c>48</c>       <c>RSASSA-PSS w/ SHA-384</c>
-          <c>PS512</c>        <c>-11</c>      <c>SHA-512</c>    <c>64</c>       <c>RSASSA-PSS w/ SHA-512</c>
+          <c>PS256</c>        <c>-26</c>      <c>SHA-256</c>    <c>32</c>       <c>RSASSA-PSS w/ SHA-256</c>
+          <c>PS384</c>        <c>-27</c>      <c>SHA-384</c>    <c>48</c>       <c>RSASSA-PSS w/ SHA-384</c>
+          <c>PS512</c>        <c>-28</c>      <c>SHA-512</c>    <c>64</c>       <c>RSASSA-PSS w/ SHA-512</c>
         </texttable>
 
         <section title="Security Considerations">
@@ -1901,40 +1880,55 @@ COSE_KDF_Context = [
           Key Encryption mode differs from Key Wrap mode in that it uses an
           asymmetric encryption algorithm rather than a symmetric encryption
           algorithm to protect the key.
-          The only current Key Encryption mode algorithm supported is RSAES-OAEP.
+          This document defines one Key Encryption mode algorithm.
         </t>
 
         <t>
-          The COSE_encrypt structure for the recipient is organized as follows:
-        </t>
-
-        <t>
+          When using a key encryption algorithm, the COSE_encrypt structure for the recipient is organized as follows:
           <list style="symbols">
             <t>
               The 'protected' field MUST be absent.
             </t>
+            
             <t>
               The plain text to be encrypted is the key from next layer down
               (usually the content layer).
             </t>
+            
             <t>
               At a minimum, the 'unprotected' field MUST contain the 'alg'
               parameter and SHOULD contain a parameter identifying the asymmetric key.
             </t>
+            
           </list>
         </t>
 
-        <section title="RSA OAEP">
-          <texttable anchor="table-RSA-OAEP" title="RSA OAEP Algorithm Values">
+        <section title="RSAES-OAEP">
+          <t>
+            RSAES-OAEP (RSA Encryption Scheme Optimal Asymmetric Encryption Padding) is an asymmetric key encryption algorithm.
+            The defintion of RSAEA-OAEP can be find in Section 7.1 of <xref target="RFC3447"/>.
+            The algorithm is parameterized using a masking generation function (mgf), a hash function (h) and encoding parameters (P).
+            For the algoithm identifiers defined in this section:
+            <list style="symbols">
+              <t>mgf is always set to MFG1 from <xref target="RFC3447"/> and uses the same hash function as h.</t>
+              <t>P is always set to the empty octet string.</t>
+            </list>
+            <xref target="table-RSA-OAEP"/> summarizes the rest of the values.
+          </t>
+          
+          <texttable anchor="table-RSA-OAEP" title="RSAES-OAEP Algorithm Values">
             <ttcol align='left'>name</ttcol>
             <ttcol align='left'>value</ttcol>
+            <ttcol align='left'>hash</ttcol>
             <ttcol align='left'>description</ttcol>
-            <c>RSA-OAEP</c>     <c>-2</c>       <c>RSAES OAEP w/ SHA-256</c>
+            <c>RSAES-OAEP w/SHA-256</c>     <c>-25</c>       <c>SHA-256</c>       <c>RSAES OAEP w/ SHA-256</c>
+            <c>RSAES-OAEP w/SHA-512</c>     <c>-26</c>       <c>SHA-512</c>       <c>RSAES OAEP w/ SHA-512</c>
           </texttable>
 
-          <section title="Security Considerations for RSA OAEP">
+          <section title="Security Considerations for RSAES-OAEP">
+            
             <t>
-              A key size of 2048 bits or larger MUST be used with this algorithm.
+              A key size of 2048 bits or larger MUST be used with these algorithms.
               This key size corresponds roughly to the same strength as provided by a 128-bit symmetric encryption algorithm.
             </t>
 
@@ -2356,6 +2350,46 @@ COSE_KDF_Context = [
       </section>
 
       <section title="RSA Keys">
+        <t>
+          This document defines a key structure for both the public and private halves of RSA keys.
+          Together, an RSA public key and an RSA private key form an RSA key pair.
+          <cref source="JLS">
+            Looking at the CBOR specification, the bstr that we are looking in our table below should most likely be specified as big numbers rather than as binary strings.
+            This means that we would use the tag 6.2 instead.
+            From my reading of the specification, there is no difference in the encoded size of the resulting output.
+            The specification of bignum does explicitly allow for integers encoded with leading zeros.
+          </cref>
+        </t>
+
+        <t>
+          The document also provides support for the so-called "multi-prime" RSA where the modulus may have more than two prime factors.
+          The benefit of multi-prime RSA is lower computational cost for the decryption and signature primitives.
+          For a discussion on how multi-prime affects the security of RSA crypto-systems, the reader is referred to <xref target="MultiPrimeRSA"/>.
+        </t>
+
+        <t>
+          This document follows the naming convention of <xref target="RFC3447"/> for the naming of the fields of an RSA public or private key.
+          The table <xref target="table-rsa-keys"/> provides a summary of the label values and the types associated with each of those labels.
+          The requirements for fields for RSA keys are as follows:
+          <list style="symbols">
+            <t>
+              For all keys, 'kty' MUST be present and MUST have a value of 3.
+            </t>
+            <t>
+              For public keys, the fields 'n' and 'e' MUST be present. 
+              All other fields defined in <xref target="table-rsa-keys"/> MUST be absent.
+            </t>
+            <t>
+              For private keys with two primes, the fields 'other', 'r_i', 'd_i' and 't_i' MUST be absent, all other fields MUST be present.
+            </t>
+            <t>
+              For private keys with more than two primes, all fields MUST  be present. 
+              For the third to nth primes, each of the primes is represented as a map containing the fields 'r_i', 'd_i' and 't_i'. 
+              The field 'other' is an array of those maps.
+            </t>
+          </list>
+        </t>
+          
         <texttable title="RSA Key Parameters" anchor="table-rsa-keys">
           <ttcol>name</ttcol>
           <ttcol>key type</ttcol>
@@ -2366,14 +2400,14 @@ COSE_KDF_Context = [
           <c>e</c>      <c>3</c>        <c>-2</c>       <c>int</c>              <c>Exponent Parameter</c>
           <c>d</c>      <c>3</c>        <c>-3</c>       <c>bstr</c>             <c>Private Exponent Parameter</c>
           <c>p</c>      <c>3</c>        <c>-4</c>       <c>bstr</c>             <c>First Prime Factor</c>
-          <c>q</c>      <c>3</c>        <c>-5</c>       <c>bstr</c>             <c>Second Prime Factor</c>
-          <c>dp</c>     <c>3</c>        <c>-6</c>       <c>bstr</c>             <c>First Factor CRT Exponent</c>
-          <c>dq</c>     <c>3</c>        <c>-7</c>       <c>bstr</c>             <c>Second Factor CRT Exponent</c>
-          <c>qi</c>     <c>3</c>        <c>-8</c>       <c>bstr</c>             <c>First CRT Coefficient</c>
+          <c>d</c>      <c>3</c>        <c>-5</c>       <c>bstr</c>             <c>Second Prime Factor</c>
+          <c>dP</c>     <c>3</c>        <c>-6</c>       <c>bstr</c>             <c>First Factor CRT Exponent</c>
+          <c>dQ</c>     <c>3</c>        <c>-7</c>       <c>bstr</c>             <c>Second Factor CRT Exponent</c>
+          <c>qInv</c>   <c>3</c>        <c>-8</c>       <c>bstr</c>             <c>First CRT Coefficient</c>
           <c>other</c>  <c>3</c>        <c>-9</c>       <c>array</c>            <c>Other Primes Info</c>
-          <c>r</c>      <c>3</c>        <c>-10</c>      <c>bstr</c>             <c>Prime Factor</c>
-          <c>d</c>      <c>3</c>        <c>-11</c>      <c>bstr</c>             <c>Factor CRT Exponent</c>
-          <c>t</c>      <c>3</c>        <c>-12</c>      <c>bstr</c>             <c>Factor CRT Coefficient</c>
+          <c>r_i</c>    <c>3</c>        <c>-10</c>      <c>bstr</c>             <c>Prime Factor</c>
+          <c>d_i</c>    <c>3</c>        <c>-11</c>      <c>bstr</c>             <c>Factor CRT Exponent</c>
+          <c>t_i</c>    <c>3</c>        <c>-12</c>      <c>bstr</c>             <c>Factor CRT Coefficient</c>
         </texttable>
       </section>
 
@@ -2964,6 +2998,21 @@ COSE_KDF_Context = [
         </front>
         <format target="http://www.secg.org/sec1-v2.pdf" type="PDF"/>
       </reference>
+
+      <reference anchor="MultiPrimeRSA">
+        <front>
+          <title>On the Security of Multi-prime RSA</title>
+          <author initials="M. J." surname="Hinek">
+            <organization>University of Waterloo</organization>
+          </author>
+          <author initials="D. R." surname="Cheriton">
+            <organization>University of Waterloo</organization>
+          </author>
+          <date year="2006" month="June"/>
+        </front>
+        <format target="http://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf" type="PDF"/>
+      </reference>
+            
 
     </references>
 
