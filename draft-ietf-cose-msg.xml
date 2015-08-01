@@ -1187,7 +1187,7 @@ key_ops_agree=7
         The first is the common signature with appendix.
         In this structure, the message content is processed and a signature is produced, the signature is called the appendix.
         This is the message structure used by our common algorithms such as ECDSA and RSASSA-PSS.
-        (In fact two of the letters in RSASSA-PSS are signature appendix.)
+        (In fact the SSA in RSASSA-PSS stands for Signature Scheme with Appendix.)
         The basic structure becomes:
       </t>
       <figure><artwork>
@@ -1200,7 +1200,7 @@ valid = Verification(message content, key, signature)
       
       <t>
         The second is a signature with message recovery.
-        (An example of such an algorithm is [TBD].)
+        (An example of such an algorithm is <xref target="PVSig"/>.)
         In this structure, the message content is processed, but part of is included in the signature.
         Moving bytes of the message content into the signature allows for an effectively smaller signature, the signature size is still potentially large, but the message content is shrunk.
         This has implications for systems implementing these algoritms and for applications that use them.
@@ -1292,7 +1292,7 @@ valid, message content = Verification(message sent, key, signature)
         </t>
 
         <t>
-          The RSASSA-PSS (RSA Signature Scheme with Appendix - Probabilistic Signature Scheme) signature algorithm is parametized with a hash function (h), a mask generation function (mgf) and a salt length (sLen).
+          The RSASSA-PSS signature algorithm is parametized with a hash function (h), a mask generation function (mgf) and a salt length (sLen).
           For this specification, the mask generation function is fixed to be MGF1 as defined in <xref target="RFC3447"/>.
           It has been recommended that the same hash function be used for hashing the data as well as in the mask generation function, for this specification we following this recommendation.
           The salt length is the same length as the hash function output.
@@ -1313,9 +1313,16 @@ valid, message content = Verification(message sent, key, signature)
           <c>PS512</c>        <c>-28</c>      <c>SHA-512</c>    <c>64</c>       <c>RSASSA-PSS w/ SHA-512</c>
         </texttable>
 
-        <section title="Security Considerations">
+        <section title="Security Considerations" anchor="RSASSA-PSS-considerations">
           <t>
-            Key size.  is there a MUST for 2048? or do we need to specify a minimum here?
+            In addition to needing to worry about keys that are too small to provide the required security,  there are issues with keys that are too large.
+            Denial of service attacks have been mounted with overly large keys.
+            This has the potential to consume resources with potentially bad keys.
+            There are two reasonable ways to address this attack.
+            First, a key should not be used for a cryptographic operation until it has been matched back to an authorized user.
+            This approach means that no cryptography would be done except for authorized users.
+            Second, applications can impose maximum as well as minimum length requirements on keys.
+            This limits the resources consumed even if the matching is not performed until the cryptography has been done.
           </t>
         </section>
       </section>
@@ -1905,7 +1912,7 @@ COSE_KDF_Context = [
 
         <section title="RSAES-OAEP">
           <t>
-            RSAES-OAEP (RSA Encryption Scheme Optimal Asymmetric Encryption Padding) is an asymmetric key encryption algorithm.
+            RSAES-OAEP is an asymmetric key encryption algorithm.
             The defintion of RSAEA-OAEP can be find in Section 7.1 of <xref target="RFC3447"/>.
             The algorithm is parameterized using a masking generation function (mgf), a hash function (h) and encoding parameters (P).
             For the algoithm identifiers defined in this section:
@@ -2400,14 +2407,14 @@ COSE_KDF_Context = [
           <c>e</c>      <c>3</c>        <c>-2</c>       <c>int</c>              <c>Exponent Parameter</c>
           <c>d</c>      <c>3</c>        <c>-3</c>       <c>bstr</c>             <c>Private Exponent Parameter</c>
           <c>p</c>      <c>3</c>        <c>-4</c>       <c>bstr</c>             <c>First Prime Factor</c>
-          <c>d</c>      <c>3</c>        <c>-5</c>       <c>bstr</c>             <c>Second Prime Factor</c>
+          <c>q</c>      <c>3</c>        <c>-5</c>       <c>bstr</c>             <c>Second Prime Factor</c>
           <c>dP</c>     <c>3</c>        <c>-6</c>       <c>bstr</c>             <c>First Factor CRT Exponent</c>
           <c>dQ</c>     <c>3</c>        <c>-7</c>       <c>bstr</c>             <c>Second Factor CRT Exponent</c>
           <c>qInv</c>   <c>3</c>        <c>-8</c>       <c>bstr</c>             <c>First CRT Coefficient</c>
           <c>other</c>  <c>3</c>        <c>-9</c>       <c>array</c>            <c>Other Primes Info</c>
-          <c>r_i</c>    <c>3</c>        <c>-10</c>      <c>bstr</c>             <c>Prime Factor</c>
-          <c>d_i</c>    <c>3</c>        <c>-11</c>      <c>bstr</c>             <c>Factor CRT Exponent</c>
-          <c>t_i</c>    <c>3</c>        <c>-12</c>      <c>bstr</c>             <c>Factor CRT Coefficient</c>
+          <c>r_i</c>    <c>3</c>        <c>-10</c>      <c>bstr</c>             <c>i-th factor, Prime Factor</c>
+          <c>d_i</c>    <c>3</c>        <c>-11</c>      <c>bstr</c>             <c>i-th factor, Factor CRT Exponent</c>
+          <c>t_i</c>    <c>3</c>        <c>-12</c>      <c>bstr</c>             <c>i-th factor, Factor CRT Coefficient</c>
         </texttable>
       </section>
 
@@ -3012,7 +3019,18 @@ COSE_KDF_Context = [
         </front>
         <format target="http://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf" type="PDF"/>
       </reference>
-            
+
+      <reference anchor="PVSig">
+        <front>
+          <title>Formal Security Proofs for a Signature Scheme with Partial Message Recover</title>
+          <author initials="D." surname="Brown">
+          </author>
+          <author initials="D." surname="Johnson">
+          </author>
+          <date year="2000" month="February"/>
+        </front>
+        <format target="https://www.certicom.com/images/pdfs/CerticomWP-PVSigSec_login.pdf" type="PDF"/>
+      </reference>
 
     </references>
 
