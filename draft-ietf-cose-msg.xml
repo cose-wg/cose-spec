@@ -39,6 +39,8 @@
 <!ENTITY Mac-04 SYSTEM "includes/Mac-04.xml">
 <!ENTITY Sig-01 SYSTEM "includes/Sig-01.xml">
 <!ENTITY Sig-02 SYSTEM "includes/Sig-02.xml">
+<!ENTITY PubKeys SYSTEM "includes/private-keys.xml">
+<!ENTITY PrivKeys SYSTEM "includes/public-keys.xml">
 
 ]>
 
@@ -177,7 +179,7 @@
 
           <figure><artwork type='CDDL'>
 <![CDATA[
-start = COSE_MSG
+start = COSE_MSG / COSE_Key / COSE_KeySet
 ]]></artwork></figure>
 
         <t>
@@ -210,6 +212,7 @@ start = COSE_MSG
         <figure><artwork type='CDDL'>
 <![CDATA[
 label = int / tstr
+values = bstr / tstr / int
 ]]></artwork></figure>
 
       </section>
@@ -1069,10 +1072,10 @@ MAC_structure = [
 
       <figure><artwork type="CDDL"><![CDATA[
 COSE_Key = {
-    kty => tstr / int,
-    ? key_ops => [+ tstr / int ],
-    ? alg => tstr / int,
-    ? kid => bstr,
+    key_kty => tstr / int,
+    ? key_ops => [+ (tstr / int) ],
+    ? key_alg => tstr / int,
+    ? key_kid => tstr,
     * label => values
 }
 
@@ -1601,7 +1604,7 @@ valid, message content = Verification(message sent, key, signature)
           Application protocols are free to define the roles differently.
           For example, they could assign the PartyU role to the entity that initiates the connection and allow directly sending multiple messages over the line without changing the role information.
         </t>
-        
+
         <t>
           We encode the context specific information using a CBOR array type.
           The fields in the array are:
@@ -1612,11 +1615,6 @@ valid, message content = Verification(message sent, key, signature)
               This field is required to be present and is a copy of the algorithm identifier in the message.
               The field exists in the context information so that if the same environment is used for different algorithms, then completely different keys will be generated each of those algorithms.
               (This practice means if algorithm A uses a shorter key than algorithm B and thus can be found easier, the key derived for algorithm B will not contain the key for algorithm A as a prefix.)
-              <cref source="JLS">
-                Unless key material is being derived for multiple items (i.e both a key and an IV) this will be the COSE algorithm value.
-                Even then it might still be the COSE algorithm value, it is just a requirement for a new algorithm.
-                Do we want to have the ability to derive both the key and a partial IV for CCM?
-              </cref>
             </t>
 
             <t hangText="PartyUInfo">
@@ -2011,7 +2009,6 @@ COSE_KDF_Context = [
           
           <t>
             We define one set of key agreement algorithms structured around Elliptic Curves Diffie-Hellman problem.
-            <cref source="JLS">Does anybody need pure DH?</cref>
             We define both an ephemeral-static and a static-static version of these algorithms.
             We allow for multiple curves to be used, it needs to be noted that the math required for the curves as well as the point representation is going to be different.
             <cref source="JLS">
@@ -2126,9 +2123,9 @@ COSE_KDF_Context = [
             <ttcol>key type</ttcol>
             <ttcol>value</ttcol>
             <ttcol>description</ttcol>
-            <c>P-256</c>        <c>EC2</c>      <c>1</c>       <c>NIST P-256 also known as ....</c>
-            <c>P-384</c>        <c>EC2</c>      <c>2</c>       <c>NIST P-384 also known as ....</c>
-            <c>P-521</c>        <c>EC2</c>      <c>3</c>       <c>NIST P-512 also known as ....</c>
+            <c>P-256</c>        <c>EC2</c>      <c>1</c>       <c>NIST P-256 also known as secp256r1</c>
+            <c>P-384</c>        <c>EC2</c>      <c>2</c>       <c>NIST P-384 also known as secp384r1</c>
+            <c>P-521</c>        <c>EC2</c>      <c>3</c>       <c>NIST P-521 also known as secp521r1</c>
             <c>Curve25519</c>   <c>EC1</c>      <c>1</c>       <c>Provide reference</c>
             <c>Goldilocks</c>   <c>EC1</c>      <c>2</c>       <c>Provide reference</c>
           </texttable>
@@ -3311,7 +3308,52 @@ COSE_KDF_Context = [
 
         </section>
       </section>
+
+      <section title="COSE Keys">
+        <section title="Public Keys">
+          <t>
+            This is an example of a COSE Key set.
+            This example includes the public keys for all of the previous examples.
+            <cref source="JLS">Still need to convert the types of some of these items.</cref>
+          </t>
+
+          <t>
+            In order the keys are:
+            <list style="symbols">
+              <t>An RSA key with a kid of "bilbo.baggins@hobbiton.example"</t>
+              <t>An EC key with a kid of "bilbo.baggins@hobbiton.example"</t>
+              <t>An EC key with a kid of "meriadoc.brandybuck@buckland.example"</t>
+              <t>An EC key with a kid of "peregrin.took@tuckborough.example"</t>
+            </list>
+          </t>
+          
+          &PubKeys;
+        </section>
+
+        <section title="Private Keys">
+          <t>
+            This is an example of a COSE Key set.
+            This example includes the private keys for all of the previous examples.
+            <cref source="JLS">Still need to convert the types of some of these items.</cref>
+          </t>
+
+          <t>
+            In order the keys are:
+            <list style="symbols">
+              <t>An RSA key with a kid of "bilbo.baggins@hobbiton.example"</t>
+              <t>An EC key with a kid of "bilbo.baggins@hobbiton.example"</t>
+              <t>A shared-secret key with a kid of "our-secret"</t>
+              <t>A shared-secret key with a kid of "018c0ae5-4d9b-471b-bfd6-eef314bc7037"</t>
+              <t>An EC key with a kid of "meriadoc.brandybuck@buckland.example"</t>
+              <t>An EC key with a kid of "peregrin.took@tuckborough.example"</t>
+            </list>
+          </t>
+
+          &PrivKeys;
+        </section>
+        </section>
     </section>
+
 
     <section anchor="Header-Algorithm-Table" title="COSE Header Algorithm Label Table">
 
@@ -3329,11 +3371,31 @@ COSE_KDF_Context = [
     </section>
 
     <section title="Document Updates">
-      <section title="Version -01 to -02">
+      <section title="Version -02 to -03">
+        <t>
+          <list style="symbols">
+            <t>Expand RSA text</t>
+            <t>Add sample key structures</t>
+          </list>
+        </t>
+      </section>
+      
+      <section title="Version -02 to -03">
         <t>
           <list style="symbols">
             <t>Add a set of straw man proposals for algorithms.  It is possible/expected that this text will be moved to a new document.</t>
             <t>Add a set of straw man proposals for key structures.  It is possible/expected that this text will be moved to a new document.</t>
+            <t>Provide guidance on use of externally supplied authenticated data.</t>
+            <t>Add external authenticated data to signing structure.</t>
+          </list>
+        </t>
+      </section>
+
+      <section title="Version -01 to -2">
+        <t>
+          <list style="symbols">
+            <t>Add first pass of algorithm information</t>
+            <t>Add direct key derivation example.</t>
           </list>
         </t>
       </section>
