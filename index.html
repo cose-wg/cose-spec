@@ -481,7 +481,8 @@ ul.toc a:first-child {
 <link href="#rfc.section.9" rel="Chapter" title="9 Message Authentication (MAC) Algorithms"/>
 <link href="#rfc.section.9.1" rel="Chapter" title="9.1 Hash-based Message Authentication Codes (HMAC)"/>
 <link href="#rfc.section.9.1.1" rel="Chapter" title="9.1.1 Security Considerations"/>
-<link href="#rfc.section.9.2" rel="Chapter" title="9.2 AES Message Authentication Code (AES-MAC)"/>
+<link href="#rfc.section.9.2" rel="Chapter" title="9.2 AES Message Authentication Code (AES-CBC-MAC)"/>
+<link href="#rfc.section.9.2.1" rel="Chapter" title="9.2.1 Security Considerations"/>
 <link href="#rfc.section.10" rel="Chapter" title="10 Content Encryption Algorithms"/>
 <link href="#rfc.section.10.1" rel="Chapter" title="10.1 AES GCM"/>
 <link href="#rfc.section.10.2" rel="Chapter" title="10.2 AES CCM"/>
@@ -555,7 +556,7 @@ ul.toc a:first-child {
 
   <meta name="dct.creator" content="Schaad, J. and B. Campbell" />
   <meta name="dct.identifier" content="urn:ietf:id:draft-ietf-cose-msg-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2015-8-3" />
+  <meta name="dct.issued" scheme="ISO8601" content="2015-8-4" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  " />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  " />
 
@@ -579,12 +580,12 @@ ul.toc a:first-child {
   <td class="right">B. Campbell</td>
 </tr>
 <tr>
-  <td class="left">Expires: February 4, 2016</td>
+  <td class="left">Expires: February 5, 2016</td>
   <td class="right">Ping Identity</td>
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">August 3, 2015</td>
+  <td class="right">August 4, 2015</td>
 </tr>
 
     	
@@ -608,7 +609,7 @@ ul.toc a:first-child {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on February 4, 2016.</p>
+<p>This Internet-Draft will expire on February 5, 2016.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -648,8 +649,9 @@ ul.toc a:first-child {
 </ul></ul><li>9.   <a href="#rfc.section.9">Message Authentication (MAC) Algorithms</a></li>
 <ul><li>9.1.   <a href="#rfc.section.9.1">Hash-based Message Authentication Codes (HMAC)</a></li>
 <ul><li>9.1.1.   <a href="#rfc.section.9.1.1">Security Considerations</a></li>
-</ul><li>9.2.   <a href="#rfc.section.9.2">AES Message Authentication Code (AES-MAC)</a></li>
-</ul><li>10.   <a href="#rfc.section.10">Content Encryption Algorithms</a></li>
+</ul><li>9.2.   <a href="#rfc.section.9.2">AES Message Authentication Code (AES-CBC-MAC)</a></li>
+<ul><li>9.2.1.   <a href="#rfc.section.9.2.1">Security Considerations</a></li>
+</ul></ul><li>10.   <a href="#rfc.section.10">Content Encryption Algorithms</a></li>
 <ul><li>10.1.   <a href="#rfc.section.10.1">AES GCM</a></li>
 <li>10.2.   <a href="#rfc.section.10.2">AES CCM</a></li>
 <ul><li>10.2.1.   <a href="#rfc.section.10.2.1">Security Considerations</a></li>
@@ -767,7 +769,7 @@ start = COSE_MSG / COSE_Key / COSE_KeySet
 <pre>
 
 label = int / tstr
-values = bstr / tstr / int
+values = any
 </pre>
 <h1 id="rfc.section.1.5"><a href="#rfc.section.1.5">1.5.</a> Document Terminology</h1>
 <p id="rfc.section.1.5.p.1">In this document we use the following terminology: <a id="CREF2" class="info">[CREF2]<span class="info">JLS: I have not gone through the document to determine what needs to be here yet.  We mostly want to grab terms which are used in unusual ways or are not generally understood.  </span></a> </p>
@@ -1372,7 +1374,7 @@ COSE_KeySet = [+COSE_Key]
 
 <dl>
   <dt>kty:</dt>
-  <dd style="margin-left: 8">This parameter is used to identify the family of keys for this structure, and thus the set of key type specific parameters to be found.  The set of values can be found in <a href="#table_key_types">Table 19</a>.  </dd>
+  <dd style="margin-left: 8">This parameter is used to identify the family of keys for this structure, and thus the set of key type specific parameters to be found.  The set of values can be found in <a href="#table_key_types">Table 20</a>.  </dd>
   <dt>alg:</dt>
   <dd style="margin-left: 8">This parameter is used to restrict the algorithms that are to be used with this key.  If this parameter is present in the key structure, the application MUST verify that this algorithm matches the algorithm for which the key is being used.  If the algorthms do not match, then this key object MUST NOT be used to perform the cryptographic operation.  Note that the same key can be in a different key structure with a different or no algorithm specified, however this is considered to be a poor security practice.  </dd>
   <dt>kid:</dt>
@@ -1468,7 +1470,8 @@ valid, message content = Verification(message sent, key, signature)
 <p id="rfc.section.8.p.3">At this time, only signatures with appendixes are defined for use with COSE, however considerable interest has been expressed in using a signature with message recovery algorithm due to the effective size reduction that is possible.  Implementations will need to keep this in mind for later possible integration.  </p>
 <h1 id="rfc.section.8.1"><a href="#rfc.section.8.1">8.1.</a> ECDSA</h1>
 <p id="rfc.section.8.1.p.1">ECDSA <a href="#DSS">[DSS]</a> defines a signature algorithm using ECC.  </p>
-<p id="rfc.section.8.1.p.2">The security strength of the signature is no greater than the minimum of the security strength associated with the bit length of the key and the security strength of the hash function.  When a hash function is used that has greater security than is provided by the length of the key, the signature algorithm uses the leftmost key length bits of the hash function output.  </p>
+<p id="rfc.section.8.1.p.2">The ECDSA signature algorithm is parameterized with a hash function (h.  In the event that the length of the hash function output is greater than group of the key, the left most bytes of the hash output are used.  </p>
+<p id="rfc.section.8.1.p.3">The algorithms defined in this document can be found in <a href="#table_ecdsa">Table 5</a>.  </p>
 <div id="rfc.table.5"/>
 <div id="table_ecdsa"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -1502,13 +1505,20 @@ valid, message content = Verification(message sent, key, signature)
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.8.1.p.3">In order to promote interoperability, it is suggested that SHA-256 be used only with keys of length 256, SHA-384 be used only with keys of length 384 and SHA-512 be used only with keys of length 521.  This is aligned with the recommendation in Section 4 of <a href="#RFC5480">[RFC5480]</a>.  </p>
-<p id="rfc.section.8.1.p.4">The signature algorithm results in a pair of integers (R, S).  These integers will be of the same order as length of the key used for the signature process.  The signature is encoded by converting the integers into byte strings of the same length as the key size.  The length is rounded up to the nearest byte and is left padded with zero bits to get to the correct length.  The two integers are then concatenated together to form a byte string that is the resulting signature.  </p>
-<p id="rfc.section.8.1.p.5">Using the function defined in <a href="#RFC3447">[RFC3447]</a> the signature is: <br/> Signature = I2OSP(R, n) | I2OSP(S, n) <br/> where n = ceiling(key_length / 8) </p>
+<p id="rfc.section.8.1.p.4">In order to promote interoperability, it is suggested that SHA-256 be used only with keys of length 256, SHA-384 be used only with keys of length 384 and SHA-512 be used only with keys of length 521.  This is aligned with the recommendation in Section 4 of <a href="#RFC5480">[RFC5480]</a>.  </p>
+<p id="rfc.section.8.1.p.5">The signature algorithm results in a pair of integers (R, S).  These integers will be of the same order as length of the key used for the signature process.  The signature is encoded by converting the integers into byte strings of the same length as the key size.  The length is rounded up to the nearest byte and is left padded with zero bits to get to the correct length.  The two integers are then concatenated together to form a byte string that is the resulting signature.  </p>
+<p id="rfc.section.8.1.p.6">Using the function defined in <a href="#RFC3447">[RFC3447]</a> the signature is: <br/> Signature = I2OSP(R, n) | I2OSP(S, n) <br/> where n = ceiling(key_length / 8) </p>
 <h1 id="rfc.section.8.1.1"><a href="#rfc.section.8.1.1">8.1.1.</a> Security Considerations</h1>
-<p id="rfc.section.8.1.1.p.1">On of the issues that needs to be discussed is substitution attacks.  There are two different things that can potentially be substituted in this algorithm.  Both of these attacks are current theoretical only.  </p>
-<p id="rfc.section.8.1.1.p.2">The first substitution attack is changing the curve used to validate the signature, the only requirement is that the order of the key match the length of R and S.  It is theoretically possible to use a different curve and get a different result.  We current do not have any way to deal with this version of the attack except to restrict the overall set of curves that can be used.  </p>
-<p id="rfc.section.8.1.1.p.3">The second substitution attack is to change the hash function that is used to verify the signature.  This attack can be mitigated by including the signature algorithm identifier in the data to be signed.  </p>
+<p id="rfc.section.8.1.1.p.1">The security strength of the signature is no greater than the minimum of the security strength associated with the bit length of the key and the security strength of the hash function.  When a hash function is used that has greater security than is provided by the length of the key, the signature algorithm uses the leftmost key length bits of the hash function output.  </p>
+<p id="rfc.section.8.1.1.p.2">System which have poor random number generation can leak their keys by signing two messages with the same value of 'k'.  <a href="#RFC6979">[RFC6979]</a> provides a method to deal with this problem by making 'k' be deterministic based on the message content rather than randomly generated.  Applications which specify ECDSA should evaluate the ability to get good random number generation and recommend this when it is not possible.  Note:  Use of this technique even when good random number generation exists may still be a good idea.  </p>
+<p id="rfc.section.8.1.1.p.3">There are two substitution that can theoretically be mounted against the ECDSA signature algorithm.  </p>
+
+<ul>
+  <li>Changing the curve used to validate the signature: If one changes the curve used to validate the signature, then potentially one could have a two messages with the same signature each computed under a different curve.  The only requirement on the new curve is that it's order be the same as the old one and it be acceptable to the client.  An example would be to change from using the curve P-256 to using Curve25519.  (Both are 256 bit curves.) We current do not have any way to deal with this version of the attack except to restrict the overall set of curves that can be used.  </li>
+  <li>Change the hash function used to validate the signature: If one has either two different hash functions of the same length, or one can truncate a hash function down, then one could potentially find collisions between the hash functions rather than within a single hash function.  (For example, truncating SHA-512 to 256 bits might collide with a SHA-256 bit hash value.) This attack can be mitigated by including the signature algorithm identifier in the data to be signed.  </li>
+</ul>
+
+<p> </p>
 <h1 id="rfc.section.8.2"><a href="#rfc.section.8.2">8.2.</a> RSASSA-PSS</h1>
 <p id="rfc.section.8.2.p.1">The RSASSA-PSS signature algorithm is defined in <a href="#RFC3447">[RFC3447]</a>.  </p>
 <p id="rfc.section.8.2.p.2">The RSASSA-PSS signature algorithm is parametized with a hash function (h), a mask generation function (mgf) and a salt length (sLen).  For this specification, the mask generation function is fixed to be MGF1 as defined in <a href="#RFC3447">[RFC3447]</a>.  It has been recommended that the same hash function be used for hashing the data as well as in the mask generation function, for this specification we following this recommendation.  The salt length is the same length as the hash function output.  </p>
@@ -1552,12 +1562,14 @@ valid, message content = Verification(message sent, key, signature)
 </table>
 <h1 id="rfc.section.8.2.1"><a href="#rfc.section.8.2.1">8.2.1.</a> <a href="#RSASSA-PSS-considerations" id="RSASSA-PSS-considerations">Security Considerations</a></h1>
 <p id="rfc.section.8.2.1.p.1">In addition to needing to worry about keys that are too small to provide the required security,  there are issues with keys that are too large.  Denial of service attacks have been mounted with overly large keys.  This has the potential to consume resources with potentially bad keys.  There are two reasonable ways to address this attack.  First, a key should not be used for a cryptographic operation until it has been matched back to an authorized user.  This approach means that no cryptography would be done except for authorized users.  Second, applications can impose maximum as well as minimum length requirements on keys.  This limits the resources consumed even if the matching is not performed until the cryptography has been done.  </p>
+<p id="rfc.section.8.2.1.p.2">There is a theoretical hash substitution attack that can be mounted against RSASSA-PSS.  However, the requirement that the same hash function be used consistently for all operations is an effective mitigation against it.  Unlike ECDSA, hash functions are not truncated so that the full hash value is always signed.  The internal padding structure of RSASSA-PSS means that one needs to have multiple collisions between the two hash functions in order to be successful in producing a forgery based on changing the hash function.  This is highly unlikely.  </p>
 <h1 id="rfc.section.9"><a href="#rfc.section.9">9.</a> Message Authentication (MAC) Algorithms</h1>
 <p id="rfc.section.9.p.1">Message Authentication Codes (MACs) provide data authentication and integrity protection.  They provide either no or very limited data origination.  (One cannot, for example, be used to prove the identity of the sender to a third party.) </p>
 <p id="rfc.section.9.p.2">MAC algorithms can be based on either a block cipher algorithm (i.e. AES-MAC) or a hash algorithm (i.e. HMAC).  This document defines a MAC algorithm for each of these two constructions.  </p>
 <h1 id="rfc.section.9.1"><a href="#rfc.section.9.1">9.1.</a> Hash-based Message Authentication Codes (HMAC)</h1>
-<p id="rfc.section.9.1.p.1">The Hash-base Message Authentication Code algorithm (HMAC) <a href="#RFC2104">[RFC2104]</a><a href="#RFC4231">[RFC4231]</a> was designed, in part, to deal with the birthday attacks on straight hash functions.  The algorithm was also designed to all for new hash algorithms to be directly plugged in without changes to the hash function.  The HMAC design process has been vindicated as, while the security of hash algorithms such as MD5 has decreased over time, the security of HMAC combined with MD5 has not yet been shown to be compromised <a href="#RFC6151">[RFC6151]</a>.  </p>
-<p id="rfc.section.9.1.p.2">For use in constrained environments, we define a set of HMAC algorithms that are truncated.  There are currently no known issues when truncating, however the security strength of the message tag is correspondingly reduced in strength.  When truncating, the left most tag length bits are kept and transmitted.  </p>
+<p id="rfc.section.9.1.p.1">The Hash-base Message Authentication Code algorithm (HMAC) <a href="#RFC2104">[RFC2104]</a><a href="#RFC4231">[RFC4231]</a> was designed to deal with length extension attacks.  The algorithm was also designed to allow for new hash algorithms to be directly plugged in without changes to the hash function.  The HMAC design process has been vindicated as, while the security of hash algorithms such as MD5 has decreased over time, the security of HMAC combined with MD5 has not yet been shown to be compromised <a href="#RFC6151">[RFC6151]</a>.  </p>
+<p id="rfc.section.9.1.p.2">The HMAC algorithm is parameterized by an inner and outer padding, a hash function (h) and an authentication tag value length.  For this specification, the inner and outer padding are fixed to the values set in <a href="#RFC2104">[RFC2104]</a>.  The length of the authentication tag corresponds to the difficulty of producing a forgery.  For use in constrained environments, we define a set of HMAC algorithms that are truncated.  There are currently no known issues when truncating, however the security strength of the message tag is correspondingly reduced in strength.  When truncating, the left most tag length bits are kept and transmitted.  </p>
+<p id="rfc.section.9.1.p.3">The algorithm defined in this document can be found in <a href="#table-hmac">Table 7</a>.  </p>
 <div id="rfc.table.7"/>
 <div id="table-hmac"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -1577,7 +1589,7 @@ valid, message content = Verification(message sent, key, signature)
       <td class="left">*</td>
       <td class="left">SHA-256</td>
       <td class="left">64</td>
-      <td class="left">HMAC w/ SHA-256 truncated to 8 bytes</td>
+      <td class="left">HMAC w/ SHA-256 truncated to 64 bits</td>
     </tr>
     <tr>
       <td class="left">HMAC 256/256</td>
@@ -1602,20 +1614,69 @@ valid, message content = Verification(message sent, key, signature)
     </tr>
   </tbody>
 </table>
+<p id="rfc.section.9.1.p.4">For some key management methods, the length of the key is known or determinable from the key management method.  For example, if RSA-OAEP is used then the key will be output at the correct length.  However, if any of the key derivation methods are used, then the size of the key to be obtained is an input parameter to the key derivation step.  For all HMAC methods defined in this document, the key size for a key derivation methods MUST be the same size as the hash function used.  It is RECOMMENDED that the key size be the same size as the hash function for all other key management methods.  </p>
 <h1 id="rfc.section.9.1.1"><a href="#rfc.section.9.1.1">9.1.1.</a> Security Considerations</h1>
-<p id="rfc.section.9.1.1.p.1">TBD.  </p>
-<h1 id="rfc.section.9.2"><a href="#rfc.section.9.2">9.2.</a> AES Message Authentication Code (AES-MAC)</h1>
-<p id="rfc.section.9.2.p.1">There are a set of different algorithms that we can specify here.  Which should it be? </p>
+<p id="rfc.section.9.1.1.p.1">HMAC has proved to be resistant even when used with weakening hash algorithms.  The current best method appears to be a brute force attack on the key.  This means that key size is going to be directly related to the security of an HMAC operation.  </p>
+<h1 id="rfc.section.9.2"><a href="#rfc.section.9.2">9.2.</a> AES Message Authentication Code (AES-CBC-MAC)</h1>
+<p id="rfc.section.9.2.p.1">AES-CBC-MAC is defined in <a href="#MAC">[MAC]</a>.  </p>
+<p id="rfc.section.9.2.p.2">AES-CBC-MAC is parameterized by the key length, the authentication tag length and the IV used.  For all of these algorithms, the IV is fixed to all zeros.  We provide an array of algorithms for various key lengths and tag lengths.  The algorithms defined in this document are found in <a href="#table-aes-mac">Table 8</a>.  </p>
+<div id="rfc.table.8"/>
+<div id="table-aes-mac"/>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <caption>AES-MAC Algorithm Values</caption>
+  <thead>
+    <tr>
+      <th class="left">name</th>
+      <th class="left">value</th>
+      <th class="left">key length</th>
+      <th class="left">tag length</th>
+      <th class="left">description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="left">AES-MAC 128/64</td>
+      <td class="left">*</td>
+      <td class="left">128</td>
+      <td class="left">64</td>
+      <td class="left">AES-MAC 128 bit key, 64-bit tag</td>
+    </tr>
+    <tr>
+      <td class="left">AES-MAC 256/64</td>
+      <td class="left">*</td>
+      <td class="left">256</td>
+      <td class="left">64</td>
+      <td class="left">AES-MAC 256 bit key, 64-bit tag</td>
+    </tr>
+    <tr>
+      <td class="left">AES-MAC 128/128</td>
+      <td class="left">*</td>
+      <td class="left">128</td>
+      <td class="left">128</td>
+      <td class="left">AES-MAC 128 bit key, 128-bit tag</td>
+    </tr>
+    <tr>
+      <td class="left">AES-MAC 256/128</td>
+      <td class="left">*</td>
+      <td class="left">256</td>
+      <td class="left">128</td>
+      <td class="left">AES-MAC 256 bit key, 128-bit tag</td>
+    </tr>
+  </tbody>
+</table>
+<h1 id="rfc.section.9.2.1"><a href="#rfc.section.9.2.1">9.2.1.</a> Security Considerations</h1>
+<p id="rfc.section.9.2.1.p.1">A number of attacks exist against CBC-MAC that need to be considered.  </p>
 
-<ul class="empty">
-  <li>AES-MAC - Use standard CBC mode</li>
-  <li>AES-CMAC - RFC 4493 - has improved security over AES-CBC.  The padding is different from CBC mode and requires one extra AES block encryption step plus and xor operation.</li>
+<ul>
+  <li>A single key must only be used for messages of a fixed and known length.  If this is not the case, an attacker will be able to generated a message with a valid tag given two message, tag pairs.  This can be addressed by using different keys for different length messages.  (CMAC mode also addresses this issue.) </li>
+  <li>If the same key is used for both encryption and authentication operations, using CBC modes an attacker can produce messages with a valid authentication code.  </li>
+  <li>If the IV can be modified, then messages can be forged.  This is addressed by fixing the IV to all zeros.  </li>
 </ul>
 
 <p> </p>
 <h1 id="rfc.section.10"><a href="#rfc.section.10">10.</a> Content Encryption Algorithms</h1>
 <h1 id="rfc.section.10.1"><a href="#rfc.section.10.1">10.1.</a> AES GCM</h1>
-<div id="rfc.table.8"/>
+<div id="rfc.table.9"/>
 <div id="table-AES-GCM"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>Algorithm Value for AES-GCM</caption>
@@ -1669,7 +1730,7 @@ valid, message content = Verification(message sent, key, signature)
 </dl>
 
 <p> </p>
-<div id="rfc.table.9"/>
+<div id="rfc.table.10"/>
 <div id="table-AES-CCM"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>Algorithm Values for AES-CCM</caption>
@@ -1775,7 +1836,7 @@ valid, message content = Verification(message sent, key, signature)
 </ul>
 
 <p> </p>
-<div id="rfc.table.10"/>
+<div id="rfc.table.11"/>
 <div id="table-hkdf"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>HKDF algorithms</caption>
@@ -1799,7 +1860,7 @@ valid, message content = Verification(message sent, key, signature)
     </tr>
   </tbody>
 </table>
-<div id="rfc.table.11"/>
+<div id="rfc.table.12"/>
 <div id="HKDF_Alg_Params"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>HKDF Algorithm Parameters</caption>
@@ -1861,7 +1922,7 @@ COSE_KDF_Context = [
     ? SuppPrivInfo : bstr
 ]
 </pre>
-<div id="rfc.table.12"/>
+<div id="rfc.table.13"/>
 <div id="KDF_Context_Alg_Params"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>Context Algorithm Parameters</caption>
@@ -1939,7 +2000,7 @@ COSE_KDF_Context = [
 </dl>
 
 <p> </p>
-<div id="rfc.table.13"/>
+<div id="rfc.table.14"/>
 <div id="table-direct"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>Direct Key</caption>
@@ -1983,7 +2044,7 @@ COSE_KDF_Context = [
 <p> </p>
 <h1 id="rfc.section.12.2.1"><a href="#rfc.section.12.2.1">12.2.1.</a> AES Key Wrapping</h1>
 <p id="rfc.section.12.2.1.p.1">The AES Key Wrapping algorithm is defined in <a href="#RFC3394">[RFC3394]</a>.  This algorithm uses an AES key to wrap a value that is a multiple of 64-bits, as such it can be used to wrap a key for any of the content encryption algorithms defined in this document.  <a id="CREF15" class="info">[CREF15]<span class="info">JLS: Do we also want to document the use of RFC 5649 as well? It allows for other sizes of keys that might be used for HMAC - i.e. a 200 bit key.  The algorithm exists, but I do not personally know of any standard uses of it.  </span></a> The algorithm requires a single fixed parameter, the initial value.  This is fixed to the value specified in Section 2.2.3.1 of  <a href="#RFC3394">[RFC3394]</a>.  There are no public parameters that vary on a per invocation basis.  </p>
-<div id="rfc.table.14"/>
+<div id="rfc.table.15"/>
 <div id="table_aes_keywrap"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>AES Key Wrap Algorithm Values</caption>
@@ -2030,7 +2091,7 @@ COSE_KDF_Context = [
 
 <p> </p>
 <h1 id="rfc.section.12.3.1"><a href="#rfc.section.12.3.1">12.3.1.</a> RSAES-OAEP</h1>
-<p id="rfc.section.12.3.1.p.1">RSAES-OAEP is an asymmetric key encryption algorithm.  The defintion of RSAEA-OAEP can be find in Section 7.1 of <a href="#RFC3447">[RFC3447]</a>.  The algorithm is parameterized using a masking generation function (mgf), a hash function (h) and encoding parameters (P).  For the algoithm identifiers defined in this section: <a href="#table-RSA-OAEP">Table 15</a> summarizes the rest of the values.  </p>
+<p id="rfc.section.12.3.1.p.1">RSAES-OAEP is an asymmetric key encryption algorithm.  The defintion of RSAEA-OAEP can be find in Section 7.1 of <a href="#RFC3447">[RFC3447]</a>.  The algorithm is parameterized using a masking generation function (mgf), a hash function (h) and encoding parameters (P).  For the algoithm identifiers defined in this section: <a href="#table-RSA-OAEP">Table 16</a> summarizes the rest of the values.  </p>
 
 <ul>
   <li>mgf is always set to MFG1 from <a href="#RFC3447">[RFC3447]</a> and uses the same hash function as h.</li>
@@ -2038,7 +2099,7 @@ COSE_KDF_Context = [
 </ul>
 
 <p> </p>
-<div id="rfc.table.15"/>
+<div id="rfc.table.16"/>
 <div id="table-RSA-OAEP"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>RSAES-OAEP Algorithm Values</caption>
@@ -2101,17 +2162,17 @@ COSE_KDF_Context = [
 </ul>
 
 <p> </p>
-<p id="rfc.section.12.4.1.p.4">As shown in <a href="#table-ecdh-es-table">Table 16</a> we define two ECDH algorithm identifiers for EC direct key agreement.  These identifiers are: </p>
+<p id="rfc.section.12.4.1.p.4">As shown in <a href="#table-ecdh-es-table">Table 17</a> we define two ECDH algorithm identifiers for EC direct key agreement.  These identifiers are: </p>
 
 <dl>
   <dt>ECDH-ES:</dt>
-  <dd style="margin-left: 8">This algorithm does a key agreement operation using a static key for the recipient and an ephemeral key for the sender.  The ephemeral key MUST be generated fresh for every message.  The HKDF function (<a href="#HKDF">Section 11.1</a>) is used with the context structure in <a href="#context">Section 11.2</a> to transform the key agreement secret into the necessary key.  Since the ephemeral key is generated freshly, the 'salt' parameter of HKDF is not needed and can be absent.  <br/> One new algorithm parameter is defined for use with this algorithm.  This parameter is: <dl><dt>ephemeral key:</dt><dd style="margin-left: 8">This parameter is used to hold and transport the ephemeral key generated by the sender of the message.  This parameter has a label of -1 and a type of COSE_Key.  This parameter can be placed in the unprotected bucket, if it is changed then the correct key will not be able to be generated.  </dd></dl><p> The parameter is summarized in </p><a href="#table-ecdh-es-parameter-table">Table 17</a>.  </dd>
+  <dd style="margin-left: 8">This algorithm does a key agreement operation using a static key for the recipient and an ephemeral key for the sender.  The ephemeral key MUST be generated fresh for every message.  The HKDF function (<a href="#HKDF">Section 11.1</a>) is used with the context structure in <a href="#context">Section 11.2</a> to transform the key agreement secret into the necessary key.  Since the ephemeral key is generated freshly, the 'salt' parameter of HKDF is not needed and can be absent.  <br/> One new algorithm parameter is defined for use with this algorithm.  This parameter is: <dl><dt>ephemeral key:</dt><dd style="margin-left: 8">This parameter is used to hold and transport the ephemeral key generated by the sender of the message.  This parameter has a label of -1 and a type of COSE_Key.  This parameter can be placed in the unprotected bucket, if it is changed then the correct key will not be able to be generated.  </dd></dl><p> The parameter is summarized in </p><a href="#table-ecdh-es-parameter-table">Table 18</a>.  </dd>
   <dt>ECDH-SS:</dt>
-  <dd style="margin-left: 8">This algorithm does a key agreement operation using two static keys, one for the recipient and one for the sender.  The HKDF function (<a href="#HKDF">Section 11.1</a>) is used with the context structure in <a href="#context">Section 11.2</a> to transform the key agreement secret into the necessary key.  Either the 'salt' parameter of HKDF or the partyU 'nonce' parameter of the context structure MUST be present.  This parameter can be generated either randomly or deterministically, the requirement is that it be a unique value for the key pair in question.  <br/> If the salt/nonce value is generated randomly, then it is suggested that the length of the random value be the same length as the hash function underlying HKDF, i.e 256-bits.  While there is no way to guarantee that it will be unique, there is a high probability that it will be unique.  If the salt/nonce value is generated deterministically, it can be guaranteed to be unique and thus there is no length requirement.  <br/> Two new algorithm parameters are defined for use with this algorithm.  These parameters are: <dl><dt>static key:</dt><dd style="margin-left: 8">This parameter is used to hold and transport the static key used by the sender of the message.  This parameter has the label of -2 and a type of COSE_Key.  The parameter can be placed in the unprotected bucket, if it is changed then the correct key will not be able to be generated.  If the data origination service is desired, then the message recipient needs to validate that the key in this field is associated with the sender.  </dd><dt>static key identifier:</dt><dd style="margin-left: 8">This parameter is used to hold a reference to the static key used by the sender of the message.  The value is expected to match the 'kid' member of a COSE_Key structure published by the sender.  The value in this field cannot be assumed to uniquely identify a single key, multiple keys may need to be found and tested.  Not all of the keys identified by a kid value may be associated with the sender of the message.  If the data origination service is desired, then the message recipient needs to validate that the key in this field is associated with the sender.  </dd></dl><p> These parameters are summarized in </p><a href="#table-ecdh-es-parameter-table">Table 17</a>.  </dd>
+  <dd style="margin-left: 8">This algorithm does a key agreement operation using two static keys, one for the recipient and one for the sender.  The HKDF function (<a href="#HKDF">Section 11.1</a>) is used with the context structure in <a href="#context">Section 11.2</a> to transform the key agreement secret into the necessary key.  Either the 'salt' parameter of HKDF or the partyU 'nonce' parameter of the context structure MUST be present.  This parameter can be generated either randomly or deterministically, the requirement is that it be a unique value for the key pair in question.  <br/> If the salt/nonce value is generated randomly, then it is suggested that the length of the random value be the same length as the hash function underlying HKDF, i.e 256-bits.  While there is no way to guarantee that it will be unique, there is a high probability that it will be unique.  If the salt/nonce value is generated deterministically, it can be guaranteed to be unique and thus there is no length requirement.  <br/> Two new algorithm parameters are defined for use with this algorithm.  These parameters are: <dl><dt>static key:</dt><dd style="margin-left: 8">This parameter is used to hold and transport the static key used by the sender of the message.  This parameter has the label of -2 and a type of COSE_Key.  The parameter can be placed in the unprotected bucket, if it is changed then the correct key will not be able to be generated.  If the data origination service is desired, then the message recipient needs to validate that the key in this field is associated with the sender.  </dd><dt>static key identifier:</dt><dd style="margin-left: 8">This parameter is used to hold a reference to the static key used by the sender of the message.  The value is expected to match the 'kid' member of a COSE_Key structure published by the sender.  The value in this field cannot be assumed to uniquely identify a single key, multiple keys may need to be found and tested.  Not all of the keys identified by a kid value may be associated with the sender of the message.  If the data origination service is desired, then the message recipient needs to validate that the key in this field is associated with the sender.  </dd></dl><p> These parameters are summarized in </p><a href="#table-ecdh-es-parameter-table">Table 18</a>.  </dd>
 </dl>
 
 <p> </p>
-<div id="rfc.table.16"/>
+<div id="rfc.table.17"/>
 <div id="table-ecdh-es-table"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>ECDH Algorithm Values</caption>
@@ -2138,7 +2199,7 @@ COSE_KDF_Context = [
     </tr>
   </tbody>
 </table>
-<div id="rfc.table.17"/>
+<div id="rfc.table.18"/>
 <div id="table-ecdh-es-parameter-table"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>ECDH Algorithm Parameters</caption>
@@ -2176,7 +2237,7 @@ COSE_KDF_Context = [
   </tbody>
 </table>
 <p id="rfc.section.12.4.1.p.5">M00TODO: Talk about curves and point formats.  </p>
-<div id="rfc.table.18"/>
+<div id="rfc.table.19"/>
 <div id="table-ec-curves"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>EC Curves</caption>
@@ -2297,7 +2358,7 @@ COSE_KDF_Context = [
 <p id="rfc.section.13.p.1">The COSE_Key object defines a way to hold a single key object, it is still required that the members of individual key types be defined.  This section of the document is where we define an initial set of members for specific key types.  </p>
 <p id="rfc.section.13.p.2">For each of the key types, we define both public and private members.  The public members are what is transmitted to others for their usage.  We define private members mainly for the purpose of archival of keys by individuals.  However, there are some circumstances where private keys may be distributed by various entities in a protocol.  Examples include:  Entities which have poor random number generation.  Centralized key creation for multi-cast type operations.  Protocols where a shared secret is used as a bearer token for authorization purposes.  </p>
 <p id="rfc.section.13.p.3">Keys are identified by the 'kty' member of the COSE_Key object.  In this document we define four values for the member.  </p>
-<div id="rfc.table.19"/>
+<div id="rfc.table.20"/>
 <div id="table_key_types"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>Key Type Values</caption>
@@ -2340,7 +2401,7 @@ COSE_KDF_Context = [
 
 <dl>
   <dt>crv</dt>
-  <dd style="margin-left: 8">contains an identifier of the curve to be used with the key.  <a id="CREF20" class="info">[CREF20]<span class="info">JLS: Do we create a registry for curves? Is is the same registry for both EC1 and EC2? </span></a> The curves defined in this document for this key type can be found in <a href="#table-ec-curves">Table 18</a>.  Other curves may be registered in the future and private curves can be used as well.  </dd>
+  <dd style="margin-left: 8">contains an identifier of the curve to be used with the key.  <a id="CREF20" class="info">[CREF20]<span class="info">JLS: Do we create a registry for curves? Is is the same registry for both EC1 and EC2? </span></a> The curves defined in this document for this key type can be found in <a href="#table-ec-curves">Table 19</a>.  Other curves may be registered in the future and private curves can be used as well.  </dd>
   <dt>x</dt>
   <dd style="margin-left: 8">contains the x coordinate for the EC point.  The integer is converted to an octet string use ???.  Note that the octet string represents a little-endian encoding of x.  <a id="CREF21" class="info">[CREF21]<span class="info">JLS: Should we use the integer encoding for x and d instead of bstr? </span></a> </dd>
   <dt>d</dt>
@@ -2349,7 +2410,7 @@ COSE_KDF_Context = [
 
 <p> </p>
 <p id="rfc.section.13.1.1.p.4">For public keys, it is REQUIRED that 'crv' and  'x' be present in the structure.  For private keys, it is REQUIRED that 'crv' and 'd' be present in the structure.  It is RECOMMENDED that 'x'  also be present, but it can be recomputed from the required elements and omitting it saves on space.  </p>
-<div id="rfc.table.20"/>
+<div id="rfc.table.21"/>
 <div id="table-ec1-keys"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>EC Key Parameters</caption>
@@ -2392,7 +2453,7 @@ COSE_KDF_Context = [
 
 <dl>
   <dt>crv</dt>
-  <dd style="margin-left: 8">contains an identifier of the curve to be used with the key.  The curves defined in this document for this key type can be found in <a href="#table-ec-curves">Table 18</a>.  Other curves may be registered in the future and private curves can be used as well.  </dd>
+  <dd style="margin-left: 8">contains an identifier of the curve to be used with the key.  The curves defined in this document for this key type can be found in <a href="#table-ec-curves">Table 19</a>.  Other curves may be registered in the future and private curves can be used as well.  </dd>
   <dt>x</dt>
   <dd style="margin-left: 8">contains the x coordinate for the EC point.  The integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  <a id="CREF22" class="info">[CREF22]<span class="info">JLS: Should we use the integer encoding for x, y and d instead of bstr? </span></a> </dd>
   <dt>y</dt>
@@ -2403,7 +2464,7 @@ COSE_KDF_Context = [
 
 <p> </p>
 <p id="rfc.section.13.1.2.p.3">For public keys, it is REQUIRED that 'crv', 'x' and 'y' be present in the structure.  For private keys, it is REQUIRED that 'crv' and 'd' be present in the structure.  It is RECOMMENDED that 'x' and 'y' also be present, but they can be recomputed from the required elements and omitting them saves on space.  </p>
-<div id="rfc.table.21"/>
+<div id="rfc.table.22"/>
 <div id="table-ec2-keys"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>EC Key Parameters</caption>
@@ -2450,17 +2511,17 @@ COSE_KDF_Context = [
 <h1 id="rfc.section.13.2"><a href="#rfc.section.13.2">13.2.</a> RSA Keys</h1>
 <p id="rfc.section.13.2.p.1">This document defines a key structure for both the public and private halves of RSA keys.  Together, an RSA public key and an RSA private key form an RSA key pair.  <a id="CREF23" class="info">[CREF23]<span class="info">JLS: Looking at the CBOR specification, the bstr that we are looking in our table below should most likely be specified as big numbers rather than as binary strings.  This means that we would use the tag 6.2 instead.  From my reading of the specification, there is no difference in the encoded size of the resulting output.  The specification of bignum does explicitly allow for integers encoded with leading zeros.  </span></a> </p>
 <p id="rfc.section.13.2.p.2">The document also provides support for the so-called "multi-prime" RSA where the modulus may have more than two prime factors.  The benefit of multi-prime RSA is lower computational cost for the decryption and signature primitives.  For a discussion on how multi-prime affects the security of RSA crypto-systems, the reader is referred to <a href="#MultiPrimeRSA">[MultiPrimeRSA]</a>.  </p>
-<p id="rfc.section.13.2.p.3">This document follows the naming convention of <a href="#RFC3447">[RFC3447]</a> for the naming of the fields of an RSA public or private key.  The table <a href="#table-rsa-keys">Table 22</a> provides a summary of the label values and the types associated with each of those labels.  The requirements for fields for RSA keys are as follows: </p>
+<p id="rfc.section.13.2.p.3">This document follows the naming convention of <a href="#RFC3447">[RFC3447]</a> for the naming of the fields of an RSA public or private key.  The table <a href="#table-rsa-keys">Table 23</a> provides a summary of the label values and the types associated with each of those labels.  The requirements for fields for RSA keys are as follows: </p>
 
 <ul>
   <li>For all keys, 'kty' MUST be present and MUST have a value of 3.  </li>
-  <li>For public keys, the fields 'n' and 'e' MUST be present.  All other fields defined in <a href="#table-rsa-keys">Table 22</a> MUST be absent.  </li>
+  <li>For public keys, the fields 'n' and 'e' MUST be present.  All other fields defined in <a href="#table-rsa-keys">Table 23</a> MUST be absent.  </li>
   <li>For private keys with two primes, the fields 'other', 'r_i', 'd_i' and 't_i' MUST be absent, all other fields MUST be present.  </li>
   <li>For private keys with more than two primes, all fields MUST  be present.  For the third to nth primes, each of the primes is represented as a map containing the fields 'r_i', 'd_i' and 't_i'.  The field 'other' is an array of those maps.  </li>
 </ul>
 
 <p> </p>
-<div id="rfc.table.22"/>
+<div id="rfc.table.23"/>
 <div id="table-rsa-keys"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>RSA Key Parameters</caption>
@@ -2571,7 +2632,7 @@ COSE_KDF_Context = [
 
 <p> </p>
 <p id="rfc.section.13.3.p.3">This key structure contains only private key information, care must be taken that it is never transmitted accidentally.  For public keys, there are no required fields.  For private keys, it is REQUIRED that 'k' be present in the structure.  </p>
-<div id="rfc.table.23"/>
+<div id="rfc.table.24"/>
 <div id="table-symmetric-keys"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <caption>Symmetric Key Parameters</caption>
@@ -2658,7 +2719,7 @@ COSE_KDF_Context = [
 </dl>
 
 <p> </p>
-<p id="rfc.section.15.4.p.3">The initial contents of the registry can be found in: <a href="#HKDF_Alg_Params">Table 11</a>,  <a href="#KDF_Context_Alg_Params">Table 12</a>, <a href="#table-ecdh-es-parameter-table">Table 17</a>, and <a href="#Header-Algorithm-Table">Appendix D</a>.  The specification column for all rows in that table should be this document.  </p>
+<p id="rfc.section.15.4.p.3">The initial contents of the registry can be found in: <a href="#HKDF_Alg_Params">Table 12</a>,  <a href="#KDF_Context_Alg_Params">Table 13</a>, <a href="#table-ecdh-es-parameter-table">Table 18</a>, and <a href="#Header-Algorithm-Table">Appendix D</a>.  The specification column for all rows in that table should be this document.  </p>
 <h1 id="rfc.section.15.5"><a href="#rfc.section.15.5">15.5.</a> <a href="#cose-algorithm-registry" id="cose-algorithm-registry">COSE Algorithm Registry</a></h1>
 <p id="rfc.section.15.5.p.1">It is requested that IANA create a new registry entitled &#8220;COSE Algorithm Registry&#8221;.  </p>
 <p/>
@@ -2675,7 +2736,7 @@ COSE_KDF_Context = [
 </dl>
 
 <p> </p>
-<p id="rfc.section.15.5.p.3">The initial contents of the registry can be found in the following: <a href="#table-AES-CCM">Table 9</a>, <a href="#table-AES-GCM">Table 8</a>, <a href="#table_ecdsa">Table 5</a>, <a href="#table-hmac">Table 7</a>, <a href="#table-direct">Table 13</a>, <a href="#table_aes_keywrap">Table 14</a>, <a href="#table-RSA-OAEP">Table 15</a>.  The specification column for all rows in that table should be this document.  </p>
+<p id="rfc.section.15.5.p.3">The initial contents of the registry can be found in the following: <a href="#table-AES-CCM">Table 10</a>, <a href="#table-AES-GCM">Table 9</a>, <a href="#table_ecdsa">Table 5</a>, <a href="#table-hmac">Table 7</a>, <a href="#table-direct">Table 14</a>, <a href="#table_aes_keywrap">Table 15</a>, <a href="#table-RSA-OAEP">Table 16</a>.  The specification column for all rows in that table should be this document.  </p>
 <h1 id="rfc.section.15.6"><a href="#rfc.section.15.6">15.6.</a> <a href="#cose-key-map-registry" id="cose-key-map-registry">COSE Key Common Parameter Registry</a></h1>
 <p id="rfc.section.15.6.p.1">It is requested that IANA create a new registry entitled &#8220;COSE Key Common Parameter" Registry.  </p>
 <p id="rfc.section.15.6.p.2">The columns of the registry are: </p>
@@ -2719,7 +2780,7 @@ COSE_KDF_Context = [
 </dl>
 
 <p> </p>
-<p id="rfc.section.15.7.p.4">This registry will be initially populated by the values in <a href="#table-ec1-keys">Table 20</a>, <a href="#table-ec2-keys">Table 21</a>, <a href="#table-rsa-keys">Table 22</a>, and <a href="#table-symmetric-keys">Table 23</a>.  The specification column for all of these entries will be this document.  </p>
+<p id="rfc.section.15.7.p.4">This registry will be initially populated by the values in <a href="#table-ec1-keys">Table 21</a>, <a href="#table-ec2-keys">Table 22</a>, <a href="#table-rsa-keys">Table 23</a>, and <a href="#table-symmetric-keys">Table 24</a>.  The specification column for all of these entries will be this document.  </p>
 <h1 id="rfc.section.15.8"><a href="#rfc.section.15.8">15.8.</a> Media Type Registration</h1>
 <h1 id="rfc.section.15.8.1"><a href="#rfc.section.15.8.1">15.8.1.</a> COSE Security Message</h1>
 <p id="rfc.section.15.8.1.p.1">This section registers the "application/cose" and "application/cose+cbor" media types in the "Media Types" registry.  <a id="CREF25" class="info">[CREF25]<span class="info">JLS: Should we register both or just the cose+cbor one?</span></a> These media types are used to indicate that the content is a COSE_MSG.  </p>
@@ -2883,6 +2944,12 @@ COSE_KDF_Context = [
     </tr>
     <tr>
       <td class="reference">
+        <b id="MAC">[MAC]</b>
+      </td>
+      <td class="top"><a>NiST, N.</a>, "<a>FIPS PUB 113: Computer Data Authentication</a>", May 1985.</td>
+    </tr>
+    <tr>
+      <td class="reference">
         <b id="MultiPrimeRSA">[MultiPrimeRSA]</b>
       </td>
       <td class="top"><a title="University of Waterloo">Hinek, M.</a> and <a title="University of Waterloo">D. Cheriton</a>, "<a>On the Security of Multi-prime RSA</a>", June 2006.</td>
@@ -2982,6 +3049,12 @@ COSE_KDF_Context = [
         <b id="RFC6151">[RFC6151]</b>
       </td>
       <td class="top"><a>Turner, S.</a> and <a>L. Chen</a>, "<a href="http://tools.ietf.org/html/rfc6151">Updated Security Considerations for the MD5 Message-Digest and the HMAC-MD5 Algorithms</a>", RFC 6151, DOI 10.17487/RFC6151, March 2011.</td>
+    </tr>
+    <tr>
+      <td class="reference">
+        <b id="RFC6979">[RFC6979]</b>
+      </td>
+      <td class="top"><a>Pornin, T.</a>, "<a href="http://tools.ietf.org/html/rfc6979">Deterministic Usage of the Digital Signature Algorithm (DSA) and Elliptic Curve Digital Signature Algorithm (ECDSA)</a>", RFC 6979, DOI 10.17487/RFC6979, August 2013.</td>
     </tr>
     <tr>
       <td class="reference">
