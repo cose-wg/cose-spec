@@ -18,6 +18,7 @@
   <!ENTITY RFC5990 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5990.xml" >
   <!ENTITY RFC6090 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6090.xml" >
   <!ENTITY RFC6151 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6151.xml" >
+  <!ENTITY RFC6979 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6979.xml" >
   <!ENTITY RFC7049 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7049.xml" >
   <!ENTITY RFC7159 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7159.xml" >
   <!ENTITY RFC7252 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7252.xml" >
@@ -217,7 +218,7 @@ start = COSE_MSG / COSE_Key / COSE_KeySet
         <figure><artwork type='CDDL'>
 <![CDATA[
 label = int / tstr
-values = bstr / tstr / int
+values = any
 ]]></artwork></figure>
 
       </section>
@@ -1238,8 +1239,12 @@ valid, message content = Verification(message sent, key, signature)
         </t>
 
         <t>
-          The security strength of the signature is no greater than the minimum of the security strength associated with the bit length of the key and the security strength of the hash function.
-          When a hash function is used that has greater security than is provided by the length of the key, the signature algorithm uses the leftmost key length bits of the hash function output.
+          The ECDSA signature algorithm is parameterized with a hash function (h.
+          In the event that the length of the hash function output is greater than group of the key, the left most bytes of the hash output are used.
+        </t>
+
+        <t>
+          The algorithms defined in this document can be found in <xref target="table_ecdsa"/>.
         </t>
         
         <texttable title="ECDSA Algorithm Values" anchor="table_ecdsa">
@@ -1275,21 +1280,37 @@ valid, message content = Verification(message sent, key, signature)
 
         <section title="Security Considerations">
           <t>
-            On of the issues that needs to be discussed is substitution attacks.
-            There are two different things that can potentially be substituted in this algorithm.
-            Both of these attacks are current theoretical only.
-          </t>
-          
-          <t>
-            The first substitution attack is changing the curve used to validate the signature, the only requirement is that the order of the key match the length of R and S.
-            It is theoretically possible to use a different curve and get a different result.
-            We current do not have any way to deal with this version of the attack except to restrict the overall set of curves that can be used.
-          </t>
+          The security strength of the signature is no greater than the minimum of the security strength associated with the bit length of the key and the security strength of the hash function.
+          When a hash function is used that has greater security than is provided by the length of the key, the signature algorithm uses the leftmost key length bits of the hash function output.
+        </t>
 
-          <t>
-            The second substitution attack is to change the hash function that is used to verify the signature.
-            This attack can be mitigated by including the signature algorithm identifier in the data to be signed.
-          </t>
+        <t>
+          System which have poor random number generation can leak their keys by signing two messages with the same value of 'k'.
+          <xref target="RFC6979"/> provides a method to deal with this problem by making 'k' be deterministic based on the message content rather than randomly generated.
+          Applications which specify ECDSA should evaluate the ability to get good random number generation and recommend this when it is not possible.
+          Note:  Use of this technique even when good random number generation exists may still be a good idea.
+        </t>
+
+        <t>
+          There are two substitution that can theoretically be mounted against the ECDSA signature algorithm.
+          <list style="symbols">
+            <t>
+              Changing the curve used to validate the signature:
+              If one changes the curve used to validate the signature, then potentially one could have a two messages with the same signature each computed under a different curve.
+              The only requirement on the new curve is that it's order be the same as the old one and it be acceptable to the client.
+              An example would be to change from using the curve P-256 to using Curve25519.
+              (Both are 256 bit curves.)
+              We current do not have any way to deal with this version of the attack except to restrict the overall set of curves that can be used.
+            </t>
+
+            <t>
+              Change the hash function used to validate the signature:
+              If one has either two different hash functions of the same length, or one can truncate a hash function down, then one could potentially find collisions between the hash functions rather than within a single hash function.
+              (For example, truncating SHA-512 to 256 bits might collide with a SHA-256 bit hash value.)
+              This attack can be mitigated by including the signature algorithm identifier in the data to be signed.
+            </t>
+          </list>
+        </t>
         </section>
         
       </section>
@@ -1332,6 +1353,14 @@ valid, message content = Verification(message sent, key, signature)
             Second, applications can impose maximum as well as minimum length requirements on keys.
             This limits the resources consumed even if the matching is not performed until the cryptography has been done.
           </t>
+
+          <t>
+            There is a theoretical hash substitution attack that can be mounted against RSASSA-PSS.
+            However, the requirement that the same hash function be used consistently for all operations is an effective mitigation against it.
+            Unlike ECDSA, hash functions are not truncated so that the full hash value is always signed.
+            The internal padding structure of RSASSA-PSS means that one needs to have multiple collisions between the two hash functions in order to be successful in producing a forgery based on changing the hash function.
+            This is highly unlikely.
+          </t>
         </section>
       </section>
       
@@ -1352,16 +1381,24 @@ valid, message content = Verification(message sent, key, signature)
 
       <section title="Hash-based Message Authentication Codes (HMAC)">
         <t>
-          The Hash-base Message Authentication Code algorithm (HMAC) <xref target="RFC2104"/><xref target="RFC4231"/> was designed, in part, to deal with the birthday attacks on straight hash functions.
-          The algorithm was also designed to all for new hash algorithms to be directly plugged in without changes to the hash function.
+          The Hash-base Message Authentication Code algorithm (HMAC) <xref target="RFC2104"/><xref target="RFC4231"/> was designed to deal with length extension attacks.
+          The algorithm was also designed to allow for new hash algorithms to be directly plugged in without changes to the hash function.
           The HMAC design process has been vindicated as, while the security of hash algorithms such as MD5 has decreased over time, the security of HMAC combined with MD5 has not yet been shown to be compromised <xref target="RFC6151"/>.
         </t>
 
         <t>
+          The HMAC algorithm is parameterized by an inner and outer padding, a hash function (h) and an authentication tag value length.
+          For this specification, the inner and outer padding are fixed to the values set in <xref target="RFC2104"/>.
+          The length of the authentication tag corresponds to the difficulty of producing a forgery.
           For use in constrained environments, we define a set of HMAC algorithms that are truncated.
           There are currently no known issues when truncating, however the security strength of the message tag is correspondingly reduced in strength.
           When truncating, the left most tag length bits are kept and transmitted.
         </t>
+
+        <t>
+          The algorithm defined in this document can be found in <xref target="table-hmac"/>.
+        </t>
+
         
         <texttable title="HMAC Algorithm Values" anchor="table-hmac">
           <ttcol align='left'>name</ttcol>
@@ -1369,42 +1406,77 @@ valid, message content = Verification(message sent, key, signature)
           <ttcol align='left'>Hash</ttcol>
           <ttcol align='left'>Length</ttcol>
           <ttcol align='left'>description</ttcol>
-          <c>HMAC 256/64</c>         <c>*</c>        <c>SHA-256</c>    <c>64</c>        <c>HMAC w/ SHA-256 truncated to 8 bytes</c>
+          <c>HMAC 256/64</c>         <c>*</c>        <c>SHA-256</c>    <c>64</c>        <c>HMAC w/ SHA-256 truncated to 64 bits</c>
           <c>HMAC 256/256</c>        <c>4</c>        <c>SHA-256</c>    <c>256</c>       <c>HMAC w/ SHA-256</c>
           <c>HMAC 384/384</c>        <c>5</c>        <c>SHA-384</c>    <c>384</c>       <c>HMAC w/ SHA-384</c>
           <c>HMAC 512/512</c>        <c>6</c>        <c>SHA-512</c>    <c>512</c>       <c>HMAC w/ SHA-512</c>
         </texttable>
 
+        <t>
+          For some key management methods, the length of the key is known or determinable from the key management method.
+          For example, if RSA-OAEP is used then the key will be output at the correct length.
+          However, if any of the key derivation methods are used, then the size of the key to be obtained is an input parameter to the key derivation step.
+          For all HMAC methods defined in this document, the key size for a key derivation methods MUST be the same size as the hash function used.
+          It is RECOMMENDED that the key size be the same size as the hash function for all other key management methods.
+        </t>
+
         <section title="Security Considerations">
           <t>
-            TBD.
+            HMAC has proved to be resistant even when used with weakening hash algorithms.
+            The current best method appears to be a brute force attack on the key.
+            This means that key size is going to be directly related to the security of an HMAC operation.
           </t>
         </section>
       </section>
 
-      <section title="AES Message Authentication Code (AES-MAC)">
+      <section title="AES Message Authentication Code (AES-CBC-MAC)">
         <t>
-          There are a set of different algorithms that we can specify here.  Which should it be?
-          <list>
-            <t>AES-MAC - Use standard CBC mode</t>
-            <t>AES-CMAC - RFC 4493 - has improved security over AES-CBC.  The padding is different from CBC mode and requires one extra AES block encryption step plus and xor operation.</t>
-          </list>
+          AES-CBC-MAC is defined in <xref target="MAC"/>.
         </t>
 
-        <!--
+        <t>
+          AES-CBC-MAC is parameterized by the key length, the authentication tag length and the IV used.
+          For all of these algorithms, the IV is fixed to all zeros.
+          We provide an array of algorithms for various key lengths and tag lengths.
+          The algorithms defined in this document are found in <xref target="table-aes-mac"/>.
+        </t>
+        
+
         <texttable title="AES-MAC Algorithm Values" anchor="table-aes-mac">
           <ttcol align='left'>name</ttcol>
           <ttcol align='left'>value</ttcol>
           <ttcol align='left'>key length</ttcol>
           <ttcol align='left'>tag length</ttcol>
           <ttcol align='left'>description</ttcol>
-          <c>AES-MAC 128/64</c>         <c>*</c>        <c>128</c>      <c>64</c>       <
-          <c>HMAC 256/64</c>         <c>*</c>        <c>SHA-256</c>    <c>64</c>        <c>HMAC w/ SHA-256 truncated to 8 bytes</c>
-          <c>HMAC 256/256</c>        <c>4</c>        <c>SHA-256</c>    <c>256</c>       <c>HMAC w/ SHA-256</c>
-          <c>HMAC 384/384</c>        <c>5</c>        <c>SHA-384</c>    <c>384</c>       <c>HMAC w/ SHA-384</c>
-          <c>HMAC 512/512</c>        <c>6</c>        <c>SHA-512</c>    <c>512</c>       <c>HMAC w/ SHA-512</c>
+          <c>AES-MAC 128/64</c>         <c>*</c>        <c>128</c>      <c>64</c>       <c>AES-MAC 128 bit key, 64-bit tag</c>
+          <c>AES-MAC 256/64</c>         <c>*</c>        <c>256</c>      <c>64</c>       <c>AES-MAC 256 bit key, 64-bit tag</c>
+          <c>AES-MAC 128/128</c>        <c>*</c>        <c>128</c>      <c>128</c>      <c>AES-MAC 128 bit key, 128-bit tag</c>
+          <c>AES-MAC 256/128</c>        <c>*</c>        <c>256</c>      <c>128</c>      <c>AES-MAC 256 bit key, 128-bit tag</c>
+          
         </texttable>
-        -->
+
+        <section title="Security Considerations">
+          <t>
+            A number of attacks exist against CBC-MAC that need to be considered.
+            <list style="symbols">
+              <t>
+                A single key must only be used for messages of a fixed and known length.
+                If this is not the case, an attacker will be able to generated a message with a valid tag given two message, tag pairs.
+                This can be addressed by using different keys for different length messages.
+                (CMAC mode also addresses this issue.)
+              </t>
+              <t>
+                If the same key is used for both encryption and authentication operations, using CBC modes an attacker can produce messages with a valid authentication code.
+              </t>
+              <t>
+                If the IV can be modified, then messages can be forged.
+                This is addressed by fixing the IV to all zeros.
+              </t>
+            </list>
+          </t>
+            
+        </section>
+
       </section>
     </section>
 
@@ -2946,6 +3018,7 @@ COSE_KDF_Context = [
       &RFC5990;
       &RFC6090;
       &RFC6151;
+      &RFC6979;
       &RFC7159;
       &RFC7252;
       &RFC7515;
@@ -2966,6 +3039,15 @@ COSE_KDF_Context = [
         <format target="https://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf" type="PDF"/>
       </reference>
 
+      <reference anchor="MAC">
+        <front>
+          <title>FIPS PUB 113: Computer Data Authentication</title>
+          <author initials="N" surname="NiST"/>
+          <date year="1985" month="May"/>
+        </front>
+        <format target="http://csrc.nist.gov/publications/fips/fips113/fips113.html" type="HTML"/>
+      </reference>
+      
       <reference anchor="DSS">
         <front>
           <title>Digital Signature Standard (DSS)</title>
