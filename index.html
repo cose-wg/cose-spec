@@ -485,6 +485,7 @@ ul.toc a:first-child {
 <link href="#rfc.section.9.2.1" rel="Chapter" title="9.2.1 Security Considerations"/>
 <link href="#rfc.section.10" rel="Chapter" title="10 Content Encryption Algorithms"/>
 <link href="#rfc.section.10.1" rel="Chapter" title="10.1 AES GCM"/>
+<link href="#rfc.section.10.1.1" rel="Chapter" title="10.1.1 Security Considerations"/>
 <link href="#rfc.section.10.2" rel="Chapter" title="10.2 AES CCM"/>
 <link href="#rfc.section.10.2.1" rel="Chapter" title="10.2.1 Security Considerations"/>
 <link href="#rfc.section.11" rel="Chapter" title="11 Key Derivation Functions (KDF)"/>
@@ -556,7 +557,7 @@ ul.toc a:first-child {
 
   <meta name="dct.creator" content="Schaad, J. and B. Campbell" />
   <meta name="dct.identifier" content="urn:ietf:id:draft-ietf-cose-msg-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2015-8-4" />
+  <meta name="dct.issued" scheme="ISO8601" content="2015-8-5" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  " />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  " />
 
@@ -580,12 +581,12 @@ ul.toc a:first-child {
   <td class="right">B. Campbell</td>
 </tr>
 <tr>
-  <td class="left">Expires: February 5, 2016</td>
+  <td class="left">Expires: February 6, 2016</td>
   <td class="right">Ping Identity</td>
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">August 4, 2015</td>
+  <td class="right">August 5, 2015</td>
 </tr>
 
     	
@@ -609,7 +610,7 @@ ul.toc a:first-child {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on February 5, 2016.</p>
+<p>This Internet-Draft will expire on February 6, 2016.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -653,7 +654,8 @@ ul.toc a:first-child {
 <ul><li>9.2.1.   <a href="#rfc.section.9.2.1">Security Considerations</a></li>
 </ul></ul><li>10.   <a href="#rfc.section.10">Content Encryption Algorithms</a></li>
 <ul><li>10.1.   <a href="#rfc.section.10.1">AES GCM</a></li>
-<li>10.2.   <a href="#rfc.section.10.2">AES CCM</a></li>
+<ul><li>10.1.1.   <a href="#rfc.section.10.1.1">Security Considerations</a></li>
+</ul><li>10.2.   <a href="#rfc.section.10.2">AES CCM</a></li>
 <ul><li>10.2.1.   <a href="#rfc.section.10.2.1">Security Considerations</a></li>
 </ul></ul><li>11.   <a href="#rfc.section.11">Key Derivation Functions (KDF)</a></li>
 <ul><li>11.1.   <a href="#rfc.section.11.1">HMAC-based Extract-and-Expand Key Derivation Function (HKDF)</a></li>
@@ -1282,7 +1284,7 @@ COSE_Key = {
     key_kty =&gt; tstr / int,
     ? key_ops =&gt; [+ (tstr / int) ],
     ? key_alg =&gt; tstr / int,
-    ? key_kid =&gt; tstr,
+    ? key_kid =&gt; bstr,
     * label =&gt; values
 }
 
@@ -1675,7 +1677,11 @@ valid, message content = Verification(message sent, key, signature)
 
 <p> </p>
 <h1 id="rfc.section.10"><a href="#rfc.section.10">10.</a> Content Encryption Algorithms</h1>
+<p/>
 <h1 id="rfc.section.10.1"><a href="#rfc.section.10.1">10.1.</a> AES GCM</h1>
+<p id="rfc.section.10.1.p.1">The GCM mode is is a generic authenticated encryption block cipher mode defined in <a href="#AES-GCM">[AES-GCM]</a>.  The GCM mode is combined with the AES block encryption algorithm to define a an AEAD cipher.  </p>
+<p id="rfc.section.10.1.p.2">The GCM mode is parameterized with by the size of the authentication tag.  The size of the authentication tag is limited to a small set of values.  For this document however, the size of the authentication tag is fixed at 128-bits.  </p>
+<p id="rfc.section.10.1.p.3">The set of algorithms defined in this document are in <a href="#table-AES-GCM">Table 9</a>.  </p>
 <div id="rfc.table.9"/>
 <div id="table-AES-GCM"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -1705,6 +1711,15 @@ valid, message content = Verification(message sent, key, signature)
     </tr>
   </tbody>
 </table>
+<h1 id="rfc.section.10.1.1"><a href="#rfc.section.10.1.1">10.1.1.</a> Security Considerations</h1>
+<p id="rfc.section.10.1.1.p.1">When using AES-CCM the following restrictions MUST be enforced: </p>
+
+<ul>
+  <li>The key and nonce pair MUST be unique for every message encrypted.  </li>
+  <li>The total amount of data encrypted MUST NOT exceed 2^39 &#8722; 256 bits .  An explicit check is required only in environments where it is expected that it might be exceeded.  </li>
+</ul>
+
+<p> </p>
 <h1 id="rfc.section.10.2"><a href="#rfc.section.10.2">10.2.</a> AES CCM</h1>
 <p id="rfc.section.10.2.p.1">Counter with CBC-MAC (CCM) is a generic authentication encryption block cipher mode defined in <a href="#RFC3610">[RFC3610]</a>.  The CCM mode is combined with the AES block encryption algorithm to define a commonly used content encryption algorithm used in constrainted devices.  </p>
 <p id="rfc.section.10.2.p.2">The CCM mode has two parameter choices.  The first choice is M, the size of the authentication field.  The choice of the value for M involves a trade-off between message expansion and the probably that an attacker can undetecably modify a message.  The second choice is L, the size of the length field.  This value requires a trade-off between the maximum message size and the size of the Nonce.  </p>
@@ -1824,18 +1839,19 @@ valid, message content = Verification(message sent, key, signature)
 <p><a href="#RFC3610">[RFC3610]</a> additionally calls out one other consideration of note.  It is possible to do a pre-computation attack against the algorithm in cases where the portions encryption content is highly predictable.  This reduces the security of the key size by half.  Ways to deal with this attack include adding a random portion to the nonce value and/or increasing the key size used.  Using a portion of the nonce for a random value will decrease the number of messages that a single key can be used for.  Increasing the key size may require more resources in the constrained device.  See sections 5 and 10 of <a href="#RFC3610">[RFC3610]</a> for more information.  </p>
 <h1 id="rfc.section.11"><a href="#rfc.section.11">11.</a> Key Derivation Functions (KDF)</h1>
 <h1 id="rfc.section.11.1"><a href="#rfc.section.11.1">11.1.</a> <a href="#HKDF" id="HKDF">HMAC-based Extract-and-Expand Key Derivation Function (HKDF)</a></h1>
-<p id="rfc.section.11.1.p.1">See <a href="#RFC5869">[RFC5869]</a>.  </p>
-<p id="rfc.section.11.1.p.2">Inputs: </p>
+<p id="rfc.section.11.1.p.1">The HKDF key derivation algorithm is defined in <a href="#RFC5869">[RFC5869]</a>.  </p>
+<p id="rfc.section.11.1.p.2">The HKDF algorithm is defined to take a number of parameters.  These parameters are: </p>
 
 <ul class="empty">
   <li>secret - a shared value that is secret.  Secrets may be either previously shared or derived from operations like a DH key agreement.  </li>
-  <li>salt - an optional public value that is used to change the generation process.  If specified, the salt is carried using the 'salt' algorithm parameter.  While <a href="#RFC5869">[RFC5869]</a> suggests that the length of the salt be the same as the length of the underlying hash value, any amount of salt will improve the security as different key values will be generated.  The 'salt' parameter is encoded as a binary string.  This parameter is protected by being included in the key computation and does not need to be separately authenticated.  </li>
+  <li>salt - an optional public value that is used to change the generation process.  If specified, the salt is carried using the 'salt' algorithm parameter.  While <a href="#RFC5869">[RFC5869]</a> suggests that the length of the salt be the same as the length of the underlying hash value, any amount of salt will improve the security as different key values will be generated.  A parameter to carry the salt is defined in <a href="#HKDF_Alg_Params">Table 12</a>.  This parameter is protected by being included in the key computation and does not need to be separately authenticated.  </li>
   <li>length - the number of bytes of output that need to be generated.  </li>
-  <li>context information </li>
+  <li>context information - Information that describes the context in which the resulting value will be used.  Making this information specific to the context that the material is going to be used ensures that the resulting material will always be unique.  </li>
   <li>hash function - The underlying hash function to be used in the HKDF algorithm.  The hash function is encoded into the HKDF algorithm selection.  </li>
 </ul>
 
 <p> </p>
+<p id="rfc.section.11.1.p.3">The algorithms defined in this document are found in <a href="#table-hkdf">Table 11</a> </p>
 <div id="rfc.table.11"/>
 <div id="table-hkdf"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -3144,7 +3160,7 @@ COSE_KDF_Context = [
   1: 2,
   2: h'a10101',
   3: {
-    -1: h'02d1f7e6f26c43d4868d87ce'
+    5: h'02d1f7e6f26c43d4868d87ce'
   },
   4: h'64f84d913ba60a76070a9a48f26e97e863e285295a44320878caceb076
 3a334806857c67',
@@ -3158,11 +3174,11 @@ COSE_KDF_Context = [
         {
           3: {
             1: "ECDH-ES",
-            5: h'6d65726961646f632e6272616e64796275636b406275636b
+            4: h'6d65726961646f632e6272616e64796275636b406275636b
 6c616e642e6578616d706c65',
-            4: {
-              1: 1,
-              -1: 4,
+            999: {
+              1: 2,
+              -1: 1,
               -2: h'b2add44368ea6d641f9ca9af308b4079aeb519f11e9b8
 a55a600b21233e86e68',
               -3: h'1a2cf118b9ee6895c8f415b686d4ca1cef362d4a7630a
@@ -3205,7 +3221,7 @@ a55a600b21233e86e68',
     {
       3: {
         1: -6,
-        5: h'6f75722d736563726574'
+        4: h'6f75722d736563726574'
       }
     }
   ]
@@ -3230,7 +3246,7 @@ a55a600b21233e86e68',
     {
       3: {
         1: "ECDH-SS",
-        5: h'6d65726961646f632e6272616e64796275636b406275636b6c61
+        4: h'6d65726961646f632e6272616e64796275636b406275636b6c61
 6e642e6578616d706c65',
         "spk": {
           "kid": "peregrin.took@tuckborough.example"
@@ -3261,7 +3277,7 @@ ec7d34b824f42d92bd06bd2c7f0271f0214e141fb779ae2856abf585a58368b01
     {
       3: {
         1: -5,
-        5: h'30313863306165352d346439622d343731622d626664362d6565
+        4: h'30313863306165352d346439622d343731622d626664362d6565
 66333134626337303337'
       },
       4: h'711ab0dc2fc4585dce27effa6781c8093eba906f227b6eb0'
@@ -3288,11 +3304,11 @@ ec7d34b824f42d92bd06bd2c7f0271f0214e141fb779ae2856abf585a58368b01
     {
       3: {
         1: "ECDH-ES+A128KW",
-        5: h'62696c626f2e62616767696e7340686f626269746f6e2e657861
+        4: h'62696c626f2e62616767696e7340686f626269746f6e2e657861
 6d706c65',
-        4: {
-          1: 1,
-          -1: 5,
+        999: {
+          1: 2,
+          -1: 3,
           -2: h'43b12669acac3fd27898ffba0bcd2e6c366d53bc4db71f909
 a759304acfb5e18cdc7ba0b13ff8c7636271a6924b1ac63c02688075b55ef2d61
 3574e7dc242f79c3',
@@ -3306,8 +3322,8 @@ a16bc09777434113'
     },
     {
       3: {
-        1: -2,
-        5: h'62696c626f2e62616767696e7340686f626269746f6e2e657861
+        1: -26,
+        4: h'62696c626f2e62616767696e7340686f626269746f6e2e657861
 6d706c65'
       },
       4: h'46c4f88069b650909a891e84013614cd58a3668f88fa18f3852940
@@ -3323,7 +3339,7 @@ b58'
     {
       3: {
         1: -5,
-        5: h'30313863306165352d346439622d343731622d626664362d6565
+        4: h'30313863306165352d346439622d343731622d626664362d6565
 66333134626337303337'
       },
       4: h'0b2c7cfce04e98276342d6476a7723c090dfdd15f9a518e7736549
@@ -3346,7 +3362,7 @@ e998370695e6d6a83b4ae507bb'
   1: 2,
   2: h'a10101',
   3: {
-    -1: h'c9cf4df2fe6c632bf7886413'
+    5: h'c9cf4df2fe6c632bf7886413'
   },
   4: h'45fce2814311024d3a479e7d3eed063850f3f0b9f3f948677e3ae9869b
 cf9ff4e1763812',
@@ -3354,11 +3370,11 @@ cf9ff4e1763812',
     {
       3: {
         1: "ECDH-ES",
-        5: h'6d65726961646f632e6272616e64796275636b406275636b6c61
+        4: h'6d65726961646f632e6272616e64796275636b406275636b6c61
 6e642e6578616d706c65',
-        4: {
-          1: 1,
-          -1: 4,
+        999: {
+          1: 2,
+          -1: 1,
           -2: h'98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf05
 4e1c7b4d91d6280',
           -3: h'f01400b089867804b8e9fc96c3932161f1934f4223069170d
@@ -3382,15 +3398,15 @@ cf9ff4e1763812',
   1: 2,
   2: h'a1010a',
   3: {
-    -1: h'89f52f65a1c580933b5261a7'
+    5: h'89f52f65a1c580933b5261a7'
   },
   4: h'7b9dcfa42c4e1d3182c402dc18ef8b5637de4fb62cf1dd156ea6e6e0',
   9: [
     {
       3: {
         1: "dir+kdf",
-        5: h'6f75722d736563726574',
-        -10: h'61616262636364646565666667676868'
+        4: h'6f75722d736563726574',
+        -20: h'61616262636364646565666667676868'
       }
     }
   ]
@@ -3410,17 +3426,17 @@ cf9ff4e1763812',
   4: h'546869732069732074686520636f6e74656e742e',
   5: [
     {
-      2: h'a20165505333383405581e62696c626f2e62616767696e7340686f
+      2: h'a20165505333383404581e62696c626f2e62616767696e7340686f
 626269746f6e2e6578616d706c65',
-      6: h'43f3d7045aa85f65af73c1aaf5f6af539b70eb31d08b731877956a
-5d6cacc23312909ba32e9ce3c7af3ba7a2fd1334de3ebeb4f218525773bf827d9
-0bbb3a7843b5224d1c032de0d0e838b61591b827d11e74a6064f8ef3e4f7ec96d
-0b484f1f9071ce6eff589ecb55c9c427b3fc414913eea4e22e78ebda896aad3a1
-68ec0d9962b39b5b656293b6e06854c2e7a4fd16b43ecbfd39475fdd895edbebc
-8726b24ff818683910c20a0285d466bb4c80c11314608dddd78fd39df928da0cd
-86799c799ae5d69c02a388f930aabfeed36d091829e7eb37abc01287605f9d4db
-86207ba2a8964832ad1e2cb8fc38fa79cfa8b48811071d9213adaa99d8bfc9b55
-a1e'
+      6: h'8e753489cf65c575d2cede0f8bdd338a6a009d87e5edc056d7d586
+df71dc27d360e33b2872ab0b8da4de6cb8fdb5f531af4e0f17a71246c8d2179da
+c75857ad1f1f9d7c180679901dfce4aafcb0a1e67769edcda983c1bc2374ae80c
+a8db59a9918cb8c9ded8637b1a09465f3db29c73ce899a6df2095fdf0e55c216e
+88cad37a0db775daa9de42fc478f6847b7ccdf2cfd546c3965ba87e1c41d663d0
+7e87ce088ec8c2365d75a5401501d03cdbd9da542a78326a65c2bb846dff16f00
+fd5954626530dd533db0318f3e688a41d76b7fa3ea44fa706f5b1f110ca15c16c
+91be525d81b600ebfeb12f0d00b6c96cdc9bf3cc2d535f295cf78845f3cc46387
+489'
     }
   ]
 }</pre>
@@ -3439,32 +3455,32 @@ a1e'
   4: h'546869732069732074686520636f6e74656e742e',
   5: [
     {
-      2: h'a10129',
+      2: h'a1013819',
       3: {
-        5: h'62696c626f2e62616767696e7340686f626269746f6e2e657861
+        4: h'62696c626f2e62616767696e7340686f626269746f6e2e657861
 6d706c65'
       },
-      6: h'9aae5ac45e0eff0466d113878cd95a9c430d148f01f1fe93360df7
-14efc5a5131a4a56311788bf33b54853ac216a7e95467cc70b3be3c9b3c224dfd
-4029c20ff46f24457ec0d5f3380e41a9da0dae8853e37a2791ba97289c157768c
-8da7bea7126ed60f64f5d634d81186f64bb32a6e270ae895c735ca27df809e4fd
-b4ef4d0409730ff39f32c4e26612122354fc77f842cfb057340f9558a1531655b
-3060422610a82440a210f430d0b574ab518a28c6e370cf465d7bf74e9506f70f4
-0f5119a9a3f144e0b3af7c638b5ed80ccd3ce60b185fca5aab2301041a0adc365
-bfaabb5df087e7db1be912fc0bc33518751b0795bbe5bbe6cd70505e96eed1abc
-204'
+      6: h'2f5e3809c370d409ffb7600b66b15bd597b10ca326da04fdaeedb5
+bfc3cdfd289593347bb06fe1fc50f6eed18588d90c270c9dc9613be89b4e043f0
+4c1845d1b7ff10c49ebe8e5f373ab3d5b058117b4b5b9a08c7f9b0ae3f5f0debf
+03a5b917b5270ccb211765e961b6476542ceaab36d4f994e313f1ffc092ee83ad
+bf51c2c9ea06ec0be349f453ef0a64c3831c5709fe8627de1bf47b586b941e0d1
+dd8e261c71be0aa28ea288835c4d62e4b56b24eed369483eb3bf8abea00cfc873
+8afd86698d7076ba2f6fb1f59936c60668d9d43acef17d1b5eae6bccc9896b0d4
+d4ffbc41e2c25011e15a0093c76b9b7d68655216835d467ce4188c107a1093855
+7ea'
     },
     {
       3: {
         1: -9,
-        5: h'62696c626f2e62616767696e7340686f626269746f6e2e657861
+        4: h'62696c626f2e62616767696e7340686f626269746f6e2e657861
 6d706c65'
       },
-      6: h'00e82790d7d33e4c952fe02d634dd553691936dfdc11e5c9f19235
-7adb9900db9368d9d184cedf91f366889c79a0f75d55814048187e826b61ecd11
-1c2a9b057c709012ee138338c08bbd2b16fe6e2890364bff2b0e389ec5fa5e5ef
-742401ae78135c61a69bc19f8bba7a58e06370a642d73f56e2242ed4fbce00109
-96382fea9b19a23'
+      6: h'458b01ff0ed0e714af31a76668c3a6abb4d14d9c55faa3a771226c
+7a7a75f254ac8cbd2d9070bdcaceb7137f76838628e8b6679e9987e28c581ec63
+fb40277d939012052b8f15bacf451294f3bb318dd1f707b53107afdf911825cd6
+48dc7fa639c27d48848cffee046ae16d95682051b5b14243ea44dea0b622eaa4b
+19b80a5ad0fc0'
     }
   ]
 }</pre>
@@ -3474,98 +3490,61 @@ bfaabb5df087e7db1be912fc0bc33518751b0795bbe5bbe6cd70505e96eed1abc
 <p id="rfc.section.C.4.1.p.2">In order the keys are: </p>
 
 <ul>
-  <li>An RSA key with a kid of "bilbo.baggins@hobbiton.example"</li>
-  <li>An EC key with a kid of "bilbo.baggins@hobbiton.example"</li>
   <li>An EC key with a kid of "meriadoc.brandybuck@buckland.example"</li>
   <li>An EC key with a kid of "peregrin.took@tuckborough.example"</li>
+  <li>An EC key with a kid of "bilbo.baggins@hobbiton.example"</li>
+  <li>An RSA key with a kid of "bilbo.baggins@hobbiton.example"</li>
 </ul>
 
 <p> </p>
 <pre>
 [
   {
-    1: 3,
-    2: "bilbo.baggins@hobbiton.example",
-    4: [
-      1
-    ],
-    -1: "n4EPtAOCc9AlkeQHPzHStgAbgs7bTZLwUBZdR8_KuKPEHLd4rHVTeT-O
--XV2jRojdNhxJWTDvNd7nqQ0VEiZQHz_AJmSCpMaJMRBSFKrKb2wqVwGU_NsYOYL-
-QtiWN2lbzcEe6XC0dApr5ydQLrHqkHHig3RBordaZ6Aj-oBHqFEHYpPe7Tpe-OfVf
-Hd1E6cS6M1FZcD1NNLYD5lFHpPI9bTwJlsde3uhGqC0ZCuEHg8lhzwOHrtIQbS0FV
-bb9k3-tVTU4fg_3L_vniUFAKwuCLqKnS2BYwdq_mzSnbLY7h_qixoR7jig3__kRhu
-axwUkRz5iaiQkqgc5gHdrNP5zw",
-    -2: "AQAB",
-    -3: "bWUC9B-EFRIo8kpGfh0ZuyGPvMNKvYWNtB_ikiH9k20eT-O1q_I78eiZ
-kpXxXQ0UTEs2LsNRS-8uJbvQ-A1irkwMSMkK1J3XTGgdrhCku9gRldY7sNA_AKZGh
--Q661_42rINLRCe8W-nZ34ui_qOfkLnK9QWDDqpaIsA-bMwWWSDFu2MUBYwkHTMEz
-LYGqOe04noqeq1hExBTHBOBdkMXiuFhUq1BU6l-DqEiWxqg82sXt2h-LMnT3046AO
-YJoRioz75tSUQfGCshWTBnP5uDjd18kKhyv07lhfSJdrPdM5Plyl21hsFf4L_mHCu
-oFau7gdsPfHPxxjVOcOpBrQzwQ",
-    -4: "3Slxg_DwTXJcb6095RoXygQCAZ5RnAvZlno1yhHtnUex_fp7AZ_9nRaO
-7HX_-SFfGQeutao2TDjDAWU4Vupk8rw9JR0AzZ0N2fvuIAmr_WCsmGpeNqQnev1T7
-IyEsnh8UMt-n5CafhkikzhEsrmndH6LxOrvRJlsPp6Zv8bUq0k",
-    -5: "uKE2dh-cTf6ERF4k4e_jy78GfPYUIaUyoSSJuBzp3Cubk3OCqs6grT8b
-R_cu0Dm1MZwWmtdqDyI95HrUeq3MP15vMMON8lHTeZu2lmKvwqW7anV5UzhM1iZ7z
-4yMkuUwFWoBvyY898EXvRD-hdqRxHlSqAZ192zB3pVFJ0s7pFc",
-    -6: "B8PVvXkvJrj2L-GYQ7v3y9r6Kw5g9SahXBwsWUzp19TVlgI-YV85q1NI
-b1rxQtD-IsXXR3-TanevuRPRt5OBOdiMGQp8pbt26gljYfKU_E9xn-RULHz0-ed9E
-9gXLKD4VGngpz-PfQ_q29pk5xWHoJp009Qf1HvChixRX59ehik",
-    -7: "CLDmDGduhylc9o7r84rEUVn7pzQ6PF83Y-iBZx5NT-TpnOZKF1pErAMV
-eKzFEl41DlHHqqBLSM0W1sOFbwTxYWZDm6sI6og5iTbwQGIC3gnJKbi_7k_vJgGHw
-HxgPaX2PnvP-zyEkDERuf-ry4c_Z11Cq9AqC2yeL6kdKT1cYF8",
-    -8: "3PiqvXQN0zwMeE-sBvZgi289XP9XCQF3VWqPzMKnIgQp7_Tugo6-NZBK
-CQsMf3HaEGBjTVJs_jcK8-TRXvaKe-7ZMaQj8VfBdYkssbu0NKDDhjJ-GtiseaDVW
-t7dcH0cfwxgFUHpQh7FoCrjFJ6h6ZEpMF6xmujs4qMpPz8aaI4"
+    -1: 1,
+    -2: h'65eda5a12577c2bae829437fe338701a10aaa375e1bb5b5de108de4
+39c08551d',
+    -3: h'1e52ed75701163f7f9e40ddf9f341b3dc9ba860af7e0ca7ca7e9eec
+d0084d19c',
+    1: 2,
+    2: h'6d65726961646f632e6272616e64796275636b406275636b6c616e64
+2e6578616d706c65'
   },
   {
+    -1: 1,
+    -2: h'98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b
+4d91d6280',
+    -3: h'f01400b089867804b8e9fc96c3932161f1934f4223069170d924b7e
+03bf822bb',
     1: 2,
-    2: "bilbo.baggins@hobbiton.example",
-    4: [
-      1
-    ],
+    2: h'706572656772696e2e746f6f6b407475636b626f726f7567682e6578
+616d706c65'
+  },
+  {
     -1: 3,
-    -2: "AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9A5
-RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt",
-    -3: "AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVySs
-UdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1",
-    -4: "AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zbKi
-pQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt"
-  },
-  {
-    1: 4,
-    2: "our-secret",
-    4: [
-      3
-    ],
-    -1: "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYg"
-  },
-  {
-    1: 4,
-    2: "018c0ae5-4d9b-471b-bfd6-eef314bc7037",
-    4: [
-      3
-    ],
-    -1: "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYg"
-  },
-  {
+    -2: h'0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737b
+f5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620
+085e5c8f42ad',
+    -3: h'01dca6947bce88bc5790485ac97427342bc35f887d86d65a089377e
+247e60baa55e4e8501e2ada5724ac51d6909008033ebc10ac999b9d7f5cc2519f
+3fe1ea1d9475',
     1: 2,
-    2: "meriadoc.brandybuck@buckland.example",
-    -1: 1,
-    -2: "Ze2loSV3wrroKUN_4zhwGhCqo3Xhu1td4QjeQ5wIVR0",
-    -3: "HlLtdXARY_f55A3fnzQbPcm6hgr34Mp8p-nuzQCE0Zw",
-    -4: "r_kHyZ-a06rmxM3yESK84r1otSg-aQcVStkRhA-iCM8"
+    2: h'62696c626f2e62616767696e7340686f626269746f6e2e6578616d70
+6c65'
   },
   {
-    1: 4,
-    -1: 1,
-    4: [
-      3
-    ],
-    2: "peregrin.took@tuckborough.example",
-    -2: "mPUKT_bAWGHIhg0TpjjqVsP1rXWQu_vwVOHHtNkdYoA",
-    -3: "8BQAsImGeAS46fyWw5MhYfGTT0IjBpFw2SS34Dv4Irs",
-    -4: "AtH35vJsQ9SGjYfOsjUxYXQKrPH3FjZHmEtSKoSN8cM"
+    -2: h'9f810fb4038273d02591e4073f31d2b6001b82cedb4d92f050165d4
+7cfcab8a3c41cb778ac7553793f8ef975768d1a2374d8712564c3bcd77b9ea434
+544899407cff0099920a931a24c4414852ab29bdb0a95c0653f36c60e60bf90b6
+258dda56f37047ba5c2d1d029af9c9d40bac7aa41c78a0dd1068add699e808fea
+011ea1441d8a4f7bb4e97be39f55f1ddd44e9c4ba335159703d4d34b603e65147
+a4f23d6d3c0996c75edee846a82d190ae10783c961cf0387aed2106d2d0555b6f
+d937fad5535387e0ff72ffbe78941402b0b822ea2a74b6058c1dabf9b34a76cb6
+3b87faa2c6847b8e2837fff91186e6b1c14911cf989a89092a81ce601ddacd3f9
+cf',
+    -1: h'010001',
+    1: 3,
+    2: h'62696c626f2e62616767696e7340686f626269746f6e2e6578616d70
+6c65'
   }
 ]</pre>
 <h1 id="rfc.appendix.C.4.2"><a href="#rfc.appendix.C.4.2">C.4.2.</a> Private Keys</h1>
@@ -3573,60 +3552,117 @@ pQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt"
 <p id="rfc.section.C.4.2.p.2">In order the keys are: </p>
 
 <ul>
-  <li>An RSA key with a kid of "bilbo.baggins@hobbiton.example"</li>
-  <li>An EC key with a kid of "bilbo.baggins@hobbiton.example"</li>
-  <li>A shared-secret key with a kid of "our-secret"</li>
-  <li>A shared-secret key with a kid of "018c0ae5-4d9b-471b-bfd6-eef314bc7037"</li>
   <li>An EC key with a kid of "meriadoc.brandybuck@buckland.example"</li>
+  <li>A shared-secret key with a kid of "our-secret"</li>
   <li>An EC key with a kid of "peregrin.took@tuckborough.example"</li>
+  <li>A shared-secret key with a kid of "018c0ae5-4d9b-471b-bfd6-eef314bc7037"</li>
+  <li>An EC key with a kid of "bilbo.baggins@hobbiton.example"</li>
+  <li>An RSA key with a kid of "bilbo.baggins@hobbiton.example"</li>
 </ul>
 
 <p> </p>
 <pre>
 [
   {
-    1: 3,
-    2: "bilbo.baggins@hobbiton.example",
-    4: [
-      1
-    ],
-    -1: "n4EPtAOCc9AlkeQHPzHStgAbgs7bTZLwUBZdR8_KuKPEHLd4rHVTeT-O
--XV2jRojdNhxJWTDvNd7nqQ0VEiZQHz_AJmSCpMaJMRBSFKrKb2wqVwGU_NsYOYL-
-QtiWN2lbzcEe6XC0dApr5ydQLrHqkHHig3RBordaZ6Aj-oBHqFEHYpPe7Tpe-OfVf
-Hd1E6cS6M1FZcD1NNLYD5lFHpPI9bTwJlsde3uhGqC0ZCuEHg8lhzwOHrtIQbS0FV
-bb9k3-tVTU4fg_3L_vniUFAKwuCLqKnS2BYwdq_mzSnbLY7h_qixoR7jig3__kRhu
-axwUkRz5iaiQkqgc5gHdrNP5zw",
-    -2: "AQAB"
-  },
-  {
     1: 2,
-    2: "bilbo.baggins@hobbiton.example",
-    4: [
-      1
-    ],
-    -1: 3,
-    -2: "AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9A5
-RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt",
-    -3: "AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVySs
-UdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1"
-  },
-  {
-    1: 2,
-    2: "meriadoc.brandybuck@buckland.example",
+    2: h'6d65726961646f632e6272616e64796275636b406275636b6c616e64
+2e6578616d706c65',
     -1: 1,
-    -2: "Ze2loSV3wrroKUN_4zhwGhCqo3Xhu1td4QjeQ5wIVR0",
-    -3: "HlLtdXARY_f55A3fnzQbPcm6hgr34Mp8p-nuzQCE0Zw"
+    -2: h'65eda5a12577c2bae829437fe338701a10aaa375e1bb5b5de108de4
+39c08551d',
+    -3: h'1e52ed75701163f7f9e40ddf9f341b3dc9ba860af7e0ca7ca7e9eec
+d0084d19c',
+    -4: h'aff907c99f9ad3aae6c4cdf21122bce2bd68b5283e6907154ad9118
+40fa208cf'
   },
   {
     1: 4,
+    2: h'6f75722d736563726574',
+    -1: h'849b57219dae48de646d07dbb533566e976686457c1491be3a76dce
+a6c427188'
+  },
+  {
+    1: 2,
     -1: 1,
-    4: [
-      3
-    ],
-    2: "peregrin.took@tuckborough.example",
-    -2: "mPUKT_bAWGHIhg0TpjjqVsP1rXWQu_vwVOHHtNkdYoA",
-    -3: "8BQAsImGeAS46fyWw5MhYfGTT0IjBpFw2SS34Dv4Irs",
-    -4: "AtH35vJsQ9SGjYfOsjUxYXQKrPH3FjZHmEtSKoSN8cM"
+    2: h'706572656772696e2e746f6f6b407475636b626f726f7567682e6578
+616d706c65',
+    -2: h'98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b
+4d91d6280',
+    -3: h'f01400b089867804b8e9fc96c3932161f1934f4223069170d924b7e
+03bf822bb',
+    -4: h'02d1f7e6f26c43d4868d87ceb2353161740aacf1f7163647984b522
+a848df1c3'
+  },
+  {
+    1: 4,
+    2: h'30313863306165352d346439622d343731622d626664362d65656633
+3134626337303337',
+    -1: h'849b57219dae48de646d07dbb533566e976686457c1491be3a76dce
+a6c427188'
+  },
+  {
+    1: 2,
+    2: h'62696c626f2e62616767696e7340686f626269746f6e2e6578616d70
+6c65',
+    -1: 3,
+    -2: h'0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737b
+f5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620
+085e5c8f42ad',
+    -3: h'01dca6947bce88bc5790485ac97427342bc35f887d86d65a089377e
+247e60baa55e4e8501e2ada5724ac51d6909008033ebc10ac999b9d7f5cc2519f
+3fe1ea1d9475',
+    -4: h'00085138ddabf5ca975f5860f91a08e91d6d5f9a76ad4018766a476
+680b55cd339e8ab6c72b5facdb2a2a50ac25bd086647dd3e2e6e99e84ca2c3609
+fdf177feb26d'
+  },
+  {
+    1: 3,
+    2: h'62696c626f2e62616767696e7340686f626269746f6e2e6578616d70
+6c65',
+    -2: h'9f810fb4038273d02591e4073f31d2b6001b82cedb4d92f050165d4
+7cfcab8a3c41cb778ac7553793f8ef975768d1a2374d8712564c3bcd77b9ea434
+544899407cff0099920a931a24c4414852ab29bdb0a95c0653f36c60e60bf90b6
+258dda56f37047ba5c2d1d029af9c9d40bac7aa41c78a0dd1068add699e808fea
+011ea1441d8a4f7bb4e97be39f55f1ddd44e9c4ba335159703d4d34b603e65147
+a4f23d6d3c0996c75edee846a82d190ae10783c961cf0387aed2106d2d0555b6f
+d937fad5535387e0ff72ffbe78941402b0b822ea2a74b6058c1dabf9b34a76cb6
+3b87faa2c6847b8e2837fff91186e6b1c14911cf989a89092a81ce601ddacd3f9
+cf',
+    -1: h'010001',
+    -3: h'6d6502f41f84151228f24a467e1d19bb218fbcc34abd858db41fe29
+221fd936d1e4fe3b5abf23bf1e8999295f15d0d144c4b362ec3514bef2e25bbd0
+f80d62ae4c0c48c90ad49dd74c681dae10a4bbd81195d63bb0d03f00a64687e43
+aeb5ff8dab20d2d109ef16fa7677e2e8bfa8e7e42e72bd4160c3aa9688b00f9b3
+3059648316ed8c5016309074cc1332d81aa39ed389e8a9eab5844c414c704e05d
+90c5e2b85854ab5054ea5f83a84896c6a83cdac5edda1f8b3274f7d38e8039826
+8462a33ef9b525107c60ac8564c19cfe6e0e3775f242a1cafd3b9617d225dacf7
+4ce4f972976d61b057f82ff9870aea056aeee076c3df1cfc718d539c3a906b433
+c1',
+    -4: h'dd297183f0f04d725c6fad3de51a17ca0402019e519c0bd9967a35c
+a11ed9d47b1fdfa7b019ffd9d168eec75fff9215f1907aeb5aa364c38c3016538
+56ea64f2bc3d251d00cd9d0dd9fbee2009abfd60ac986a5e36a4277afd53ec8c8
+4b2787c50cb7e9f909a7e1922933844b2b9a7747e8bc4eaef44996c3e9e99bfc6
+d4ab49',
+    -5: h'b8a136761f9c4dfe84445e24e1efe3cbbf067cf61421a532a12489b
+81ce9dc2b9b937382aacea0ad3f1b47f72ed039b5319c169ad76a0f223de47ad4
+7aadcc3f5e6f30c38df251d3799bb69662afc2a5bb6a757953384cd6267bcf8c8
+c92e530156a01bf263cf7c117bd10fe85da91c47952a80675f76cc1de9545274b
+3ba457',
+    -6: h'07c3d5bd792f26b8f62fe19843bbf7cbdafa2b0e60f526a15c1c2c5
+94ce9d7d4d596023e615f39ab53486f5af142d0fe22c5d7477f936a77afb913d1
+b7938139d88c190a7ca5bb76ea096361f294fc4f719fe4542c7cf4f9e77d13d81
+72ca0f85469e0a73f8f7d0feadbda64e71587a09a74d3d41fd47bc2862c515f9f
+5e8629',
+    -7: h'08b0e60c676e87295cf68eebf38ac45159fba7343a3c5f3763e8816
+71e4d4fe4e99ce64a175a44ac031578acc5125e350e51c7aaa04b48cd16d6c385
+6f04f16166439bab08ea88398936f0406202de09c929b8bfee4fef260187c07c6
+03da5f63e7bcffb3c84903111b9ffabcb873f675d42abd02a0b6c9e2fa91d293d
+5c605f',
+    -8: h'dcf8aabd740dd33c0c784fac06f6608b6f3d5cff57090177556a8fc
+cc2a7220429eff4ee828ebe35904a090b0c7f71da1060634d526cfe370af3e4d1
+5ef68a7beed931a423f157c175892cb1bbb434a0c386327e1ad8ac79a0d55aded
+d707d1c7f0c601541e9421ec5a02ae3149ea1e99129305eb19ae8ece2a3293f3f
+1a688e'
   }
 ]</pre>
 <h1 id="rfc.appendix.D"><a href="#rfc.appendix.D">Appendix D.</a> <a href="#Header-Algorithm-Table" id="Header-Algorithm-Table">COSE Header Algorithm Label Table</a></h1>
