@@ -40,8 +40,8 @@
 <!ENTITY Mac-04 SYSTEM "includes/Mac-04.xml">
 <!ENTITY Sig-01 SYSTEM "includes/Sig-01.xml">
 <!ENTITY Sig-02 SYSTEM "includes/Sig-02.xml">
-<!ENTITY PubKeys SYSTEM "includes/private-keys.xml">
-<!ENTITY PrivKeys SYSTEM "includes/public-keys.xml">
+<!ENTITY PrivKeys SYSTEM "includes/private-keyset.xml">
+<!ENTITY PubKeys SYSTEM "includes/public-keyset.xml">
 
 ]>
 
@@ -1076,7 +1076,7 @@ COSE_Key = {
     key_kty => tstr / int,
     ? key_ops => [+ (tstr / int) ],
     ? key_alg => tstr / int,
-    ? key_kid => tstr,
+    ? key_kid => bstr,
     * label => values
 }
 
@@ -1476,7 +1476,26 @@ valid, message content = Verification(message sent, key, signature)
     </section>
 
     <section title="Content Encryption Algorithms">
+      <t>
+        
+      </t>
+      
       <section title="AES GCM">
+        <t>
+          The GCM mode is is a generic authenticated encryption block cipher mode defined in <xref target="AES-GCM"/>.
+          The GCM mode is combined with the AES block encryption algorithm to define a an AEAD cipher.
+        </t>
+
+        <t>
+          The GCM mode is parameterized with by the size of the authentication tag.
+          The size of the authentication tag is limited to a small set of values.
+          For this document however, the size of the authentication tag is fixed at 128-bits.
+        </t>
+
+        <t>
+          The set of algorithms defined in this document are in <xref target="table-AES-GCM"/>.
+        </t>
+        
         <texttable title="Algorithm Value for AES-GCM" anchor="table-AES-GCM">
           <ttcol align='left'>name</ttcol>
           <ttcol align='left'>value</ttcol>
@@ -1485,7 +1504,22 @@ valid, message content = Verification(message sent, key, signature)
           <c>A192GCM</c>        <c>2</c>        <c>AES-GCM mode w/ 192-bit key</c>
           <c>A256GCM</c>        <c>3</c>        <c>AES-GCM mode w/ 256-bit key</c>
         </texttable>
-        
+
+        <section title="Security Considerations">
+          <t>
+            When using AES-CCM the following restrictions MUST be enforced:
+            <list style="symbols">
+              <t>
+                The key and nonce pair MUST be unique for every message encrypted.
+              </t>
+              <t>
+                The total amount of data encrypted MUST NOT exceed 2^39 − 256 bits .
+                An explicit check is required only in environments where it is expected that it might be exceeded.
+              </t>
+            </list>
+          </t>
+
+        </section>
       </section>
       
       <section title="AES CCM">
@@ -1603,12 +1637,13 @@ valid, message content = Verification(message sent, key, signature)
 
       <section title="HMAC-based Extract-and-Expand Key Derivation Function (HKDF)" anchor="HKDF">
         <t> 
-          
-          See <xref target="RFC5869"/>.
+          The HKDF key derivation algorithm is defined in <xref target="RFC5869"/>.
         </t>
 
         <t>
-          Inputs:
+          The HKDF algorithm is defined to take a number of parameters.
+          These parameters are:
+
           <list style="none">
             <t>
               secret - a shared value that is secret. 
@@ -1619,7 +1654,7 @@ valid, message content = Verification(message sent, key, signature)
               salt - an optional public value that is used to change the generation process.
               If specified, the salt is carried using the 'salt' algorithm parameter.
               While <xref target="RFC5869"/> suggests that the length of the salt be the same as the length of the underlying hash value, any amount of salt will improve the security as different key values will be generated.
-              The 'salt' parameter is encoded as a binary string.
+              A parameter to carry the salt is defined in <xref target="HKDF_Alg_Params"/>.
               This parameter is protected by being included in the key computation and does not need to be separately authenticated.
             </t>
 
@@ -1628,7 +1663,8 @@ valid, message content = Verification(message sent, key, signature)
             </t>
 
             <t>
-              context information
+              context information - Information that describes the context in which the resulting value will be used.
+              Making this information specific to the context that the material is going to be used ensures that the resulting material will always be unique.
             </t>
 
             <t>
@@ -1637,6 +1673,10 @@ valid, message content = Verification(message sent, key, signature)
             </t>
 
           </list>
+        </t>
+
+        <t>
+          The algorithms defined in this document are found in <xref target="table-hkdf"/>
         </t>
 
         <texttable title="HKDF algorithms" anchor="table-hkdf">
@@ -3402,10 +3442,10 @@ COSE_KDF_Context = [
           <t>
             In order the keys are:
             <list style="symbols">
-              <t>An RSA key with a kid of "bilbo.baggins@hobbiton.example"</t>
-              <t>An EC key with a kid of "bilbo.baggins@hobbiton.example"</t>
               <t>An EC key with a kid of "meriadoc.brandybuck@buckland.example"</t>
               <t>An EC key with a kid of "peregrin.took@tuckborough.example"</t>
+              <t>An EC key with a kid of "bilbo.baggins@hobbiton.example"</t>
+              <t>An RSA key with a kid of "bilbo.baggins@hobbiton.example"</t>
             </list>
           </t>
           
@@ -3422,12 +3462,12 @@ COSE_KDF_Context = [
           <t>
             In order the keys are:
             <list style="symbols">
-              <t>An RSA key with a kid of "bilbo.baggins@hobbiton.example"</t>
-              <t>An EC key with a kid of "bilbo.baggins@hobbiton.example"</t>
-              <t>A shared-secret key with a kid of "our-secret"</t>
-              <t>A shared-secret key with a kid of "018c0ae5-4d9b-471b-bfd6-eef314bc7037"</t>
               <t>An EC key with a kid of "meriadoc.brandybuck@buckland.example"</t>
+              <t>A shared-secret key with a kid of "our-secret"</t>
               <t>An EC key with a kid of "peregrin.took@tuckborough.example"</t>
+              <t>A shared-secret key with a kid of "018c0ae5-4d9b-471b-bfd6-eef314bc7037"</t>
+              <t>An EC key with a kid of "bilbo.baggins@hobbiton.example"</t>
+              <t>An RSA key with a kid of "bilbo.baggins@hobbiton.example"</t>
             </list>
           </t>
 
