@@ -26,6 +26,7 @@
   <!ENTITY RFC7516 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7516.xml" >
   <!ENTITY RFC7517 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7517.xml" >
   <!ENTITY RFC7518 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7518.xml" >
+  <!ENTITY RFC7539 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7539.xml" >
 
   <!ENTITY CDDL SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.greevenbosch-appsawg-cbor-cddl.xml" >
   <!ENTITY CBCMAC SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.mcgrew-aead-aes-cbc-hmac-sha2.xml" >
@@ -1604,11 +1605,6 @@ valid, message content = Verification(message sent, key, signature)
           <c>AES-CCM-64-128-256</c>       <c>33</c>    <c>64</c>       <c>128</c>      <c>256</c>      <c>AES-CCM mode 256-bit key, 128-bit tag, 7-byte nonce</c>
         </texttable>
 
-        <t>
-          M00TODO: Make a determination of which ones get 1-, 2- or 3-byte identifiers.
-          I.e. which ones are going to be popular.
-        </t>
-
         <section title="Security Considerations">
           <t>
             When using AES-CCM the following restrictions MUST be enforced:
@@ -1636,6 +1632,34 @@ valid, message content = Verification(message sent, key, signature)
           
         </section>
       </section>
+
+      <section title="ChaCha20 and Poly1305">
+        <t>
+          ChaCha20 and Poly1305 combined together is a new AEAD mode that is defined in <xref target="RFC7539"/>.
+          This is a new mode defined to be a cipher which is not AES and thus would not suffer from any future weaknesses found in AES.
+          These cryptographic functions are designed to be fast in software only implementations.
+        </t>
+
+        <t>
+          The ChaCha20/Poly1305 AEAD construction defined in <xref target="RFC7539"/> has no parameterization.
+          It takes a 256-bit key and an a 96-bit nonce as well as the plain text and additional data as inputs and produces the cipher text as an option.
+          We define one algorithm identifier for this algorithm in <xref target="Table-CHACHA"/>.
+        </t>
+
+        <texttable title="Algorithm Value for AES-GCM" anchor="Table-CHACHA">
+          <ttcol align='left'>name</ttcol>
+          <ttcol align='left'>value</ttcol>
+          <ttcol align='left'>description</ttcol>
+          <c>ChaCha20/Poly1305</c>        <c>11</c>        <c>ChaCha20/Poly1305 w/ 256-bit key</c>
+        </texttable>
+        
+        <section title="Security Considerations">
+          <t>
+            The pair of key, nonce MUST be unique for every invocation of the algorithm.
+            Nonce counters are considered to be an acceptable way of ensuring that they are unique.
+          </t>
+        </section>
+      </section>
     </section>
 
     <section title="Key Derivation Functions (KDF)">
@@ -1646,12 +1670,12 @@ valid, message content = Verification(message sent, key, signature)
         </t>
 
         <t>
-          The HKDF algorithm is defined to take a number of parameters.
-          These parameters are:
+          The HKDF algorithm is defined to take a number of inputs
+          These inputs are:
 
           <list style="none">
             <t>
-              secret - a shared value that is secret. 
+              secret - a shared value that is secret.
               Secrets may be either previously shared or derived from operations like a DH key agreement.
             </t>
 
@@ -1670,6 +1694,7 @@ valid, message content = Verification(message sent, key, signature)
             <t>
               context information - Information that describes the context in which the resulting value will be used.
               Making this information specific to the context that the material is going to be used ensures that the resulting material will always be unique.
+              The context structure used is encoded into the algorithm identifier.
             </t>
 
             <t>
@@ -1681,15 +1706,26 @@ valid, message content = Verification(message sent, key, signature)
         </t>
 
         <t>
+          HKDF is defined to use HMAC as the underlying PRF.
+          However, it is possible to use other functions in the same construct to provide a different KDF function that may be more appropriate in the constrained world.
+          Specifically, one can use AES-CBC-MAC as the PRF for the expand step, but not for the extract step.
+          When using a good random shared secret of the correct length, the extract step can be skipped.
+          The extract cannot be skipped if the secret is not uniformly random, for example if it is the result of a ECDH key agreement step.
+        </t>
+
+        <t>
           The algorithms defined in this document are found in <xref target="table-hkdf"/>
         </t>
 
         <texttable title="HKDF algorithms" anchor="table-hkdf">
           <ttcol>name</ttcol>
           <ttcol>hash</ttcol>
+          <ttcol>Skip extract</ttcol>
           <ttcol>context</ttcol>
-          <c>HKDF-256</c>       <c>SHA-256</c>  <c>XXX</c>
-          <c>HKDF-512</c>       <c>SHA-512</c>  <c>XXX</c>
+          <c>HKDF SHA-256</c>       <c>SHA-256</c>      <c>no</c>       <c>XXX</c>
+          <c>HKDF SHA-512</c>       <c>SHA-512</c>      <c>no</c>       <c>XXX</c>
+          <c>HKDF AES-MAC-128</c>   <c>AES-CBC-128</c>  <c>yes</c>      <c>HKDF using AES-MAC as the PRF w/ 128-bit key</c>
+          <c>HKDF AES-MAC-256</c>   <c>AES-CBC-128</c>  <c>yes</c>      <c>HKDF using AES-MAC as the PRF w/ 256-bit key</c>
         </texttable>
 
         <texttable title="HKDF Algorithm Parameters" anchor="HKDF_Alg_Params">
@@ -1699,7 +1735,6 @@ valid, message content = Verification(message sent, key, signature)
           <ttcol>description</ttcol>
           <c>salt</c>   <c>-20</c>      <c>bstr</c>     <c>Random salt</c>
         </texttable>
-        
 
       </section>
 
@@ -1715,6 +1750,8 @@ valid, message content = Verification(message sent, key, signature)
           The context information structure refers to PartyU and PartyV as the two parties which are doing the key derivation.
           Unless the application protocol defines differently, we assign PartyU to the entity that is creating the message and PartyV to the entity that is receiving the message.
           This is because we are assuming a set of stand alone store and forward messaging processes.
+          In <xref target="SP800-56A"/>, PartyU is the initiator and PartyV is the responder.
+          The specification is written with the idea of on-line protocols rather than store and forward protocols as the main consumer.
         </t>
 
         <t>
@@ -1723,7 +1760,16 @@ valid, message content = Verification(message sent, key, signature)
         </t>
 
         <t>
+          Using the PartyU and PartyV fields is the easiest way to get different keys in each direction.
+          The use of a transaction identifier, either in one of the supplemental fields or as the salt if one is using HKDF, ensures that a unique key is generated for each set of transactions.
+          Combining nonce fields with the transaction identifier provides a method so that a different key is used for each message in each direction.
+        </t>
+
+        
+
+        <t>
           We encode the context specific information using a CBOR array type.
+          For the fields that we define an algorithm parameter, the details of the parameters can be found in <xref target="KDF_Context_Alg_Params"/>.
           The fields in the array are:
 
           <list style="hanging">
@@ -1731,7 +1777,7 @@ valid, message content = Verification(message sent, key, signature)
               This field indicates the algorithm for which the key material will be used.
               This field is required to be present and is a copy of the algorithm identifier in the message.
               The field exists in the context information so that if the same environment is used for different algorithms, then completely different keys will be generated each of those algorithms.
-              (This practice means if algorithm A uses a shorter key than algorithm B and thus can be found easier, the key derived for algorithm B will not contain the key for algorithm A as a prefix.)
+              (This practice means if algorithm A is broken and  thus can is easier to find, the key derived for algorithm B will not be the same as the key for algorithm B.)
             </t>
 
             <t hangText="PartyUInfo">
@@ -1752,17 +1798,13 @@ valid, message content = Verification(message sent, key, signature)
                   If identity information is carried in the message, applications SHOULD have a way of validating the supplied identity information.
                   The identity information does not need to be specified and can be left as absent.
                   <vspace/>
-                  The identity value supplied will be validated as part of the key derivation process.
+                  The identity value supplied will be integrity checked as part of the key derivation process.
                   If the identity string is wrong, then the wrong key will be created.
                 </t>
 
                 <t hangText="nonce">
                   This contains a one time nonce value.
                   The nonce can either be implicit from the protocol or carried as a value in the unprotected headers.
-                  <cref source="JLS">
-                    I need to get a better justification for this item.
-                    It has to do with generating new keys for each message in a series of messages that have the same salt value.
-                  </cref>
                   <vspace/>
                   We define an algorithm parameter 'PartyU nonce' that can be used to carry this value in the message
                   However, the nonce value could be determined by the application and the value determined from elsewhere.
@@ -1788,8 +1830,8 @@ valid, message content = Verification(message sent, key, signature)
               <list style="hanging">
                 <t hangText="keyDataLength">
                   This is set to the number of bits of the desired output value.
+                  (This practice means if algorithm A can use two different key lengths, the key derived for longer key size will not contain the key for shorter key size as a prefix.)
                 </t>
-
 
                 <t hangText="other">
                   The field other is for free form data defined by the application.
@@ -1845,6 +1887,8 @@ COSE_KDF_Context = [
         </texttable>
 
       </section>
+
+
     </section>
 
     <section title="Key Management Algorithms" anchor="key-management-algs">
@@ -1895,37 +1939,80 @@ COSE_KDF_Context = [
 
           <section title="Direct Key">
             <t>
-              We define two key agreement algorithms that function as direct key algorithms.
-              These algorithms are:
-              <list style="hanging">
-                <t hangText="Direct:">
-                  This key management technique is the simplest method, the supplied key is directly used as the key for the next layer down in the message.
-                  There are no algorithm parameters defined for this key management methods.
-                </t>
-
-                <t hangText="Direct KDF:">
-                  This key managment takes a common shared secret between the two parties and applies the HKDF function (<xref target="HKDF"/>) using the context structure defined in <xref target="context"/> to transform the shared secret into the necessary key.
-                  Either the 'salt' parameter of HKDF or the partyU 'nonce' parameter of the context structure MUST be present.
-                  This parameter can be generated either randomly or deterministically, the requirement is that it be a unique value for the key pair in question.
-                  <vspace/>
-                  If the salt/nonce value is generated randomly, then it is suggested that the length of the random value be the same length as the hash function underlying HKDF, i.e 256-bits.
-                  While there is no way to guarantee that it will be unique, there is a high probability that it will be unique.
-                  If the salt/nonce value is generated deterministically, it can be guaranteed to be unique and thus there is no length requirement.
-                </t>
-              </list>
+              This key management technique is the simplest method, the supplied key is directly used as the key for the next layer down in the message.
+              There are no algorithm parameters defined for this key management methods.
+              The algorithm identifier assignment can be found in <xref target="table-direct"/>.
             </t>
 
             <texttable title="Direct Key" anchor="table-direct">
               <ttcol align='left'>name</ttcol>
               <ttcol align='left'>value</ttcol>
-              <ttcol align='left'>KDF</ttcol>
               <ttcol align='left'>description</ttcol>
-              <c>direct</c>          <c>-6</c>       <c>N/A</c>    <c>Direct use of CEK</c>
-              <c>direct+KDF</c>      <c>*</c>        <c>HKDF SHA-256</c>   <c>Shared secret w/ KDF</c>
+              <c>direct</c>          <c>-6</c>       <c>Direct use of CEK</c>
             </texttable>
 
             <section title="Security Considerations">
-              <t>Lifetime, Length, Compromise</t>
+              <t>
+                The direct key management technique has several potential problems that need to be considered:
+                <list style="symbols">
+                  <t>
+                    These keys need to have some method to be regularly updated over time.
+                    All of the content encryption algorithms specified in this document have limits on how many times a key can be used without significant loss of security.
+                  </t>
+                  <t>
+                    These keys need to be dedicated to a single algorithm.
+                    There have been a number of attacks developed over time when a single key is used for multiple different algorithms.
+                    One example of this is the use of a single key both for CBC encryption mode and CBC-MAC authentication mode.
+                  </t>
+                  <t>
+                    Breaking one message means all messages are broken.
+                    If an adversary succeeds in determining the key for a single message, then the key for all messages is also determined.
+                  </t>
+                </list>
+              </t>
+            </section>
+          </section>
+
+          <section title="Direct Key with KDF">
+            <t>
+              This key managment takes a common shared secret between the two parties and applies the HKDF function (<xref target="HKDF"/>) using the context structure defined in <xref target="context"/> to transform the shared secret into the necessary key.
+              Either the 'salt' parameter of HKDF or the partyU 'nonce' parameter of the context structure MUST be present.
+              This parameter can be generated either randomly or deterministically, the requirement is that it be a unique value for the key pair in question.
+            </t>
+
+            <t>
+              If the salt/nonce value is generated randomly, then it is suggested that the length of the random value be the same length as the hash function underlying HKDF, i.e 256-bits.
+              While there is no way to guarantee that it will be unique, there is a high probability that it will be unique.
+              If the salt/nonce value is generated deterministically, it can be guaranteed to be unique and thus there is no length requirement.
+            </t>
+
+            <t>
+              Since with this technique a new key can be generated for every message, the restrictions on IVs can frequently be relaxed.
+              For the content encryption algorithms used in this document IVs must be unique for a specific key.
+              If the key is altered then the IV can be re-used.
+              Alternatively, an application can be the IV be generated from the same context as the key is by changing the algorithm identifier to the string "IV-GENERATION".
+            </t>
+            
+            <t>
+              The set of algorithms defined in this document can be found in <xref target="table-direct-kdf"/>.
+            </t>
+
+            <texttable title="Direct Key" anchor="table-direct-kdf">
+              <ttcol align='left'>name</ttcol>
+              <ttcol align='left'>value</ttcol>
+              <ttcol align='left'>KDF</ttcol>
+              <ttcol align='left'>description</ttcol>
+              <c>direct+KDF-SHA-256</c>      <c>*</c>        <c>HKDF SHA-256</c>   <c>Shared secret w/ KDF</c>
+              <c>direct+KDF-SHA-512</c>      <c>*</c>        <c>HKDF SHA-512</c>   <c>Shared secret w/ KDF</c>
+              <c>direct+KDF-AES-128</c>      <c>*</c>           <c>HKDF AES-MAC-128</c> <c>Shared secret w/ AES-MAC 128-bit key</c>
+              <c>direct+KDF-AES-256</c>      <c>*</c>           <c>HKDF AES-MAC-256</c> <c>Shared secret w/ AES-MAC 256-bit key</c>
+            </texttable>
+
+            <section title="Security Considerations">
+              <t>
+                The shared secret need to have some method to be regularly updated over time.
+                The shared secret is forming the basis of trust, although not used directly it should still be subject to scheduled rotation.
+              </t>
             </section>
           </section>
       </section>
@@ -1963,7 +2050,7 @@ COSE_KDF_Context = [
           </list>
         </t>
 
-        <section title="AES Key Wrapping">
+        <section title="AES Key Wrapping" anchor="key_wrap_algs">
           <t>
             The AES Key Wrapping algorithm is defined in <xref target="RFC3394"/>.
             This algorithm uses an AES key to wrap a value that is a multiple of 64-bits, as such it can be used to wrap a key for any of the content encryption algorithms defined in this document.
@@ -1988,20 +2075,18 @@ COSE_KDF_Context = [
           </texttable>
 
           <section title="Security Considerations for AES-KW">
-            <t>
-              There are no specific security considerations for this algorithm.
-            </t>
+              <t>
+                The shared secret need to have some method to be regularly updated over time.
+                The shared secret is forming the basis of trust, although not used directly it should still be subject to scheduled rotation.
+              </t>
           </section>
         </section>
       </section>
 
       <section title="Key Encryption">
         <t>
-          Key Encryption mode is also called key transport mode in some
-          standards.
-          Key Encryption mode differs from Key Wrap mode in that it uses an
-          asymmetric encryption algorithm rather than a symmetric encryption
-          algorithm to protect the key.
+          Key Encryption mode is also called key transport mode in some standards.
+          Key Encryption mode differs from Key Wrap mode in that it uses an asymmetric encryption algorithm rather than a symmetric encryption algorithm to protect the key.
           This document defines one Key Encryption mode algorithm.
         </t>
 
@@ -2030,7 +2115,7 @@ COSE_KDF_Context = [
             RSAES-OAEP is an asymmetric key encryption algorithm.
             The defintion of RSAEA-OAEP can be find in Section 7.1 of <xref target="RFC3447"/>.
             The algorithm is parameterized using a masking generation function (mgf), a hash function (h) and encoding parameters (P).
-            For the algoithm identifiers defined in this section:
+            For the algorithm identifiers defined in this section:
             <list style="symbols">
               <t>mgf is always set to MFG1 from <xref target="RFC3447"/> and uses the same hash function as h.</t>
               <t>P is always set to the empty octet string.</t>
@@ -2082,15 +2167,17 @@ COSE_KDF_Context = [
           Two variants of DH that are easily supported are:
           <list>
             <t>
-              Ephemeral-Static DH: where the sender of the message creates a one time DH key and uses a static key for the recipient.
+-              Ephemeral-Static DH: where the sender of the message creates a one time DH key and uses a static key for the recipient.
               The use of the ephemeral sender key means that no additional random input is needed as this is randomly generated for each message.
             </t>
+
             <t>
               Static-Static DH: where a static key is used for both the sender and the recipient.
               The use of static keys allows for recipient to get a weak version of data origination for the message.
               When static-static key agreement is used, then some piece of unique data is require to ensure that a different key is created for each message
             </t>
           </list>
+          
           In this specification, both variants are specified.
           This has been done to provide the weak data origination option for use with MAC operations.
         </t>
@@ -2098,7 +2185,7 @@ COSE_KDF_Context = [
         <t>
           When direct key agreement mode is used, it MUST be the only key management mode used on the message and there MUST be only one recipient.
           This method creates the key directly and that makes it difficult to mix with additional recipients.
-          If multiple recipients are needed, then the version with key wrap (<xref target="ECDH-KeyWrap"/>) needs to be used.
+          If multiple recipients are needed, then the version with key wrap needs to be used.
         </t>
 
         <t>
@@ -2121,104 +2208,80 @@ COSE_KDF_Context = [
 
         <section title="ECDH">
           <t>
-            NOTE: Curves 25519 and Goldilocks are elements at risk.
+            The basic mathematics for Elliptic Curve Diffie-Hellman can be found in <xref target="RFC6090"/>.
+            Two new curves have been defined in <xref target="I-D.irtf-cfrg-curves"/>.
           </t>
-          
+
           <t>
-            We define one set of key agreement algorithms structured around Elliptic Curves Diffie-Hellman problem.
-            We define both an ephemeral-static and a static-static version of these algorithms.
-            We allow for multiple curves to be used, it needs to be noted that the math required for the curves as well as the point representation is going to be different.
-            <cref source="JLS">
-              This could just as easily be done by specifying two different set of algorithm identifiers, one for each of the key formats.
-              I don't believe that we need to set things up by having two different sets of algorithm identifiers for the different keys as the structure of what is represented is going to be the same, just the math and point formats are going to be different.
-              The other "difference" is the question of how the octet string of the shared secret is defined. 
-              However, since we don't need to specify either in this document we can defer both of them into their respective documents.
-            </cref>
-          </t>
-          
-          <t>
-            We setup to use two different curve structures for the ECDH algorithms.
-            <list style="none">
+            ECDH is parameterized by the following:
+            <list style="symbols">
               <t>
-                Weierstrass Curves: These are the ones one is used to seeing from NIST.
-                We define three NIST curves for use with this document.
-                These curves are P-256, P-384 and P-512.
-                (The mathematics can be found in <xref target="RFC6090"/>.)
-                For these curves, the key type 'EC2' is used (<xref target="EC2-Keys"/>).
+                Curve Type/Curve: 
+                The curve selected controls not only the size of the shared secret, but the mathematics for computing the shared secret.
+                The curve selected also controls how a point in the curve is represented and what happens for the identity points on the curve.
+                In this specification we allow for a number of different curves to be used.
+                The curves are defined in <xref target="table-ec-curves"/>.
+                <vspace/>
+                Since the only the math is changed by changing the curve, the curve is not fixed for any of the algorithm identifiers we define, instead it is defined by the points used.
               </t>
               
               <t>
-                Montgomery Curves:
-                These curves are Curve25519 and Goldilocks.
-                (The mathematics can be found in <xref target="I-D.irtf-cfrg-curves"/>.)
-                For these curves, the key type 'EC1' is used (<xref target="EC1-Keys"/>).
+                Ephemeral-static or static-static:
+                The key agreement process may be done using either a static or an ephemeral key at the senders side.
+                When using ephemeral keys, the sender MUST generate a new ephemeral key for every key agreement operation.
+                The ephemeral key is placed in in the 'ephemeral key' parameter and MUST be present for all algorithm identifiers which use ephemeral keys.
+                When using static keys, the sender MUST either generate a new random value placed in either in the KDF parameters or the context structure.
+                For the KDF functions used, this means either in the 'salt' parameter for HKDF (<xref target="HKDF_Alg_Params"/>) or in in the 'PartyU nonce' parameter for the context struture (<xref target="KDF_Context_Alg_Params"/>) MUST be present.
+                (Both may be present if desired.)
+                The value in the parameter MUST be unique for the key pair being used.
+                It is acceptable to use a global counter which is incremented for every static-static operation and use the resulting value.
+                When using static keys, the static key needs to be identified to the recipient.
+                The static key can be identified either by providing the key ('static key') or by providing a key identifier for the static key ('static key id').
+                Both of these parameters are defined in <xref target="table-ecdh-es-parameter-table"/>
+              </t>
+              
+              <t>
+                Key derivation algorithm:
+                The result of an ECDH key agreement process does not provide a uniformly random secret, as such it needs to be run through a KDF in order to produce a usable key.
+                Processing the secret through a KDF also allows for the introduction of both context material, how the key is going to be used, and one time material in the even to of a static-static key agreement.
+              </t>
+
+              <t>
+                Key Wrap algorithm:
+                The key wrap algorithm can be 'none' if the result of the KDF is going to be used as the key directly.
+                This option, along with static-static, should be used if knowledge about the sender is desired.
+                If 'none' is used then the content layer encryption algorithm size is value fed to the context structure.
+                Support is also provided for any of the key wrap algorithms defined in section <xref target="key_wrap_algs"/>.
+                If one of these options is used, the input key size to the key wrap algorithm is the value fed into the context structure as the key size.
               </t>
             </list>
           </t>
 
           <t>
-            As shown in <xref target="table-ecdh-es-table"/> we define two ECDH algorithm identifiers for EC direct key agreement.
-            These identifiers are:
-            <list style="hanging">
-              <t hangText="ECDH-ES:">
-                This algorithm does a key agreement operation using a static key for the recipient and an ephemeral key for the sender.
-                The ephemeral key MUST be generated fresh for every message.
-                The HKDF function (<xref target="HKDF"/>) is used with the context structure in <xref target="context"/> to transform the key agreement secret into the necessary key.
-                Since the ephemeral key is generated freshly, the 'salt' parameter of HKDF is not needed and can be absent.
-                <vspace/>
-                One new algorithm parameter is defined for use with this algorithm.
-                This parameter is:
-                <list style="hanging">
-                  <t hangText="ephemeral key:">
-                    This parameter is used to hold and transport the ephemeral key generated by the sender of the message.
-                    This parameter has a label of -1 and a type of COSE_Key.
-                    This parameter can be placed in the unprotected bucket, if it is changed then the correct key will not be able to be generated.
-                  </t>
-                </list>
-                The parameter is summarized in <xref target="table-ecdh-es-parameter-table"/>.
-              </t>
-              <t hangText="ECDH-SS:">
-                This algorithm does a key agreement operation using two static keys, one for the recipient and one for the sender.
-                The HKDF function (<xref target="HKDF"/>) is used with the context structure in <xref target="context"/> to transform the key agreement secret into the necessary key.
-                Either the 'salt' parameter of HKDF or the partyU 'nonce' parameter of the context structure MUST be present.
-                This parameter can be generated either randomly or deterministically, the requirement is that it be a unique value for the key pair in question.
-                <vspace/>
-                If the salt/nonce value is generated randomly, then it is suggested that the length of the random value be the same length as the hash function underlying HKDF, i.e 256-bits.
-                While there is no way to guarantee that it will be unique, there is a high probability that it will be unique.
-                If the salt/nonce value is generated deterministically, it can be guaranteed to be unique and thus there is no length requirement.
-                <vspace/>
-                Two new algorithm parameters are defined for use with this algorithm.
-                These parameters are:
-
-                <list style="hanging">
-                  <t hangText="static key:">
-                    This parameter is used to hold and transport the static key used by the sender of the message.
-                    This parameter has the label of -2 and a type of COSE_Key.
-                    The parameter can be placed in the unprotected bucket, if it is changed then the correct key will not be able to be generated.
-                    If the data origination service is desired, then the message recipient needs to validate that the key in this field is associated with the sender.
-                  </t>
-
-                  <t hangText="static key identifier:">
-                    This parameter is used to hold a reference to the static key used by the sender of the message.
-                    The value is expected to match the 'kid' member of a COSE_Key structure published by the sender.
-                    The value in this field cannot be assumed to uniquely identify a single key, multiple keys may need to be found and tested.
-                    Not all of the keys identified by a kid value may be associated with the sender of the message.
-                    If the data origination service is desired, then the message recipient needs to validate that the key in this field is associated with the sender.
-                  </t>
-                </list>
-                These parameters are summarized in <xref target="table-ecdh-es-parameter-table"/>.
-              </t>
-            </list>
+            The set of algorithms direct ECDH defined in this document are found in <xref target="table-ecdh-es-table"/>.
           </t>
 
           <texttable title="ECDH Algorithm Values" anchor="table-ecdh-es-table">
             <ttcol align='left'>name</ttcol>
             <ttcol align='left'>value</ttcol>
             <ttcol align='left'>KDF</ttcol>
+            <ttcol align='left'>Ephemeral-Static</ttcol>
+            <ttcol align='left'>Key Wrap</ttcol>
             <ttcol align='left'>description</ttcol>
-            <c>ECDH-ES</c>      <c>ECDH-ES</c>        <c>HKDF - SHA-256</c>     <c>ECDH ES w/ HKDF - generate key directly</c>
-            <c>ECDH-SS</c>      <c>ECDH-SS</c>        <c>HKDF - SHA-256</c>     <c>ECDH SS w/ HKDF - generate key directly</c>
+            
+            <c>ECDH-ES + HKDF-256</c>      <c>50</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
+            <c>ECDH-ES + HKDF-512</c>      <c>51</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
+            <c>ECDH-SS + HKDF-256</c>      <c>52</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
+            <c>ECDH-SS + HKDF-512</c>      <c>53</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
+            <c>ECDH-ES+A128KW</c>          <c>54</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A128KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
+            <c>ECDH-ES+A192KW</c>          <c>55</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A192KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
+            <c>ECDH-ES+A256KW</c>          <c>56</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A256KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
+            <c>ECDH-SS+A128KW</c>          <c>57</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>A128KW</c>     <c>ECDH SS w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
+            <c>ECDH-SS+A192KW</c>          <c>58</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>A192KW</c>     <c>ECDH SS w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
+            <c>ECDH-SS+A256KW</c>          <c>59</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>A256KW</c>     <c>ECDH SS w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
+
           </texttable>
+
 
           <texttable title="ECDH Algorithm Parameters" anchor="table-ecdh-es-parameter-table">
             <ttcol>name</ttcol>
@@ -2230,22 +2293,7 @@ COSE_KDF_Context = [
             <c>static key</c>           <c>-2</c>       <c>COSE_Key</c>         <c>ECDH-ES</c>  <c>Static Public key for the sender</c>
             <c>static key id </c>       <c>-3</c>       <c>bstr</c>             <c>ECDH-SS</c>  <c>Static Public key identifier for the sender</c>
           </texttable>
-
-          <t>
-            M00TODO: Talk about curves and point formats.
-          </t>
-
-          <texttable title="EC Curves" anchor="table-ec-curves">
-            <ttcol>name</ttcol>
-            <ttcol>key type</ttcol>
-            <ttcol>value</ttcol>
-            <ttcol>description</ttcol>
-            <c>P-256</c>        <c>EC2</c>      <c>1</c>       <c>NIST P-256 also known as secp256r1</c>
-            <c>P-384</c>        <c>EC2</c>      <c>2</c>       <c>NIST P-384 also known as secp384r1</c>
-            <c>P-521</c>        <c>EC2</c>      <c>3</c>       <c>NIST P-521 also known as secp521r1</c>
-            <c>Curve25519</c>   <c>EC1</c>      <c>1</c>       <c>Provide reference</c>
-            <c>Goldilocks</c>   <c>EC1</c>      <c>2</c>       <c>Provide reference</c>
-          </texttable>
+        
 
         </section>
       </section>
@@ -2278,17 +2326,13 @@ COSE_KDF_Context = [
           </list>
         </t>
 
-        <section title="ECDH ES + HKDF" anchor="ECDH-KeyWrap">
-          <texttable>
-            <ttcol align='left'>name</ttcol>
-            <ttcol align='left'>value</ttcol>
-            <ttcol>KDF</ttcol>
-            <ttcol align='left'>description</ttcol>
-            <c>ECDH-ES+A128KW</c>        <c>*</c>        <c>HKDF - SHA-256</c>          <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
-            <c>ECDH-ES+A192KW</c>        <c>*</c>        <c>HKDF - SHA-256</c>          <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
-            <c>ECDH-ES+A256KW</c>        <c>*</c>        <c>HKDF - SHA-256</c>          <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
-          </texttable>
+        <section title="ECDH">
+
+          <t>
+            These algorithms are defined in <xref target="table-ecdh-es-table"/>.
+          </t>
         </section>
+        
       </section>
 
       <section title="Password">
@@ -2352,6 +2396,18 @@ COSE_KDF_Context = [
           An example of this is Curve25519 <xref target="I-D.irtf-cfrg-curves"/>.
         </t>
         
+          <texttable title="EC Curves" anchor="table-ec-curves">
+            <ttcol>name</ttcol>
+            <ttcol>key type</ttcol>
+            <ttcol>value</ttcol>
+            <ttcol>description</ttcol>
+            <c>P-256</c>        <c>EC2</c>      <c>1</c>       <c>NIST P-256 also known as secp256r1</c>
+            <c>P-384</c>        <c>EC2</c>      <c>2</c>       <c>NIST P-384 also known as secp384r1</c>
+            <c>P-521</c>        <c>EC2</c>      <c>3</c>       <c>NIST P-521 also known as secp521r1</c>
+            <c>Curve25519</c>   <c>EC1</c>      <c>1</c>       <c>Provide reference</c>
+            <c>Goldilocks</c>   <c>EC1</c>      <c>2</c>       <c>Provide reference</c>
+          </texttable>
+
         <section title="Single Coordinate Curves" anchor="EC1-Keys">
           <t>
             NOTE: This section represents at risk work depending on the ability to get good references for Curve25519 and Goldilocks.
@@ -2378,11 +2434,7 @@ COSE_KDF_Context = [
               
               <t hangText="x">
                 contains the x coordinate for the EC point.
-                The integer is converted to an octet string use ???.
-                Note that the octet string represents a little-endian encoding of x.
-                <cref source="JLS">
-                  Should we use the integer encoding for x and d instead of bstr?
-                </cref>
+                The octet string represents a little-endian encoding of x.
               </t>
               
               <t hangText="d">
@@ -3065,6 +3117,7 @@ COSE_KDF_Context = [
       &RFC7516;
       &RFC7517;
       &RFC7518;
+      &RFC7539;
       
       &CFRG-EC;
 
@@ -3441,7 +3494,6 @@ COSE_KDF_Context = [
           <t>
             This is an example of a COSE Key set.
             This example includes the public keys for all of the previous examples.
-            <cref source="JLS">Still need to convert the types of some of these items.</cref>
           </t>
 
           <t>
@@ -3461,7 +3513,6 @@ COSE_KDF_Context = [
           <t>
             This is an example of a COSE Key set.
             This example includes the private keys for all of the previous examples.
-            <cref source="JLS">Still need to convert the types of some of these items.</cref>
           </t>
 
           <t>
@@ -3501,8 +3552,11 @@ COSE_KDF_Context = [
       <section title="Version -02 to -03">
         <t>
           <list style="symbols">
-            <t>Expand RSA text</t>
-            <t>Add sample key structures</t>
+            <t>Make a pass over all of the algorithm text.</t>
+            <t>Alter the CDDL so that Keys and KeySets are top level items and the key examples validate.</t>
+            <t>Add sample key structures.</t>
+            <t>Expand text on dealing with Externally Supplied Data.</t>
+            <t>Update the examples to match some of the renumbering of fields.</t>
           </list>
         </t>
       </section>

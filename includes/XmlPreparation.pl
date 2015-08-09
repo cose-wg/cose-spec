@@ -12,6 +12,8 @@ my $OutString = '';
 my $CurrFile = '';
 my $ThisFile;
 my $depth=0;
+my $fileSize=0;
+my $BFile;
 
 foreach $ThisFile (@InFiles) {
     my @AllLines = ();
@@ -19,6 +21,12 @@ foreach $ThisFile (@InFiles) {
     while(<IN>) { push(@AllLines, $_) }
     close(IN);
 
+    ($BFile = $ThisFile) =~ s/.xml.txt/.bin/;
+
+    $fileSize = (stat($BFile))[7];
+
+    print ("<t>Size of binary file is " . $fileSize . " bytes </t>\n\n");
+    
     my @values = split(/(, |\{|\[|\}|\])/, @AllLines[0]);
     my @new = ();
     my $tab=1;
