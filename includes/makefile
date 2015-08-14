@@ -1,4 +1,3 @@
-
 Example_DIR = c:\projects\cose\examples\spec-examples\new
 
 .SUFFIXES:

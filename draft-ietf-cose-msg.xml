@@ -290,27 +290,7 @@ values = any
       </t>
 
       <t>
-        Each of the top-level security objects use a CBOR map as the base structure.
-        Items in the map at the top level are identified by a label.
-        The type of the value associated with the label is determined by the definition of the label.
-        
-        <!-- M00TODO:
-             JLS:  While I want to point to the registry at some point, I don't think this is the correct sentence and place to do it.
-             Figure out where it needs to go and move the following sentence into the correct location. 
-             Also need to determine if anything needs to be done to keep a pointer in this paragraph.
-             
-             This document defines a number of labels in the IANA “COSE Object Labels Registry” (defined in <xref target="IANA-Top-Level-Keys"/>).
-        -->
-      </t>
-
-      <t>
-        The set of labels present in a security object is not restricted to those defined in this document.
-        However, it is not recommended that additional fields be added to a structure unless this is going to be done in a closed environment.
-        When new fields need to be added, it is recommended that a new message type be created so that processing of the field can be ensured.
-        Using an older structure with a new field means that any security properties of the new field will not be enforced.
-        Before a new field is added at the outer level, strong consideration needs to be given to defining a new header field and placing it into the protected headers.
-        Applications should make a determination if non-standardized fields are going to be permitted.
-        It is suggested that libraries allow for an option to fail parsing if non-standardized fields exist, this is especially true if they do not allow for access to the fields in other ways.
+        Each of the top-level security objects use a CBOR array as the base structure.
       </t>
 
       <t>
@@ -321,6 +301,7 @@ values = any
           Should they be moved back to just appearing if used in a COSE_MSG rather than on the individual structure?
         </cref>
         <cref source="JLS">Should we create an IANA registries for the values of msg_type?</cref>
+        <cref source="JLS">Rewrite needed - think about label concept for array elements.</cref>
       </t>
 
       <t>
@@ -338,12 +319,6 @@ values = any
         The value of 0 is reserved and not to be used.
         If the value of 0 is found, then clients MUST fail processing the structure.
         Implementations need to recognize that the set of values might be extended at a later date, but they should not provide a security service based on guesses of what is there.
-      </t>
-
-      <t>
-        NOTE:  Is there any reason to allow for a marker of a COSE_Key structure and allow it to be a COSE_MSG?
-	Doing so does allow for a security risk, but may simplify the code.
-        <cref source="JLS">OPEN ISSUE</cref>
       </t>
 
       <t>
@@ -365,11 +340,10 @@ msg_type_mac=3
 ]]></artwork></figure>
 
       <t>
-        The top level of each of the COSE message structures are encoded as maps.
-        We use an integer to distinguish between the different security message types.
-        By searching for the integer under the label identified by msg_type (which is in turn an integer), one can determine which security message is being used and thus what syntax is for the rest of the elements in the map.
+        The top level of each of the COSE message structures are encoded as arrays.
       </t>
 
+      <!--
       <texttable anchor="Top-Level-Keys" title="COSE Map Labels">
         <ttcol align='left'>name</ttcol>
         <ttcol align='left'>number</ttcol>
@@ -402,6 +376,7 @@ recipients=9
 tag=10
 
 ]]></artwork></figure>
+      -->
       
     </section>
 
@@ -468,8 +443,8 @@ tag=10
 header_map = {+ label => any }
 
 Headers = (
-    ? protected => bstr,                ; Contains a header_map
-    ? unprotected => header_map
+    protected : bstr,                  ; Contains a header_map
+    unprotected : header_map
 )
 ]]></artwork></figure>
 
@@ -609,16 +584,16 @@ Headers = (
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_Sign = {
-    msg_type => msg_type_signed,
+COSE_Sign = [
+    msg_type: msg_type_signed,
     Headers,
-    ? payload => bstr,
-    signatures => [+ COSE_signature]
-}
+    payload : bstr,
+    signatures : [+ COSE_signature]
+]
 ]]></artwork></figure>
 
       <t>
-        The fields is the structure have the following semantics:
+        The fields in the array have the following semantics:
       </t>
       <t>
         <list style="hanging">
@@ -647,24 +622,18 @@ COSE_Sign = {
       </t>
 
       <t>
-        We use the values in <xref target="Top-Level-Keys"/> as the labels in the COSE_Sign map.
-        While other labels can be present in the map, it is not generally a recommended practice. 
-        The other labels can be either of integer or string type, use of other types SHOULD be treated as an error.
-      </t>
-
-      <t>
         The CDDL grammar structure for a signature is:
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_signature =  {
+COSE_signature =  [
     Headers,      
-    signature => bstr
-}
+    signature : bstr
+]
 ]]></artwork></figure>
 
       <t>
-        The fields in the structure have the following semantics:
+        The fields in the array have the following semantics:
       </t>
 
       <t>
@@ -796,15 +765,15 @@ Sig_structure = [
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_encrypt = {
-    msg_type=>msg_type_encrypted,
+COSE_encrypt = [
+    msg_type: msg_type_encrypted,
     COSE_encrypt_fields
-}
+]
 
 COSE_encrypt_fields = (
     Headers,
-    ? ciphertext => bstr,
-    ? recipients => [+{COSE_encrypt_fields}]
+    ciphertext: bstr,
+    ? recipients: [+[COSE_encrypt_fields]]
 )
 ]]></artwork></figure>
 
@@ -886,8 +855,9 @@ Enc_structure = [
             </t>
 
             <t>
-              Determine the encryption key.  This step is dependent on the key management method being used:
+              Determine the encryption key.  This step is dependent on the key management method being used.
               For:
+
               <list style="hanging">
                 <t hangText="No Recipients:">
                   The key to be used is determined by the algorithm and key at the current level.
@@ -926,8 +896,9 @@ Enc_structure = [
               Verify that there was no external additional authenticated data supplied for this operation.
             </t>
             <t>
-              Determine the encryption key.  This step is dependent on the key management method being used:
+              Determine the encryption key.  This step is dependent on the key management method being used.
               For:
+
               <list style="hanging">
                 <t hangText="No Recipients:">
                   The key to be used is determined by the algorithm and key at the current level.
@@ -975,13 +946,13 @@ Enc_structure = [
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_mac = {
-   msg_type=>msg_type_mac, 
+COSE_mac = [
+   msg_type: msg_type_mac, 
    Headers,
-   ? payload => bstr,
-   tag => bstr,
-   recipients => [+{COSE_encrypt_fields}]
-}
+   payload: bstr,
+   tag: bstr,
+   recipients: [+[COSE_encrypt_fields]]
+]
 
 ]]></artwork></figure>
 
@@ -2666,7 +2637,7 @@ COSE_KDF_Context = [
 
       </section>
 
-      
+      <!--
       <section anchor="IANA-Top-Level-Keys" title="COSE Object Labels Registry">
 
         <t>
@@ -2678,7 +2649,8 @@ COSE_KDF_Context = [
           This table is initially populated by the table in <xref target="Top-Level-Keys"/>.
         </t>
 
-      </section>
+        </section>
+      -->
       
       <section anchor="cose-header-key-table" title="COSE Header Parameter Registry">
 
