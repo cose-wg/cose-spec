@@ -159,6 +159,14 @@
 
       
       <section anchor="requirements-terminology" title="Requirements Terminology">
+        <!--  NOTE FOR AUTHORS:
+             We use the following terms in the document
+             
+             field - an entry in a CBOR array
+             parameter - an element in a CBOR map (as oppose to 'member' which is frequently used in JSON
+             label - the key of an element in a CBOR map.   Unless otherwise separated from text, enclose with single quote marks
+             value - the value of an element in a CBOR map
+        -->
 
         <t>
           The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL NOT”, “SHOULD”, “SHOULD NOT”, “RECOMMENDED”, “NOT RECOMMENDED”, “MAY”, and “OPTIONAL” in this document are to be interpreted as described in <xref target="RFC2119"/>.
@@ -294,14 +302,15 @@ values = any
       </t>
 
       <t>
-        A label 'msg_type' is defined to distinguish between the different structures when they appear as part of a COSE_MSG object.
+        A field 'msg_type' is defined to distinguish between the different structures when they appear as part of a COSE_MSG object.
         <cref source="JLS">
           I have moved msg_type into the individual structures.
           However, they would not be necessary in the cases where a) the security service is known and b) security libraries can setup to take individual structures.
           Should they be moved back to just appearing if used in a COSE_MSG rather than on the individual structure?
+          This would make things shorter if one was using just a signed message because the msg_type field can be omitted as well as the COSE_Tagged_MSG tag field.
+          One the other hand, it will complicated the code if one is doing general purpose library type things.
         </cref>
         <cref source="JLS">Should we create an IANA registries for the values of msg_type?</cref>
-        <cref source="JLS">Rewrite needed - think about label concept for array elements.</cref>
       </t>
 
       <t>
@@ -314,8 +323,8 @@ values = any
       </t>
 
       <t>
-        Implementations MUST be prepared to find an integer under this label that does not correspond to the values 1 to 3.
-        If this is found then the client MUST stop attempting to parse the structure and fail.
+        Implementations MUST be prepared to find an integer in this field that does not correspond to the values 1 to 3.
+        If this is found then the client MUST stop attempting to process the structure and fail.
         The value of 0 is reserved and not to be used.
         If the value of 0 is found, then clients MUST fail processing the structure.
         Implementations need to recognize that the set of values might be extended at a later date, but they should not provide a security service based on guesses of what is there.
@@ -383,7 +392,7 @@ tag=10
     <section anchor="header-parameters" title="Header Parameters">
 
       <t>
-        The structure of COSE has been designed to have two buckets of information that are not considered to be part of the payload itself, but are used for holding information about algorithms, keys, or evaluation hints for the  processing of the layer.
+        The structure of COSE has been designed to have two buckets of information that are not considered to be part of the payload itself, but are used for holding information about content, algorithms, keys, or evaluation hints for the  processing of the layer.
         These two buckets are available for use in all of the structures in this document except for keys.
         While these buckets can be present, they may not all be usable in all instances.
         For example, while the protected bucket is defined as part of recipient structures, most of the algorithms that are used for recipients do not provide the necessary functionality to provide the needed protection and thus the bucket should not be used.
@@ -394,7 +403,7 @@ tag=10
         The map key is a 'label' (<xref target="label"/>).
         The value portion is dependent on the definition for the label.
         Both maps use the same set of label/value pairs. 
-        The integer range for labels has been divided into several sections with a standard range, a private range, and a range that is dependent on the algorithm selected.
+        The integer and string values for labels has been divided into several sections with a standard range, a private range, and a range that is dependent on the algorithm selected.
         The defined labels can be found in the 'COSE Header Parameters' IANA registry (<xref target="cose-header-key-table"/>).
       </t>
 
@@ -408,7 +417,7 @@ tag=10
         <list style="hanging">
           <t hangText='protected'>
             contains parameters about the current layer that are to be cryptographically protected.
-            This bucket MUST NOT be used if it is not going to be included in a cryptographic computation.
+            This bucket MUST be empty if it is not going to be included in a cryptographic computation.
             This bucket is encoded in the message as a binary object.
             This value is obtained by CBOR encoding the protected map and wrapping it in a bstr object.
             This wrapping allows for the encoding of the protected map to be transported with a greater chance that it will not be altered in transit.
@@ -429,7 +438,7 @@ tag=10
       </t>
 
       <t>
-        The presence of both buckets is optional, however the requirement that the 'alg' parameter be present at each level effectively imposes a requirement that one of the buckets will always be present.
+        The presence of both buckets is required.
         The parameters that go into the buckets come from the IANA "COSE Header Parameters" (<xref target="cose-header-key-table"/>).
         Some common parameters are defined in the next section, but a number of parameters are defined throughout this document.
         
@@ -448,10 +457,10 @@ Headers = (
 )
 ]]></artwork></figure>
 
-      <section anchor="cose-headers" title="COSE Headers">
+      <section anchor="cose-headers" title="Common COSE Headers Parameters">
         <t>
-          This document defines a set of common header parameters.
-          A summary of the parameters defined in this section can be found in <xref target="Header-Table"/>.
+          This section defines a set of common header parameters.
+          A summary of those parameters can be found in <xref target="Header-Table"/>.
           This table should be consulted to determine the value of label used as well as the type of the value.
         </t>
 
@@ -483,26 +492,23 @@ Headers = (
                 </t>
               </list>
               The header parameter values indicated by 'crit' can be processed by either the security library code or by an application using a security library, the only requirement is that the parameter is processed.
+              If the 'crit' value list includes a value for which the parameter is not in the protected bucket, this is a fatal error in processing the message.
             </t>
             
             <t hangText='content type'>
               This parameter is used to indicate the content type of the data in the payload or ciphertext fields.
-              <cref source="JLS">
-                After looking at this, I am wondering if the type for this should be: [int int]/[int tstr] so that we can keep the major/minor difference of media-types.
-                This does cost a couple of bytes in the message.
-              </cref>
-              Integers are from the XXXXX<cref source="JLS">Need to figure out how we are going to go about creating this registry -or are we going to modify the current mime-content table?</cref> IANA registry table.
-              Strings are from the IANA 'mime-content types' registry.
+              Integers are from the 'CoAP Content-Formats' IANA registry table.
+              Strings are from the IANA 'Media Types' registry.
               Applications SHOULD provide this parameter if the content structure is potentially ambiguous.
             </t>
             
             <t hangText='kid'>
               This parameter one of the ways that can be used to find the key to be used.
-              The value of this parameter is matched against the 'kid' field in a COSE_Key structure.
+              The value of this parameter is matched against the 'kid' member in a COSE_Key structure.
               Applications MUST NOT assume that 'kid' values are unique.
               There may be more than one key with the same 'kid' value, it may be required that all of the keys need to be checked to find the correct one.
               The internal structure of 'kid' values is not defined and generally cannot be relied on by applications.
-              Key identifier values are hints about which key to use, they are not directly a security critical field, for this reason they can normally be placed in the unprotected headers bucket.
+              Key identifier values are hints about which key to use, they are not directly a security critical field, for this reason they can be placed in the unprotected headers bucket.
             </t>
 
             <t hangText='nonce'>
@@ -524,7 +530,7 @@ Headers = (
         
         <c>alg</c>        <c>1</c>        <c>int / tstr</c>        <c>COSE Algorithm Registry</c>       <c>Integers are taken from table --POINT TO REGISTRY--</c>
         <c>crit</c>       <c>2</c>        <c>[+ label]</c>         <c>COSE Header Label Registry</c>    <c>integer values are from  -- POINT TO REGISTRY --</c>
-        <c>content type</c>        <c>3</c>        <c>tstr / int</c>        <c>media-types registry</c>          <c>Value is either a media-type or an integer from the media-type registry</c>
+        <c>content type</c> <c>3</c>        <c>tstr / int</c>        <c>CoAP Content-Formats or Media Types registry</c>          <c>Value is either a Media Type or an integer from the CoAP Content Format registry</c>
         
         <c>jku</c>        <c>*</c>        <c>tstr</c>              <c></c>                              <c>URL to COSE key object</c>
         <c>jwk</c>        <c>*</c>        <c>COSE_Key</c>          <c></c>                              <c>contains a COSE key not a JWK key</c>
@@ -595,6 +601,7 @@ COSE_Sign = [
       <t>
         The fields in the array have the following semantics:
       </t>
+
       <t>
         <list style="hanging">
           <t hangText='msg_type'>
@@ -609,14 +616,13 @@ COSE_Sign = [
           </t>
           <t hangText='payload'>
             contains the serialized content to be signed.
-            If the payload is not present in the message, the application is required to 
-            supply the payload separately.
+            If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes.
-            If the payload is transported separately, it is the responsibility of the application
-            to ensure that it will be transported without changes.
+            If the payload is transported separately, it is the responsibility of the application to ensure that it will be transported without changes.
           </t>
           <t hangText='signatures'>
-            is an array of signature items.  Each of these items uses the COSE_signature structure for its representation.
+            is an array of signature items.
+            Each of these items uses the COSE_signature structure for its representation.
           </t>
         </list>
       </t>
@@ -855,7 +861,8 @@ Enc_structure = [
             </t>
 
             <t>
-              Determine the encryption key.  This step is dependent on the key management method being used.
+              Determine the encryption key.
+              This step is dependent on the key management method being used.
               For:
 
               <list style="hanging">
@@ -896,7 +903,8 @@ Enc_structure = [
               Verify that there was no external additional authenticated data supplied for this operation.
             </t>
             <t>
-              Determine the encryption key.  This step is dependent on the key management method being used.
+              Determine the encryption key.
+              This step is dependent on the key management method being used.
               For:
 
               <list style="hanging">
@@ -1027,7 +1035,7 @@ MAC_structure = [
       <t>
         A COSE Key structure is built on a CBOR map object.
         The set of common parameters that can appear in a COSE Key can be found in the IANA registry 'COSE Key Common Parameter Registry' (<xref target="cose-key-map-registry"/>).
-        Additional parameters defined for different key types can be found in the IANA registry 'COSE Key Type Parameters' (<xref target="cose-key-parameter-registry"/>).
+        Additional parameters defined for specific key types can be found in the IANA registry 'COSE Key Type Parameters' (<xref target="cose-key-parameter-registry"/>).
       </t>
 
       <t>
@@ -1098,6 +1106,7 @@ COSE_KeySet = [+COSE_Key]
           <t hangText="kty:">
             This parameter is used to identify the family of keys for this structure, and thus the set of key type specific parameters to be found.
             The set of values can be found in <xref target="table_key_types"/>.
+            This parameter MUST be present in a key object.
           </t>
           
           <t hangText="alg:">
@@ -1119,8 +1128,6 @@ COSE_KeySet = [+COSE_Key]
           </t>
           
         </list>
-        Only the 'kty' field MUST be present in a key object.
-        All other parameters can be omitted if their behavior is not needed.
       </t>
 
       <texttable title="Key Operation Values" anchor="table-key-ops">
@@ -1211,7 +1218,7 @@ valid, message content = Verification(message sent, key, signature)
         </t>
 
         <t>
-          The ECDSA signature algorithm is parameterized with a hash function (h.
+          The ECDSA signature algorithm is parameterized with a hash function (h).
           In the event that the length of the hash function output is greater than group of the key, the left most bytes of the hash output are used.
         </t>
 
@@ -1253,14 +1260,14 @@ valid, message content = Verification(message sent, key, signature)
         <section title="Security Considerations">
           <t>
           The security strength of the signature is no greater than the minimum of the security strength associated with the bit length of the key and the security strength of the hash function.
-          When a hash function is used that has greater security than is provided by the length of the key, the signature algorithm uses the leftmost key length bits of the hash function output.
         </t>
 
         <t>
-          System which have poor random number generation can leak their keys by signing two messages with the same value of 'k'.
+          System which have poor random number generation can leak their keys by signing two different messages with the same value of 'k'.
           <xref target="RFC6979"/> provides a method to deal with this problem by making 'k' be deterministic based on the message content rather than randomly generated.
-          Applications which specify ECDSA should evaluate the ability to get good random number generation and recommend this when it is not possible.
-          Note:  Use of this technique even when good random number generation exists may still be a good idea.
+          Applications which specify ECDSA should evaluate the ability to get good random number generation and require this when it is not possible.
+          Note: Use of this technique a good idea even when good random number generation exists.
+          Doing so both reduces the possiblity of having the same value of 'k' in two signature operations, but allows for reproducable signature values which helps testing.
         </t>
 
         <t>
@@ -1607,7 +1614,7 @@ valid, message content = Verification(message sent, key, signature)
       <section title="ChaCha20 and Poly1305">
         <t>
           ChaCha20 and Poly1305 combined together is a new AEAD mode that is defined in <xref target="RFC7539"/>.
-          This is a new mode defined to be a cipher which is not AES and thus would not suffer from any future weaknesses found in AES.
+          This is a new algorithm defined to be a cipher which is not AES and thus would not suffer from any future weaknesses found in AES.
           These cryptographic functions are designed to be fast in software only implementations.
         </t>
 
@@ -1634,6 +1641,8 @@ valid, message content = Verification(message sent, key, signature)
     </section>
 
     <section title="Key Derivation Functions (KDF)">
+      <t>
+      </t>
 
       <section title="HMAC-based Extract-and-Expand Key Derivation Function (HKDF)" anchor="HKDF">
         <t> 
@@ -1720,14 +1729,14 @@ valid, message content = Verification(message sent, key, signature)
         <t>
           The context information structure refers to PartyU and PartyV as the two parties which are doing the key derivation.
           Unless the application protocol defines differently, we assign PartyU to the entity that is creating the message and PartyV to the entity that is receiving the message.
-          This is because we are assuming a set of stand alone store and forward messaging processes.
+          This is because we are assuming a set of standalone store and forward messaging processes.
           In <xref target="SP800-56A"/>, PartyU is the initiator and PartyV is the responder.
           The specification is written with the idea of on-line protocols rather than store and forward protocols as the main consumer.
         </t>
 
         <t>
           Application protocols are free to define the roles differently.
-          For example, they could assign the PartyU role to the entity that initiates the connection and allow directly sending multiple messages over the line without changing the role information.
+          For example, they could assign the PartyU role to the entity that initiates the connection and allow directly sending multiple messages over the connection in both directions without changing the role information.
         </t>
 
         <t>
