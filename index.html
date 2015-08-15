@@ -462,7 +462,7 @@ ul.toc a:first-child {
 <link href="#rfc.section.1.6" rel="Chapter" title="1.6 Mandatory to Implement Algorithms"/>
 <link href="#rfc.section.2" rel="Chapter" title="2 The COSE_MSG structure"/>
 <link href="#rfc.section.3" rel="Chapter" title="3 Header Parameters"/>
-<link href="#rfc.section.3.1" rel="Chapter" title="3.1 COSE Headers"/>
+<link href="#rfc.section.3.1" rel="Chapter" title="3.1 Common COSE Headers Parameters"/>
 <link href="#rfc.section.4" rel="Chapter" title="4 Signing Structure"/>
 <link href="#rfc.section.4.1" rel="Chapter" title="4.1 Externally Supplied Data"/>
 <link href="#rfc.section.4.2" rel="Chapter" title="4.2 Signing and Verification Process"/>
@@ -559,7 +559,7 @@ ul.toc a:first-child {
 
   <meta name="dct.creator" content="Schaad, J. and B. Campbell" />
   <meta name="dct.identifier" content="urn:ietf:id:draft-ietf-cose-msg-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2015-8-14" />
+  <meta name="dct.issued" scheme="ISO8601" content="2015-8-15" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  " />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  " />
 
@@ -583,12 +583,12 @@ ul.toc a:first-child {
   <td class="right">B. Campbell</td>
 </tr>
 <tr>
-  <td class="left">Expires: February 15, 2016</td>
+  <td class="left">Expires: February 16, 2016</td>
   <td class="right">Ping Identity</td>
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">August 14, 2015</td>
+  <td class="right">August 15, 2015</td>
 </tr>
 
     	
@@ -612,7 +612,7 @@ ul.toc a:first-child {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on February 15, 2016.</p>
+<p>This Internet-Draft will expire on February 16, 2016.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -633,7 +633,7 @@ ul.toc a:first-child {
 <li>1.6.   <a href="#rfc.section.1.6">Mandatory to Implement Algorithms</a></li>
 </ul><li>2.   <a href="#rfc.section.2">The COSE_MSG structure</a></li>
 <li>3.   <a href="#rfc.section.3">Header Parameters</a></li>
-<ul><li>3.1.   <a href="#rfc.section.3.1">COSE Headers</a></li>
+<ul><li>3.1.   <a href="#rfc.section.3.1">Common COSE Headers Parameters</a></li>
 </ul><li>4.   <a href="#rfc.section.4">Signing Structure</a></li>
 <ul><li>4.1.   <a href="#rfc.section.4.1">Externally Supplied Data</a></li>
 <li>4.2.   <a href="#rfc.section.4.2">Signing and Verification Process</a></li>
@@ -798,7 +798,7 @@ values = any
 <p id="rfc.section.2.p.2">The COSE_Tagged_MSG CBOR type takes the COSE_MSG and prepends a CBOR tag of TBD1 to the encoding of COSE_MSG.  By having both a tagged and untagged version of the COSE_MSG structure, it becomes easy to either use COSE_MSG as a top level object or embedded in another object.  The tagged version allows for a method of placing the COSE_MSG structure into a choice, using a consistent tag value to determine that this is a COSE object.  </p>
 <p id="rfc.section.2.p.3">The existence of the COSE_MSG and COSE_Tagged_MSG CBOR data types are not intended to prevent protocols from using the individual security primitives directly.  Where only a single service is required, that structure can be used directly.  </p>
 <p id="rfc.section.2.p.4">Each of the top-level security objects use a CBOR array as the base structure.  </p>
-<p id="rfc.section.2.p.5">A label 'msg_type' is defined to distinguish between the different structures when they appear as part of a COSE_MSG object.  <a id="CREF4" class="info">[CREF4]<span class="info">JLS: I have moved msg_type into the individual structures.  However, they would not be necessary in the cases where a) the security service is known and b) security libraries can setup to take individual structures.  Should they be moved back to just appearing if used in a COSE_MSG rather than on the individual structure? </span></a> <a id="CREF5" class="info">[CREF5]<span class="info">JLS: Should we create an IANA registries for the values of msg_type?</span></a> <a id="CREF6" class="info">[CREF6]<span class="info">JLS: Rewrite needed - think about label concept for array elements.</span></a> </p>
+<p id="rfc.section.2.p.5">A field 'msg_type' is defined to distinguish between the different structures when they appear as part of a COSE_MSG object.  <a id="CREF4" class="info">[CREF4]<span class="info">JLS: I have moved msg_type into the individual structures.  However, they would not be necessary in the cases where a) the security service is known and b) security libraries can setup to take individual structures.  Should they be moved back to just appearing if used in a COSE_MSG rather than on the individual structure? This would make things shorter if one was using just a signed message because the msg_type field can be omitted as well as the COSE_Tagged_MSG tag field.  One the other hand, it will complicated the code if one is doing general purpose library type things.  </span></a> <a id="CREF5" class="info">[CREF5]<span class="info">JLS: Should we create an IANA registries for the values of msg_type?</span></a> </p>
 <p/>
 
 <ul class="empty">
@@ -809,7 +809,7 @@ values = any
 </ul>
 
 <p> </p>
-<p id="rfc.section.2.p.7">Implementations MUST be prepared to find an integer under this label that does not correspond to the values 1 to 3.  If this is found then the client MUST stop attempting to parse the structure and fail.  The value of 0 is reserved and not to be used.  If the value of 0 is found, then clients MUST fail processing the structure.  Implementations need to recognize that the set of values might be extended at a later date, but they should not provide a security service based on guesses of what is there.  </p>
+<p id="rfc.section.2.p.7">Implementations MUST be prepared to find an integer in this field that does not correspond to the values 1 to 3.  If this is found then the client MUST stop attempting to process the structure and fail.  The value of 0 is reserved and not to be used.  If the value of 0 is found, then clients MUST fail processing the structure.  Implementations need to recognize that the set of values might be extended at a later date, but they should not provide a security service based on guesses of what is there.  </p>
 <p id="rfc.section.2.p.8">The CDDL grammar that corresponds to the above is: </p>
 <pre>
 COSE_MSG = COSE_Sign / 
@@ -827,19 +827,19 @@ msg_type_mac=3
 </pre>
 <p id="rfc.section.2.p.9">The top level of each of the COSE message structures are encoded as arrays.  </p>
 <h1 id="rfc.section.3"><a href="#rfc.section.3">3.</a> <a href="#header-parameters" id="header-parameters">Header Parameters</a></h1>
-<p id="rfc.section.3.p.1">The structure of COSE has been designed to have two buckets of information that are not considered to be part of the payload itself, but are used for holding information about algorithms, keys, or evaluation hints for the  processing of the layer.  These two buckets are available for use in all of the structures in this document except for keys.  While these buckets can be present, they may not all be usable in all instances.  For example, while the protected bucket is defined as part of recipient structures, most of the algorithms that are used for recipients do not provide the necessary functionality to provide the needed protection and thus the bucket should not be used.  </p>
-<p id="rfc.section.3.p.2">Both buckets are implemented as CBOR maps.  The map key is a 'label' (<a href="#label">Section 1.4</a>).  The value portion is dependent on the definition for the label.  Both maps use the same set of label/value pairs.  The integer range for labels has been divided into several sections with a standard range, a private range, and a range that is dependent on the algorithm selected.  The defined labels can be found in the 'COSE Header Parameters' IANA registry (<a href="#cose-header-key-table">Section 15.2</a>).  </p>
-<p id="rfc.section.3.p.3">Two buckets are provided for each layer: <a id="CREF7" class="info">[CREF7]<span class="info">JLS: A completest version of this grammar would list the options available in the protected and unprotected headers.  Do we want to head that direction? </span></a> </p>
+<p id="rfc.section.3.p.1">The structure of COSE has been designed to have two buckets of information that are not considered to be part of the payload itself, but are used for holding information about content, algorithms, keys, or evaluation hints for the  processing of the layer.  These two buckets are available for use in all of the structures in this document except for keys.  While these buckets can be present, they may not all be usable in all instances.  For example, while the protected bucket is defined as part of recipient structures, most of the algorithms that are used for recipients do not provide the necessary functionality to provide the needed protection and thus the bucket should not be used.  </p>
+<p id="rfc.section.3.p.2">Both buckets are implemented as CBOR maps.  The map key is a 'label' (<a href="#label">Section 1.4</a>).  The value portion is dependent on the definition for the label.  Both maps use the same set of label/value pairs.  The integer and string values for labels has been divided into several sections with a standard range, a private range, and a range that is dependent on the algorithm selected.  The defined labels can be found in the 'COSE Header Parameters' IANA registry (<a href="#cose-header-key-table">Section 15.2</a>).  </p>
+<p id="rfc.section.3.p.3">Two buckets are provided for each layer: <a id="CREF6" class="info">[CREF6]<span class="info">JLS: A completest version of this grammar would list the options available in the protected and unprotected headers.  Do we want to head that direction? </span></a> </p>
 
 <dl>
   <dt>protected</dt>
-  <dd style="margin-left: 8">contains parameters about the current layer that are to be cryptographically protected.  This bucket MUST NOT be used if it is not going to be included in a cryptographic computation.  This bucket is encoded in the message as a binary object.  This value is obtained by CBOR encoding the protected map and wrapping it in a bstr object.  This wrapping allows for the encoding of the protected map to be transported with a greater chance that it will not be altered in transit.  (Badly behaved intermediates could decode and re-encode, but this will result in a failure to verify unless the re-encoded byte string is identical to the decoded byte string.) This finesses the problem of all parties needing to be able to do a common connical encoding.  </dd>
+  <dd style="margin-left: 8">contains parameters about the current layer that are to be cryptographically protected.  This bucket MUST be empty if it is not going to be included in a cryptographic computation.  This bucket is encoded in the message as a binary object.  This value is obtained by CBOR encoding the protected map and wrapping it in a bstr object.  This wrapping allows for the encoding of the protected map to be transported with a greater chance that it will not be altered in transit.  (Badly behaved intermediates could decode and re-encode, but this will result in a failure to verify unless the re-encoded byte string is identical to the decoded byte string.) This finesses the problem of all parties needing to be able to do a common connical encoding.  </dd>
   <dt>unprotected</dt>
   <dd style="margin-left: 8">contains parameters about the current layer that are not cryptographically protected.  </dd>
 </dl>
 
 <p> Only parameters that deal with the current layer are to be placed at that layer.  As an example of this, the parameter 'content type' describes the content of the message being carried in the message.  As such this parameter is placed only the the content layer and is not placed in the key managment or signature layers.  In principle, one should be able to process any given layer without reference to any other layer.  (The only data that should need to cross layers is the cryptographic key.) </p>
-<p id="rfc.section.3.p.4">The presence of both buckets is optional, however the requirement that the 'alg' parameter be present at each level effectively imposes a requirement that one of the buckets will always be present.  The parameters that go into the buckets come from the IANA "COSE Header Parameters" (<a href="#cose-header-key-table">Section 15.2</a>).  Some common parameters are defined in the next section, but a number of parameters are defined throughout this document.  </p>
+<p id="rfc.section.3.p.4">The presence of both buckets is required.  The parameters that go into the buckets come from the IANA "COSE Header Parameters" (<a href="#cose-header-key-table">Section 15.2</a>).  Some common parameters are defined in the next section, but a number of parameters are defined throughout this document.  </p>
 <p id="rfc.section.3.p.5">The CDDL fragment that describes the two buckets is: </p>
 <pre>
 header_map = {+ label =&gt; any }
@@ -849,8 +849,8 @@ Headers = (
     unprotected : header_map
 )
 </pre>
-<h1 id="rfc.section.3.1"><a href="#rfc.section.3.1">3.1.</a> <a href="#cose-headers" id="cose-headers">COSE Headers</a></h1>
-<p id="rfc.section.3.1.p.1">This document defines a set of common header parameters.  A summary of the parameters defined in this section can be found in <a href="#Header-Table">Table 1</a>.  This table should be consulted to determine the value of label used as well as the type of the value.  </p>
+<h1 id="rfc.section.3.1"><a href="#rfc.section.3.1">3.1.</a> <a href="#cose-headers" id="cose-headers">Common COSE Headers Parameters</a></h1>
+<p id="rfc.section.3.1.p.1">This section defines a set of common header parameters.  A summary of those parameters can be found in <a href="#Header-Table">Table 1</a>.  This table should be consulted to determine the value of label used as well as the type of the value.  </p>
 <p id="rfc.section.3.1.p.2">The set of header parameters defined in this section are: </p>
 <p/>
 
@@ -858,13 +858,13 @@ Headers = (
   <dt>alg</dt>
   <dd style="margin-left: 8">This parameter is used to indicate the algorithm used for the security processing.  This parameter MUST be present at each level of a signed, encrypted or authenticated message.  The value is taken from the 'COSE Algorithm Registry' (see <a href="#IANA-Alg-Registry">Section 15.3</a>).  </dd>
   <dt>crit</dt>
-  <dd style="margin-left: 8">This parameter is used to ensure that applications will take appropriate action based on the values found.  The parameter is used to indicate which protected header labels an application that is processing a message is required to understand.  The value is an array of COSE Header Labels.  When present, this parameter MUST be placed in the protected header bucket.  <br/> <ul><li>Integer labels in the range of 0 to 10 SHOULD be omitted.</li><li>Integer labels in the range -1 to -255 can be omitted as they are algorithm dependent.  If an application can correctly process an algorithm, it can be assumed that it will correctly process all of the parameters associated with that algorithm.  (The algorithm range is -1 to -65536, it is assumed that the higher end will deal with more optional algorithm specific items.) </li></ul><p> The header parameter values indicated by 'crit' can be processed by either the security library code or by an application using a security library, the only requirement is that the parameter is processed.  </p></dd>
+  <dd style="margin-left: 8">This parameter is used to ensure that applications will take appropriate action based on the values found.  The parameter is used to indicate which protected header labels an application that is processing a message is required to understand.  The value is an array of COSE Header Labels.  When present, this parameter MUST be placed in the protected header bucket.  <br/> <ul><li>Integer labels in the range of 0 to 10 SHOULD be omitted.</li><li>Integer labels in the range -1 to -255 can be omitted as they are algorithm dependent.  If an application can correctly process an algorithm, it can be assumed that it will correctly process all of the parameters associated with that algorithm.  (The algorithm range is -1 to -65536, it is assumed that the higher end will deal with more optional algorithm specific items.) </li></ul><p> The header parameter values indicated by 'crit' can be processed by either the security library code or by an application using a security library, the only requirement is that the parameter is processed.  If the 'crit' value list includes a value for which the parameter is not in the protected bucket, this is a fatal error in processing the message.  </p></dd>
   <dt>content type</dt>
-  <dd style="margin-left: 8">This parameter is used to indicate the content type of the data in the payload or ciphertext fields.  <a id="CREF8" class="info">[CREF8]<span class="info">JLS: After looking at this, I am wondering if the type for this should be: [int int]/[int tstr] so that we can keep the major/minor difference of media-types.  This does cost a couple of bytes in the message.  </span></a> Integers are from the XXXXX<a id="CREF9" class="info">[CREF9]<span class="info">JLS: Need to figure out how we are going to go about creating this registry -or are we going to modify the current mime-content table?</span></a> IANA registry table.  Strings are from the IANA 'mime-content types' registry.  Applications SHOULD provide this parameter if the content structure is potentially ambiguous.  </dd>
+  <dd style="margin-left: 8">This parameter is used to indicate the content type of the data in the payload or ciphertext fields.  Integers are from the 'CoAP Content-Formats' IANA registry table.  Strings are from the IANA 'Media Types' registry.  Applications SHOULD provide this parameter if the content structure is potentially ambiguous.  </dd>
   <dt>kid</dt>
-  <dd style="margin-left: 8">This parameter one of the ways that can be used to find the key to be used.  The value of this parameter is matched against the 'kid' field in a COSE_Key structure.  Applications MUST NOT assume that 'kid' values are unique.  There may be more than one key with the same 'kid' value, it may be required that all of the keys need to be checked to find the correct one.  The internal structure of 'kid' values is not defined and generally cannot be relied on by applications.  Key identifier values are hints about which key to use, they are not directly a security critical field, for this reason they can normally be placed in the unprotected headers bucket.  </dd>
+  <dd style="margin-left: 8">This parameter one of the ways that can be used to find the key to be used.  The value of this parameter is matched against the 'kid' member in a COSE_Key structure.  Applications MUST NOT assume that 'kid' values are unique.  There may be more than one key with the same 'kid' value, it may be required that all of the keys need to be checked to find the correct one.  The internal structure of 'kid' values is not defined and generally cannot be relied on by applications.  Key identifier values are hints about which key to use, they are not directly a security critical field, for this reason they can be placed in the unprotected headers bucket.  </dd>
   <dt>nonce</dt>
-  <dd style="margin-left: 8">This parameter holds either a nonce or Initialization Vector value.  The value can be used either as a counter value for a protocol or as an IV for an algorithm.  TODO: Talk about zero extending the value in some cases.  <a id="CREF10" class="info">[CREF10]<span class="info">JLS: Open to do.</span></a> </dd>
+  <dd style="margin-left: 8">This parameter holds either a nonce or Initialization Vector value.  The value can be used either as a counter value for a protocol or as an IV for an algorithm.  TODO: Talk about zero extending the value in some cases.  <a id="CREF7" class="info">[CREF7]<span class="info">JLS: Open to do.</span></a> </dd>
 </dl>
 
 <p> </p>
@@ -900,8 +900,8 @@ Headers = (
       <td class="left">content type</td>
       <td class="left">3</td>
       <td class="left">tstr / int</td>
-      <td class="left">media-types registry</td>
-      <td class="left">Value is either a media-type or an integer from the media-type registry</td>
+      <td class="left">CoAP Content-Formats or Media Types registry</td>
+      <td class="left">Value is either a Media Type or an integer from the CoAP Content Format registry</td>
     </tr>
     <tr>
       <td class="left">jku</td>
@@ -1070,7 +1070,7 @@ Sig_structure = [
 <p id="rfc.section.4.2.p.4">In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the appropriate authorization is done.  </p>
 <h1 id="rfc.section.5"><a href="#rfc.section.5">5.</a> <a href="#encryption-object" id="encryption-object">Encryption object</a></h1>
 <p id="rfc.section.5.p.1">In this section we describe the structure and methods to be used when doing an encryption in COSE.  In COSE, we use the same techniques and structures for encrypting both the plain text and the keys used to protect the text.  This is different from the approach used by both <a href="#RFC5652">[RFC5652]</a> and <a href="#RFC7516">[RFC7516]</a> where different structures are used for the plain text and for the different key management techniques.  </p>
-<p id="rfc.section.5.p.2">One of the byproducts of using the same technique for encrypting and encoding both the content and the keys using the various key management techniques, is a requirement that all of the key management techniques use an Authenticated Encryption (AE) algorithm.  (For the purpose of this document we use a slightly loose definition of AE algorithms.) When encrypting the plain text, it is normal to use an Authenticated Encryption with Additional Data (AEAD) algorithm.  For key management, either AE or AEAD algorithms can be used.  See <a href="#AE-algo">Appendix A</a> for more details about the different types of algorithms.  <a id="CREF11" class="info">[CREF11]<span class="info">Ilari: I don't follow/understand this text</span></a> </p>
+<p id="rfc.section.5.p.2">One of the byproducts of using the same technique for encrypting and encoding both the content and the keys using the various key management techniques, is a requirement that all of the key management techniques use an Authenticated Encryption (AE) algorithm.  (For the purpose of this document we use a slightly loose definition of AE algorithms.) When encrypting the plain text, it is normal to use an Authenticated Encryption with Additional Data (AEAD) algorithm.  For key management, either AE or AEAD algorithms can be used.  See <a href="#AE-algo">Appendix A</a> for more details about the different types of algorithms.  <a id="CREF8" class="info">[CREF8]<span class="info">Ilari: I don't follow/understand this text</span></a> </p>
 <p id="rfc.section.5.p.3">The CDDL grammar structure for encryption is: </p>
 <pre>
 COSE_encrypt = [
@@ -1204,9 +1204,9 @@ MAC_structure = [
 
 <p> </p>
 <h1 id="rfc.section.7"><a href="#rfc.section.7">7.</a> <a href="#key-structure" id="key-structure">Key Structure</a></h1>
-<p id="rfc.section.7.p.1">A COSE Key structure is built on a CBOR map object.  The set of common parameters that can appear in a COSE Key can be found in the IANA registry 'COSE Key Common Parameter Registry' (<a href="#cose-key-map-registry">Section 15.5</a>).  Additional parameters defined for different key types can be found in the IANA registry 'COSE Key Type Parameters' (<a href="#cose-key-parameter-registry">Section 15.6</a>).  </p>
-<p id="rfc.section.7.p.2">A COSE Key Set uses a CBOR array object as it's underlying type.  The values of the array elements are COSE Keys.  A Key Set MUST have at least one element in the array.  <a id="CREF12" class="info">[CREF12]<span class="info">JLS: Is there a reason to assign a CBOR tag to identify keys and/or key sets? </span></a> </p>
-<p id="rfc.section.7.p.3">The CDDL grammar describing a COSE_Key and COSE_KeySet is: <a id="CREF13" class="info">[CREF13]<span class="info">JLS: We can really simplify the grammar for COSE_Key to be just the kty (the one required field) and the generic item.  The reason to do this is that it makes things simpler.  The reason not to do this says that we really need to add a lot more items so that a grammar check can be done that is more tightly enforced.  </span></a> </p>
+<p id="rfc.section.7.p.1">A COSE Key structure is built on a CBOR map object.  The set of common parameters that can appear in a COSE Key can be found in the IANA registry 'COSE Key Common Parameter Registry' (<a href="#cose-key-map-registry">Section 15.5</a>).  Additional parameters defined for specific key types can be found in the IANA registry 'COSE Key Type Parameters' (<a href="#cose-key-parameter-registry">Section 15.6</a>).  </p>
+<p id="rfc.section.7.p.2">A COSE Key Set uses a CBOR array object as it's underlying type.  The values of the array elements are COSE Keys.  A Key Set MUST have at least one element in the array.  <a id="CREF9" class="info">[CREF9]<span class="info">JLS: Is there a reason to assign a CBOR tag to identify keys and/or key sets? </span></a> </p>
+<p id="rfc.section.7.p.3">The CDDL grammar describing a COSE_Key and COSE_KeySet is: <a id="CREF10" class="info">[CREF10]<span class="info">JLS: We can really simplify the grammar for COSE_Key to be just the kty (the one required field) and the generic item.  The reason to do this is that it makes things simpler.  The reason not to do this says that we really need to add a lot more items so that a grammar check can be done that is more tightly enforced.  </span></a> </p>
 <pre>
 COSE_Key = {
     key_kty =&gt; tstr / int,
@@ -1304,7 +1304,7 @@ COSE_KeySet = [+COSE_Key]
 
 <dl>
   <dt>kty:</dt>
-  <dd style="margin-left: 8">This parameter is used to identify the family of keys for this structure, and thus the set of key type specific parameters to be found.  The set of values can be found in <a href="#table_key_types">Table 20</a>.  </dd>
+  <dd style="margin-left: 8">This parameter is used to identify the family of keys for this structure, and thus the set of key type specific parameters to be found.  The set of values can be found in <a href="#table_key_types">Table 20</a>.  This parameter MUST be present in a key object.  </dd>
   <dt>alg:</dt>
   <dd style="margin-left: 8">This parameter is used to restrict the algorithms that are to be used with this key.  If this parameter is present in the key structure, the application MUST verify that this algorithm matches the algorithm for which the key is being used.  If the algorthms do not match, then this key object MUST NOT be used to perform the cryptographic operation.  Note that the same key can be in a different key structure with a different or no algorithm specified, however this is considered to be a poor security practice.  </dd>
   <dt>kid:</dt>
@@ -1313,7 +1313,7 @@ COSE_KeySet = [+COSE_Key]
   <dd style="margin-left: 8">This parameter is defined to restrict the set of operations that a key is to be used for.  The value of the field is an array of values from <a href="#table-key-ops">Table 3</a>.  </dd>
 </dl>
 
-<p> Only the 'kty' field MUST be present in a key object.  All other parameters can be omitted if their behavior is not needed.  </p>
+<p> </p>
 <div id="rfc.table.3"/>
 <div id="table-key-ops"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -1400,7 +1400,7 @@ valid, message content = Verification(message sent, key, signature)
 <p id="rfc.section.8.p.3">At this time, only signatures with appendixes are defined for use with COSE, however considerable interest has been expressed in using a signature with message recovery algorithm due to the effective size reduction that is possible.  Implementations will need to keep this in mind for later possible integration.  </p>
 <h1 id="rfc.section.8.1"><a href="#rfc.section.8.1">8.1.</a> ECDSA</h1>
 <p id="rfc.section.8.1.p.1">ECDSA <a href="#DSS">[DSS]</a> defines a signature algorithm using ECC.  </p>
-<p id="rfc.section.8.1.p.2">The ECDSA signature algorithm is parameterized with a hash function (h.  In the event that the length of the hash function output is greater than group of the key, the left most bytes of the hash output are used.  </p>
+<p id="rfc.section.8.1.p.2">The ECDSA signature algorithm is parameterized with a hash function (h).  In the event that the length of the hash function output is greater than group of the key, the left most bytes of the hash output are used.  </p>
 <p id="rfc.section.8.1.p.3">The algorithms defined in this document can be found in <a href="#table_ecdsa">Table 4</a>.  </p>
 <div id="rfc.table.4"/>
 <div id="table_ecdsa"/>
@@ -1439,8 +1439,8 @@ valid, message content = Verification(message sent, key, signature)
 <p id="rfc.section.8.1.p.5">The signature algorithm results in a pair of integers (R, S).  These integers will be of the same order as length of the key used for the signature process.  The signature is encoded by converting the integers into byte strings of the same length as the key size.  The length is rounded up to the nearest byte and is left padded with zero bits to get to the correct length.  The two integers are then concatenated together to form a byte string that is the resulting signature.  </p>
 <p id="rfc.section.8.1.p.6">Using the function defined in <a href="#RFC3447">[RFC3447]</a> the signature is: <br/> Signature = I2OSP(R, n) | I2OSP(S, n) <br/> where n = ceiling(key_length / 8) </p>
 <h1 id="rfc.section.8.1.1"><a href="#rfc.section.8.1.1">8.1.1.</a> Security Considerations</h1>
-<p id="rfc.section.8.1.1.p.1">The security strength of the signature is no greater than the minimum of the security strength associated with the bit length of the key and the security strength of the hash function.  When a hash function is used that has greater security than is provided by the length of the key, the signature algorithm uses the leftmost key length bits of the hash function output.  </p>
-<p id="rfc.section.8.1.1.p.2">System which have poor random number generation can leak their keys by signing two messages with the same value of 'k'.  <a href="#RFC6979">[RFC6979]</a> provides a method to deal with this problem by making 'k' be deterministic based on the message content rather than randomly generated.  Applications which specify ECDSA should evaluate the ability to get good random number generation and recommend this when it is not possible.  Note:  Use of this technique even when good random number generation exists may still be a good idea.  </p>
+<p id="rfc.section.8.1.1.p.1">The security strength of the signature is no greater than the minimum of the security strength associated with the bit length of the key and the security strength of the hash function.  </p>
+<p id="rfc.section.8.1.1.p.2">System which have poor random number generation can leak their keys by signing two different messages with the same value of 'k'.  <a href="#RFC6979">[RFC6979]</a> provides a method to deal with this problem by making 'k' be deterministic based on the message content rather than randomly generated.  Applications which specify ECDSA should evaluate the ability to get good random number generation and require this when it is not possible.  Note: Use of this technique a good idea even when good random number generation exists.  Doing so both reduces the possiblity of having the same value of 'k' in two signature operations, but allows for reproducable signature values which helps testing.  </p>
 <p id="rfc.section.8.1.1.p.3">There are two substitution that can theoretically be mounted against the ECDSA signature algorithm.  </p>
 
 <ul>
@@ -1765,7 +1765,7 @@ valid, message content = Verification(message sent, key, signature)
 <p> </p>
 <p><a href="#RFC3610">[RFC3610]</a> additionally calls out one other consideration of note.  It is possible to do a pre-computation attack against the algorithm in cases where the portions encryption content is highly predictable.  This reduces the security of the key size by half.  Ways to deal with this attack include adding a random portion to the nonce value and/or increasing the key size used.  Using a portion of the nonce for a random value will decrease the number of messages that a single key can be used for.  Increasing the key size may require more resources in the constrained device.  See sections 5 and 10 of <a href="#RFC3610">[RFC3610]</a> for more information.  </p>
 <h1 id="rfc.section.10.3"><a href="#rfc.section.10.3">10.3.</a> ChaCha20 and Poly1305</h1>
-<p id="rfc.section.10.3.p.1">ChaCha20 and Poly1305 combined together is a new AEAD mode that is defined in <a href="#RFC7539">[RFC7539]</a>.  This is a new mode defined to be a cipher which is not AES and thus would not suffer from any future weaknesses found in AES.  These cryptographic functions are designed to be fast in software only implementations.  </p>
+<p id="rfc.section.10.3.p.1">ChaCha20 and Poly1305 combined together is a new AEAD mode that is defined in <a href="#RFC7539">[RFC7539]</a>.  This is a new algorithm defined to be a cipher which is not AES and thus would not suffer from any future weaknesses found in AES.  These cryptographic functions are designed to be fast in software only implementations.  </p>
 <p id="rfc.section.10.3.p.2">The ChaCha20/Poly1305 AEAD construction defined in <a href="#RFC7539">[RFC7539]</a> has no parameterization.  It takes a 256-bit key and an a 96-bit nonce as well as the plain text and additional data as inputs and produces the cipher text as an option.  We define one algorithm identifier for this algorithm in <a href="#Table-CHACHA">Table 10</a>.  </p>
 <div id="rfc.table.10"/>
 <div id="Table-CHACHA"/>
@@ -1789,6 +1789,7 @@ valid, message content = Verification(message sent, key, signature)
 <h1 id="rfc.section.10.3.1"><a href="#rfc.section.10.3.1">10.3.1.</a> Security Considerations</h1>
 <p id="rfc.section.10.3.1.p.1">The pair of key, nonce MUST be unique for every invocation of the algorithm.  Nonce counters are considered to be an acceptable way of ensuring that they are unique.  </p>
 <h1 id="rfc.section.11"><a href="#rfc.section.11">11.</a> Key Derivation Functions (KDF)</h1>
+<p/>
 <h1 id="rfc.section.11.1"><a href="#rfc.section.11.1">11.1.</a> <a href="#HKDF" id="HKDF">HMAC-based Extract-and-Expand Key Derivation Function (HKDF)</a></h1>
 <p id="rfc.section.11.1.p.1">The HKDF key derivation algorithm is defined in <a href="#RFC5869">[RFC5869]</a>.  </p>
 <p id="rfc.section.11.1.p.2">The HKDF algorithm is defined to take a number of inputs These inputs are: </p>
@@ -1866,8 +1867,8 @@ valid, message content = Verification(message sent, key, signature)
 </table>
 <h1 id="rfc.section.11.2"><a href="#rfc.section.11.2">11.2.</a> <a href="#context" id="context">Context Information Structure</a></h1>
 <p id="rfc.section.11.2.p.1">The context information structure is used to ensure that the derived keying material is "bound" to the context of the transaction.  The context information structure used here is based on that defined in <a href="#SP800-56A">[SP800-56A]</a>.  By using CBOR for the encoding of the context information structure, we automatically get the same type of type and length separation of fields that is obtained by the use of ASN.1.  This means that there is no need to encode the lengths for the base elements as it is done by the CBOR encoding.  </p>
-<p id="rfc.section.11.2.p.2">The context information structure refers to PartyU and PartyV as the two parties which are doing the key derivation.  Unless the application protocol defines differently, we assign PartyU to the entity that is creating the message and PartyV to the entity that is receiving the message.  This is because we are assuming a set of stand alone store and forward messaging processes.  In <a href="#SP800-56A">[SP800-56A]</a>, PartyU is the initiator and PartyV is the responder.  The specification is written with the idea of on-line protocols rather than store and forward protocols as the main consumer.  </p>
-<p id="rfc.section.11.2.p.3">Application protocols are free to define the roles differently.  For example, they could assign the PartyU role to the entity that initiates the connection and allow directly sending multiple messages over the line without changing the role information.  </p>
+<p id="rfc.section.11.2.p.2">The context information structure refers to PartyU and PartyV as the two parties which are doing the key derivation.  Unless the application protocol defines differently, we assign PartyU to the entity that is creating the message and PartyV to the entity that is receiving the message.  This is because we are assuming a set of standalone store and forward messaging processes.  In <a href="#SP800-56A">[SP800-56A]</a>, PartyU is the initiator and PartyV is the responder.  The specification is written with the idea of on-line protocols rather than store and forward protocols as the main consumer.  </p>
+<p id="rfc.section.11.2.p.3">Application protocols are free to define the roles differently.  For example, they could assign the PartyU role to the entity that initiates the connection and allow directly sending multiple messages over the connection in both directions without changing the role information.  </p>
 <p id="rfc.section.11.2.p.4">Using the PartyU and PartyV fields is the easiest way to get different keys in each direction.  The use of a transaction identifier, either in one of the supplemental fields or as the salt if one is using HKDF, ensures that a unique key is generated for each set of transactions.  Combining nonce fields with the transaction identifier provides a method so that a different key is used for each message in each direction.  </p>
 <p id="rfc.section.11.2.p.5">We encode the context specific information using a CBOR array type.  For the fields that we define an algorithm parameter, the details of the parameters can be found in <a href="#KDF_Context_Alg_Params">Table 13</a>.  The fields in the array are: </p>
 
@@ -2064,7 +2065,7 @@ COSE_KDF_Context = [
 
 <p> </p>
 <h1 id="rfc.section.12.2.1"><a href="#rfc.section.12.2.1">12.2.1.</a> <a href="#key_wrap_algs" id="key_wrap_algs">AES Key Wrapping</a></h1>
-<p id="rfc.section.12.2.1.p.1">The AES Key Wrapping algorithm is defined in <a href="#RFC3394">[RFC3394]</a>.  This algorithm uses an AES key to wrap a value that is a multiple of 64-bits, as such it can be used to wrap a key for any of the content encryption algorithms defined in this document.  <a id="CREF14" class="info">[CREF14]<span class="info">JLS: Do we also want to document the use of RFC 5649 as well? It allows for other sizes of keys that might be used for HMAC - i.e. a 200 bit key.  The algorithm exists, but I do not personally know of any standard uses of it.  </span></a> The algorithm requires a single fixed parameter, the initial value.  This is fixed to the value specified in Section 2.2.3.1 of  <a href="#RFC3394">[RFC3394]</a>.  There are no public parameters that vary on a per invocation basis.  </p>
+<p id="rfc.section.12.2.1.p.1">The AES Key Wrapping algorithm is defined in <a href="#RFC3394">[RFC3394]</a>.  This algorithm uses an AES key to wrap a value that is a multiple of 64-bits, as such it can be used to wrap a key for any of the content encryption algorithms defined in this document.  <a id="CREF11" class="info">[CREF11]<span class="info">JLS: Do we also want to document the use of RFC 5649 as well? It allows for other sizes of keys that might be used for HMAC - i.e. a 200 bit key.  The algorithm exists, but I do not personally know of any standard uses of it.  </span></a> The algorithm requires a single fixed parameter, the initial value.  This is fixed to the value specified in Section 2.2.3.1 of  <a href="#RFC3394">[RFC3394]</a>.  There are no public parameters that vary on a per invocation basis.  </p>
 <div id="rfc.table.16"/>
 <div id="table_aes_keywrap"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -2149,7 +2150,7 @@ COSE_KDF_Context = [
 </table>
 <h1 id="rfc.section.12.3.1.1"><a href="#rfc.section.12.3.1.1">12.3.1.1.</a> Security Considerations for RSAES-OAEP</h1>
 <p id="rfc.section.12.3.1.1.p.1">A key size of 2048 bits or larger MUST be used with these algorithms.  This key size corresponds roughly to the same strength as provided by a 128-bit symmetric encryption algorithm.  </p>
-<p id="rfc.section.12.3.1.1.p.2">It is highly recommended that checks on the key length  be done before starting a decryption operation.  One potential denial of service operation is to provide encrypted objects using either abnormally long or oddly sized RSA modulus values.  Implementations SHOULD be able to encrypt and decrypt with modulus between 2048 and 16K bits in length.<a id="CREF15" class="info">[CREF15]<span class="info">JLS: Is this range we want to specify?</span></a> Applications can impose additional restrictions on the length of the modulus.  </p>
+<p id="rfc.section.12.3.1.1.p.2">It is highly recommended that checks on the key length  be done before starting a decryption operation.  One potential denial of service operation is to provide encrypted objects using either abnormally long or oddly sized RSA modulus values.  Implementations SHOULD be able to encrypt and decrypt with modulus between 2048 and 16K bits in length.<a id="CREF12" class="info">[CREF12]<span class="info">JLS: Is this range we want to specify?</span></a> Applications can impose additional restrictions on the length of the modulus.  </p>
 <h1 id="rfc.section.12.4"><a href="#rfc.section.12.4">12.4.</a> Direct Key Agreement</h1>
 <p id="rfc.section.12.4.p.1">When using the 'Direct Key Agreement' key managment method, the two parties use a key agreement method to create a shared secret.  A KDF is then applied to the shared secret to derive a key to be used in protecting the data.  This key is normally used as a CEK or MAC key, but could be used for other purposes if more than two layers are in use (see <a href="#three-layer">Appendix B</a>).  </p>
 <p id="rfc.section.12.4.p.2">The most commonly used key agreement algorithm used is Diffie-Hellman, but other variants exist.  Since COSE is designed for a store and forward environment rather than an on-line environment, many of the DH variants cannot be used as the receiver of the message cannot provide any key material.  One side-effect of this is that perfect forward security is not achievable, a static key will always be used for the receiver of the COSE message.  </p>
@@ -2325,7 +2326,7 @@ COSE_KDF_Context = [
 <p/>
 
 <ul>
-  <li>The 'protected' field MUST be absent if the key wrap algorithm is an AE algorithm.  <a id="CREF16" class="info">[CREF16]<span class="info">JLS: It would be possible to include the protected field in the KDF rather than the key wrap algorithm if we wanted to.  This would provide the same level of security, it would not be possible to get the same key if they are different.  </span></a> </li>
+  <li>The 'protected' field MUST be absent if the key wrap algorithm is an AE algorithm.  <a id="CREF13" class="info">[CREF13]<span class="info">JLS: It would be possible to include the protected field in the KDF rather than the key wrap algorithm if we wanted to.  This would provide the same level of security, it would not be possible to get the same key if they are different.  </span></a> </li>
   <li>The plain text to be encrypted is the key from next layer down (usually the content layer).  </li>
   <li>At a minimum, the 'unprotected' field MUST contain the 'alg' parameter, a parameter identifying the recipient asymmetric key, and a parameter with the sender's asymmetric public key.  </li>
 </ul>
@@ -2334,7 +2335,7 @@ COSE_KDF_Context = [
 <h1 id="rfc.section.12.5.1"><a href="#rfc.section.12.5.1">12.5.1.</a> ECDH</h1>
 <p id="rfc.section.12.5.1.p.1">These algorithms are defined in <a href="#table-ecdh-es-table">Table 18</a>.  </p>
 <h1 id="rfc.section.12.6"><a href="#rfc.section.12.6">12.6.</a> Password</h1>
-<p><a id="CREF17" class="info">[CREF17]<span class="info">JLS: Do we want/need to support this? JOSE did it mainly to support the encryption of private keys.  </span></a> </p>
+<p><a id="CREF14" class="info">[CREF14]<span class="info">JLS: Do we want/need to support this? JOSE did it mainly to support the encryption of private keys.  </span></a> </p>
 <h1 id="rfc.section.12.6.1"><a href="#rfc.section.12.6.1">12.6.1.</a> PBES2</h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
@@ -2454,7 +2455,7 @@ COSE_KDF_Context = [
 
 <dl>
   <dt>crv</dt>
-  <dd style="margin-left: 8">contains an identifier of the curve to be used with the key.  <a id="CREF18" class="info">[CREF18]<span class="info">JLS: Do we create a registry for curves? Is is the same registry for both EC1 and EC2? </span></a> The curves defined in this document for this key type can be found in <a href="#table-ec-curves">Table 21</a>.  Other curves may be registered in the future and private curves can be used as well.  </dd>
+  <dd style="margin-left: 8">contains an identifier of the curve to be used with the key.  <a id="CREF15" class="info">[CREF15]<span class="info">JLS: Do we create a registry for curves? Is is the same registry for both EC1 and EC2? </span></a> The curves defined in this document for this key type can be found in <a href="#table-ec-curves">Table 21</a>.  Other curves may be registered in the future and private curves can be used as well.  </dd>
   <dt>x</dt>
   <dd style="margin-left: 8">contains the x coordinate for the EC point.  The octet string represents a little-endian encoding of x.  </dd>
   <dt>d</dt>
@@ -2508,7 +2509,7 @@ COSE_KDF_Context = [
   <dt>crv</dt>
   <dd style="margin-left: 8">contains an identifier of the curve to be used with the key.  The curves defined in this document for this key type can be found in <a href="#table-ec-curves">Table 21</a>.  Other curves may be registered in the future and private curves can be used as well.  </dd>
   <dt>x</dt>
-  <dd style="margin-left: 8">contains the x coordinate for the EC point.  The integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  <a id="CREF19" class="info">[CREF19]<span class="info">JLS: Should we use the integer encoding for x, y and d instead of bstr? </span></a> </dd>
+  <dd style="margin-left: 8">contains the x coordinate for the EC point.  The integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  <a id="CREF16" class="info">[CREF16]<span class="info">JLS: Should we use the integer encoding for x, y and d instead of bstr? </span></a> </dd>
   <dt>y</dt>
   <dd style="margin-left: 8">contains either the sign bit or the value of y coordinate for the EC point.  For the value, the integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  For the sign bit, the value is true if the value of y is positive.  </dd>
   <dt>d</dt>
@@ -2562,7 +2563,7 @@ COSE_KDF_Context = [
   </tbody>
 </table>
 <h1 id="rfc.section.13.2"><a href="#rfc.section.13.2">13.2.</a> RSA Keys</h1>
-<p id="rfc.section.13.2.p.1">This document defines a key structure for both the public and private halves of RSA keys.  Together, an RSA public key and an RSA private key form an RSA key pair.  <a id="CREF20" class="info">[CREF20]<span class="info">JLS: Looking at the CBOR specification, the bstr that we are looking in our table below should most likely be specified as big numbers rather than as binary strings.  This means that we would use the tag 6.2 instead.  From my reading of the specification, there is no difference in the encoded size of the resulting output.  The specification of bignum does explicitly allow for integers encoded with leading zeros.  </span></a> </p>
+<p id="rfc.section.13.2.p.1">This document defines a key structure for both the public and private halves of RSA keys.  Together, an RSA public key and an RSA private key form an RSA key pair.  <a id="CREF17" class="info">[CREF17]<span class="info">JLS: Looking at the CBOR specification, the bstr that we are looking in our table below should most likely be specified as big numbers rather than as binary strings.  This means that we would use the tag 6.2 instead.  From my reading of the specification, there is no difference in the encoded size of the resulting output.  The specification of bignum does explicitly allow for integers encoded with leading zeros.  </span></a> </p>
 <p id="rfc.section.13.2.p.2">The document also provides support for the so-called "multi-prime" RSA where the modulus may have more than two prime factors.  The benefit of multi-prime RSA is lower computational cost for the decryption and signature primitives.  For a discussion on how multi-prime affects the security of RSA crypto-systems, the reader is referred to <a href="#MultiPrimeRSA">[MultiPrimeRSA]</a>.  </p>
 <p id="rfc.section.13.2.p.3">This document follows the naming convention of <a href="#RFC3447">[RFC3447]</a> for the naming of the fields of an RSA public or private key.  The table <a href="#table-rsa-keys">Table 24</a> provides a summary of the label values and the types associated with each of those labels.  The requirements for fields for RSA keys are as follows: </p>
 
@@ -2833,7 +2834,7 @@ COSE_KDF_Context = [
 <p id="rfc.section.15.6.p.4">This registry will be initially populated by the values in <a href="#table-ec1-keys">Table 22</a>, <a href="#table-ec2-keys">Table 23</a>, <a href="#table-rsa-keys">Table 24</a>, and <a href="#table-symmetric-keys">Table 25</a>.  The specification column for all of these entries will be this document.  </p>
 <h1 id="rfc.section.15.7"><a href="#rfc.section.15.7">15.7.</a> Media Type Registration</h1>
 <h1 id="rfc.section.15.7.1"><a href="#rfc.section.15.7.1">15.7.1.</a> COSE Security Message</h1>
-<p id="rfc.section.15.7.1.p.1">This section registers the "application/cose" and "application/cose+cbor" media types in the "Media Types" registry.  <a id="CREF21" class="info">[CREF21]<span class="info">JLS: Should we register both or just the cose+cbor one?</span></a> These media types are used to indicate that the content is a COSE_MSG.  </p>
+<p id="rfc.section.15.7.1.p.1">This section registers the "application/cose" and "application/cose+cbor" media types in the "Media Types" registry.  <a id="CREF18" class="info">[CREF18]<span class="info">JLS: Should we register both or just the cose+cbor one?</span></a> These media types are used to indicate that the content is a COSE_MSG.  </p>
 <p/>
 
 <ul class="empty">
@@ -3237,7 +3238,7 @@ a55a600b21233e86e68',
 <h1 id="rfc.appendix.C"><a href="#rfc.appendix.C">Appendix C.</a> <a href="#examples" id="examples">Examples</a></h1>
 <p id="rfc.section.C.p.1">The examples can be found at https://github.com/cose-wg/Examples.  I am currently still in the process of getting the examples up there along with some control information for people to be able to check and reproduce the examples.  </p>
 <p id="rfc.section.C.p.2">Examples may have some features that are in questions but not yet incorporated in the document.  </p>
-<p id="rfc.section.C.p.3">To make it easier to read, the examples are presented using the CBOR's diagnostic notation rather than a binary dump.  <a id="CREF22" class="info">[CREF22]<span class="info">JLS: Do we want to keep this as diagnostic notation or should we switch to having "binary" examples instead? </span></a> Using the Ruby based CBOR diagnostic tools at ????, the diagnostic notation can be converted into binary files using the following command line: (install command is?...) </p>
+<p id="rfc.section.C.p.3">To make it easier to read, the examples are presented using the CBOR's diagnostic notation rather than a binary dump.  <a id="CREF19" class="info">[CREF19]<span class="info">JLS: Do we want to keep this as diagnostic notation or should we switch to having "binary" examples instead? </span></a> Using the Ruby based CBOR diagnostic tools at ????, the diagnostic notation can be converted into binary files using the following command line: (install command is?...) </p>
 <pre>
           
          diag2cbor &lt; inputfile &gt; outputfile
@@ -3280,7 +3281,7 @@ a55a600b21233e86e68',
 <p id="rfc.section.C.1.2.p.1">This example uses the following: </p>
 
 <ul>
-  <li>MAC: HMAC w/SHA-256, 256-bit key <a id="CREF23" class="info">[CREF23]<span class="info">JLS: Need to examine how this is worked out.  In this case the length of the key to be used is implicit rather than explicit.  This needs to be the case because a direct key could be any length, however it means that when the key is derived, there is currently nothing to state how long the derived key needs to be.  </span></a> </li>
+  <li>MAC: HMAC w/SHA-256, 256-bit key <a id="CREF20" class="info">[CREF20]<span class="info">JLS: Need to examine how this is worked out.  In this case the length of the key to be used is implicit rather than explicit.  This needs to be the case because a direct key could be any length, however it means that when the key is derived, there is currently nothing to state how long the derived key needs to be.  </span></a> </li>
   <li>Key management: ECDH key agreement, two static keys, HKDF w/ context structure</li>
 </ul>
 
