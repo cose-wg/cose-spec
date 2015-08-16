@@ -132,14 +132,14 @@
               Signed messages separate the concept of protected and unprotected parameters that are for the content and the signature.
             </t>
             <t>
-              Key management has been made to be more uniform. 
-              All key management techniques are represented as a recipient rather than only have some of them be so.
+              Recipient processing has been made more uniform.
+              A recipient structure is required for all recipients rather than only for some.
             </t>
             <t>
               MAC messages are separated from signed messages.
             </t>
             <t>
-              MAC messages have the ability to do key management on the MAC authentication key.
+              MAC messages have the ability to do use all recipient algorithms on the MAC authentication key.
             </t>
             <t>
               Use binary encodings for binary data rather than base64url encodings.
@@ -432,7 +432,7 @@ tag=10
 
         Only parameters that deal with the current layer are to be placed at that layer.
         As an example of this, the parameter 'content type' describes the content of the message being carried in the message.
-        As such this parameter is placed only the the content layer and is not placed in the key managment or signature layers.
+        As such this parameter is placed only the the content layer and is not placed in the recipient or signature layers.
         In principle, one should be able to process any given layer without reference to any other layer.
         (The only data that should need to cross layers is the cryptographic key.)
       </t>
@@ -752,18 +752,18 @@ Sig_structure = [
     <section anchor="encryption-object" title="Encryption object">
 
       <t>
-        In this section we describe the structure and methods to be used when doing an encryption in COSE.
-        In COSE, we use the same techniques and structures for encrypting both the plain text and the keys used to protect the text.
-        This is different from the approach used by both <xref target="RFC5652"/> and <xref target="RFC7516"/> where different structures are used for the plain text and for the different key management techniques.
+        The encryption structure allows for one or more recipients of a message.
+        There are provisions for parameters about the content and parameters about the recipient information to be carried in the message.
+        The parameters associated with the content can be authenticated by the content encryption algorithm.
+        The parameters associated with the recipient can be authenticated by the recipient algorithm (when the algorithm supports it).
+        Examples of parameters about the content are the type of the content, when the content was created, and the content encryption algorithm.
+        Examples of parameters about the recipient are the recipients key identifier, the recipient encryption algorithm.
       </t>
-
+      
       <t>
-        One of the byproducts of using the same technique for encrypting and encoding both the content and the keys using the various key management techniques, is a requirement that all of the key management techniques use an Authenticated Encryption (AE) algorithm. 
-        (For the purpose of this document we use a slightly loose definition of AE algorithms.)
-        When encrypting the plain text, it is normal to use an Authenticated Encryption with Additional Data (AEAD) algorithm. 
-        For key management, either AE or AEAD algorithms can be used.
-        See <xref target="AE-algo"/> for more details about the different types of algorithms.
-        <cref source="Ilari">I don't follow/understand this text</cref>
+        In COSE, the same techniques and structures for encrypting both the plain text and the keys used to protect the text.
+        This is different from the approach used by both <xref target="RFC5652"/> and <xref target="RFC7516"/> where different structures are used for the content layer and for the recipient layer.
+        
       </t>
 
       <t>
@@ -810,23 +810,22 @@ COSE_encrypt_fields = (
         </list>
       </t>
 
-      <section anchor="key-management-methods" title="Key Management Methods">
+      <section anchor="key-management-methods" title="Recipient Algorithm Classes">
         <t>
           A typical encrypted message consists of an encrypted content and an encrypted CEK for one or more recipients.
-          The content-encryption key is encrypted for each recipient.
-          The details of this encryption depends on the key management technique used, but the six generally techniques are:
+          The content-encryption key is encrypted for each recipient, using a key specific to that recipient.
+          The details of this encryption depends on which class the recipient algorithm falls into.
+          Specific details on each of the classes can be found in <xref target="key-management-algs"/>.
+          A short summary of the six recipient algorithm classes is:
           <list style="hanging">
-            <t hangText="none:"> The CEK is the same as as the identified previously distributed symmetric key.</t>
+            <t hangText="none:"> The CEK is the same as as the identified previously distributed symmetric key or derived from a previously distributed secret.</t>
             <t hangText="symmetric key-encryption keys:"> The CEK is encrypted using a previously distributed symmetric key-encryption key.</t>
-            <t hangText="key agreement:"> the recipient's public key and a sender's private key are used to generate a pairwise symmetric key, then the CEK is either the derived key or encrypted by the derived key.</t>
+            <t hangText="key agreement:"> the recipient's public key and a sender's private key are used to generate a pairwise secret, a KDF is applied to derive a key, and then the CEK is either the derived key or encrypted by the derived key.</t>
             <t hangText="key transport:"> the CEK is encrypted in the recipient's public key</t>
-            <t hangText="passwords:"> the CEK is encrypted in a key-encryption key that is derived from a password or other shared secret value.</t>
+            <t hangText="passwords:"> the CEK is encrypted in a key-encryption key that is derived from a password.</t>
           </list>
         </t>
 
-        <t>
-          <xref target="key-management-algs"/> provides details on a number of different key management algorithms and discusses which parameters need to be present for each of the key management techniques.
-        </t>
       </section>
       
       <section anchor="encryption-algorithm-for-aead-algorithms" title="Encryption Algorithm for AEAD algorithms">
@@ -862,7 +861,7 @@ Enc_structure = [
 
             <t>
               Determine the encryption key.
-              This step is dependent on the key management method being used.
+              This step is dependent on the class of recipient algorithm being used.
               For:
 
               <list style="hanging">
@@ -904,7 +903,7 @@ Enc_structure = [
             </t>
             <t>
               Determine the encryption key.
-              This step is dependent on the key management method being used.
+              This step is dependent on the class of recipient algorithm being used.
               For:
 
               <list style="hanging">
@@ -940,15 +939,15 @@ Enc_structure = [
 
       <t>
         In this section we describe the structure and methods to be used when doing MAC authentication in COSE. 
-        This document allows for the use of all of the same methods of key management as are allowed for encryption.
+        This document allows for the use of all of the same classes of recipient algorithms as are allowed for encryption.
       </t>
 
       <t>
         When using MAC operations, there are two modes in which it can be used. 
         The first is just a check that the content has not been changed since the MAC was computed. 
-        Any of the key management methods can be used for this purpose. 
-        The second mode is to both check that the content has not been changed since the MAC was computed, and to use key management to verify who sent it. 
-        The key management modes that support this are ones that either use a pre-shared secret, or do static-static key agreement. 
+        Any class of recipient algorithm can be used for this purpose. 
+        The second mode is to both check that the content has not been changed since the MAC was computed, and to use recipient algorithm to verify who sent it.
+        The classes of recipient algorithms that support this are those that use a pre-shared secret or do static-static key agreement (without the key wrap step).
         In both of these cases the entity MACing the message can be validated by a key binding. 
         (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.)
       </t>
@@ -1392,11 +1391,9 @@ valid, message content = Verification(message sent, key, signature)
         </texttable>
 
         <t>
-          For some key management methods, the length of the key is known or determinable from the key management method.
-          For example, if RSA-OAEP is used then the key will be output at the correct length.
-          However, if any of the key derivation methods are used, then the size of the key to be obtained is an input parameter to the key derivation step.
-          For all HMAC methods defined in this document, the key size for a key derivation methods MUST be the same size as the hash function used.
-          It is RECOMMENDED that the key size be the same size as the hash function for all other key management methods.
+          Some recipient algorithms carry the key while others derive a key from secret data.
+          For those algorithms which carry the key (i.e. RSA-OAEP and AES-KeyWrap), the size of the HMAC key SHOULD be the same size as the underlying hash function.
+          For those algorithms which derive the key, the derived key MUST be the same size as the underlying hash function.
         </t>
 
         <section title="Security Considerations">
@@ -1530,7 +1527,7 @@ valid, message content = Verification(message sent, key, signature)
 
         <t>
           We define a matrix of algorithms in this document over the values of L and M.
-          Constrained devices are usually operating in situations where they use short messages and want to avoid doing key management operations.
+          Constrained devices are usually operating in situations where they use short messages and want to avoid doing recipient specific cryptographic operations.
           This favors smaller values of M and larger values of L.
           Less constrained devices do will want to be able to user larger messages and are more willing to generate new keys for every operation.
           This favors larger values of M and smaller values of L.
@@ -1813,6 +1810,10 @@ valid, message content = Verification(message sent, key, signature)
                   (This practice means if algorithm A can use two different key lengths, the key derived for longer key size will not contain the key for shorter key size as a prefix.)
                 </t>
 
+                <t hangText="protected">
+                  This field contains the protected parameter field.
+                </t>
+
                 <t hangText="other">
                   The field other is for free form data defined by the application.
                   An example is that an application could defined two different strings to be placed here to generate different keys for a data stream vs a control stream.
@@ -1847,6 +1848,7 @@ COSE_KDF_Context = [
     ],
     SuppPubInfo : [
         keyDataLength : uint,
+        protected : bstr,
         ? other : bstr
     ],
     ? SuppPrivInfo : bstr
@@ -1871,33 +1873,19 @@ COSE_KDF_Context = [
 
     </section>
 
-    <section title="Key Management Algorithms" anchor="key-management-algs">
+    <section title="Recipient Algorithm Classes" anchor="key-management-algs">
       <t>
-        There are a number of different key management methods that can be used in the COSE encryption system.
-        In this section we will discuss each of the key management methods, what fields need to be specified, and which algorithms are defined in this document to deal with each of them.
-      </t>
-
-      <t>
-        The names of the key management methods used here are the same as are defined in <xref target="RFC7517"/>.
-        Other specifications use different terms for the key management methods or do not support some of the key management methods.
-      </t>
-
-      <t>
-        At the moment we do not have any key management methods that allow for the use of protected headers. 
-        This may be changed in the future if, for example, the AES-GCM Key wrap method defined in <xref target="RFC7518"/> were extended to allow for authenticated data. 
-        In that event, the use of the 'protected' field, which is current forbidden below, would be permitted.
+        Recipient algorithms can be defined into a number of different classes.
+        COSE has the ability to support many classes of recipient algorithms.
+        In this section, a number of classes are listed and then a set of algorithms are specified for each of the classes.
+        The names of the recipient algorithm classes used here are the same as are defined in <xref target="RFC7517"/>.
+        Other specifications use different terms for the recipient algorithm classes or do not support some of our recipient algorithm classes.
       </t>
 
       <section title="Direct Encryption">
           <t>
-            In direct encryption mode, a shared secret between the sender and the recipient is used as the key.
+            The direct encryption class algorithms share a secret between the sender and the recipient that is used either directly or after manipulation as the content key.
             When direct encryption mode is used, it MUST be the only mode used on the message.
-            It is a massive security leak to have both direct encryption and a different key management mode on the same message.
-          </t>
-
-          <t>
-            For JOSE, direct encryption key management is the only key management method allowed for doing MACed messages.
-            In COSE, all of the key management methods can be used for MACed messages.
           </t>
 
           <t>
@@ -1907,21 +1895,37 @@ COSE_KDF_Context = [
           <t>
             <list style="symbols">
               <t>
-                The 'protected', 'ciphertext' and 'recipients' fields MUST be absent.
+                The 'protected' field MUST be a zero length item if it is not used in the computation of the content key.
               </t>
+              
               <t>
-                At a minimum, the 'unprotected' field MUST contain the 'alg' parameter and SHOULD contain a parameter identifying the shared secret.
+                The 'alg' parameter MUST be present.
               </t>
+
+              <t>
+                A parameter identifying the shared secret SHOULD be present.
+              </t>
+
+              <t>
+                The 'ciphertext' field MUST be a zero length item.
+              </t>
+              
+              <t>
+                The 'recipients' field MUST be absent.
+              </t>
+              
             </list>
           </t>
 
-            
-
           <section title="Direct Key">
             <t>
-              This key management technique is the simplest method, the supplied key is directly used as the key for the next layer down in the message.
-              There are no algorithm parameters defined for this key management methods.
-              The algorithm identifier assignment can be found in <xref target="table-direct"/>.
+              This recipient algorithm is the simplest, the supplied key is directly used as the key for the next layer down in the message.
+              There are no algorithm parameters defined for this algorithm.
+              The algorithm identifier value is assigned  in <xref target="table-direct"/>.
+            </t>
+
+            <t>
+              When this algorithm is used, the protected field MUST be zero length.
             </t>
 
             <texttable title="Direct Key" anchor="table-direct">
@@ -1933,7 +1937,7 @@ COSE_KDF_Context = [
 
             <section title="Security Considerations">
               <t>
-                The direct key management technique has several potential problems that need to be considered:
+                This recipient algorithm has several potential problems that need to be considered:
                 <list style="symbols">
                   <t>
                     These keys need to have some method to be regularly updated over time.
@@ -1955,22 +1959,22 @@ COSE_KDF_Context = [
 
           <section title="Direct Key with KDF">
             <t>
-              This key managment takes a common shared secret between the two parties and applies the HKDF function (<xref target="HKDF"/>) using the context structure defined in <xref target="context"/> to transform the shared secret into the necessary key.
+              These recipient algorithms take a common shared secret between the two parties and applies the HKDF function (<xref target="HKDF"/>) using the context structure defined in <xref target="context"/> to transform the shared secret into the necessary key.
               Either the 'salt' parameter of HKDF or the partyU 'nonce' parameter of the context structure MUST be present.
               This parameter can be generated either randomly or deterministically, the requirement is that it be a unique value for the key pair in question.
             </t>
 
             <t>
-              If the salt/nonce value is generated randomly, then it is suggested that the length of the random value be the same length as the hash function underlying HKDF, i.e 256-bits.
+              If the salt/nonce value is generated randomly, then it is suggested that the length of the random value be the same length as the hash function underlying HKDF.
               While there is no way to guarantee that it will be unique, there is a high probability that it will be unique.
               If the salt/nonce value is generated deterministically, it can be guaranteed to be unique and thus there is no length requirement.
             </t>
 
             <t>
-              Since with this technique a new key can be generated for every message, the restrictions on IVs can frequently be relaxed.
-              For the content encryption algorithms used in this document IVs must be unique for a specific key.
-              If the key is altered then the IV can be re-used.
-              Alternatively, an application can be the IV be generated from the same context as the key is by changing the algorithm identifier to the string "IV-GENERATION".
+              A new IV must be used if the same key is used in more than one message.
+              The IV can be modified in a predictable manner, a random manner or an unpredictable manner.
+              One unpredictable manner than can be used is to use the HKDF function to generate the IV.
+              If HKDF is used for generating the IV, the algorithm identifier is set to "IV-GENERATION".
             </t>
             
             <t>
@@ -1982,10 +1986,10 @@ COSE_KDF_Context = [
               <ttcol align='left'>value</ttcol>
               <ttcol align='left'>KDF</ttcol>
               <ttcol align='left'>description</ttcol>
-              <c>direct+KDF-SHA-256</c>      <c>*</c>        <c>HKDF SHA-256</c>   <c>Shared secret w/ KDF</c>
-              <c>direct+KDF-SHA-512</c>      <c>*</c>        <c>HKDF SHA-512</c>   <c>Shared secret w/ KDF</c>
-              <c>direct+KDF-AES-128</c>      <c>*</c>           <c>HKDF AES-MAC-128</c> <c>Shared secret w/ AES-MAC 128-bit key</c>
-              <c>direct+KDF-AES-256</c>      <c>*</c>           <c>HKDF AES-MAC-256</c> <c>Shared secret w/ AES-MAC 256-bit key</c>
+              <c>direct+HKDF-SHA-256</c>      <c>*</c>        <c>HKDF SHA-256</c>     <c>Shared secret w/ HKDF and SHA-256</c>
+              <c>direct+HKDF-SHA-512</c>      <c>*</c>        <c>HKDF SHA-512</c>     <c>Shared secret w/ HKDF and SHA-512</c>
+              <c>direct+HKDF-AES-128</c>      <c>*</c>        <c>HKDF AES-MAC-128</c> <c>Shared secret w/ AES-MAC 128-bit key</c>
+              <c>direct+HKDF-AES-256</c>      <c>*</c>        <c>HKDF AES-MAC-256</c> <c>Shared secret w/ AES-MAC 256-bit key</c>
             </texttable>
 
             <section title="Security Considerations">
@@ -2132,7 +2136,7 @@ COSE_KDF_Context = [
 
       <section title="Direct Key Agreement">
         <t>
-          When using the 'Direct Key Agreement' key managment method, the two parties use a key agreement method to create a shared secret.
+          The 'direct key agreement' class of recipient algorithms uses a key agreement method to create a shared secret.
           A KDF is then applied to the shared secret to derive a key to be used in protecting the data.
           This key is normally used as a CEK or MAC key, but could be used for other purposes if more than two layers are in use (see <xref target="three-layer"/>).
         </t>
@@ -2163,7 +2167,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          When direct key agreement mode is used, it MUST be the only key management mode used on the message and there MUST be only one recipient.
+          When direct key agreement mode is used, there MUST be only one recipient in the message.
           This method creates the key directly and that makes it difficult to mix with additional recipients.
           If multiple recipients are needed, then the version with key wrap needs to be used.
         </t>
@@ -3254,10 +3258,9 @@ COSE_KDF_Context = [
     <section anchor="three-layer" title="Three Levels of Recipient Information">
 
       <t>
-        All of the currently defined Key Management methods only use two levels of the COSE_Encrypt structure.
+        All of the currently defined recipient algorithms classes only use two levels of the COSE_Encrypt structure.
         The first level is the message content and the second level is the content key encryption.
-        However, if one uses a key management technique such as RSA-KEM (see Appendix A of RSA-KEM <xref target="RFC5990"/>, then
-        it make sense to have three levels of the COSE_Encrypt structure.
+        However, if one uses a recipient algorithm such as RSA-KEM (see Appendix A of RSA-KEM <xref target="RFC5990"/>, then it make sense to have three levels of the COSE_Encrypt structure.
       </t>
 
       <t>
@@ -3335,7 +3338,7 @@ COSE_KDF_Context = [
             This example users the following:
             <list style="symbols">
               <t>MAC: AES-CMAC, 256-bit key, trucated to 64 bits</t>
-              <t>Key management: direct shared secret</t>
+              <t>Recipient class: direct shared secret</t>
               <t>File name: Mac-04</t>
             </list>
           </t>
@@ -3356,7 +3359,7 @@ COSE_KDF_Context = [
                 This needs to be the case because a direct key could be any length, however it means that when the key is derived, there is currently nothing to state how long the derived key needs to be.
               </cref>
               </t>
-              <t>Key management: ECDH key agreement, two static keys, HKDF w/ context structure</t>
+              <t>Recipient class: ECDH key agreement, two static keys, HKDF w/ context structure</t>
             </list>
           </t>
 
@@ -3370,7 +3373,7 @@ COSE_KDF_Context = [
 
             <list style="symbols">
               <t>MAC: AES-MAC, 128-bit key, truncated to 64 bits</t>
-              <t>Key management: AES keywrap w/ a pre-shared 256-bit key</t>
+              <t>Recipient class: AES keywrap w/ a pre-shared 256-bit key</t>
             </list>
           </t>
 
@@ -3386,7 +3389,7 @@ COSE_KDF_Context = [
             <list style="symbols">
               <t>MAC: HMAC w/ SHA-256, 128-bit key</t>
               <t>
-                Key management: Uses three different methods
+                Recipient class: Uses three different methods
                 <list style="numbers">
                   <t>ECDH Ephemeral-Static, Curve P-521, AES-Key Wrap w/ 128-bit key</t>
                   <t>RSA-OAEP w/ SHA-256</t>
@@ -3410,7 +3413,7 @@ COSE_KDF_Context = [
 
             <list style="symbols">
               <t>CEK: AES-GCM w/ 128-bit key</t>
-              <t>Key managment: ECDH Ephemeral-Static, Curve P-256</t>
+              <t>Recipient class: ECDH Ephemeral-Static, Curve P-256</t>
             </list>
           </t>
           
@@ -3423,7 +3426,7 @@ COSE_KDF_Context = [
             This example uses the following:
             <list style="symbols">
               <t>CEK: AES-CCM w/128-bit key, trucate the tag to 64-bits</t>
-              <t>Key managment: Use HKDF on a shared secret with the following implicit fields as part of the context.
+              <t>Recipient class: Use HKDF on a shared secret with the following implicit fields as part of the context.
               <list style="symbols">
                 <t>APU identity: "lighting-client"</t>
                 <t>APV identity: "lighting-server"</t>
