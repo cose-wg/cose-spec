@@ -2038,11 +2038,13 @@ COSE_KDF_Context = [
           <t>
             The AES Key Wrapping algorithm is defined in <xref target="RFC3394"/>.
             This algorithm uses an AES key to wrap a value that is a multiple of 64-bits, as such it can be used to wrap a key for any of the content encryption algorithms defined in this document.
+            <!--  Don't care about this anymore
             <cref source="JLS">
               Do we also want to document the use of RFC 5649 as well?  
               It allows for other sizes of keys that might be used for HMAC - i.e. a 200 bit key.
               The algorithm exists, but I do not personally know of any standard uses of it.
-            </cref>
+              </cref>
+              -->
             The algorithm requires a single fixed parameter, the initial value.
             This is fixed to the value specified in Section 2.2.3.1 of  <xref target="RFC3394"/>.
             There are no public parameters that vary on a per invocation basis.
@@ -2126,7 +2128,7 @@ COSE_KDF_Context = [
             <t>
               It is highly recommended that checks on the key length  be done before starting a decryption operation.
               One potential denial of service operation is to provide encrypted objects using either abnormally long or oddly sized RSA modulus values.
-              Implementations SHOULD be able to encrypt and decrypt with modulus between 2048 and 16K bits in length.<cref source="JLS">Is this range we want to specify?</cref>
+              Implementations SHOULD be able to encrypt and decrypt with modulus between 2048 and 16K bits in length.
               Applications can impose additional restrictions on the length of the modulus.
             </t>
           </section>
@@ -2295,17 +2297,17 @@ COSE_KDF_Context = [
         <t>
           <list style="symbols">
             <t>
-              The 'protected' field MUST be absent if the key wrap algorithm is an AE algorithm.
-              <cref source="JLS">
-                It would be possible to include the protected field in the KDF rather than the key wrap algorithm if we wanted to.
-                This would provide the same level of security, it would not be possible to get the same key if they are different.
-              </cref>
+              The 'protected' field is fed into the KDF context structure.
             </t>
             <t>
               The plain text to be encrypted is the key from next layer down (usually the content layer).
             </t>
             <t>
-              At a minimum, the 'unprotected' field MUST contain the 'alg' parameter, a parameter identifying the recipient asymmetric key, and a parameter with the sender's asymmetric public key.
+              The 'alg' parameter MUST be present in the layer.
+            </t>
+            <t>
+              A parameter identifying the recipient's key SHOULD be present.
+              A parameter identifying the senders key SHOULD be present.
             </t>
           </list>
         </t>
@@ -2319,6 +2321,8 @@ COSE_KDF_Context = [
         
       </section>
 
+      <!--  Comment out password based algorithms.   Issue #6 - https://github.com/cose-wg/cose-issues/issues/6
+           
       <section title="Password">
         <t>
           <cref source="JLS">
@@ -2337,7 +2341,8 @@ COSE_KDF_Context = [
             <c>PBES2-HS512+A256KW</c>        <c>*</c>        <c>PBES2 w/ HMAC SHA-512 and AES Key wrap w/ 256 bit key</c>
           </texttable>
         </section>
-      </section>
+        </section>
+        -->
     </section>
 
     <section title="Keys" anchor="Key-specific-labels">
@@ -2357,7 +2362,7 @@ COSE_KDF_Context = [
       </t>
 
       <t>
-        Keys are identified by the 'kty' member of the COSE_Key object.
+        Key types are identified by the 'kty' member of the COSE_Key object.
         In this document we define four values for the member.
       </t>
 
@@ -2376,35 +2381,34 @@ COSE_KDF_Context = [
           Two different key structures are being defined for Elliptic Curve keys.
           One version uses both an x and a y coordinate, potentially with point compression.
           This is the traditional EC point representation that is used in <xref target="RFC5480"/>.
+          
           The other version uses only the x coordinate as the y coordinate is either to be recomputed or not needed for the key agreement operation.
           An example of this is Curve25519 <xref target="I-D.irtf-cfrg-curves"/>.
         </t>
         
-          <texttable title="EC Curves" anchor="table-ec-curves">
-            <ttcol>name</ttcol>
-            <ttcol>key type</ttcol>
-            <ttcol>value</ttcol>
-            <ttcol>description</ttcol>
-            <c>P-256</c>        <c>EC2</c>      <c>1</c>       <c>NIST P-256 also known as secp256r1</c>
-            <c>P-384</c>        <c>EC2</c>      <c>2</c>       <c>NIST P-384 also known as secp384r1</c>
-            <c>P-521</c>        <c>EC2</c>      <c>3</c>       <c>NIST P-521 also known as secp521r1</c>
-            <c>Curve25519</c>   <c>EC1</c>      <c>1</c>       <c>Provide reference</c>
-            <c>Goldilocks</c>   <c>EC1</c>      <c>2</c>       <c>Provide reference</c>
-          </texttable>
+        <texttable title="EC Curves" anchor="table-ec-curves">
+          <ttcol>name</ttcol>
+          <ttcol>key type</ttcol>
+          <ttcol>value</ttcol>
+          <ttcol>description</ttcol>
+          <c>P-256</c>        <c>EC2</c>      <c>1</c>       <c>NIST P-256 also known as secp256r1</c>
+          <c>P-384</c>        <c>EC2</c>      <c>2</c>       <c>NIST P-384 also known as secp384r1</c>
+          <c>P-521</c>        <c>EC2</c>      <c>3</c>       <c>NIST P-521 also known as secp521r1</c>
+          <c>Curve25519</c>   <c>EC1</c>      <c>1</c>       <c>Curve 25519</c>
+          <c>Curve448</c>     <c>EC1</c>      <c>2</c>       <c>Curve 448</c>
+        </texttable>
 
         <section title="Single Coordinate Curves" anchor="EC1-Keys">
           <t>
-            NOTE: This section represents at risk work depending on the ability to get good references for Curve25519 and Goldilocks.
+            One class of Elliptic Curve mathematics allows for a point to be completely defined using the curve and the x coordinate of the point on the curve.
+            The two curves that are initially setup to use is point format are Curve 25519 and Curve 448 which are defined in <xref target="I-D.irtf-cfrg-curves"/>.
           </t>
-          
+
           <t>
-            New versions of ECC have been targeted at variants where only a single value of the EC Point need to be transmitted.
-            This work is currently going on in the IRTF CFRG group.
-          </t>
-          
-          <t>
-            For EC keys with both coordinates, the 'kty' member is set to 1 (EC1).
+            For EC keys with only the x coordinates, the 'kty' member is set to 1 (EC1).
+            The key parameters defined in this section are summarized in <xref target="table-ec1-keys"/>.
             The members that are defined for this key type are:
+            
             <list style="hanging">
               <t hangText="crv">
                 contains an identifier of the curve to be used with the key.
@@ -2431,7 +2435,7 @@ COSE_KDF_Context = [
           <t>
             For public keys, it is REQUIRED that 'crv' and  'x' be present in the structure.
             For private keys, it is REQUIRED that 'crv' and 'd' be present in the structure.
-            It is RECOMMENDED that 'x'  also be present, but it can be recomputed from the required elements and omitting it saves on space.
+            For private keys, it is RECOMMENDED that 'x' also be present, but it can be recomputed from the required elements and omitting it saves on space.
           </t>
           
           <texttable title="EC Key Parameters" anchor="table-ec1-keys">
@@ -2452,9 +2456,12 @@ COSE_KDF_Context = [
             The latter encoding has not been recommend in the IETF due to potential IPR issues with Certicom.
             However, for operations in constrained environments, the ability to shrink a message by not sending the y coordinate is potentially useful.
           </t>
+          
           <t>
             For EC keys with both coordinates, the 'kty' member is set to 2 (EC2).
+            The key parameters defined in this section are summarized in <xref target="table-ec2-keys"/>.
             The members that are defined for this key type are:
+            
             <list style="hanging">
               <t hangText="crv">
                 contains an identifier of the curve to be used with the key.
@@ -2466,8 +2473,9 @@ COSE_KDF_Context = [
                 contains the x coordinate for the EC point.
                 The integer is converted to an octet string as defined in <xref target="SEC1"/>.
                 Zero octets MUST NOT be removed from the front of the octet string.
+
                 <cref source="JLS">
-                  Should we use the integer encoding for x, y and d instead of bstr?
+                  Should we use the bignum encoding for x, y and d instead of bstr?
                 </cref>
               </t>
               
@@ -2488,10 +2496,9 @@ COSE_KDF_Context = [
           <t>
             For public keys, it is REQUIRED that 'crv', 'x' and 'y' be present in the structure.
             For private keys, it is REQUIRED that 'crv' and 'd' be present in the structure.
-            It is RECOMMENDED that 'x' and 'y' also be present, but they can be recomputed from the required elements and omitting them saves on space.
+            For private keys, it is RECOMMENDED that 'x' and 'y' also be present, but they can be recomputed from the required elements and omitting them saves on space.
           </t>
 
-          
           <texttable title="EC Key Parameters" anchor="table-ec2-keys">
             <ttcol>name</ttcol>
             <ttcol>key type</ttcol>
@@ -2813,7 +2820,7 @@ COSE_KDF_Context = [
 
         <t>
           The initial contents of the registry can be found in the following:
-          <xref target="table-AES-CCM"/>, <xref target="table-AES-GCM"/>, <xref target="table_ecdsa"/>, <xref target="table-hmac"/>, <xref target="table-direct"/>, <xref target="table_aes_keywrap"/>, <xref target="table-RSA-OAEP"/>.
+          <xref target="table-AES-CCM"/>, <xref target="table-AES-GCM"/>, <xref target="Table-CHACHA"/>, <xref target="table_ecdsa"/>, <xref target="table-rsa-algs"/>, <xref target="table-hmac"/>, <xref target="table-aes-mac"/>, <xref target="table-direct"/>, <xref target="table-direct-kdf"/>, <xref target="table_aes_keywrap"/>, <xref target="table-RSA-OAEP"/>, <xref target="table-ecdh-es-table"/>.
           The specification column for all rows in that table should be this document.
         </t>
 
@@ -3353,11 +3360,6 @@ COSE_KDF_Context = [
             
             <list style="symbols">
               <t>MAC: HMAC w/SHA-256, 256-bit key
-              <cref source="JLS">
-                Need to examine how this is worked out.
-                In this case the length of the key to be used is implicit rather than explicit.
-                This needs to be the case because a direct key could be any length, however it means that when the key is derived, there is currently nothing to state how long the derived key needs to be.
-              </cref>
               </t>
               <t>Recipient class: ECDH key agreement, two static keys, HKDF w/ context structure</t>
             </list>
