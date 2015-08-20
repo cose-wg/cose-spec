@@ -1353,6 +1353,20 @@ valid, message content = Verification(message sent, key, signature)
       </t>
 
       <t>
+        MACs are designed in the same basic structure as signature with appendix algorithms.
+        The message content is processed and an authentication code is produced, the authentication code is frequently called a tag.
+        The basic structure becomes:
+      </t>
+      <figure><artwork>
+        <![CDATA[
+tag = MAC_Create(message content, key)
+
+valid = MAC_Verify(message content, key, tag)
+]]>
+      </artwork></figure>
+      
+
+      <t>
         MAC algorithms can be based on either a block cipher algorithm (i.e. AES-MAC) or a hash algorithm (i.e. HMAC).
         This document defines a MAC algorithm for each of these two constructions.
       </t>
@@ -1458,7 +1472,30 @@ valid, message content = Verification(message sent, key, signature)
 
     <section title="Content Encryption Algorithms">
       <t>
-        
+        Content Encryption Algorithms provide data confidentialty for potentially large blocks of data using a symmetric key.
+        They provide either no or very limited data origination.
+        (One cannot, for example, be used to prove the identity of the sender to a third party.)
+        The ability to provide data origination is linked to how the symmetric key is obtained.
+      </t>
+
+      <t>
+        We restrict the set of legal content encryption algorithms to those which support authentication both of the content and additional data.
+        The encryption process will generate some type of authentication value, but that value may be either explicit or implicit in terms of the algorithm definition.
+        For simplicity sake, the authentication code will normally be defined as being appended to the cipher text stream.
+        The basic structure becomes:
+      </t>
+      <figure><artwork>
+        <![CDATA[
+ciphertext = Encrypt(message content, key, additional data)
+
+valid, message content = Decrypt(cipher text, key, additional data)
+]]>
+      </artwork></figure>
+
+      <t>
+        Most AEAD algorithms are logically defined as returning the message content only if the decryption is valid.
+        Many but not all implementations will follow this convention.
+        The message content MUST NOT be used if the decryption does not validate.
       </t>
       
       <section title="AES GCM">
@@ -1639,8 +1676,34 @@ valid, message content = Verification(message sent, key, signature)
 
     <section title="Key Derivation Functions (KDF)">
       <t>
+        Key Derivation Functions (KDFs) are used to take some secret value and generate a different one.
+        The original secret values come in three basic flavors:
+        <list style="symbols">
+          <t>Secrets which are uniformly random:  This is the type of secret which is created by a good random number generator.</t>
+          <t>Secrets which are not uniformly random: This is type of secret which is created by operations like key agreement.</t>
+          <t>Secrets which are not random: This is the type of secret that people generate for things like passwords.</t>
+        </list>
       </t>
 
+      <t>
+        General KDF functions work well with the first type of secret, can do reasonable well with the second type of secret and generally do poorly with the last type of secret.
+        None of the KDF functions in this section are designed to deal with the type of secrets that are used for passwords.
+        Functions like PBSE2 <xref target="PBSE2"/> need to be used for that type of secret.
+      </t>
+
+      <t>
+        Many functions are going to handle the first two type of secrets differently.
+        The KDF function defined in <xref target="HKDF"/> can use different underlying constructions if the secret is uniformly random than if the secret is not uniformly random.
+        This is reflected in the set of algorithms defined for HKDF.
+      </t>
+
+      <t>
+        When using KDF functions, one component that is generally included is context information.
+        Context information is used to allow for different keying information to be derived from the same secret.
+        The use of context based keying material is considered to be a good security practice.
+        This document defines a single context structure and a single KDF function.
+      </t>
+      
       <section title="HMAC-based Extract-and-Expand Key Derivation Function (HKDF)" anchor="HKDF">
         <t> 
           The HKDF key derivation algorithm is defined in <xref target="RFC5869"/>.
@@ -1881,6 +1944,8 @@ COSE_KDF_Context = [
         The names of the recipient algorithm classes used here are the same as are defined in <xref target="RFC7517"/>.
         Other specifications use different terms for the recipient algorithm classes or do not support some of our recipient algorithm classes.
       </t>
+
+      
 
       <section title="Direct Encryption">
           <t>
@@ -3535,6 +3600,18 @@ COSE_KDF_Context = [
     </section>
 
     <section title="Document Updates">
+      <section title="Version -03 to -04">
+        <t>
+          <list style="symbols">
+            <t>Eliminate the term "key managment" from the document.</t>
+            <t>Change top level from map to array.</t>
+            <t>Point to content registries for the 'content type' attribute</t>
+            <t>Push protected field into the KDF functions for recipients.</t>
+            <t>Remove password based recipient information.</t>
+          </list>
+        </t>
+      </section>
+      
       <section title="Version -02 to -03">
         <t>
           <list style="symbols">
