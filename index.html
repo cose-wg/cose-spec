@@ -545,10 +545,11 @@ ul.toc a:first-child {
 <link href="#rfc.appendix.C.4.2" rel="Chapter" title="C.4.2 Private Keys"/>
 <link href="#rfc.appendix.D" rel="Chapter" title="D COSE Header Algorithm Label Table"/>
 <link href="#rfc.appendix.E" rel="Chapter" title="E Document Updates"/>
-<link href="#rfc.appendix.E.1" rel="Chapter" title="E.1 Version -02 to -03"/>
+<link href="#rfc.appendix.E.1" rel="Chapter" title="E.1 Version -03 to -04"/>
 <link href="#rfc.appendix.E.2" rel="Chapter" title="E.2 Version -02 to -03"/>
-<link href="#rfc.appendix.E.3" rel="Chapter" title="E.3 Version -01 to -2"/>
-<link href="#rfc.appendix.E.4" rel="Chapter" title="E.4 Version -00 to -01"/>
+<link href="#rfc.appendix.E.3" rel="Chapter" title="E.3 Version -02 to -03"/>
+<link href="#rfc.appendix.E.4" rel="Chapter" title="E.4 Version -01 to -2"/>
+<link href="#rfc.appendix.E.5" rel="Chapter" title="E.5 Version -00 to -01"/>
 <link href="#rfc.authors" rel="Chapter"/>
 
 
@@ -557,7 +558,7 @@ ul.toc a:first-child {
 
   <meta name="dct.creator" content="Schaad, J. and B. Campbell" />
   <meta name="dct.identifier" content="urn:ietf:id:draft-ietf-cose-msg-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2015-8-19" />
+  <meta name="dct.issued" scheme="ISO8601" content="2015-8-24" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  " />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  " />
 
@@ -581,12 +582,12 @@ ul.toc a:first-child {
   <td class="right">B. Campbell</td>
 </tr>
 <tr>
-  <td class="left">Expires: February 20, 2016</td>
+  <td class="left">Expires: February 25, 2016</td>
   <td class="right">Ping Identity</td>
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">August 19, 2015</td>
+  <td class="right">August 24, 2015</td>
 </tr>
 
     	
@@ -610,7 +611,7 @@ ul.toc a:first-child {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on February 20, 2016.</p>
+<p>This Internet-Draft will expire on February 25, 2016.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -714,10 +715,11 @@ ul.toc a:first-child {
 <li>C.4.2.   <a href="#rfc.appendix.C.4.2">Private Keys</a></li>
 </ul></ul><li>Appendix D.   <a href="#rfc.appendix.D">COSE Header Algorithm Label Table</a></li>
 <li>Appendix E.   <a href="#rfc.appendix.E">Document Updates</a></li>
-<ul><li>E.1.   <a href="#rfc.appendix.E.1">Version -02 to -03</a></li>
+<ul><li>E.1.   <a href="#rfc.appendix.E.1">Version -03 to -04</a></li>
 <li>E.2.   <a href="#rfc.appendix.E.2">Version -02 to -03</a></li>
-<li>E.3.   <a href="#rfc.appendix.E.3">Version -01 to -2</a></li>
-<li>E.4.   <a href="#rfc.appendix.E.4">Version -00 to -01</a></li>
+<li>E.3.   <a href="#rfc.appendix.E.3">Version -02 to -03</a></li>
+<li>E.4.   <a href="#rfc.appendix.E.4">Version -01 to -2</a></li>
+<li>E.5.   <a href="#rfc.appendix.E.5">Version -00 to -01</a></li>
 </ul><li><a href="#rfc.authors">Authors' Addresses</a></li>
 
 
@@ -829,7 +831,7 @@ msg_type_mac=3
 
 <dl>
   <dt>protected</dt>
-  <dd style="margin-left: 8">contains parameters about the current layer that are to be cryptographically protected.  This bucket MUST be empty if it is not going to be included in a cryptographic computation.  This bucket is encoded in the message as a binary object.  This value is obtained by CBOR encoding the protected map and wrapping it in a bstr object.  This wrapping allows for the encoding of the protected map to be transported with a greater chance that it will not be altered in transit.  (Badly behaved intermediates could decode and re-encode, but this will result in a failure to verify unless the re-encoded byte string is identical to the decoded byte string.) This finesses the problem of all parties needing to be able to do a common connical encoding.  </dd>
+  <dd style="margin-left: 8">contains parameters about the current layer that are to be cryptographically protected.  This bucket MUST be empty if it is not going to be included in a cryptographic computation.  This bucket is encoded in the message as a binary object.  This value is obtained by CBOR encoding the protected map and wrapping it in a bstr object.  Senders SHOULD encode an empty protected map as a zero length binary object (it is shorter).  Recipients MUST accept both a zero length binary value and a zero length map encoded in the binary value.  The wrapping allows for the encoding of the protected map to be transported with a greater chance that it will not be altered in transit.  (Badly behaved intermediates could decode and re-encode, but this will result in a failure to verify unless the re-encoded byte string is identical to the decoded byte string.) This finesses the problem of all parties needing to be able to do a common connical encoding.  </dd>
   <dt>unprotected</dt>
   <dd style="margin-left: 8">contains parameters about the current layer that are not cryptographically protected.  </dd>
 </dl>
@@ -1490,7 +1492,15 @@ valid, message content = Verification(message sent, key, signature)
 <p id="rfc.section.8.2.1.p.2">There is a theoretical hash substitution attack that can be mounted against RSASSA-PSS.  However, the requirement that the same hash function be used consistently for all operations is an effective mitigation against it.  Unlike ECDSA, hash functions are not truncated so that the full hash value is always signed.  The internal padding structure of RSASSA-PSS means that one needs to have multiple collisions between the two hash functions in order to be successful in producing a forgery based on changing the hash function.  This is highly unlikely.  </p>
 <h1 id="rfc.section.9"><a href="#rfc.section.9">9.</a> Message Authentication (MAC) Algorithms</h1>
 <p id="rfc.section.9.p.1">Message Authentication Codes (MACs) provide data authentication and integrity protection.  They provide either no or very limited data origination.  (One cannot, for example, be used to prove the identity of the sender to a third party.) </p>
-<p id="rfc.section.9.p.2">MAC algorithms can be based on either a block cipher algorithm (i.e. AES-MAC) or a hash algorithm (i.e. HMAC).  This document defines a MAC algorithm for each of these two constructions.  </p>
+<p id="rfc.section.9.p.2">MACs are designed in the same basic structure as signature with appendix algorithms.  The message content is processed and an authentication code is produced, the authentication code is frequently called a tag.  The basic structure becomes: </p>
+<pre>
+        
+tag = MAC_Create(message content, key)
+
+valid = MAC_Verify(message content, key, tag)
+
+      </pre>
+<p id="rfc.section.9.p.3">MAC algorithms can be based on either a block cipher algorithm (i.e. AES-MAC) or a hash algorithm (i.e. HMAC).  This document defines a MAC algorithm for each of these two constructions.  </p>
 <h1 id="rfc.section.9.1"><a href="#rfc.section.9.1">9.1.</a> Hash-based Message Authentication Codes (HMAC)</h1>
 <p id="rfc.section.9.1.p.1">The Hash-base Message Authentication Code algorithm (HMAC) <a href="#RFC2104">[RFC2104]</a><a href="#RFC4231">[RFC4231]</a> was designed to deal with length extension attacks.  The algorithm was also designed to allow for new hash algorithms to be directly plugged in without changes to the hash function.  The HMAC design process has been vindicated as, while the security of hash algorithms such as MD5 has decreased over time, the security of HMAC combined with MD5 has not yet been shown to be compromised <a href="#RFC6151">[RFC6151]</a>.  </p>
 <p id="rfc.section.9.1.p.2">The HMAC algorithm is parameterized by an inner and outer padding, a hash function (h) and an authentication tag value length.  For this specification, the inner and outer padding are fixed to the values set in <a href="#RFC2104">[RFC2104]</a>.  The length of the authentication tag corresponds to the difficulty of producing a forgery.  For use in constrained environments, we define a set of HMAC algorithms that are truncated.  There are currently no known issues when truncating, however the security strength of the message tag is correspondingly reduced in strength.  When truncating, the left most tag length bits are kept and transmitted.  </p>
@@ -1600,7 +1610,16 @@ valid, message content = Verification(message sent, key, signature)
 
 <p> </p>
 <h1 id="rfc.section.10"><a href="#rfc.section.10">10.</a> Content Encryption Algorithms</h1>
-<p/>
+<p id="rfc.section.10.p.1">Content Encryption Algorithms provide data confidentialty for potentially large blocks of data using a symmetric key.  They provide either no or very limited data origination.  (One cannot, for example, be used to prove the identity of the sender to a third party.) The ability to provide data origination is linked to how the symmetric key is obtained.  </p>
+<p id="rfc.section.10.p.2">We restrict the set of legal content encryption algorithms to those which support authentication both of the content and additional data.  The encryption process will generate some type of authentication value, but that value may be either explicit or implicit in terms of the algorithm definition.  For simplicity sake, the authentication code will normally be defined as being appended to the cipher text stream.  The basic structure becomes: </p>
+<pre>
+        
+ciphertext = Encrypt(message content, key, additional data)
+
+valid, message content = Decrypt(cipher text, key, additional data)
+
+      </pre>
+<p id="rfc.section.10.p.3">Most AEAD algorithms are logically defined as returning the message content only if the decryption is valid.  Many but not all implementations will follow this convention.  The message content MUST NOT be used if the decryption does not validate.  </p>
 <h1 id="rfc.section.10.1"><a href="#rfc.section.10.1">10.1.</a> AES GCM</h1>
 <p id="rfc.section.10.1.p.1">The GCM mode is is a generic authenticated encryption block cipher mode defined in <a href="#AES-GCM">[AES-GCM]</a>.  The GCM mode is combined with the AES block encryption algorithm to define a an AEAD cipher.  </p>
 <p id="rfc.section.10.1.p.2">The GCM mode is parameterized with by the size of the authentication tag.  The size of the authentication tag is limited to a small set of values.  For this document however, the size of the authentication tag is fixed at 128-bits.  </p>
@@ -1784,7 +1803,18 @@ valid, message content = Verification(message sent, key, signature)
 <h1 id="rfc.section.10.3.1"><a href="#rfc.section.10.3.1">10.3.1.</a> Security Considerations</h1>
 <p id="rfc.section.10.3.1.p.1">The pair of key, nonce MUST be unique for every invocation of the algorithm.  Nonce counters are considered to be an acceptable way of ensuring that they are unique.  </p>
 <h1 id="rfc.section.11"><a href="#rfc.section.11">11.</a> Key Derivation Functions (KDF)</h1>
-<p/>
+<p id="rfc.section.11.p.1">Key Derivation Functions (KDFs) are used to take some secret value and generate a different one.  The original secret values come in three basic flavors: </p>
+
+<ul>
+  <li>Secrets which are uniformly random:  This is the type of secret which is created by a good random number generator.</li>
+  <li>Secrets which are not uniformly random: This is type of secret which is created by operations like key agreement.</li>
+  <li>Secrets which are not random: This is the type of secret that people generate for things like passwords.</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.11.p.2">General KDF functions work well with the first type of secret, can do reasonable well with the second type of secret and generally do poorly with the last type of secret.  None of the KDF functions in this section are designed to deal with the type of secrets that are used for passwords.  Functions like PBSE2 <a href="#RFC2898">[RFC2898]</a> need to be used for that type of secret.  </p>
+<p id="rfc.section.11.p.3">Many functions are going to handle the first two type of secrets differently.  The KDF function defined in <a href="#HKDF">Section 11.1</a> can use different underlying constructions if the secret is uniformly random than if the secret is not uniformly random.  This is reflected in the set of algorithms defined for HKDF.  </p>
+<p id="rfc.section.11.p.4">When using KDF functions, one component that is generally included is context information.  Context information is used to allow for different keying information to be derived from the same secret.  The use of context based keying material is considered to be a good security practice.  This document defines a single context structure and a single KDF function.  </p>
 <h1 id="rfc.section.11.1"><a href="#rfc.section.11.1">11.1.</a> <a href="#HKDF" id="HKDF">HMAC-based Extract-and-Expand Key Derivation Function (HKDF)</a></h1>
 <p id="rfc.section.11.1.p.1">The HKDF key derivation algorithm is defined in <a href="#RFC5869">[RFC5869]</a>.  </p>
 <p id="rfc.section.11.1.p.2">The HKDF algorithm is defined to take a number of inputs These inputs are: </p>
@@ -2953,7 +2983,7 @@ COSE_KDF_Context = [
       <td class="reference">
         <b id="I-D.irtf-cfrg-curves">[I-D.irtf-cfrg-curves]</b>
       </td>
-      <td class="top"><a>Langley, A.</a> and <a>M. Hamburg</a>, "<a href="http://tools.ietf.org/html/draft-irtf-cfrg-curves-04">Elliptic Curves for Security</a>", Internet-Draft draft-irtf-cfrg-curves-04, August 2015.</td>
+      <td class="top"><a>Langley, A.</a> and <a>M. Hamburg</a>, "<a href="http://tools.ietf.org/html/draft-irtf-cfrg-curves-05">Elliptic Curves for Security</a>", Internet-Draft draft-irtf-cfrg-curves-05, August 2015.</td>
     </tr>
     <tr>
       <td class="reference">
@@ -2990,6 +3020,12 @@ COSE_KDF_Context = [
         <b id="RFC2633">[RFC2633]</b>
       </td>
       <td class="top"><a>Ramsdell, B.</a>, "<a href="http://tools.ietf.org/html/rfc2633">S/MIME Version 3 Message Specification</a>", RFC 2633, DOI 10.17487/RFC2633, June 1999.</td>
+    </tr>
+    <tr>
+      <td class="reference">
+        <b id="RFC2898">[RFC2898]</b>
+      </td>
+      <td class="top"><a>Kaliski, B.</a>, "<a href="http://tools.ietf.org/html/rfc2898">PKCS #5: Password-Based Cryptography Specification Version 2.0</a>", RFC 2898, DOI 10.17487/RFC2898, September 2000.</td>
     </tr>
     <tr>
       <td class="reference">
@@ -3753,7 +3789,19 @@ d707d1c7f0c601541e9421ec5a02ae3149ea1e99129305eb19ae8ece2a3293f3f
   </tbody>
 </table>
 <h1 id="rfc.appendix.E"><a href="#rfc.appendix.E">Appendix E.</a> Document Updates</h1>
-<h1 id="rfc.appendix.E.1"><a href="#rfc.appendix.E.1">E.1.</a> Version -02 to -03</h1>
+<h1 id="rfc.appendix.E.1"><a href="#rfc.appendix.E.1">E.1.</a> Version -03 to -04</h1>
+<p/>
+
+<ul>
+  <li>Eliminate the term "key managment" from the document.</li>
+  <li>Change top level from map to array.</li>
+  <li>Point to content registries for the 'content type' attribute</li>
+  <li>Push protected field into the KDF functions for recipients.</li>
+  <li>Remove password based recipient information.</li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.appendix.E.2"><a href="#rfc.appendix.E.2">E.2.</a> Version -02 to -03</h1>
 <p/>
 
 <ul>
@@ -3765,7 +3813,7 @@ d707d1c7f0c601541e9421ec5a02ae3149ea1e99129305eb19ae8ece2a3293f3f
 </ul>
 
 <p> </p>
-<h1 id="rfc.appendix.E.2"><a href="#rfc.appendix.E.2">E.2.</a> Version -02 to -03</h1>
+<h1 id="rfc.appendix.E.3"><a href="#rfc.appendix.E.3">E.3.</a> Version -02 to -03</h1>
 <p/>
 
 <ul>
@@ -3776,7 +3824,7 @@ d707d1c7f0c601541e9421ec5a02ae3149ea1e99129305eb19ae8ece2a3293f3f
 </ul>
 
 <p> </p>
-<h1 id="rfc.appendix.E.3"><a href="#rfc.appendix.E.3">E.3.</a> Version -01 to -2</h1>
+<h1 id="rfc.appendix.E.4"><a href="#rfc.appendix.E.4">E.4.</a> Version -01 to -2</h1>
 <p/>
 
 <ul>
@@ -3785,7 +3833,7 @@ d707d1c7f0c601541e9421ec5a02ae3149ea1e99129305eb19ae8ece2a3293f3f
 </ul>
 
 <p> </p>
-<h1 id="rfc.appendix.E.4"><a href="#rfc.appendix.E.4">E.4.</a> Version -00 to -01</h1>
+<h1 id="rfc.appendix.E.5"><a href="#rfc.appendix.E.5">E.5.</a> Version -00 to -01</h1>
 <p/>
 
 <ul>
