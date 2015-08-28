@@ -49,7 +49,7 @@ foreach $ThisFile (@InFiles) {
             }
             elsif ($val eq "}") { 
                 $depth--;
-                push(@new, "\n");
+                if ($new[-2] ne "{") { push(@new, "\n"); }
                 push(@new, $indent x $depth);
                 push (@new, $val);
             }
