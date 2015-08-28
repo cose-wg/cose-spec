@@ -81,6 +81,7 @@
     </abstract>
 
     <note title="Contributing to this document">
+      <!-- RFC EDITOR - Please remove this note before publishing -->
       <t>
         The source for this draft is being maintained in GitHub.
         Suggested changes should be submitted as pull requests  at <eref target="https://github.com/cose-wg/cose-spec"/>.
@@ -104,8 +105,8 @@
       </t>
 
       <t>
-        The JOSE working group produced a set of documents <xref target="RFC7515"/><xref target="RFC7516"/><xref target="RFC7517"/><xref target="RFC7518"/> that defined how to perform encryption, signatures and message authentication (MAC) operations for JavaScript Object Notation (JSON) documents and then to encode the results using the JSON format <xref target="RFC7159"/>.
-        This document does the same work for use with the Concise Binary Object Representation (CBOR) <xref target="RFC7049"/> document format.
+        The JOSE working group produced a set of documents <xref target="RFC7515"/><xref target="RFC7516"/><xref target="RFC7517"/><xref target="RFC7518"/> that defined how to perform encryption, signatures and message authentication (MAC) operations for JSON documents and then to encode the results using the JSON format <xref target="RFC7159"/>.
+        This document does the same work for use with the CBOR <xref target="RFC7049"/> document format.
         While there is a strong attempt to keep the flavor of the original JOSE documents, two considerations are taken into account:
       </t>
 
@@ -116,8 +117,18 @@
             One example of this is the fact that CBOR has a method of encoding binary directly without first converting it into a base64 encoded string.
           </t>
           <t>
-            The author did not always agree with some of the decisions made by the JOSE working group. 
-            Many of these decisions have been re-examined, and where it seems to the author to be superior or simpler, replaced.
+            COSE is not a direct copy of the JOSE specification.
+            In the process of creating COSE, decisions that were made for JOSE were re-examined.
+            In many cases different results were decided on as the criteria were not always the same as for JOSE.
+            <!--
+                Hannes
+                
+                For a working group draft it does not matter whether the author agrees or disagrees. I would suggest to remove this paragraph.
+
+                REPLACED TEXT:
+                The author did not always agree with some of the decisions made by the JOSE working group. 
+                Many of these decisions have been re-examined, and where it seems to the author to be superior or simpler, replaced.
+            -->
           </t>
         </list>
       </t>
@@ -218,7 +229,7 @@ start = COSE_MSG / COSE_Key / COSE_KeySet
           In COSE, we use both strings and integers (both negative and non-negative integers) as map keys, as well as data items to identify specific choices.
           The integers (both positive and negative) are used for compactness of encoding and easy comparison.
           (Generally, in this document the value zero is going to be reserved and not used.)
-          Since the work "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage of either an integer or a string to identify map keys and choice data items.
+          Since the work "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage of either an integer or a string to identify map keys and choose data items.
         </t>
 
         <t>
@@ -283,6 +294,13 @@ values = any
 
       <t>
         The COSE_MSG structure is a top level CBOR object that corresponds to the DataContent type in the Cryptographic Message Syntax (CMS) <xref target="RFC5652"/>.
+        <!-- Hannes
+             I would remove references to CMS and S/MIME since they are most likely only helpful to a very small audience.
+
+             OPEN
+        -->
+        <cref source="Hannes">I would remove references to CMS and S/MIME since they are most likely only helpful to a very small audience.</cref>
+
         This structure allows for a top level message to be sent that could be any of the different security services.
         The security service is identified within the message.
       </t>
@@ -346,7 +364,6 @@ msg_type_reserved=0
 msg_type_signed=1
 msg_type_encrypted=2
 msg_type_mac=3
-
 ]]></artwork></figure>
 
       <t>
@@ -425,7 +442,7 @@ tag=10
             Recipients MUST accept both a zero length binary value and a zero length map encoded in the binary value.
             The wrapping allows for the encoding of the protected map to be transported with a greater chance that it will not be altered in transit.
             (Badly behaved intermediates could decode and re-encode, but this will result in a failure to verify unless the re-encoded byte string is identical to the decoded byte string.)
-            This finesses the problem of all parties needing to be able to do a common connical encoding.
+            This finesses the problem of all parties needing to be able to do a common canonical encoding.
           </t>
           
           <t hangText='unprotected'>
@@ -517,8 +534,6 @@ Headers = (
             <t hangText='nonce'>
               This parameter holds either a nonce or Initialization Vector value.
               The value can be used either as a counter value for a protocol or as an IV for an algorithm.
-              TODO: Talk about zero extending the value in some cases.
-              <cref source="JLS">Open to do.</cref>
             </t>
           </list>
         </t>
@@ -1197,7 +1212,7 @@ valid = Verification(message content, key, signature)
         The first is that the message content is not fully available until after a signature has been validated.
         Until that point the part of the message contained inside of the signature is unrecoverable.
         The second is that the security analysis of the strength of the signature is very much based on the structure of the message content.
-        Messages which are highly predictable require additional randomness to be supplied as part of the signature process, in the worst case it because the same as doing a singature with appendix.
+        Messages which are highly predictable require additional randomness to be supplied as part of the signature process, in the worst case it becomes the same as doing a signature with appendix.
         Thirdly, in the event that multple signatures are applied to a message, all of the signature algorithms are going to be required to consume the same number of bytes of message content.
       </t>
 
@@ -2041,7 +2056,7 @@ COSE_KDF_Context = [
             <t>
               A new IV must be used if the same key is used in more than one message.
               The IV can be modified in a predictable manner, a random manner or an unpredictable manner.
-              One unpredictable manner than can be used is to use the HKDF function to generate the IV.
+              One unpredictable manner that can be used is to use the HKDF function to generate the IV.
               If HKDF is used for generating the IV, the algorithm identifier is set to "IV-GENERATION".
             </t>
             
@@ -3319,7 +3334,9 @@ COSE_KDF_Context = [
 
     </references>
 
-
+    <!--
+        I think this can go away because the text in the encryption section went away as well.
+        
     <section anchor="AE-algo" title="AEAD and AE algorithms">
 
       <t>
@@ -3362,7 +3379,7 @@ COSE_KDF_Context = [
             A separately generated tag computed by both the encrypter and decrypter and then compared by the decryptor.
             This tag value may be either placed at the end of the cipher text (the decision we made) or kept separately (the decision made by the JOSE working group).
             This is the approach followed by AES-GCM <xref target="AES-GCM"/> and AES-CCM <xref target="RFC3610"/>.
-            <!-- Mike Jones:  Last sentence is not clear.  He is reading this as referring to ? rather than just being generating a tag. - M00TODO -->
+            <! - - Mike Jones:  Last sentence is not clear.  He is reading this as referring to ? rather than just being generating a tag. - M00TODO - - >
           </t>
           <t>
             A fixed value that is part of the encoded plain text.
@@ -3377,6 +3394,8 @@ COSE_KDF_Context = [
       </t>
 
     </section>
+
+        -->
     
     <section anchor="three-layer" title="Three Levels of Recipient Information">
 
@@ -3414,7 +3433,7 @@ COSE_KDF_Context = [
             Level 1: Uses the AES Key wrap algorithm with a 128-bit key.
           </t>
           <t>
-            Level 3: Uses ECDH Ephemeral-Static direct to generate the level 1 key.
+            Level 2: Uses ECDH Ephemeral-Static direct to generate the level 1 key.
           </t>
         </list>
 
@@ -3429,7 +3448,7 @@ COSE_KDF_Context = [
     <section anchor="examples" title="Examples">
 
       <t>
-        The examples can be found at https://github.com/cose-wg/Examples.  I am currently still in the process of getting the examples up there along with some control information for people to be able to check and reproduce the examples.
+        The examples can be found at https://github.com/cose-wg/Examples.  The file names in each section correspond the the same file names in the repository. I am currently still in the process of getting the examples up there along with some control information for people to be able to check and reproduce the examples.
       </t>
 
       <t>
@@ -3438,11 +3457,17 @@ COSE_KDF_Context = [
 
       <t>
         To make it easier to read, the examples are presented using the CBOR's diagnostic notation rather than a binary dump.
-        <cref source="JLS">
-          Do we want to keep this as diagnostic notation or should we switch to having "binary" examples instead?
-        </cref>
-        Using the Ruby based CBOR diagnostic tools at ????, the diagnostic notation can be converted into binary files using the following command line:
-        (install command is?...)
+        A ruby based tool exists to convert between a number of formats.
+        This tool can be installed with the command line:
+      </t>
+      <figure>
+        <artwork>
+        <![CDATA[gem install cbor-diag]]>
+        </artwork>
+      </figure>
+
+      <t>
+        The diagnostic notation can be converted into binary files using the following command line:
       </t>
       <figure><artwork>
 <![CDATA[          
