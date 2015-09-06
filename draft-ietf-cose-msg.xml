@@ -198,6 +198,9 @@
           The use of CDDL is intended to be explanitory.
           In the event of a conflict between the text and the CDDL grammar, the text is authorative.
           (Problems may be introduced at a later point because the CDDL grammar is not yet fixed.)
+          <cref source="Hannes">
+            Need to define the terms tstr, bstr, int and so forth.
+          </cref>
         </t>
 
         <t>
@@ -220,6 +223,8 @@ start = COSE_MSG / COSE_Key / COSE_KeySet
 //artwork[@type='CDDL']/text()
 ]]></artwork></figure>         
         </t>
+
+        
         
       </section>
 
@@ -257,6 +262,11 @@ values = any
         <t>
           Key management is used as a term to describe how a key at level n is obtained from level n+1 in encrypted and MACed messages.
           The term is also used to discuss key life cycle management,  this document does not discuss key life cycle operations.
+          <!-- Ilari OPEN
+               Should we remove the term "KEY MANAGEMENT" in this location as well.
+
+               JLS - perhaps we should do a discussion of how the term is used in different places and punt?
+          -->
         </t>
       </section>
 
@@ -493,7 +503,7 @@ Headers = (
             <t hangText='alg'>
               This parameter is used to indicate the algorithm used for the security processing.
               This parameter MUST be present at each level of a signed, encrypted or authenticated message.
-              The value is taken from the 'COSE Algorithm Registry' (see <xref target="IANA-Alg-Registry"/>).
+              The value is taken from the 'COSE Algorithm Registry' (see <xref target="cose-algorithm-registry"/>).
             </t>
             
             <t hangText='crit'>
@@ -611,13 +621,14 @@ Headers = (
 COSE_Sign = [
     msg_type: msg_type_signed,
     Headers,
-    payload : bstr,
+    payload : bstr / null,
     signatures : [+ COSE_signature]
 ]
 ]]></artwork></figure>
 
       <t>
-        The fields in the array have the following semantics:
+        The COSE_Sign structure is a CBOR array.
+        The fields of the array in order are:
       </t>
 
       <t>
@@ -636,7 +647,7 @@ COSE_Sign = [
             contains the serialized content to be signed.
             If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes.
-            If the payload is transported separately, it is the responsibility of the application to ensure that it will be transported without changes.
+            If the payload is transported separately, then a null CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
           </t>
           <t hangText='signatures'>
             is an array of signature items.
@@ -657,7 +668,8 @@ COSE_signature =  [
 ]]></artwork></figure>
 
       <t>
-        The fields in the array have the following semantics:
+        The COSE_signature structure is a CBOR array.
+        The fields of the array in order are:
       </t>
 
       <t>
@@ -796,13 +808,14 @@ COSE_encrypt = [
 
 COSE_encrypt_fields = (
     Headers,
-    ciphertext: bstr,
+    ciphertext: bstr / null,
     ? recipients: [+[COSE_encrypt_fields]]
 )
 ]]></artwork></figure>
 
       <t>
-        Description of the fields:
+        The COSE_encrypt structure is a CBOR array.
+        The fields of the array in order are:
       </t>
 
       <t>
@@ -819,7 +832,7 @@ COSE_encrypt_fields = (
           </t>
           <t hangText='ciphertext'>
             contains the encrypted plain text.
-            If the ciphertext is to be transported independently of the control information about the encryption process (i.e. detached content) then the field is omitted.
+            If the ciphertext is to be transported independently of the control information about the encryption process (i.e. detached content) then the field is encoded as a null object.
           </t>
           <t hangText='recipients'>
             contains the recipient information.
@@ -974,7 +987,7 @@ Enc_structure = [
 COSE_mac = [
    msg_type: msg_type_mac, 
    Headers,
-   payload: bstr,
+   payload: bstr / null,
    tag: bstr,
    recipients: [+[COSE_encrypt_fields]]
 ]
@@ -982,7 +995,8 @@ COSE_mac = [
 ]]></artwork></figure>
 
       <t>
-        Field descriptions:
+        The COSE_encrypt structure is a CBOR array.
+        The fields of the array in order are:
       </t>
 
       <t>
@@ -1000,7 +1014,8 @@ COSE_mac = [
           <t hangText='payload'>
             contains the serialized content to be MACed.
             If the payload is not present in the message, the application is required to supply the payload separately.
-            The payload is wrapped in a bstr to ensure that it is transported without changes, if the payload is transported separately it is the responsibility of the application to ensure that it will be transported without changes.
+            The payload is wrapped in a bstr to ensure that it is transported without changes.
+            If the payload is transported separately, then a null CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
           </t>
           <t hangText='tag'>
             contains the MAC value.
@@ -1124,6 +1139,8 @@ COSE_KeySet = [+COSE_Key]
             This parameter is used to identify the family of keys for this structure, and thus the set of key type specific parameters to be found.
             The set of values can be found in <xref target="table_key_types"/>.
             This parameter MUST be present in a key object.
+            Implementations MUST verify that the key type is appropriate for the algorithm being processed.
+            The key type MUST be included as part of a trust decision process.
           </t>
           
           <t hangText="alg:">
@@ -1254,7 +1271,14 @@ valid, message content = Verification(message sent, key, signature)
         </texttable>
 
         <t>
-          In order to promote interoperability, it is suggested that SHA-256 be used only with keys of length 256, SHA-384 be used only with keys of length 384 and SHA-512 be used only with keys of length 521.
+          This document defines ECDSA to work only with the curves P-256, P-384 and P-521.
+          This document requires that the curves be encoded using the 'EC2' key type.
+          Implementations need to check that the key type and curve are correct when creating and verifying a signature.
+          Other documents can defined it to work with other curves and points in the future.
+        </t>
+
+        <t>
+          In order to promote interoperability, it is suggested that SHA-256 be used only with curve P-256, SHA-384 be used only with curve P-384 and SHA-512 be used with curve P-521.
           This is aligned with the recommendation in Section 4 of <xref target="RFC5480"/>.
         </t>
 
@@ -1294,7 +1318,7 @@ valid, message content = Verification(message sent, key, signature)
               Changing the curve used to validate the signature:
               If one changes the curve used to validate the signature, then potentially one could have a two messages with the same signature each computed under a different curve.
               The only requirement on the new curve is that it's order be the same as the old one and it be acceptable to the client.
-              An example would be to change from using the curve P-256 to using Curve25519.
+              An example would be to change from using the curve secp256r1 (aka P-256) to using secp256k1.
               (Both are 256 bit curves.)
               We current do not have any way to deal with this version of the attack except to restrict the overall set of curves that can be used.
             </t>
@@ -1321,6 +1345,10 @@ valid, message content = Verification(message sent, key, signature)
           For this specification, the mask generation function is fixed to be MGF1 as defined in <xref target="RFC3447"/>.
           It has been recommended that the same hash function be used for hashing the data as well as in the mask generation function, for this specification we following this recommendation.
           The salt length is the same length as the hash function output.
+        </t>
+
+        <t>
+          Implementations need to check that the key type is 'RSA' when creating or verifying a signature.
         </t>
 
         <t>
@@ -1408,7 +1436,6 @@ valid = MAC_Verify(message content, key, tag)
         <t>
           The algorithm defined in this document can be found in <xref target="table-hmac"/>.
         </t>
-
         
         <texttable title="HMAC Algorithm Values" anchor="table-hmac">
           <ttcol align='left'>name</ttcol>
@@ -1426,6 +1453,11 @@ valid = MAC_Verify(message content, key, tag)
           Some recipient algorithms carry the key while others derive a key from secret data.
           For those algorithms which carry the key (i.e. RSA-OAEP and AES-KeyWrap), the size of the HMAC key SHOULD be the same size as the underlying hash function.
           For those algorithms which derive the key, the derived key MUST be the same size as the underlying hash function.
+        </t>
+
+        <t>
+          If the key obtained from a key structure, the key type MUST be 'Symmetric'.
+          Implementations creating and validating MAC values MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
         </t>
 
         <section title="Security Considerations">
@@ -1462,6 +1494,12 @@ valid = MAC_Verify(message content, key, tag)
           <c>AES-MAC 256/128</c>        <c>*</c>        <c>256</c>      <c>128</c>      <c>AES-MAC 256 bit key, 128-bit tag</c>
           
         </texttable>
+
+        <t>
+          Keys may be obtained either from a key structure or from a recipient structure.
+          If the key obtained from a key structure, the key type MUST be 'Symmetric'.
+          Implementations creating and validating MAC values MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+        </t>
 
         <section title="Security Considerations">
           <t>
@@ -1540,6 +1578,12 @@ valid, message content = Decrypt(cipher text, key, additional data)
           <c>A192GCM</c>        <c>2</c>        <c>AES-GCM mode w/ 192-bit key</c>
           <c>A256GCM</c>        <c>3</c>        <c>AES-GCM mode w/ 256-bit key</c>
         </texttable>
+
+        <t>
+          Keys may be obtained either from a key structure or from a recipient structure.
+          If the key obtained from a key structure, the key type MUST be 'Symmetric'.
+          Implementations creating and validating MAC values MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+        </t>
 
         <section title="Security Considerations">
           <t>
@@ -1635,6 +1679,12 @@ valid, message content = Decrypt(cipher text, key, additional data)
           <c>AES-CCM-64-128-256</c>       <c>33</c>    <c>64</c>       <c>128</c>      <c>256</c>      <c>AES-CCM mode 256-bit key, 128-bit tag, 7-byte nonce</c>
         </texttable>
 
+        <t>
+          Keys may be obtained either from a key structure or from a recipient structure.
+          If the key obtained from a key structure, the key type MUST be 'Symmetric'.
+          Implementations creating and validating MAC values MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+        </t>
+
         <section title="Security Considerations">
           <t>
             When using AES-CCM the following restrictions MUST be enforced:
@@ -1683,6 +1733,12 @@ valid, message content = Decrypt(cipher text, key, additional data)
           <c>ChaCha20/Poly1305</c>        <c>11</c>        <c>ChaCha20/Poly1305 w/ 256-bit key</c>
         </texttable>
         
+        <t>
+          Keys may be obtained either from a key structure or from a recipient structure.
+          If the key obtained from a key structure, the key type MUST be 'Symmetric'.
+          Implementations creating and validating MAC values MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+        </t>
+
         <section title="Security Considerations">
           <t>
             The pair of key, nonce MUST be unique for every invocation of the algorithm.
@@ -1801,15 +1857,16 @@ valid, message content = Decrypt(cipher text, key, additional data)
           The context information structure is used to ensure that the derived keying material is "bound" to the context of the transaction.
           The context information structure used here is based on that defined in <xref target="SP800-56A"/>.
           By using CBOR for the encoding of the context information structure, we automatically get the same type of type and length separation of fields that is obtained by the use of ASN.1.
-          This means that there is no need to encode the lengths for the base elements as it is done by the CBOR encoding.
+          This means that there is no need to encode the lengths for the base elements as it is done by the JOSE encoding.
+          <cref source="Ilari">
+            Look to see if we need to be clearer about how the fields defined in the table are transported and thus why they have labels.
+          </cref>
         </t>
 
         <t>
           The context information structure refers to PartyU and PartyV as the two parties which are doing the key derivation.
           Unless the application protocol defines differently, we assign PartyU to the entity that is creating the message and PartyV to the entity that is receiving the message.
-          This is because we are assuming a set of standalone store and forward messaging processes.
-          In <xref target="SP800-56A"/>, PartyU is the initiator and PartyV is the responder.
-          The specification is written with the idea of on-line protocols rather than store and forward protocols as the main consumer.
+          By doing this association, different keys will be derived for each direction as the context information is different in each direction.
         </t>
 
         <t>
@@ -1818,16 +1875,20 @@ valid, message content = Decrypt(cipher text, key, additional data)
         </t>
 
         <t>
-          Using the PartyU and PartyV fields is the easiest way to get different keys in each direction.
           The use of a transaction identifier, either in one of the supplemental fields or as the salt if one is using HKDF, ensures that a unique key is generated for each set of transactions.
           Combining nonce fields with the transaction identifier provides a method so that a different key is used for each message in each direction.
         </t>
 
-        
+        <t>
+          The context structure is built from information that is known to both entities.
+          Some of the information is known only to the two entities, some is implied based on the application and some is explicitly transported as part of the message.
+          The information that can be carried in the message, parameters have been defined and can be found in <xref target="KDF_Concat_Alg_Params"/>.
+          These parameters are designed to be placed in the unprotected bucket of the recipient structure.
+          (They do not need to be in the protected bucket since they already are included in the cryptographic computation by virtue of being included in the context structure.)
+        </t>
 
         <t>
           We encode the context specific information using a CBOR array type.
-          For the fields that we define an algorithm parameter, the details of the parameters can be found in <xref target="KDF_Context_Alg_Params"/>.
           The fields in the array are:
 
           <list style="hanging">
@@ -1840,7 +1901,9 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
             <t hangText="PartyUInfo">
               This field holds information about party U.
-              The ParytUInfo structure is divided into three pieces:
+              The PartyUInfo is encoded as a CBOR struture.
+              The elements of PartyUInfo are encoded in the order presented, however if the element does not exist no element is placed in the array.
+              The elements of the PartyUInfo array are:
               
               <list style="hanging">
                 <t hangText="identity">
@@ -2009,6 +2072,7 @@ COSE_KDF_Context = [
 
             <t>
               When this algorithm is used, the protected field MUST be zero length.
+              The key type MUST be 'Symmetric'.
             </t>
 
             <texttable title="Direct Key" anchor="table-direct">
@@ -2017,6 +2081,7 @@ COSE_KDF_Context = [
               <ttcol align='left'>description</ttcol>
               <c>direct</c>          <c>-6</c>       <c>Direct use of CEK</c>
             </texttable>
+
 
             <section title="Security Considerations">
               <t>
@@ -2058,6 +2123,10 @@ COSE_KDF_Context = [
               The IV can be modified in a predictable manner, a random manner or an unpredictable manner.
               One unpredictable manner that can be used is to use the HKDF function to generate the IV.
               If HKDF is used for generating the IV, the algorithm identifier is set to "IV-GENERATION".
+            </t>
+
+            <t>
+              When these algorithms are used, the key type MUST be 'symmetric'.
             </t>
             
             <t>
@@ -2132,6 +2201,13 @@ COSE_KDF_Context = [
             This is fixed to the value specified in Section 2.2.3.1 of  <xref target="RFC3394"/>.
             There are no public parameters that vary on a per invocation basis.
           </t>
+
+          <t>
+            Keys may be obtained either from a key structure or from a recipient structure.
+            If the key obtained from a key structure, the key type MUST be 'Symmetric'.
+            Implementations creating and validating MAC values MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+          </t>
+          
           
           <texttable title="AES Key Wrap Algorithm Values" anchor="table_aes_keywrap">
             <ttcol align='left'>name</ttcol>
@@ -2200,6 +2276,10 @@ COSE_KDF_Context = [
             <c>RSAES-OAEP w/SHA-256</c>     <c>-25</c>       <c>SHA-256</c>       <c>RSAES OAEP w/ SHA-256</c>
             <c>RSAES-OAEP w/SHA-512</c>     <c>-26</c>       <c>SHA-512</c>       <c>RSAES OAEP w/ SHA-512</c>
           </texttable>
+
+          <t>
+            The key type MUST be 'RSA'.
+          </t>
 
           <section title="Security Considerations for RSAES-OAEP">
             
@@ -2362,7 +2442,12 @@ COSE_KDF_Context = [
             <c>static key</c>           <c>-2</c>       <c>COSE_Key</c>         <c>ECDH-ES</c>  <c>Static Public key for the sender</c>
             <c>static key id </c>       <c>-3</c>       <c>bstr</c>             <c>ECDH-SS</c>  <c>Static Public key identifier for the sender</c>
           </texttable>
-        
+
+          <t>
+            This document defines these algorithms to be used with the curves P-256, P-384, P-521, X25519 and X448.
+            Implementations MUST verify that the key type and curve are correct, different curves are restricted to different key types.
+            Implementations MUST verify that the curve and algorithm are appropriate for the entities involved.
+          </t>
 
         </section>
       </section>
@@ -2468,6 +2553,10 @@ COSE_KDF_Context = [
           
           The other version uses only the x coordinate as the y coordinate is either to be recomputed or not needed for the key agreement operation.
           An example of this is Curve25519 <xref target="I-D.irtf-cfrg-curves"/>.
+              <cref source="Ilari">
+                Check to see what the curves are renamed to during final publishing.
+                It appears to be X25519 now.
+              </cref>
         </t>
         
         <texttable title="EC Curves" anchor="table-ec-curves">
@@ -3198,6 +3287,12 @@ COSE_KDF_Context = [
           </t>
           <t>
             Considerations about protected vs unprotected header fields.
+          </t>
+          <t>
+            Need to verify that:
+            1) the kty field of the key matches the key and algorithm being used. 
+            2) that the kty field needs to be included in the trust decision as well as the other key fields.
+            3) that the algorithm be included in the trust decision.
           </t>
         </list>
       </t>
