@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="rfc2629.xslt" ?>
 <!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
-<!ENTITY RFC2104 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2104.xml" >
-<!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml" >
+  <!ENTITY RFC2104 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2104.xml" >
+  <!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml" >
 
   <!ENTITY RFC2633 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2633.xml" >
   <!ENTITY RFC2898 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2898.xml" >
@@ -194,37 +194,43 @@
 
         <t>
           There currently is no standard CBOR grammar available for use by specifications.
-          While we describe the CBOR structures in prose, they are agumented in the text by the use of the CBOR Data Definition Language (CDDL) <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>.
-          The use of CDDL is intended to be explanitory.
-          In the event of a conflict between the text and the CDDL grammar, the text is authorative.
-          (Problems may be introduced at a later point because the CDDL grammar is not yet fixed.)
-          <cref source="Hannes">
-            Need to define the terms tstr, bstr, int and so forth.
-          </cref>
+          We therefore describe the CBOR structures in prose.
+          There is a version of a CBOR grammar in the CBOR Data Definition Language (CDDL) <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>.
+          An informational version of the CBOR grammar that reflects what is in the prose can be found in <xref target="Grammar_Appendix"/>.
+          CDDL has not been fixed, so this grammar may will only work with the version of CDDL at the time of publishing.
         </t>
 
         <t>
-          CDDL productions that together define the grammar are interspersed in the document like this:
+          The document was developed by first working on the grammar and then developing the prose to go with it.
+          An artifact of this is that the prose was written using the primitive type strings defined by early versions CDDL.
+          In this specification the following primitive types are used:
+          <list style="none">
+            <t>bstr - byte string (major type 2).</t>
+            <t>int - an unsigned integer or a negative integer.</t>
+            <t>nil - a null value (tag 7.22).</t>
+            <t>nint - a negative integer (major type 1).</t>
+            <t>tstr - a UTF-8 text string (major type 3).</t>
+            <t>uint - an unsigned integer (major type 0).</t>
+          </list>
         </t>
 
-          <figure><artwork type='CDDL'>
+        <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+
+        <t>
+          Text from here to start of next section to be removed
+        </t>
+             
+        <t>
+          NOTE: For the purposes of review, we are currently interlacing the CDLL grammar into the text of document.
+          This is being done for simplicity of comparision of the grammar againist the prose.
+          The grammar will be removed to an appendix during WGLC.
+        </t>
+        
+        <figure><artwork type='CDDL'>
 <![CDATA[
-start = COSE_MSG / COSE_Key / COSE_KeySet
+start = COSE_MSG / COSE_Tagged_MSG / COSE_Key / COSE_KeySet
 ]]></artwork></figure>
 
-        <t>
-          The collected CDDL can be extracted from the XML version of this document via the following XPath expression below.
-          (Depending on the XPath evaluator one is using, it may be necessary to deal with &amp;gt; as an entity.)
-        </t>
-
-        <t>
-          <figure><artwork type='XPATH'>
-<![CDATA[
-//artwork[@type='CDDL']/text()
-]]></artwork></figure>         
-        </t>
-
-        
         
       </section>
 
@@ -237,10 +243,12 @@ start = COSE_MSG / COSE_Key / COSE_KeySet
           Since the work "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage of either an integer or a string to identify map keys and choose data items.
         </t>
 
+        <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+
         <t>
-          The CDLL grammar that defines a type that represents a label is given below:
+          Text from here to start of next section to be removed
         </t>
-        
+
         <figure><artwork type='CDDL'>
 <![CDATA[
 label = int / tstr
@@ -328,10 +336,9 @@ values = any
 
       <t>
         Each of the top-level security objects use a CBOR array as the base structure.
-      </t>
-
-      <t>
-        A field 'msg_type' is defined to distinguish between the different structures when they appear as part of a COSE_MSG object.
+        For each of the top-level security objects, the first field is a 'msg_type'.
+        The CBOR type for a 'msg_type' is 'int'.
+        The 'msg_type' is defined to distinguish between the different structures when they appear as part of a COSE_MSG object.
         <cref source="JLS">
           I have moved msg_type into the individual structures.
           However, they would not be necessary in the cases where a) the security service is known and b) security libraries can setup to take individual structures.
@@ -340,9 +347,11 @@ values = any
           One the other hand, it will complicated the code if one is doing general purpose library type things.
         </cref>
         <cref source="JLS">Should we create an IANA registries for the values of msg_type?</cref>
+        <cref source="CB">I would like to make msg_type go away</cref>
       </t>
 
       <t>
+        The message types defined in this document are:
         <list style="none">
           <t>0 - Reserved.</t>
           <t>1 - Signed Message.</t>
@@ -353,15 +362,18 @@ values = any
 
       <t>
         Implementations MUST be prepared to find an integer in this field that does not correspond to the values 1 to 3.
-        If this is found then the client MUST stop attempting to process the structure and fail.
-        The value of 0 is reserved and not to be used.
+        If a message type is found then the client does not support the associated security object, the client MUST stop attempting to process the structure and fail.
+        The value of 0 is reserved and not assigned to a security object.
         If the value of 0 is found, then clients MUST fail processing the structure.
-        Implementations need to recognize that the set of values might be extended at a later date, but they should not provide a security service based on guesses of what is there.
+        Implementations need to recognize that the set of values might be extended at a later date, but they should not provide a security service based on guesses of what the security object might be.
       </t>
 
+      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+
       <t>
-        The CDDL grammar that corresponds to the above is:
+        Text from here to start of next section to be removed
       </t>
+
       <figure><artwork type="CDDL"><![CDATA[
 COSE_MSG = COSE_Sign / 
     COSE_encrypt / 
@@ -376,9 +388,6 @@ msg_type_encrypted=2
 msg_type_mac=3
 ]]></artwork></figure>
 
-      <t>
-        The top level of each of the COSE message structures are encoded as arrays.
-      </t>
 
       <!--
       <texttable anchor="Top-Level-Keys" title="COSE Map Labels">
@@ -437,10 +446,6 @@ tag=10
 
       <t>
         Two buckets are provided for each layer:
-        <cref source="JLS">
-          A completest version of this grammar would list the options available in the protected and unprotected headers.
-          Do we want to head that direction?
-        </cref>
 
         <list style="hanging">
           <t hangText='protected'>
@@ -468,14 +473,21 @@ tag=10
       </t>
 
       <t>
+        The buckets are present in all of the security objects defined in this document.
+        The fields in order are the 'protected' bucket (as a CBOR 'bstr' type) and then the 'unprotected' bucket (as a CBOR 'map' type).
         The presence of both buckets is required.
         The parameters that go into the buckets come from the IANA "COSE Header Parameters" (<xref target="cose-header-key-table"/>).
         Some common parameters are defined in the next section, but a number of parameters are defined throughout this document.
-        
       </t>
 
+      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+
       <t>
-        The CDDL fragment that describes the two buckets is:
+        Text from here to start of next section to be removed
+        <cref source="JLS">
+          A completest version of this grammar would list the options available in the protected and unprotected headers.
+          Do we want to head that direction?
+        </cref>
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
@@ -614,19 +626,6 @@ Headers = (
       </t>
 
       <t>
-        The CDDL grammar for a signature message is:
-      </t>
-
-      <figure><artwork type="CDDL"><![CDATA[
-COSE_Sign = [
-    msg_type: msg_type_signed,
-    Headers,
-    payload : bstr / null,
-    signatures : [+ COSE_signature]
-]
-]]></artwork></figure>
-
-      <t>
         The COSE_Sign structure is a CBOR array.
         The fields of the array in order are:
       </t>
@@ -637,35 +636,29 @@ COSE_Sign = [
             identifies this as providing the signed security service.
             The value MUST be msg_type_signed (1).
           </t>
+          
           <t hangText='protected'>
             is described in <xref target="header-parameters"/>.
           </t>
+          
           <t hangText='unprotected'>
             is described in <xref target="header-parameters"/>.
           </t>
+          
           <t hangText='payload'>
             contains the serialized content to be signed.
             If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes.
-            If the payload is transported separately, then a null CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
+            If the payload is transported separately, then a nil CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
           </t>
+          
           <t hangText='signatures'>
             is an array of signature items.
             Each of these items uses the COSE_signature structure for its representation.
           </t>
+          
         </list>
       </t>
-
-      <t>
-        The CDDL grammar structure for a signature is:
-      </t>
-
-      <figure><artwork type="CDDL"><![CDATA[
-COSE_signature =  [
-    Headers,      
-    signature : bstr
-]
-]]></artwork></figure>
 
       <t>
         The COSE_signature structure is a CBOR array.
@@ -677,14 +670,40 @@ COSE_signature =  [
           <t hangText='protected'>
             is described in <xref target="header-parameters"/>.
           </t>
+          
           <t hangText='unprotected'>
             is described in <xref target="header-parameters"/>.
           </t>
+          
           <t hangText='signature'>
             contains the computed signature value.
+            The type of the field is a bstr.
           </t>
+          
         </list>
       </t>
+
+      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+
+      <t>
+        Text from here to start of next section to be removed
+      </t>
+
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Sign = [
+    msg_type: msg_type_signed,
+    Headers,
+    payload : bstr / nil,
+    signatures : [+ COSE_signature]
+]
+
+COSE_signature =  [
+    Headers,      
+    signature : bstr
+]
+]]></artwork></figure>
+
 
       <section title="Externally Supplied Data" anchor="Extern_AAD">
         <t>
@@ -714,13 +733,104 @@ COSE_signature =  [
         </t>
       </section>
 
+
       <section title="Signing and Verification Process">
 
-      <t>
-        The COSE structure used to create the byte stream to be signed uses the following CDDL grammar structure:
-      </t>
+        <t>
+          In order to create a signature, a consistent byte stream is needed in order to process.
+          This document uses a CBOR array to construct the byte stream to be processed.
+          The fields of the array in order are:
+          <list style="numbers">
+            <t>
+              The body protected attributes.
+              This is a bstr type containing the protected attributes of the body.
+            </t>
 
-      <figure><artwork type="CDDL"><![CDATA[
+            <t>
+              The signature protected attributes.
+              This is a bstr type containing the protected attributes of the signature.
+            </t>
+
+            <t>
+              The external protected attributes.
+              This is a bstr type containing the protected attributes external to the COSE_Signature structure.
+            </t>
+
+            <t>
+              The payload to be signed.
+              The payload is encoded in a bstr.
+              The payload is placed here independent of how it is transported.
+            </t>
+          </list>
+        </t>
+
+        <t>
+          How to compute a signature:
+
+          <list style="numbers">
+            <t>
+              Create a CBOR array and populate it with the appropriate fields. 
+              For body_protected and sign_protected, if the fields are not present in their corresponding maps, an bstr of length zero is used.
+            </t>
+
+            <t>
+              If the application has supplied external additional authenticated data to be included in the computation, then it is placed in the third field.
+              If no data was supplied, then a zero length binary value is used.
+            </t>
+
+            <t>
+              Create the value ToBeSigned by encoding the Sig_structure to a byte string.
+            </t>
+
+            <t>
+              Call the signature creation algorithm passing in K (the key to sign with), alg (the algorithm to sign with) and ToBeSigned (the value to sign).
+            </t>
+
+            <t>
+              Place the resulting signature value in the 'signature' field of the map.
+            </t>
+          </list>
+        </t>
+
+        <t>
+          How to verify a signature:
+
+          <list style="numbers">
+            <t>
+              Create a Sig_structure object and populate it with the appropriate fields. 
+              For body_protected and sign_protected, if the fields are not present in their corresponding maps, an bstr of length zero is used.
+            </t>
+            
+            <t>
+              If the application has supplied external additional authenticated data to be included in the computation, then it is placed in the third field.
+              If no data was supplied, then a zero length binary value is used.
+            </t>
+
+            <t>
+              Create the value ToBeSigned by encoding the Sig_structure to a byte string.
+            </t>
+            
+            <t>
+              Call the signature verification algorithm passing in K (the key to verify with), alg (the algorithm to sign with), ToBeSigned (the value to sign), and sig (the signature to be verified).
+            </t>
+          </list>
+        </t>
+
+        <t>
+          In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the appropriate authorization is done.
+        </t>
+
+        <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+
+        <t>
+          Text from here to start of next section to be removed
+        </t>
+
+        <t>
+          The COSE structure used to create the byte stream to be signed uses the following CDDL grammar structure:
+        </t>
+
+        <figure><artwork type="CDDL"><![CDATA[
 Sig_structure = [
     body_protected: bstr,
     sign_protected: bstr,
@@ -729,53 +839,6 @@ Sig_structure = [
 ]
 ]]></artwork></figure>
 
-      <t>
-        How to compute a signature:
-
-        <list style="numbers">
-          <t>
-            Create a Sig_structure object and populate it with the appropriate fields.  For body_protected and sign_protected, if the fields are not present in their corresponding maps, an bstr of length zero is used.
-          </t>
-            <t>
-              If the application has supplied external additional authenticated data to be included in the computation, then it is placed in the 'external_aad' field.
-              If no data was supplied, then a zero length binary value is used.
-            </t>
-          <t>
-            Create the value ToBeSigned by encoding the Sig_structure to a byte string.
-          </t>
-          <t>
-            Call the signature creation algorithm passing in K (the key to sign with), alg (the algorithm to sign with) and ToBeSigned (the value to sign).
-          </t>
-          <t>
-            Place the resulting signature value in the 'signature' field of the map.
-          </t>
-        </list>
-      </t>
-
-      <t>
-        How to verify a signature:
-
-        <list style="numbers">
-          <t>
-            Create a Sig_structure object and populate it with the appropriate fields.  For body_protected and sign_protected, if the fields are not present in their corresponding maps, an bstr of length zero is used.
-          </t>
-            <t>
-              If the application has supplied external additional authenticated data to be included in the computation, then it is placed in the 'external_aad' field.
-              If no data was supplied, then a zero length binary value is used.
-            </t>
-
-          <t>
-            Create the value ToBeSigned by encoding the Sig_structure to a byte string.
-          </t>
-          <t>
-            Call the signature verification algorithm passing in K (the key to verify with), alg (the algorithm to sign with), ToBeSigned (the value to sign), and sig (the signature to be verified).
-          </t>
-        </list>
-      </t>
-
-      <t>
-        In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the appropriate authorization is done.
-      </t>
       </section>
     </section>
 
@@ -808,7 +871,7 @@ COSE_encrypt = [
 
 COSE_encrypt_fields = (
     Headers,
-    ciphertext: bstr / null,
+    ciphertext: bstr / nil,
     ? recipients: [+[COSE_encrypt_fields]]
 )
 ]]></artwork></figure>
@@ -987,7 +1050,7 @@ Enc_structure = [
 COSE_mac = [
    msg_type: msg_type_mac, 
    Headers,
-   payload: bstr / null,
+   payload: bstr / nil,
    tag: bstr,
    recipients: [+[COSE_encrypt_fields]]
 ]
@@ -1882,7 +1945,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
         <t>
           The context structure is built from information that is known to both entities.
           Some of the information is known only to the two entities, some is implied based on the application and some is explicitly transported as part of the message.
-          The information that can be carried in the message, parameters have been defined and can be found in <xref target="KDF_Concat_Alg_Params"/>.
+          The information that can be carried in the message, parameters have been defined and can be found in <xref target="KDF_Context_Alg_Params"/>.
           These parameters are designed to be placed in the unprotected bucket of the recipient structure.
           (They do not need to be in the protected bucket since they already are included in the cryptographic computation by virtue of being included in the context structure.)
         </t>
@@ -3311,7 +3374,7 @@ COSE_KDF_Context = [
 
     <references title='Informative References'>
       &CDDL;
-      &CBCMAC;
+      <!-- &CBCMAC; -->
       &RFC2104;
       &RFC2633;
       &RFC2898;
@@ -3491,6 +3554,27 @@ COSE_KDF_Context = [
     </section>
 
         -->
+
+    <section anchor="Grammar_Appendix" title="CDDL Grammar">
+
+      <t>
+        For people who prefer using a formal language to describe the syntax of the CBOR, in this section a CDDL grammar is given that corresponds to <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>.
+        This grammar is informational, in the event of differences between this grammar and the prose, the prose is considered to be authorative.
+      </t>
+      
+      <t>
+        The collected CDDL can be extracted from the XML version of this document via the following XPath expression below.
+        (Depending on the XPath evaluator one is using, it may be necessary to deal with &amp;gt; as an entity.)
+      </t>
+
+      <t>
+        <figure><artwork type='XPATH'>
+<![CDATA[
+//artwork[@type='CDDL']/text()
+]]></artwork></figure>         
+      </t>
+      
+    </section>
     
     <section anchor="three-layer" title="Three Levels of Recipient Information">
 
