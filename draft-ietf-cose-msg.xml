@@ -355,8 +355,9 @@ values = any
         <list style="none">
           <t>0 - Reserved.</t>
           <t>1 - Signed Message.</t>
-          <t>2 - Encrypted Message</t>
+          <t>2 - Enveloped Message</t>
           <t>3 - Authenticated Message (MACed message)</t>
+          <t>4 - Encrypted Message</t>
         </list>
       </t>
 
@@ -376,7 +377,8 @@ values = any
 
       <figure><artwork type="CDDL"><![CDATA[
 COSE_MSG = COSE_Sign / 
-    COSE_encrypt / 
+    COSE_enveloped /
+    COSE_encryptData /
     COSE_mac
 
 COSE_Tagged_MSG = #6.999(COSE_MSG)   ; Replace 999 with TBD1
@@ -384,8 +386,9 @@ COSE_Tagged_MSG = #6.999(COSE_MSG)   ; Replace 999 with TBD1
 ; msg_type values
 msg_type_reserved=0
 msg_type_signed=1
-msg_type_encrypted=2
+msg_type_enveloped=2
 msg_type_mac=3
+msg_type_encryptData=4
 ]]></artwork></figure>
 
 
@@ -835,10 +838,18 @@ Sig_structure = [
       </section>
     </section>
 
-    <section anchor="encryption-object" title="Encryption object">
+    <section anchor="encryption-object" title="Encryption objects">
+      <t>
+        COSE supports two different encryption structures.
+        OOSE_enveloped is used when the key needs to be explicilty identified.
+        This structure supports the use of recipient structures to allow for random content encryption keys to be used..
+        COSE_encrypted is used when the a recipient structure is not needed because the key to be used is known implicitly.
+      </t>
+
+      <section title="Enveloped COSE structure">
 
       <t>
-        The encryption structure allows for one or more recipients of a message.
+        The enveloped structure allows for one or more recipients of a message.
         There are provisions for parameters about the content and parameters about the recipient information to be carried in the message.
         The parameters associated with the content can be authenticated by the content encryption algorithm.
         The parameters associated with the recipient can be authenticated by the recipient algorithm (when the algorithm supports it).
@@ -849,53 +860,88 @@ Sig_structure = [
       <t>
         In COSE, the same techniques and structures for encrypting both the plain text and the keys used to protect the text.
         This is different from the approach used by both <xref target="RFC5652"/> and <xref target="RFC7516"/> where different structures are used for the content layer and for the recipient layer.
-        
       </t>
-
-      <t>
-        The CDDL grammar structure for encryption is:
-      </t>
-
-      <figure><artwork type="CDDL"><![CDATA[
-COSE_encrypt = [
-    msg_type: msg_type_encrypted,
-    COSE_encrypt_fields
-]
-
-COSE_encrypt_fields = (
-    Headers,
-    ciphertext: bstr / nil,
-    ? recipients: [+[COSE_encrypt_fields]]
-)
-]]></artwork></figure>
 
       <t>
         The COSE_encrypt structure is a CBOR array.
         The fields of the array in order are:
-      </t>
 
-      <t>
         <list style="hanging">
           <t hangText='msg_type'>
             identifies this as providing the encrypted security service.
             The value MUST be msg_type_encrypted (2).
           </t>
+          
           <t hangText='protected'>
             is described in <xref target="header-parameters"/>.
           </t>
+          
           <t hangText='unprotected'>
             is described in <xref target="header-parameters"/>.
           </t>
+          
           <t hangText='ciphertext'>
-            contains the encrypted plain text.
+            contains the encrypted plain text encoded as a bstr.
             If the ciphertext is to be transported independently of the control information about the encryption process (i.e. detached content) then the field is encoded as a null object.
           </t>
+          
           <t hangText='recipients'>
-            contains the recipient information.
-            It is required that at least one recipient MUST be present for the content encryption layer.
+            contains an array of recipient information structures.
+            The type for the recipient information structure is a COSE_recipient.
           </t>
         </list>
       </t>
+
+      <t>
+        The COSE_recipient structure is a CBOR array.
+        The fields of the array in order are:
+
+        <list style="hanging">
+
+          <t hangText='protected'>
+            is described in <xref target="header-parameters"/>.
+          </t>
+          
+          <t hangText='unprotected'>
+            is described in <xref target="header-parameters"/>.
+          </t>
+          
+          <t hangText='ciphertext'>
+            contains the encrypted key encoded as a bstr.
+            If there is not an encrypted key, then this field is encoded as a nil type.
+          </t>
+          
+          <t hangText='recipients'>
+            contains an array of recipient information structures.
+            The type for the recipient information structure is a COSE_recipient.
+            If there are no recipient information structures, this element is absent.
+          </t>
+        </list>
+      </t>
+
+      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+
+      <t>
+        Text from here to start of next section to be removed
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_enveloped = [
+    msg_type: msg_type_enveloped,
+    COSE_encrypt_fields
+    recipients: [+COSE_recipient]
+]
+
+COSE_encrypt_fields = (
+    Headers,
+    ciphertext: bstr / nil,
+)
+
+COSE_recipient = [    
+    COSE_encrypt_fields
+    ? recipients: [+COSE_recipient]
+]
+]]></artwork></figure>
 
       <section anchor="key-management-methods" title="Recipient Algorithm Classes">
         <t>
@@ -914,21 +960,54 @@ COSE_encrypt_fields = (
         </t>
 
       </section>
+
+    </section>
+
+    <section title="Encrypted COSE structure">
+      <t>
+        The encrypted structure does not have the ability to specify recipients of the message.
+        The structure assumes that the recipient of the object will already know the identity of the key to be used in order to decrypt the message.
+        If a key needs to be identified to the recipient, the enveloped structure is used.
+      </t>
+
+      <t>
+        The CDDL grammar structure for encrypted data is:
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_encryptData = [
+    msg_type: msg_type_encryptData,
+    COSE_encrypt_fields
+]
+]]></artwork></figure>
+
+      <t>
+        The COSE_encryptedData structure is a CBOR array.
+        The fields of the array in order are:
+
+        <list style="hanging">
+          <t hangText='msg_type'>
+            identifies this as providing the encrypted data security service.
+            This value MUST be mg_type_encrypted (4).
+          </t>
+          <t hangText='protected'> is described in <xref target="header-parameters"/>.</t>
+          <t hangText='unprotected'> is described in <xref target="header-parameters"/>.</t>
+          <t hangText='ciphertext'>
+            contains the encrypted plain text.
+            If the ciphertext is to be transported independently of the control information about the encryption process (i.e. detached content) then the field is encoded as a null object.
+          </t>
+        </list>
+      </t>
+    </section>
+
       
       <section anchor="encryption-algorithm-for-aead-algorithms" title="Encryption Algorithm for AEAD algorithms">
 
         <t>
           The encryption algorithm for AEAD algorithms is fairly simple.
+          
           In order to get a consistent encoding of the data to be authenticated, the Enc_structure is used to have canonical form of the AAD.
         </t>
-
-        <figure><artwork type="CDDL"><![CDATA[
-Enc_structure = [
-    protected: bstr,
-    external_aad: bstr
-]
-
-]]></artwork></figure>
 
         <t>
           <list style="numbers">
@@ -976,6 +1055,20 @@ Enc_structure = [
             </t>
           </list>
         </t>
+
+        <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+
+        <t>
+          Text from here to start of next section to be removed
+        </t>
+
+        <figure><artwork type="CDDL"><![CDATA[
+Enc_structure = [
+    protected: bstr,
+    external_aad: bstr
+]
+
+]]></artwork></figure>
 
       </section>
       <section anchor="encryption-algorithm-for-ae-algorithms" title="Encryption algorithm for AE algorithms">
@@ -1039,43 +1132,35 @@ Enc_structure = [
         (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.)
       </t>
 
-      <figure><artwork type="CDDL"><![CDATA[
-COSE_mac = [
-   msg_type: msg_type_mac, 
-   Headers,
-   payload: bstr / nil,
-   tag: bstr,
-   recipients: [+[COSE_encrypt_fields]]
-]
-
-]]></artwork></figure>
-
       <t>
         The COSE_encrypt structure is a CBOR array.
         The fields of the array in order are:
-      </t>
 
-      <t>
         <list style="hanging">
           <t hangText='msg_type'>
             identifies this as providing the encrypted security service.
             The value MUST be msg_type_mac (3).
           </t>
+
           <t hangText='protected'>
             is described in <xref target="header-parameters"/>.
           </t>
+
           <t hangText='unprotected'>
             is described in <xref target="header-parameters"/>.
           </t>
+
           <t hangText='payload'>
             contains the serialized content to be MACed.
             If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes.
             If the payload is transported separately, then a null CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
           </t>
+
           <t hangText='tag'>
             contains the MAC value.
           </t>
+
           <t hangText='recipients'>
             contains the recipient information.  
             See the description under COSE_Encryption for more info.
@@ -1083,7 +1168,58 @@ COSE_mac = [
         </list>
       </t>
 
+      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+
+      <t>
+        Text from here to start of next section to be removed
+      </t>
+
       <figure><artwork type="CDDL"><![CDATA[
+COSE_mac = [
+   msg_type: msg_type_mac, 
+   Headers,
+   payload: bstr / nil,
+   tag: bstr,
+   recipients: [+COSE_recipient]
+]
+
+]]></artwork></figure>
+
+        <section title="How to compute a MAC">
+
+          <t>
+            How to compute a MAC:
+          </t>
+
+          <t>
+            <list style="numbers">
+              <t>
+                Create a MAC_structure and copy the protected and payload fields from the COSE_mac structure.
+              </t>
+              <t>
+                If the application has supplied external authenticated data, encode it as a binary value and place in the MAC_structure.
+                If there is no external authenticated data, then use a zero length 'bstr'.
+                (See <xref target="Extern_AAD"/> for application guidance on constructing this field.)
+              </t>
+              <t>
+                Encode the MAC_structure using a canonical CBOR encoder.  The resulting bytes is the value to compute the MAC on.
+              </t>
+              <t>
+                Compute the MAC and place the result in the 'tag' field of the COSE_mac structure.
+              </t>
+              <t>
+                Encrypt and encode the MAC key for each recipient of the message.
+              </t>
+            </list>
+          </t>
+
+          <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+
+          <t>
+            Text from here to start of next section to be removed
+          </t>
+
+          <figure><artwork type="CDDL"><![CDATA[
 MAC_structure = [
      protected: bstr,
      external_aad: bstr,
@@ -1091,33 +1227,8 @@ MAC_structure = [
 ]
 ]]></artwork></figure>
 
-      <t>
-        How to compute a MAC:
-      </t>
-
-      <t>
-        <list style="numbers">
-          <t>
-            Create a MAC_structure and copy the protected and payload fields from the COSE_mac structure.
-          </t>
-          <t>
-            If the application has supplied external authenticated data, encode it as a binary value and place in the MAC_structure.
-            If there is no external authenticated data, then use a zero length 'bstr'.
-              (See <xref target="Extern_AAD"/> for application guidance on constructing this field.)
-          </t>
-          <t>
-            Encode the MAC_structure using a canonical CBOR encoder.  The resulting bytes is the value to compute the MAC on.
-          </t>
-          <t>
-            Compute the MAC and place the result in the 'tag' field of the COSE_mac structure.
-          </t>
-          <t>
-            Encrypt and encode the MAC key for each recipient of the message.
-          </t>
-        </list>
-      </t>
-
-    </section>
+        </section>
+      </section>
     <section anchor="key-structure" title="Key Structure">
 
       <t>
@@ -1133,6 +1244,16 @@ MAC_structure = [
         <cref source="JLS">
           Is there a reason to assign a CBOR tag to identify keys and/or key sets?
         </cref>
+      </t>
+
+      <t>
+        The element “kty” is a required element in a COSE_Key map.
+      </t>
+
+      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+
+      <t>
+        Text from here to start of next section to be removed
       </t>
 
       <t>
@@ -1155,11 +1276,6 @@ COSE_Key = {
 
 COSE_KeySet = [+COSE_Key]
 ]]></artwork></figure>
-
-      <t>
-        The element “kty” is a required element in a COSE_Key map.
-      </t>
-
 
 
     <section anchor="COSE_KEY_KEYS" title="COSE Key Common Parameters">
@@ -1229,6 +1345,12 @@ COSE_KeySet = [+COSE_Key]
         <c>key agree</c>        <c>7</c>        <c>The key is used for key agreement.</c>
       </texttable>
       
+      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+
+      <t>
+        Text from here to start of next section to be removed
+      </t>
+
       <t>
         The following provides a CDDL fragment which duplicates the assignment labels from <xref target="table-key-labels"/> and <xref target="table-key-ops"/>.
       </t>
@@ -2028,6 +2150,25 @@ valid, message content = Decrypt(cipher text, key, additional data)
           </list>
         </t>
 
+        <texttable title="Context Algorithm Parameters" anchor="KDF_Context_Alg_Params">
+          <ttcol>name</ttcol>
+          <ttcol>label</ttcol>
+          <ttcol>type</ttcol>
+          <ttcol>description</ttcol>
+          <c>PartyU identity</c>   <c>-21</c>      <c>bstr</c>          <c>Party U identity Information</c>
+          <c>PartyU nonce</c>      <c>-22</c>      <c>bstr / int</c>    <c>Party U provided nonce</c>
+          <c>PartyU other</c>      <c>-23</c>      <c>bstr</c>          <c>Party U other provided information</c>
+          <c>PartyV identity</c>   <c>-24</c>      <c>bstr</c>          <c>Party V identity Information</c>
+          <c>PartyV nonce</c>      <c>-25</c>      <c>bstr / int</c>    <c>Party V provided nonce</c>
+          <c>PartyV other</c>      <c>-26</c>      <c>bstr</c>          <c>Party V other provided information</c>
+        </texttable>
+
+        <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+
+      <t>
+        Text from here to start of next section to be removed
+      </t>
+
         <figure><artwork type='CDDL'>
 <![CDATA[
 COSE_KDF_Context = [
@@ -2051,18 +2192,6 @@ COSE_KDF_Context = [
 ]
 ]]></artwork></figure>
 
-        <texttable title="Context Algorithm Parameters" anchor="KDF_Context_Alg_Params">
-          <ttcol>name</ttcol>
-          <ttcol>label</ttcol>
-          <ttcol>type</ttcol>
-          <ttcol>description</ttcol>
-          <c>PartyU identity</c>   <c>-21</c>      <c>bstr</c>          <c>Party U identity Information</c>
-          <c>PartyU nonce</c>      <c>-22</c>      <c>bstr / int</c>    <c>Party U provided nonce</c>
-          <c>PartyU other</c>      <c>-23</c>      <c>bstr</c>          <c>Party U other provided information</c>
-          <c>PartyV identity</c>   <c>-24</c>      <c>bstr</c>          <c>Party V identity Information</c>
-          <c>PartyV nonce</c>      <c>-25</c>      <c>bstr / int</c>    <c>Party V provided nonce</c>
-          <c>PartyV other</c>      <c>-26</c>      <c>bstr</c>          <c>Party V other provided information</c>
-        </texttable>
 
       </section>
 
