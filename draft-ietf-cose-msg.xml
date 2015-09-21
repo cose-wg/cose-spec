@@ -355,8 +355,9 @@ values = any
         <list style="none">
           <t>0 - Reserved.</t>
           <t>1 - Signed Message.</t>
-          <t>2 - Encrypted Message</t>
+          <t>2 - Enveloped Message</t>
           <t>3 - Authenticated Message (MACed message)</t>
+          <t>4 - Encrypted Message</t>
         </list>
       </t>
 
@@ -376,7 +377,8 @@ values = any
 
       <figure><artwork type="CDDL"><![CDATA[
 COSE_MSG = COSE_Sign / 
-    COSE_encrypt / 
+    COSE_enveloped /
+    COSE_encryptData /
     COSE_mac
 
 COSE_Tagged_MSG = #6.999(COSE_MSG)   ; Replace 999 with TBD1
@@ -384,8 +386,9 @@ COSE_Tagged_MSG = #6.999(COSE_MSG)   ; Replace 999 with TBD1
 ; msg_type values
 msg_type_reserved=0
 msg_type_signed=1
-msg_type_encrypted=2
+msg_type_enveloped=2
 msg_type_mac=3
+msg_type_encryptData=4
 ]]></artwork></figure>
 
 
@@ -842,10 +845,18 @@ Sig_structure = [
       </section>
     </section>
 
-    <section anchor="encryption-object" title="Encryption object">
+    <section anchor="encryption-object" title="Encryption objects">
+      <t>
+        COSE supports two different encryption structures.
+        OOSE_enveloped is used when the key needs to be explicilty identified.
+        This structure supports the use of recipient structures to allow for random content encryption keys to be used..
+        COSE_encrypted is used when the a recipient structure is not needed because the key to be used is known implicitly.
+      </t>
+
+      <section title="Enveloped COSE structure">
 
       <t>
-        The encryption structure allows for one or more recipients of a message.
+        The enveloped structure allows for one or more recipients of a message.
         There are provisions for parameters about the content and parameters about the recipient information to be carried in the message.
         The parameters associated with the content can be authenticated by the content encryption algorithm.
         The parameters associated with the recipient can be authenticated by the recipient algorithm (when the algorithm supports it).
@@ -864,24 +875,27 @@ Sig_structure = [
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_encrypt = [
-    msg_type: msg_type_encrypted,
+COSE_enveloped = [
+    msg_type: msg_type_enveloped,
     COSE_encrypt_fields
+    recipients: [+COSE_recipient]
 ]
 
 COSE_encrypt_fields = (
     Headers,
     ciphertext: bstr / nil,
-    ? recipients: [+[COSE_encrypt_fields]]
 )
+
+COSE_recipient = [    
+    COSE_encrypt_fields
+    ? recipients: [+COSE_recipient]
+]
 ]]></artwork></figure>
 
       <t>
         The COSE_encrypt structure is a CBOR array.
         The fields of the array in order are:
-      </t>
 
-      <t>
         <list style="hanging">
           <t hangText='msg_type'>
             identifies this as providing the encrypted security service.
@@ -921,6 +935,46 @@ COSE_encrypt_fields = (
         </t>
 
       </section>
+
+    </section>
+
+    <section title="Encrypted COSE structure">
+      <t>
+        The encrypted structure does not have the ability to specify recipients of the message.
+        The structure assumes that the recipient of the object will already know the identity of the key to be used in order to decrypt the message.
+        If a key needs to be identified to the recipient, the enveloped structure is used.
+      </t>
+
+      <t>
+        The CDDL grammar structure for encrypted data is:
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_encryptData = [
+    msg_type: msg_type_encryptData,
+    COSE_encrypt_fields
+]
+]]></artwork></figure>
+
+      <t>
+        The COSE_encryptedData structure is a CBOR array.
+        The fields of the array in order are:
+
+        <list style="hanging">
+          <t hangText='msg_type'>
+            identifies this as providing the encrypted data security service.
+            This value MUST be mg_type_encrypted (4).
+          </t>
+          <t hangText='protected'> is described in <xref target="header-parameters"/>.</t>
+          <t hangText='unprotected'> is described in <xref target="header-parameters"/>.</t>
+          <t hangText='ciphertext'>
+            contains the encrypted plain text.
+            If the ciphertext is to be transported independently of the control information about the encryption process (i.e. detached content) then the field is encoded as a null object.
+          </t>
+        </list>
+      </t>
+    </section>
+
       
       <section anchor="encryption-algorithm-for-aead-algorithms" title="Encryption Algorithm for AEAD algorithms">
 
@@ -1052,7 +1106,7 @@ COSE_mac = [
    Headers,
    payload: bstr / nil,
    tag: bstr,
-   recipients: [+[COSE_encrypt_fields]]
+   recipients: [+COSE_recipient]
 ]
 
 ]]></artwork></figure>
