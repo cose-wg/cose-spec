@@ -466,6 +466,7 @@ ul.toc a:first-child {
 <link href="#rfc.section.4" rel="Chapter" title="4 Signing Structure"/>
 <link href="#rfc.section.4.1" rel="Chapter" title="4.1 Externally Supplied Data"/>
 <link href="#rfc.section.4.2" rel="Chapter" title="4.2 Signing and Verification Process"/>
+<link href="#rfc.section.4.3" rel="Chapter" title="4.3 Computing Counter Signatures"/>
 <link href="#rfc.section.5" rel="Chapter" title="5 Encryption objects"/>
 <link href="#rfc.section.5.1" rel="Chapter" title="5.1 Enveloped COSE structure"/>
 <link href="#rfc.section.5.1.1" rel="Chapter" title="5.1.1 Recipient Algorithm Classes"/>
@@ -562,7 +563,7 @@ ul.toc a:first-child {
 
   <meta name="dct.creator" content="Schaad, J. and B. Campbell" />
   <meta name="dct.identifier" content="urn:ietf:id:draft-ietf-cose-msg-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2015-9-21" />
+  <meta name="dct.issued" scheme="ISO8601" content="2015-9-22" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  " />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies how to do signatures, message authentication codes and encryption using this data format.  " />
 
@@ -586,12 +587,12 @@ ul.toc a:first-child {
   <td class="right">B. Campbell</td>
 </tr>
 <tr>
-  <td class="left">Expires: March 24, 2016</td>
+  <td class="left">Expires: March 25, 2016</td>
   <td class="right">Ping Identity</td>
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">September 21, 2015</td>
+  <td class="right">September 22, 2015</td>
 </tr>
 
     	
@@ -615,7 +616,7 @@ ul.toc a:first-child {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on March 24, 2016.</p>
+<p>This Internet-Draft will expire on March 25, 2016.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -640,6 +641,7 @@ ul.toc a:first-child {
 </ul><li>4.   <a href="#rfc.section.4">Signing Structure</a></li>
 <ul><li>4.1.   <a href="#rfc.section.4.1">Externally Supplied Data</a></li>
 <li>4.2.   <a href="#rfc.section.4.2">Signing and Verification Process</a></li>
+<li>4.3.   <a href="#rfc.section.4.3">Computing Counter Signatures</a></li>
 </ul><li>5.   <a href="#rfc.section.5">Encryption objects</a></li>
 <ul><li>5.1.   <a href="#rfc.section.5.1">Enveloped COSE structure</a></li>
 <ul><li>5.1.1.   <a href="#rfc.section.5.1.1">Recipient Algorithm Classes</a></li>
@@ -878,6 +880,8 @@ Headers = (
   <dd style="margin-left: 8">This parameter one of the ways that can be used to find the key to be used.  The value of this parameter is matched against the 'kid' member in a COSE_Key structure.  Applications MUST NOT assume that 'kid' values are unique.  There may be more than one key with the same 'kid' value, it may be required that all of the keys need to be checked to find the correct one.  The internal structure of 'kid' values is not defined and generally cannot be relied on by applications.  Key identifier values are hints about which key to use, they are not directly a security critical field, for this reason they can be placed in the unprotected headers bucket.  </dd>
   <dt>nonce</dt>
   <dd style="margin-left: 8">This parameter holds either a nonce or Initialization Vector value.  The value can be used either as a counter value for a protocol or as an IV for an algorithm.  </dd>
+  <dt>counter signature</dt>
+  <dd style="margin-left: 8">This parameter holds a counter signature value.  Counter signatures provide a method of having a second party sign some data, the counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_signature, COSE_enveloped, COSE_recipient, COSE_encryptedData, COSE_mac.  These structures all have the same basic structure so that a consistent calculation of the counter signature can be computed.  Details on computing counter signatures are found in <a href="#counter_signature">Section 4.3</a>.  </dd>
 </dl>
 
 <p> </p>
@@ -929,6 +933,13 @@ Headers = (
       <td class="left">bstr</td>
       <td class="left"/>
       <td class="left">Nonce or Initialization Vector (IV)</td>
+    </tr>
+    <tr>
+      <td class="left">counter signature</td>
+      <td class="left">6</td>
+      <td class="left">COSE_signature</td>
+      <td class="left"/>
+      <td class="left">CBOR encoded signature structure</td>
     </tr>
     <tr>
       <td class="left">zip</td>
@@ -1048,6 +1059,10 @@ Sig_structure = [
     payload: bstr
 ]
 </pre>
+<h1 id="rfc.section.4.3"><a href="#rfc.section.4.3">4.3.</a> <a href="#counter_signature" id="counter_signature">Computing Counter Signatures</a></h1>
+<p id="rfc.section.4.3.p.1">Counter signatures provide a method of having a different signature occur on some piece of content.  This is normally used to provide a signature on a signature allowing for a proof that a signature existed at a given time.  In this document we allow for counter signatures to exist in a greater number of environments.  A counter signature can exist, for example, on a COSE_encyptedData object and allow for a signature to be present on the encrypted content of a message.  </p>
+<p id="rfc.section.4.3.p.2">The creation and validation of counter signatures over the different items relies on the fact that the structure all of our objects have the same structure.  The first element may be a message type, this is followed by a set of protected attributes, a set of unprotected attributes and a body in that order.  This means that the Sig_structure can be used for in a uniform manner to get the byte stream for processing a signature.  If the counter signature is going to be computed over a COSE_encryptedData structure, the body_protected and payload items can be mapped into the Sig_structure in the same manner as from the COSE_Sign structure.  </p>
+<p id="rfc.section.4.3.p.3">While one can create a counter signature for a COSE_Sign structure, there is not much of a point to doing so.  It is equivalent to create a new COSE_signature structure and placing it in the signatures array.  It is strongly suggested that it not be done, but it is not banned.  </p>
 <h1 id="rfc.section.5"><a href="#rfc.section.5">5.</a> <a href="#encryption-object" id="encryption-object">Encryption objects</a></h1>
 <p id="rfc.section.5.p.1">COSE supports two different encryption structures.  OOSE_enveloped is used when the key needs to be explicilty identified.  This structure supports the use of recipient structures to allow for random content encryption keys to be used..  COSE_encrypted is used when the a recipient structure is not needed because the key to be used is known implicitly.  </p>
 <h1 id="rfc.section.5.1"><a href="#rfc.section.5.1">5.1.</a> Enveloped COSE structure</h1>
@@ -3792,6 +3807,8 @@ d707d1c7f0c601541e9421ec5a02ae3149ea1e99129305eb19ae8ece2a3293f3f
 
 <ul>
   <li>Removed the jku, x5c, x5t, x5t#S256, x5u, and jwk headers.</li>
+  <li>Add enveloped data vs encrypted data structures.</li>
+  <li>Add counter signature parameter.</li>
 </ul>
 
 <p> </p>
