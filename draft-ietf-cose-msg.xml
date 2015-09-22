@@ -560,6 +560,13 @@ Headers = (
               This parameter holds either a nonce or Initialization Vector value.
               The value can be used either as a counter value for a protocol or as an IV for an algorithm.
             </t>
+
+            <t hangText='counter signature'>
+              This parameter holds a counter signature value.
+              Counter signatures provide a method of having a second party sign some data, the counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_signature, COSE_enveloped, COSE_recipient, COSE_encryptedData, COSE_mac.
+              These structures all have the same basic structure so that a consistent calculation of the counter signature can be computed.
+              Details on computing counter signatures are found in <xref target="counter_signature"/>.
+            </t>
           </list>
         </t>
 
@@ -576,6 +583,7 @@ Headers = (
         <c>content type</c> <c>3</c>        <c>tstr / int</c>        <c>CoAP Content-Formats or Media Types registry</c>          <c>Value is either a Media Type or an integer from the CoAP Content Format registry</c>
         <c>kid</c>        <c>4</c>        <c>bstr</c>              <c></c>                              <c>key identifier</c>
         <c>nonce</c>      <c>5</c>        <c>bstr</c>              <c></c>                              <c>Nonce or Initialization Vector (IV)</c>
+        <c>counter signature</c> <c>6</c> <c>COSE_signature</c>    <c></c>                              <c>CBOR encoded signature structure</c>
         <c>zip</c>        <c>*</c>        <c>int / tstr</c>        <c></c>                              <c>Integers are taken from the table --POINT TO REGISTRY--</c>
       </texttable>
 
@@ -835,6 +843,26 @@ Sig_structure = [
 ]
 ]]></artwork></figure>
 
+      </section>
+
+      <section anchor="counter_signature" title="Computing Counter Signatures">
+        <t>
+          Counter signatures provide a method of having a different signature occur on some piece of content.
+          This is normally used to provide a signature on a signature allowing for a proof that a signature existed at a given time.
+          In this document we allow for counter signatures to exist in a greater number of environments.
+          A counter signature can exist, for example, on a COSE_encyptedData object and allow for a signature to be present on the encrypted content of a message.
+        </t>
+
+        <t>
+          The creation and validation of counter signatures over the different items relies on the fact that the structure all of our objects have the same structure.
+          The first element may be a message type, this is followed by a set of protected attributes, a set of unprotected attributes and a body in that order.
+          This means that the Sig_structure can be used for in a uniform manner to get the byte stream for processing a signature.
+          If the counter signature is going to be computed over a COSE_encryptedData structure, the body_protected and payload items can be mapped into the Sig_structure in the same manner as from the COSE_Sign structure.
+        </t>
+
+        <t>
+          While one can create a counter signature for a COSE_Sign structure, there is not much of a point to doing so.  It is equivalent to create a new COSE_signature structure and placing it in the signatures array.  It is strongly suggested that it not be done, but it is not banned.
+        </t>
       </section>
     </section>
 
@@ -3982,6 +4010,8 @@ COSE_KDF_Context = [
         <t>
           <list style="symbols">
             <t>Removed the jku, x5c, x5t, x5t#S256, x5u, and jwk headers.</t>
+            <t>Add enveloped data vs encrypted data structures.</t>
+            <t>Add counter signature parameter.</t>
           </list>
         </t>
       </section>
