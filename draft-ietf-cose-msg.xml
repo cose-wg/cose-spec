@@ -2564,7 +2564,6 @@ COSE_KDF_Context = [
         <section title="ECDH">
           <t>
             The basic mathematics for Elliptic Curve Diffie-Hellman can be found in <xref target="RFC6090"/>.
-            Two new curves have been defined in <xref target="I-D.irtf-cfrg-curves"/>.
           </t>
 
           <t>
@@ -2650,7 +2649,7 @@ COSE_KDF_Context = [
           </texttable>
 
           <t>
-            This document defines these algorithms to be used with the curves P-256, P-384, P-521, X25519 and X448.
+            This document defines these algorithms to be used with the curves P-256, P-384, P-521.
             Implementations MUST verify that the key type and curve are correct, different curves are restricted to different key types.
             Implementations MUST verify that the curve and algorithm are appropriate for the entities involved.
           </t>
@@ -2753,16 +2752,12 @@ COSE_KDF_Context = [
       
       <section title="Elliptic Curve Keys">
         <t>
-          Two different key structures are being defined for Elliptic Curve keys.
+          Two different key structures could be defined for Elliptic Curve keys.
           One version uses both an x and a y coordinate, potentially with point compression.
           This is the traditional EC point representation that is used in <xref target="RFC5480"/>.
           
-          The other version uses only the x coordinate as the y coordinate is either to be recomputed or not needed for the key agreement operation.
-          An example of this is Curve25519 <xref target="I-D.irtf-cfrg-curves"/>.
-              <cref source="Ilari">
-                Check to see what the curves are renamed to during final publishing.
-                It appears to be X25519 now.
-              </cref>
+          The other version uses only the x coordinate as the y coordinate is either to be recomputed or not needed for the key agreement operation
+          Currently no algorithms are defined using this key structure.
         </t>
         
         <texttable title="EC Curves" anchor="table-ec-curves">
@@ -2773,61 +2768,7 @@ COSE_KDF_Context = [
           <c>P-256</c>        <c>EC2</c>      <c>1</c>       <c>NIST P-256 also known as secp256r1</c>
           <c>P-384</c>        <c>EC2</c>      <c>2</c>       <c>NIST P-384 also known as secp384r1</c>
           <c>P-521</c>        <c>EC2</c>      <c>3</c>       <c>NIST P-521 also known as secp521r1</c>
-          <c>Curve25519</c>   <c>EC1</c>      <c>1</c>       <c>Curve 25519</c>
-          <c>Curve448</c>     <c>EC1</c>      <c>2</c>       <c>Curve 448</c>
         </texttable>
-
-        <section title="Single Coordinate Curves" anchor="EC1-Keys">
-          <t>
-            One class of Elliptic Curve mathematics allows for a point to be completely defined using the curve and the x coordinate of the point on the curve.
-            The two curves that are initially setup to use is point format are Curve 25519 and Curve 448 which are defined in <xref target="I-D.irtf-cfrg-curves"/>.
-          </t>
-
-          <t>
-            For EC keys with only the x coordinates, the 'kty' member is set to 1 (EC1).
-            The key parameters defined in this section are summarized in <xref target="table-ec1-keys"/>.
-            The members that are defined for this key type are:
-            
-            <list style="hanging">
-              <t hangText="crv">
-                contains an identifier of the curve to be used with the key.
-                <cref source="JLS">
-                  Do we create a registry for curves?
-                  Is is the same registry for both EC1 and EC2?
-                </cref>
-                The curves defined in this document for this key type can be found in <xref target="table-ec-curves"/>.
-                Other curves may be registered in the future and private curves can be used as well.
-              </t>
-              
-              <t hangText="x">
-                contains the x coordinate for the EC point.
-                The octet string represents a little-endian encoding of x.
-              </t>
-              
-              <t hangText="d">
-                contains the private key.
-              </t>
-              
-            </list>
-          </t>
-
-          <t>
-            For public keys, it is REQUIRED that 'crv' and  'x' be present in the structure.
-            For private keys, it is REQUIRED that 'crv' and 'd' be present in the structure.
-            For private keys, it is RECOMMENDED that 'x' also be present, but it can be recomputed from the required elements and omitting it saves on space.
-          </t>
-          
-          <texttable title="EC Key Parameters" anchor="table-ec1-keys">
-            <ttcol>name</ttcol>
-            <ttcol>key type</ttcol>
-            <ttcol>value</ttcol>
-            <ttcol>type</ttcol>
-            <ttcol>description</ttcol>
-            <c>crv</c>    <c>1</c>      <c>-1</c>       <c>int / tstr</c>       <c>EC Curve identifier - Taken from the COSE General Registry</c>
-            <c>x</c>      <c>1</c>      <c>-2</c>       <c>bstr</c>             <c>X Coordinate</c>
-            <c>d</c>      <c>1</c>      <c>-4</c>       <c>bstr</c>             <c>Private key</c>
-          </texttable>
-        </section>
 
         <section title="Double Coordinate Curves" anchor="EC2-Keys">
           <t>
@@ -3289,7 +3230,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          This registry will be initially populated by the values in <xref target="table-ec1-keys"/>, <xref target="table-ec2-keys"/>, <xref target="table-rsa-keys"/>, and <xref target="table-symmetric-keys"/>.
+          This registry will be initially populated by the values in <xref target="table-ec2-keys"/>, <xref target="table-rsa-keys"/>, and <xref target="table-symmetric-keys"/>.
           The specification column for all of these entries will be this document.
         </t>
 
@@ -3543,7 +3484,7 @@ COSE_KDF_Context = [
       &RFC7518;
       &RFC7539;
       
-      &CFRG-EC;
+      <!-- &CFRG-EC; -->
 
       <reference anchor="AES-GCM" >
         <front>
