@@ -223,7 +223,7 @@
         
         <figure><artwork type='CDDL'>
 <![CDATA[
-start = COSE_MSG / COSE_Tagged_MSG / COSE_Key / COSE_KeySet
+start = COSE_Untagged_Message / COSE_Tagged_Message / COSE_Key / COSE_KeySet
 ]]></artwork></figure>
 
         
@@ -303,26 +303,50 @@ values = any
 
     </section>
     
-    <section anchor="the-cosemsg-structure" title="The COSE_MSG structure">
+    <section anchor="the-cosemsg-structure" title="Basic COSE Structure">
+      <t>
+        The COSE Message structure is designed so that there can be a large amount of common code when parsing and processing the different security messages.
+        All of the message structures are build on a CBOR array type.
+        The first three elements of the array contains the same basic information.
+        The first element is a set of protected header information.
+        The second element is a set of unprotected header information.
+        The third element is the content of the message (either as plain text or encrypted).
+        Elements after this point are dependent on the specific message type.
+      </t>
 
       <t>
+        Identification of which message is present is done by one of two methods:
+        <list style="symbols">
+          <t>
+            The specific message type is known from the context in which it is placed.
+            This may be defined by a marker in the containing structure or by restrictions specified by the application protocol.
+          </t>
+          <t>
+            The message type is identified by a CBOR tag.
+            This document defines a CBOR tag for each of the message structures.
+          </t>
+        </list>
+      </t>
+      
+      <!--
+      <t>
         The COSE_MSG structure is a top level CBOR object that corresponds to the DataContent type in the Cryptographic Message Syntax (CMS) <xref target="RFC5652"/>.
-        <!-- Hannes
+        < ! - - Hannes
              I would remove references to CMS and S/MIME since they are most likely only helpful to a very small audience.
 
              OPEN
-        -->
+        - - >
         <cref source="Hannes">I would remove references to CMS and S/MIME since they are most likely only helpful to a very small audience.</cref>
 
         This structure allows for a top level message to be sent that could be any of the different security services.
         The security service is identified within the message.
-      </t>
+        </t>
 
-      <t>
+        <t>
         The COSE_Tagged_MSG CBOR type takes the COSE_MSG and prepends a CBOR tag of TBD1 to the encoding of COSE_MSG.
         By having both a tagged and untagged version of the COSE_MSG structure, it becomes easy to either use COSE_MSG as a top level object or embedded in another object.
         The tagged version allows for a method of placing the COSE_MSG structure into a choice, using a consistent tag value to determine that this is a COSE object.
-      </t>
+        </t>
 
       <t>
         The existence of the COSE_MSG and COSE_Tagged_MSG CBOR data types are not intended to prevent protocols from using the individual security primitives directly.
@@ -363,6 +387,7 @@ values = any
         If the value of 0 is found, then clients MUST fail processing the structure.
         Implementations need to recognize that the set of values might be extended at a later date, but they should not provide a security service based on guesses of what the security object might be.
       </t>
+      -->
 
       <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
 
@@ -371,19 +396,16 @@ values = any
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_MSG = COSE_Sign / 
+
+COSE_Untagged_Message = COSE_Sign / 
     COSE_enveloped /
     COSE_encryptData /
-    COSE_mac
+    COSE_Mac
 
-COSE_Tagged_MSG = #6.999(COSE_MSG)   ; Replace 999 with TBD1
-
-; msg_type values
-msg_type_reserved=0
-msg_type_signed=1
-msg_type_enveloped=2
-msg_type_mac=3
-msg_type_encryptData=4
+COSE_Tagged_Message = COSE_Sign_Tagged /
+    COSE_Enveloped_Tagged /
+    COSE_EncryptedData_Tagged /
+    COSE_Mac_Tagged
 ]]></artwork></figure>
 
 
@@ -633,10 +655,12 @@ Headers = (
 
       <t>
         <list style="hanging">
+          <!--
           <t hangText='msg_type'>
             identifies this as providing the signed security service.
             The value MUST be msg_type_signed (1).
-          </t>
+            </t>
+          -->
           
           <t hangText='protected'>
             is described in <xref target="header-parameters"/>.
@@ -692,8 +716,10 @@ Headers = (
 
 
       <figure><artwork type="CDDL"><![CDATA[
+
+COSE_Sign_Tagged = #6.999(COSE_Sign) ; Replace 999 with TBD1
+      
 COSE_Sign = [
-    msg_type: msg_type_signed,
     Headers,
     payload : bstr / nil,
     signatures : [+ COSE_signature]
@@ -892,10 +918,12 @@ Sig_structure = [
         The fields of the array in order are:
 
         <list style="hanging">
+          <!--
           <t hangText='msg_type'>
             identifies this as providing the encrypted security service.
             The value MUST be msg_type_encrypted (2).
           </t>
+          -->
           
           <t hangText='protected'>
             is described in <xref target="header-parameters"/>.
@@ -951,8 +979,10 @@ Sig_structure = [
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
+
+COSE_Enveloped_Tagged = #6.998(COSE_enveloped)          ; Replace 998 with TBD2
+      
 COSE_enveloped = [
-    msg_type: msg_type_enveloped,
     COSE_encrypt_fields
     recipients: [+COSE_recipient]
 ]
@@ -1000,8 +1030,9 @@ COSE_recipient = [
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
+COSE_EncryptedData_Tagged = #6.997(COSE_encryptData)     ; Replace 997 with TBD3
+      
 COSE_encryptData = [
-    msg_type: msg_type_encryptData,
     COSE_encrypt_fields
 ]
 ]]></artwork></figure>
@@ -1011,10 +1042,12 @@ COSE_encryptData = [
         The fields of the array in order are:
 
         <list style="hanging">
+          <!--
           <t hangText='msg_type'>
             identifies this as providing the encrypted data security service.
             This value MUST be mg_type_encrypted (4).
-          </t>
+            </t>
+          -->
           <t hangText='protected'> is described in <xref target="header-parameters"/>.</t>
           <t hangText='unprotected'> is described in <xref target="header-parameters"/>.</t>
           <t hangText='ciphertext'>
@@ -1158,14 +1191,16 @@ Enc_structure = [
       </t>
 
       <t>
-        The COSE_encrypt structure is a CBOR array.
+        The COSE_Mac structure is a CBOR array.
         The fields of the array in order are:
 
         <list style="hanging">
+          <!--
           <t hangText='msg_type'>
             identifies this as providing the encrypted security service.
             The value MUST be msg_type_mac (3).
           </t>
+          -->
 
           <t hangText='protected'>
             is described in <xref target="header-parameters"/>.
@@ -1200,8 +1235,9 @@ Enc_structure = [
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_mac = [
-   msg_type: msg_type_mac, 
+COSE_Mac_Tagged = #6.996(COSE_Mac)              ; Repalce 996 with TBD4
+      
+COSE_Mac = [
    Headers,
    payload: bstr / nil,
    tag: bstr,
@@ -1219,7 +1255,7 @@ COSE_mac = [
           <t>
             <list style="numbers">
               <t>
-                Create a MAC_structure and copy the protected and payload fields from the COSE_mac structure.
+                Create a MAC_structure and copy the protected and payload fields from the COSE_Mac structure.
               </t>
               <t>
                 If the application has supplied external authenticated data, encode it as a binary value and place in the MAC_structure.
@@ -1230,7 +1266,7 @@ COSE_mac = [
                 Encode the MAC_structure using a canonical CBOR encoder.  The resulting bytes is the value to compute the MAC on.
               </t>
               <t>
-                Compute the MAC and place the result in the 'tag' field of the COSE_mac structure.
+                Compute the MAC and place the result in the 'tag' field of the COSE_Mac structure.
               </t>
               <t>
                 Encrypt and encode the MAC key for each recipient of the message.
@@ -2960,20 +2996,21 @@ COSE_KDF_Context = [
       <section anchor="cbor-tag-assignment" title="CBOR Tag assignment">
 
         <t>
-          It is requested that IANA assign a new tag from the “Concise Binary Object Representation (CBOR) Tags” registry.  It is requested that the tag be assigned in the 0 to 23 value range.
+          It is requested that IANA assign the following tags from the “Concise Binary Object Representation (CBOR) Tags” registry.
+          It is requested that the tags be assigned in the 24 to 128 value range.
         </t>
 
         <t>
-          Tag Value:  TBD1
+          The tags to be assigned are:
         </t>
 
-        <t>
-          Data Item: COSE_Msg
-        </t>
-
-        <t>
-          Semantics: COSE security message.
-        </t>
+          <texttable>
+            <ttcol>Tag Value</ttcol>    <ttcol>Data Item</ttcol>  <ttcol>Semantics</ttcol>
+            <c>TBD1</c>                 <c>COSE_Sign</c>                <c>COSE Signed Data Object</c>
+            <c>TBD2</c>                 <c>COSE_enveloped</c>           <c>COSE Enveloped Data Object</c>
+            <c>TBD3</c>                 <c>COSE_encryptData</c>         <c>COSE Encrypted Data Object</c>
+            <c>TBD4</c>                 <c>COSE_Mac</c>                 <c>COSE Mac-ed Data Object</c>
+          </texttable>
 
       </section>
 
