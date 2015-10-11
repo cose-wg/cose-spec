@@ -460,7 +460,7 @@ ul.toc a:first-child {
 <link href="#rfc.section.1.4" rel="Chapter" title="1.4 CBOR Related Terminology"/>
 <link href="#rfc.section.1.5" rel="Chapter" title="1.5 Document Terminology"/>
 <link href="#rfc.section.1.6" rel="Chapter" title="1.6 Mandatory to Implement Algorithms"/>
-<link href="#rfc.section.2" rel="Chapter" title="2 The COSE_MSG structure"/>
+<link href="#rfc.section.2" rel="Chapter" title="2 Basic COSE Structure"/>
 <link href="#rfc.section.3" rel="Chapter" title="3 Header Parameters"/>
 <link href="#rfc.section.3.1" rel="Chapter" title="3.1 Common COSE Headers Parameters"/>
 <link href="#rfc.section.4" rel="Chapter" title="4 Signing Structure"/>
@@ -631,7 +631,7 @@ ul.toc a:first-child {
 <li>1.4.   <a href="#rfc.section.1.4">CBOR Related Terminology</a></li>
 <li>1.5.   <a href="#rfc.section.1.5">Document Terminology</a></li>
 <li>1.6.   <a href="#rfc.section.1.6">Mandatory to Implement Algorithms</a></li>
-</ul><li>2.   <a href="#rfc.section.2">The COSE_MSG structure</a></li>
+</ul><li>2.   <a href="#rfc.section.2">Basic COSE Structure</a></li>
 <li>3.   <a href="#rfc.section.3">Header Parameters</a></li>
 <ul><li>3.1.   <a href="#rfc.section.3.1">Common COSE Headers Parameters</a></li>
 </ul><li>4.   <a href="#rfc.section.4">Signing Structure</a></li>
@@ -778,7 +778,7 @@ ul.toc a:first-child {
 <p id="rfc.section.1.3.p.4">NOTE: For the purposes of review, we are currently interlacing the CDLL grammar into the text of document.  This is being done for simplicity of comparision of the grammar againist the prose.  The grammar will be removed to an appendix during WGLC.  </p>
 <pre>
 
-start = COSE_MSG / COSE_Tagged_MSG / COSE_Key / COSE_KeySet
+start = COSE_Untagged_Message / COSE_Tagged_Message / COSE_Key / COSE_KeySet
 </pre>
 <h1 id="rfc.section.1.4"><a href="#rfc.section.1.4">1.4.</a> <a href="#label" id="label">CBOR Related Terminology</a></h1>
 <p id="rfc.section.1.4.p.1">In JSON, maps are called objects and only have one kind of map key: a string.  In COSE, we use both strings and integers (both negative and non-negative integers) as map keys, as well as data items to identify specific choices.  The integers (both positive and negative) are used for compactness of encoding and easy comparison.  (Generally, in this document the value zero is going to be reserved and not used.) Since the work "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage of either an integer or a string to identify map keys and choose data items.  </p>
@@ -804,38 +804,28 @@ values = any
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.2"><a href="#rfc.section.2">2.</a> <a href="#the-cosemsg-structure" id="the-cosemsg-structure">The COSE_MSG structure</a></h1>
-<p id="rfc.section.2.p.1">The COSE_MSG structure is a top level CBOR object that corresponds to the DataContent type in the Cryptographic Message Syntax (CMS) <a href="#RFC5652">[RFC5652]</a>.  <a id="CREF4" class="info">[CREF4]<span class="info">Hannes: I would remove references to CMS and S/MIME since they are most likely only helpful to a very small audience.</span></a> This structure allows for a top level message to be sent that could be any of the different security services.  The security service is identified within the message.  </p>
-<p id="rfc.section.2.p.2">The COSE_Tagged_MSG CBOR type takes the COSE_MSG and prepends a CBOR tag of TBD1 to the encoding of COSE_MSG.  By having both a tagged and untagged version of the COSE_MSG structure, it becomes easy to either use COSE_MSG as a top level object or embedded in another object.  The tagged version allows for a method of placing the COSE_MSG structure into a choice, using a consistent tag value to determine that this is a COSE object.  </p>
-<p id="rfc.section.2.p.3">The existence of the COSE_MSG and COSE_Tagged_MSG CBOR data types are not intended to prevent protocols from using the individual security primitives directly.  Where only a single service is required, that structure can be used directly.  </p>
-<p id="rfc.section.2.p.4">Each of the top-level security objects use a CBOR array as the base structure.  For each of the top-level security objects, the first field is a 'msg_type'.  The CBOR type for a 'msg_type' is 'int'.  The 'msg_type' is defined to distinguish between the different structures when they appear as part of a COSE_MSG object.  <a id="CREF5" class="info">[CREF5]<span class="info">JLS: I have moved msg_type into the individual structures.  However, they would not be necessary in the cases where a) the security service is known and b) security libraries can setup to take individual structures.  Should they be moved back to just appearing if used in a COSE_MSG rather than on the individual structure? This would make things shorter if one was using just a signed message because the msg_type field can be omitted as well as the COSE_Tagged_MSG tag field.  One the other hand, it will complicated the code if one is doing general purpose library type things.  </span></a> <a id="CREF6" class="info">[CREF6]<span class="info">JLS: Should we create an IANA registries for the values of msg_type?</span></a> <a id="CREF7" class="info">[CREF7]<span class="info">CB: I would like to make msg_type go away</span></a> </p>
-<p id="rfc.section.2.p.5">The message types defined in this document are: </p>
+<h1 id="rfc.section.2"><a href="#rfc.section.2">2.</a> <a href="#the-cosemsg-structure" id="the-cosemsg-structure">Basic COSE Structure</a></h1>
+<p id="rfc.section.2.p.1">The COSE Message structure is designed so that there can be a large amount of common code when parsing and processing the different security messages.  All of the message structures are build on a CBOR array type.  The first three elements of the array contains the same basic information.  The first element is a set of protected header information.  The second element is a set of unprotected header information.  The third element is the content of the message (either as plain text or encrypted).  Elements after this point are dependent on the specific message type.  </p>
+<p id="rfc.section.2.p.2">Identification of which message is present is done by one of two methods: </p>
 
-<ul class="empty">
-  <li>0 - Reserved.</li>
-  <li>1 - Signed Message.</li>
-  <li>2 - Enveloped Message</li>
-  <li>3 - Authenticated Message (MACed message)</li>
-  <li>4 - Encrypted Message</li>
+<ul>
+  <li>The specific message type is known from the context in which it is placed.  This may be defined by a marker in the containing structure or by restrictions specified by the application protocol.  </li>
+  <li>The message type is identified by a CBOR tag.  This document defines a CBOR tag for each of the message structures.  </li>
 </ul>
 
 <p> </p>
-<p id="rfc.section.2.p.6">Implementations MUST be prepared to find an integer in this field that does not correspond to the values 1 to 3.  If a message type is found then the client does not support the associated security object, the client MUST stop attempting to process the structure and fail.  The value of 0 is reserved and not assigned to a security object.  If the value of 0 is found, then clients MUST fail processing the structure.  Implementations need to recognize that the set of values might be extended at a later date, but they should not provide a security service based on guesses of what the security object might be.  </p>
-<p id="rfc.section.2.p.7">Text from here to start of next section to be removed </p>
+<p id="rfc.section.2.p.3">Text from here to start of next section to be removed </p>
 <pre>
-COSE_MSG = COSE_Sign / 
+
+COSE_Untagged_Message = COSE_Sign / 
     COSE_enveloped /
     COSE_encryptData /
-    COSE_mac
+    COSE_Mac
 
-COSE_Tagged_MSG = #6.999(COSE_MSG)   ; Replace 999 with TBD1
-
-; msg_type values
-msg_type_reserved=0
-msg_type_signed=1
-msg_type_enveloped=2
-msg_type_mac=3
-msg_type_encryptData=4
+COSE_Tagged_Message = COSE_Sign_Tagged /
+    COSE_Enveloped_Tagged /
+    COSE_EncryptedData_Tagged /
+    COSE_Mac_Tagged
 </pre>
 <h1 id="rfc.section.3"><a href="#rfc.section.3">3.</a> <a href="#header-parameters" id="header-parameters">Header Parameters</a></h1>
 <p id="rfc.section.3.p.1">The structure of COSE has been designed to have two buckets of information that are not considered to be part of the payload itself, but are used for holding information about content, algorithms, keys, or evaluation hints for the  processing of the layer.  These two buckets are available for use in all of the structures in this document except for keys.  While these buckets can be present, they may not all be usable in all instances.  For example, while the protected bucket is defined as part of recipient structures, most of the algorithms that are used for recipients do not provide the necessary functionality to provide the needed protection and thus the bucket should not be used.  </p>
@@ -851,7 +841,7 @@ msg_type_encryptData=4
 
 <p> Only parameters that deal with the current layer are to be placed at that layer.  As an example of this, the parameter 'content type' describes the content of the message being carried in the message.  As such this parameter is placed only the the content layer and is not placed in the recipient or signature layers.  In principle, one should be able to process any given layer without reference to any other layer.  (The only data that should need to cross layers is the cryptographic key.) </p>
 <p id="rfc.section.3.p.4">The buckets are present in all of the security objects defined in this document.  The fields in order are the 'protected' bucket (as a CBOR 'bstr' type) and then the 'unprotected' bucket (as a CBOR 'map' type).  The presence of both buckets is required.  The parameters that go into the buckets come from the IANA "COSE Header Parameters" (<a href="#cose-header-key-table">Section 15.2</a>).  Some common parameters are defined in the next section, but a number of parameters are defined throughout this document.  </p>
-<p id="rfc.section.3.p.5">Text from here to start of next section to be removed <a id="CREF8" class="info">[CREF8]<span class="info">JLS: A completest version of this grammar would list the options available in the protected and unprotected headers.  Do we want to head that direction? </span></a> </p>
+<p id="rfc.section.3.p.5">Text from here to start of next section to be removed <a id="CREF4" class="info">[CREF4]<span class="info">JLS: A completest version of this grammar would list the options available in the protected and unprotected headers.  Do we want to head that direction? </span></a> </p>
 <pre>
 header_map = {+ label =&gt; any }
 
@@ -948,14 +938,12 @@ Headers = (
 
 <p> </p>
 <h1 id="rfc.section.4"><a href="#rfc.section.4">4.</a> <a href="#signing-structure" id="signing-structure">Signing Structure</a></h1>
-<p id="rfc.section.4.p.1">The signature structure allows for one or more signatures to be applied to a message payload.  There are provisions for parameters about the content and parameters about the signature to be carried along with the signature itself.  These parameters may be authenticated by the signature, or just present.  Examples of parameters about the content would be the type of content, when the content was created, and who created the content.  <a id="CREF9" class="info">[CREF9]<span class="info">Hannes: Ensure that the list of examples only includes items which are implemented in this specification.  Check the other places where such lists occur and ensure that they also follow this rule.  </span></a> Examples of parameters about the signature would be the algorithm and key used to create the signature, when the signature was created, and counter-signatures.  </p>
+<p id="rfc.section.4.p.1">The signature structure allows for one or more signatures to be applied to a message payload.  There are provisions for parameters about the content and parameters about the signature to be carried along with the signature itself.  These parameters may be authenticated by the signature, or just present.  Examples of parameters about the content would be the type of content, when the content was created, and who created the content.  <a id="CREF5" class="info">[CREF5]<span class="info">Hannes: Ensure that the list of examples only includes items which are implemented in this specification.  Check the other places where such lists occur and ensure that they also follow this rule.  </span></a> Examples of parameters about the signature would be the algorithm and key used to create the signature, when the signature was created, and counter-signatures.  </p>
 <p id="rfc.section.4.p.2">When more than one signature is present, the successful validation of one signature associated with a given signer is usually treated as a successful signature by that signer.  However, there are some application environments where other rules are needed.  An application that employs a rule other than one valid signature for each signer must specify those rules.  Also, where simple matching of the signer identifier is not sufficient to determine whether the signatures were generated by the same signer, the application specification must describe how to determine which signatures were generated by the same signer.  Support of different communities of recipients is the primary reason that signers choose to include more than one signature.  For example, the COSE_Sign structure might include signatures generated with the RSA signature algorithm and with the Elliptic Curve Digital Signature Algorithm (ECDSA) signature algorithm.  This allows recipients to verify the signature associated with one algorithm or the other.  (The original source of this text is <a href="#RFC5652">[RFC5652]</a>.) More detailed information on multiple signature evaluation can be found in <a href="#RFC5752">[RFC5752]</a>.  </p>
 <p id="rfc.section.4.p.3">The COSE_Sign structure is a CBOR array.  The fields of the array in order are: </p>
 <p/>
 
 <dl>
-  <dt>msg_type</dt>
-  <dd style="margin-left: 8">identifies this as providing the signed security service.  The value MUST be msg_type_signed (1).  </dd>
   <dt>protected</dt>
   <dd style="margin-left: 8">is described in <a href="#header-parameters">Section 3</a>.  </dd>
   <dt>unprotected</dt>
@@ -982,8 +970,10 @@ Headers = (
 <p> </p>
 <p id="rfc.section.4.p.7">Text from here to start of next section to be removed </p>
 <pre>
+
+COSE_Sign_Tagged = #6.999(COSE_Sign) ; Replace 999 with TBD1
+      
 COSE_Sign = [
-    msg_type: msg_type_signed,
     Headers,
     payload : bstr / nil,
     signatures : [+ COSE_signature]
@@ -1059,8 +1049,6 @@ Sig_structure = [
 <p id="rfc.section.5.1.p.3">The COSE_encrypt structure is a CBOR array.  The fields of the array in order are: </p>
 
 <dl>
-  <dt>msg_type</dt>
-  <dd style="margin-left: 8">identifies this as providing the encrypted security service.  The value MUST be msg_type_encrypted (2).  </dd>
   <dt>protected</dt>
   <dd style="margin-left: 8">is described in <a href="#header-parameters">Section 3</a>.  </dd>
   <dt>unprotected</dt>
@@ -1088,8 +1076,10 @@ Sig_structure = [
 <p> </p>
 <p id="rfc.section.5.1.p.5">Text from here to start of next section to be removed </p>
 <pre>
+
+COSE_Enveloped_Tagged = #6.998(COSE_enveloped)          ; Replace 998 with TBD2
+      
 COSE_enveloped = [
-    msg_type: msg_type_enveloped,
     COSE_encrypt_fields
     recipients: [+COSE_recipient]
 ]
@@ -1125,16 +1115,15 @@ COSE_recipient = [
 <p id="rfc.section.5.2.p.1">The encrypted structure does not have the ability to specify recipients of the message.  The structure assumes that the recipient of the object will already know the identity of the key to be used in order to decrypt the message.  If a key needs to be identified to the recipient, the enveloped structure is used.  </p>
 <p id="rfc.section.5.2.p.2">The CDDL grammar structure for encrypted data is: </p>
 <pre>
+COSE_EncryptedData_Tagged = #6.997(COSE_encryptData)     ; Replace 997 with TBD3
+      
 COSE_encryptData = [
-    msg_type: msg_type_encryptData,
     COSE_encrypt_fields
 ]
 </pre>
 <p id="rfc.section.5.2.p.3">The COSE_encryptedData structure is a CBOR array.  The fields of the array in order are: </p>
 
 <dl>
-  <dt>msg_type</dt>
-  <dd style="margin-left: 8">identifies this as providing the encrypted data security service.  This value MUST be mg_type_encrypted (4).  </dd>
   <dt>protected</dt>
   <dd style="margin-left: 8">is described in <a href="#header-parameters">Section 3</a>.</dd>
   <dt>unprotected</dt>
@@ -1181,11 +1170,9 @@ Enc_structure = [
 <h1 id="rfc.section.6"><a href="#rfc.section.6">6.</a> <a href="#mac-objects" id="mac-objects">MAC objects</a></h1>
 <p id="rfc.section.6.p.1">In this section we describe the structure and methods to be used when doing MAC authentication in COSE.  This document allows for the use of all of the same classes of recipient algorithms as are allowed for encryption.  </p>
 <p id="rfc.section.6.p.2">When using MAC operations, there are two modes in which it can be used.  The first is just a check that the content has not been changed since the MAC was computed.  Any class of recipient algorithm can be used for this purpose.  The second mode is to both check that the content has not been changed since the MAC was computed, and to use recipient algorithm to verify who sent it.  The classes of recipient algorithms that support this are those that use a pre-shared secret or do static-static key agreement (without the key wrap step).  In both of these cases the entity MACing the message can be validated by a key binding.  (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.) </p>
-<p id="rfc.section.6.p.3">The COSE_encrypt structure is a CBOR array.  The fields of the array in order are: </p>
+<p id="rfc.section.6.p.3">The COSE_Mac structure is a CBOR array.  The fields of the array in order are: </p>
 
 <dl>
-  <dt>msg_type</dt>
-  <dd style="margin-left: 8">identifies this as providing the encrypted security service.  The value MUST be msg_type_mac (3).  </dd>
   <dt>protected</dt>
   <dd style="margin-left: 8">is described in <a href="#header-parameters">Section 3</a>.  </dd>
   <dt>unprotected</dt>
@@ -1201,8 +1188,9 @@ Enc_structure = [
 <p> </p>
 <p id="rfc.section.6.p.4">Text from here to start of next section to be removed </p>
 <pre>
-COSE_mac = [
-   msg_type: msg_type_mac, 
+COSE_Mac_Tagged = #6.996(COSE_Mac)              ; Repalce 996 with TBD4
+      
+COSE_Mac = [
    Headers,
    payload: bstr / nil,
    tag: bstr,
@@ -1215,10 +1203,10 @@ COSE_mac = [
 <p/>
 
 <ol>
-  <li>Create a MAC_structure and copy the protected and payload fields from the COSE_mac structure.  </li>
+  <li>Create a MAC_structure and copy the protected and payload fields from the COSE_Mac structure.  </li>
   <li>If the application has supplied external authenticated data, encode it as a binary value and place in the MAC_structure.  If there is no external authenticated data, then use a zero length 'bstr'.  (See <a href="#Extern_AAD">Section 4.1</a> for application guidance on constructing this field.) </li>
   <li>Encode the MAC_structure using a canonical CBOR encoder.  The resulting bytes is the value to compute the MAC on.  </li>
-  <li>Compute the MAC and place the result in the 'tag' field of the COSE_mac structure.  </li>
+  <li>Compute the MAC and place the result in the 'tag' field of the COSE_Mac structure.  </li>
   <li>Encrypt and encode the MAC key for each recipient of the message.  </li>
 </ol>
 
@@ -1233,10 +1221,10 @@ MAC_structure = [
 </pre>
 <h1 id="rfc.section.7"><a href="#rfc.section.7">7.</a> <a href="#key-structure" id="key-structure">Key Structure</a></h1>
 <p id="rfc.section.7.p.1">A COSE Key structure is built on a CBOR map object.  The set of common parameters that can appear in a COSE Key can be found in the IANA registry 'COSE Key Common Parameter Registry' (<a href="#cose-key-map-registry">Section 15.5</a>).  Additional parameters defined for specific key types can be found in the IANA registry 'COSE Key Type Parameters' (<a href="#cose-key-parameter-registry">Section 15.6</a>).  </p>
-<p id="rfc.section.7.p.2">A COSE Key Set uses a CBOR array object as it's underlying type.  The values of the array elements are COSE Keys.  A Key Set MUST have at least one element in the array.  <a id="CREF10" class="info">[CREF10]<span class="info">JLS: Is there a reason to assign a CBOR tag to identify keys and/or key sets? </span></a> </p>
+<p id="rfc.section.7.p.2">A COSE Key Set uses a CBOR array object as it's underlying type.  The values of the array elements are COSE Keys.  A Key Set MUST have at least one element in the array.  <a id="CREF6" class="info">[CREF6]<span class="info">JLS: Is there a reason to assign a CBOR tag to identify keys and/or key sets? </span></a> </p>
 <p id="rfc.section.7.p.3">The element &#8220;kty&#8221; is a required element in a COSE_Key map.  </p>
 <p id="rfc.section.7.p.4">Text from here to start of next section to be removed </p>
-<p id="rfc.section.7.p.5">The CDDL grammar describing a COSE_Key and COSE_KeySet is: <a id="CREF11" class="info">[CREF11]<span class="info">JLS: We can really simplify the grammar for COSE_Key to be just the kty (the one required field) and the generic item.  The reason to do this is that it makes things simpler.  The reason not to do this says that we really need to add a lot more items so that a grammar check can be done that is more tightly enforced.  </span></a> </p>
+<p id="rfc.section.7.p.5">The CDDL grammar describing a COSE_Key and COSE_KeySet is: <a id="CREF7" class="info">[CREF7]<span class="info">JLS: We can really simplify the grammar for COSE_Key to be just the kty (the one required field) and the generic item.  The reason to do this is that it makes things simpler.  The reason not to do this says that we really need to add a lot more items so that a grammar check can be done that is more tightly enforced.  </span></a> </p>
 <pre>
 COSE_Key = {
     key_kty =&gt; tstr / int,
@@ -1903,7 +1891,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
   </tbody>
 </table>
 <h1 id="rfc.section.11.2"><a href="#rfc.section.11.2">11.2.</a> <a href="#context" id="context">Context Information Structure</a></h1>
-<p id="rfc.section.11.2.p.1">The context information structure is used to ensure that the derived keying material is "bound" to the context of the transaction.  The context information structure used here is based on that defined in <a href="#SP800-56A">[SP800-56A]</a>.  By using CBOR for the encoding of the context information structure, we automatically get the same type of type and length separation of fields that is obtained by the use of ASN.1.  This means that there is no need to encode the lengths for the base elements as it is done by the JOSE encoding.  <a id="CREF12" class="info">[CREF12]<span class="info">Ilari: Look to see if we need to be clearer about how the fields defined in the table are transported and thus why they have labels.  </span></a> </p>
+<p id="rfc.section.11.2.p.1">The context information structure is used to ensure that the derived keying material is "bound" to the context of the transaction.  The context information structure used here is based on that defined in <a href="#SP800-56A">[SP800-56A]</a>.  By using CBOR for the encoding of the context information structure, we automatically get the same type of type and length separation of fields that is obtained by the use of ASN.1.  This means that there is no need to encode the lengths for the base elements as it is done by the JOSE encoding.  <a id="CREF8" class="info">[CREF8]<span class="info">Ilari: Look to see if we need to be clearer about how the fields defined in the table are transported and thus why they have labels.  </span></a> </p>
 <p id="rfc.section.11.2.p.2">The context information structure refers to PartyU and PartyV as the two parties which are doing the key derivation.  Unless the application protocol defines differently, we assign PartyU to the entity that is creating the message and PartyV to the entity that is receiving the message.  By doing this association, different keys will be derived for each direction as the context information is different in each direction.  </p>
 <p id="rfc.section.11.2.p.3">Application protocols are free to define the roles differently.  For example, they could assign the PartyU role to the entity that initiates the connection and allow directly sending multiple messages over the connection in both directions without changing the role information.  </p>
 <p id="rfc.section.11.2.p.4">The use of a transaction identifier, either in one of the supplemental fields or as the salt if one is using HKDF, ensures that a unique key is generated for each set of transactions.  Combining nonce fields with the transaction identifier provides a method so that a different key is used for each message in each direction.  </p>
@@ -2461,7 +2449,7 @@ COSE_KDF_Context = [
   <dt>crv</dt>
   <dd style="margin-left: 8">contains an identifier of the curve to be used with the key.  The curves defined in this document for this key type can be found in <a href="#table-ec-curves">Table 21</a>.  Other curves may be registered in the future and private curves can be used as well.  </dd>
   <dt>x</dt>
-  <dd style="margin-left: 8">contains the x coordinate for the EC point.  The integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  <a id="CREF13" class="info">[CREF13]<span class="info">JLS: Should we use the bignum encoding for x, y and d instead of bstr? </span></a> </dd>
+  <dd style="margin-left: 8">contains the x coordinate for the EC point.  The integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  <a id="CREF9" class="info">[CREF9]<span class="info">JLS: Should we use the bignum encoding for x, y and d instead of bstr? </span></a> </dd>
   <dt>y</dt>
   <dd style="margin-left: 8">contains either the sign bit or the value of y coordinate for the EC point.  For the value, the integer is converted to an octet string as defined in <a href="#SEC1">[SEC1]</a>.  Zero octets MUST NOT be removed from the front of the octet string.  For the sign bit, the value is true if the value of y is positive.  </dd>
   <dt>d</dt>
@@ -2515,7 +2503,7 @@ COSE_KDF_Context = [
   </tbody>
 </table>
 <h1 id="rfc.section.13.2"><a href="#rfc.section.13.2">13.2.</a> RSA Keys</h1>
-<p id="rfc.section.13.2.p.1">This document defines a key structure for both the public and private halves of RSA keys.  Together, an RSA public key and an RSA private key form an RSA key pair.  <a id="CREF14" class="info">[CREF14]<span class="info">JLS: Looking at the CBOR specification, the bstr that we are looking in our table below should most likely be specified as big numbers rather than as binary strings.  This means that we would use the tag 6.2 instead.  From my reading of the specification, there is no difference in the encoded size of the resulting output.  The specification of bignum does explicitly allow for integers encoded with leading zeros.  </span></a> </p>
+<p id="rfc.section.13.2.p.1">This document defines a key structure for both the public and private halves of RSA keys.  Together, an RSA public key and an RSA private key form an RSA key pair.  <a id="CREF10" class="info">[CREF10]<span class="info">JLS: Looking at the CBOR specification, the bstr that we are looking in our table below should most likely be specified as big numbers rather than as binary strings.  This means that we would use the tag 6.2 instead.  From my reading of the specification, there is no difference in the encoded size of the resulting output.  The specification of bignum does explicitly allow for integers encoded with leading zeros.  </span></a> </p>
 <p id="rfc.section.13.2.p.2">The document also provides support for the so-called "multi-prime" RSA where the modulus may have more than two prime factors.  The benefit of multi-prime RSA is lower computational cost for the decryption and signature primitives.  For a discussion on how multi-prime affects the security of RSA crypto-systems, the reader is referred to <a href="#MultiPrimeRSA">[MultiPrimeRSA]</a>.  </p>
 <p id="rfc.section.13.2.p.3">This document follows the naming convention of <a href="#RFC3447">[RFC3447]</a> for the naming of the fields of an RSA public or private key.  The table <a href="#table-rsa-keys">Table 23</a> provides a summary of the label values and the types associated with each of those labels.  The requirements for fields for RSA keys are as follows: </p>
 
@@ -2674,10 +2662,39 @@ COSE_KDF_Context = [
 <p> </p>
 <h1 id="rfc.section.15"><a href="#rfc.section.15">15.</a> <a href="#iana-considerations" id="iana-considerations">IANA Considerations</a></h1>
 <h1 id="rfc.section.15.1"><a href="#rfc.section.15.1">15.1.</a> <a href="#cbor-tag-assignment" id="cbor-tag-assignment">CBOR Tag assignment</a></h1>
-<p id="rfc.section.15.1.p.1">It is requested that IANA assign a new tag from the &#8220;Concise Binary Object Representation (CBOR) Tags&#8221; registry.  It is requested that the tag be assigned in the 0 to 23 value range.  </p>
-<p id="rfc.section.15.1.p.2">Tag Value:  TBD1 </p>
-<p id="rfc.section.15.1.p.3">Data Item: COSE_Msg </p>
-<p id="rfc.section.15.1.p.4">Semantics: COSE security message.  </p>
+<p id="rfc.section.15.1.p.1">It is requested that IANA assign the following tags from the &#8220;Concise Binary Object Representation (CBOR) Tags&#8221; registry.  It is requested that the tags be assigned in the 24 to 128 value range.  </p>
+<p id="rfc.section.15.1.p.2">The tags to be assigned are: </p>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="left">Tag Value</th>
+      <th class="left">Data Item</th>
+      <th class="left">Semantics</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="left">TBD1</td>
+      <td class="left">COSE_Sign</td>
+      <td class="left">COSE Signed Data Object</td>
+    </tr>
+    <tr>
+      <td class="left">TBD2</td>
+      <td class="left">COSE_enveloped</td>
+      <td class="left">COSE Enveloped Data Object</td>
+    </tr>
+    <tr>
+      <td class="left">TBD3</td>
+      <td class="left">COSE_encryptData</td>
+      <td class="left">COSE Encrypted Data Object</td>
+    </tr>
+    <tr>
+      <td class="left">TBD4</td>
+      <td class="left">COSE_Mac</td>
+      <td class="left">COSE Mac-ed Data Object</td>
+    </tr>
+  </tbody>
+</table>
 <h1 id="rfc.section.15.2"><a href="#rfc.section.15.2">15.2.</a> <a href="#cose-header-key-table" id="cose-header-key-table">COSE Header Parameter Registry</a></h1>
 <p id="rfc.section.15.2.p.1">It is requested that IANA create a new registry entitled &#8220;COSE Header Parameters&#8221;.  </p>
 <p id="rfc.section.15.2.p.2">The columns of the registry are: </p>
@@ -2806,7 +2823,7 @@ COSE_KDF_Context = [
 <p id="rfc.section.15.7.p.4">This registry will be initially populated by the values in <a href="#table_key_types">Table 20</a>.  The specification column for all of these entries will be this document.  </p>
 <h1 id="rfc.section.15.8"><a href="#rfc.section.15.8">15.8.</a> Media Type Registration</h1>
 <h1 id="rfc.section.15.8.1"><a href="#rfc.section.15.8.1">15.8.1.</a> COSE Security Message</h1>
-<p id="rfc.section.15.8.1.p.1">This section registers the "application/cose" and "application/cose+cbor" media types in the "Media Types" registry.  <a id="CREF15" class="info">[CREF15]<span class="info">JLS: Should we register both or just the cose+cbor one?</span></a> These media types are used to indicate that the content is a COSE_MSG.  </p>
+<p id="rfc.section.15.8.1.p.1">This section registers the "application/cose" and "application/cose+cbor" media types in the "Media Types" registry.  <a id="CREF11" class="info">[CREF11]<span class="info">JLS: Should we register both or just the cose+cbor one?</span></a> These media types are used to indicate that the content is a COSE_MSG.  </p>
 <p/>
 
 <ul class="empty">
@@ -3158,10 +3175,9 @@ COSE_KDF_Context = [
 </ul>
 
 <p> In effect this example is a decomposed version of using the ECDH-ES+A128KW algorithm.  </p>
-<p id="rfc.section.B.p.4">Size of binary file is 214 bytes </p>
+<p id="rfc.section.B.p.4">Size of binary file is 216 bytes </p>
 <pre>
-[
-  2,
+998( [
   h'a10101',
   {
     5: h'02d1f7e6f26c43d4868d87ce'
@@ -3196,7 +3212,7 @@ a55a600b21233e86e68',
       ]
     ]
   ]
-]</pre>
+])</pre>
 <h1 id="rfc.appendix.C"><a href="#rfc.appendix.C">Appendix C.</a> <a href="#examples" id="examples">Examples</a></h1>
 <p id="rfc.section.C.p.1">The examples can be found at https://github.com/cose-wg/Examples.  The file names in each section correspond the the same file names in the repository. I am currently still in the process of getting the examples up there along with some control information for people to be able to check and reproduce the examples.  </p>
 <p id="rfc.section.C.p.2">Examples may have some features that are in questions but not yet incorporated in the document.  </p>
@@ -3222,10 +3238,9 @@ a55a600b21233e86e68',
 </ul>
 
 <p> </p>
-<p id="rfc.section.C.1.1.p.2">Size of binary file is 71 bytes </p>
+<p id="rfc.section.C.1.1.p.2">Size of binary file is 73 bytes </p>
 <pre>
-[
-  3,
+996( [
   h'a1016f4145532d434d41432d3235362f3634',
   {
   },
@@ -3241,7 +3256,7 @@ a55a600b21233e86e68',
       h''
     ]
   ]
-]</pre>
+])</pre>
 <h1 id="rfc.appendix.C.1.2"><a href="#rfc.appendix.C.1.2">C.1.2.</a> <a href="#Mac-01" id="Mac-01">ECDH Direct MAC</a></h1>
 <p id="rfc.section.C.1.2.p.1">This example uses the following: </p>
 
@@ -3251,10 +3266,9 @@ a55a600b21233e86e68',
 </ul>
 
 <p> </p>
-<p id="rfc.section.C.1.2.p.2">Size of binary file is 215 bytes </p>
+<p id="rfc.section.C.1.2.p.2">Size of binary file is 217 bytes </p>
 <pre>
-[
-  3,
+996( [
   h'a10104',
   {
   },
@@ -3277,7 +3291,7 @@ ec7d34b824f42d92bd06bd2c7f0271f0214e141fb779ae2856abf585a58368b01
       h''
     ]
   ]
-]</pre>
+])</pre>
 <h1 id="rfc.appendix.C.1.3"><a href="#rfc.appendix.C.1.3">C.1.3.</a> <a href="#Mac-02" id="Mac-02">Wrapped MAC</a></h1>
 <p id="rfc.section.C.1.3.p.1">This example uses the following: </p>
 
@@ -3287,10 +3301,9 @@ ec7d34b824f42d92bd06bd2c7f0271f0214e141fb779ae2856abf585a58368b01
 </ul>
 
 <p> </p>
-<p id="rfc.section.C.1.3.p.2">Size of binary file is 122 bytes </p>
+<p id="rfc.section.C.1.3.p.2">Size of binary file is 124 bytes </p>
 <pre>
-[
-  3,
+996( [
   h'a1016e4145532d3132382d4d41432d3634',
   {
   },
@@ -3307,7 +3320,7 @@ ec7d34b824f42d92bd06bd2c7f0271f0214e141fb779ae2856abf585a58368b01
       h'711ab0dc2fc4585dce27effa6781c8093eba906f227b6eb0'
     ]
   ]
-]</pre>
+])</pre>
 <h1 id="rfc.appendix.C.1.4"><a href="#rfc.appendix.C.1.4">C.1.4.</a> <a href="#Mac-03" id="Mac-03">Multi-recipient MAC message</a></h1>
 <p id="rfc.section.C.1.4.p.1">This example uses the following: </p>
 
@@ -3317,10 +3330,9 @@ ec7d34b824f42d92bd06bd2c7f0271f0214e141fb779ae2856abf585a58368b01
 </ul>
 
 <p> </p>
-<p id="rfc.section.C.1.4.p.2">Size of binary file is 670 bytes </p>
+<p id="rfc.section.C.1.4.p.2">Size of binary file is 672 bytes </p>
 <pre>
-[
-  3,
+996( [
   h'a10104',
   {
   },
@@ -3376,7 +3388,7 @@ c3e4a215d173bfa668f116ca9f1177505afb7629a9b0b5e096e81d37900e06f56
 8370695e6d6a83b4ae507bb'
     ]
   ]
-]</pre>
+])</pre>
 <h1 id="rfc.appendix.C.2"><a href="#rfc.appendix.C.2">C.2.</a> Examples of Encrypted Messages</h1>
 <h1 id="rfc.appendix.C.2.1"><a href="#rfc.appendix.C.2.1">C.2.1.</a> <a href="#Enc-01" id="Enc-01">Direct ECDH</a></h1>
 <p id="rfc.section.C.2.1.p.1">This example uses the following: </p>
@@ -3387,10 +3399,9 @@ c3e4a215d173bfa668f116ca9f1177505afb7629a9b0b5e096e81d37900e06f56
 </ul>
 
 <p> </p>
-<p id="rfc.section.C.2.1.p.2">Size of binary file is 182 bytes </p>
+<p id="rfc.section.C.2.1.p.2">Size of binary file is 184 bytes </p>
 <pre>
-[
-  2,
+998( [
   h'a10101',
   {
     5: h'c9cf4df2fe6c632bf7886413'
@@ -3416,7 +3427,7 @@ ff4e1763812',
       h''
     ]
   ]
-]</pre>
+])</pre>
 <h1 id="rfc.appendix.C.2.2"><a href="#rfc.appendix.C.2.2">C.2.2.</a> <a href="#Enc-02" id="Enc-02">Direct plus Key Derivation</a></h1>
 <p id="rfc.section.C.2.2.p.1">This example uses the following: </p>
 
@@ -3426,10 +3437,9 @@ ff4e1763812',
 </ul>
 
 <p> </p>
-<p id="rfc.section.C.2.2.p.2">Size of binary file is 95 bytes </p>
+<p id="rfc.section.C.2.2.p.2">Size of binary file is 97 bytes </p>
 <pre>
-[
-  2,
+998( [
   h'a1010a',
   {
     5: h'89f52f65a1c580933b5261a7'
@@ -3446,7 +3456,7 @@ ff4e1763812',
       h''
     ]
   ]
-]</pre>
+])</pre>
 <h1 id="rfc.appendix.C.3"><a href="#rfc.appendix.C.3">C.3.</a> Examples of Signed Message</h1>
 <h1 id="rfc.appendix.C.3.1"><a href="#rfc.appendix.C.3.1">C.3.1.</a> <a href="#Sig-01" id="Sig-01">Single Signature</a></h1>
 <p id="rfc.section.C.3.1.p.1">This example uses the following: </p>
@@ -3456,10 +3466,9 @@ ff4e1763812',
 </ul>
 
 <p> </p>
-<p id="rfc.section.C.3.1.p.2">Size of binary file is 330 bytes </p>
+<p id="rfc.section.C.3.1.p.2">Size of binary file is 332 bytes </p>
 <pre>
-[
-  1,
+999( [
   h'',
   {
   },
@@ -3481,7 +3490,7 @@ a5a51c83899c6f6e7c7e01dc3db21a250092a69fc635b74a2e54f5c98cb955d83
 '
     ]
   ]
-]</pre>
+])</pre>
 <h1 id="rfc.appendix.C.3.2"><a href="#rfc.appendix.C.3.2">C.3.2.</a> <a href="#Sig-02" id="Sig-02">Multiple Signers</a></h1>
 <p id="rfc.section.C.3.2.p.1">This example uses the following: </p>
 
@@ -3491,10 +3500,9 @@ a5a51c83899c6f6e7c7e01dc3db21a250092a69fc635b74a2e54f5c98cb955d83
 </ul>
 
 <p> </p>
-<p id="rfc.section.C.3.2.p.2">Size of binary file is 496 bytes </p>
+<p id="rfc.section.C.3.2.p.2">Size of binary file is 498 bytes </p>
 <pre>
-[
-  1,
+999( [
   h'',
   {
   },
@@ -3530,7 +3538,7 @@ c85186b427026e096a076bfab738215f354be59f57643a7f6b2c92535cf3c37ee
 eb0ae6d0e6'
     ]
   ]
-]</pre>
+])</pre>
 <h1 id="rfc.appendix.C.4"><a href="#rfc.appendix.C.4">C.4.</a> COSE Keys</h1>
 <h1 id="rfc.appendix.C.4.1"><a href="#rfc.appendix.C.4.1">C.4.1.</a> Public Keys</h1>
 <p id="rfc.section.C.4.1.p.1">This is an example of a COSE Key set.  This example includes the public keys for all of the previous examples.  </p>
@@ -3558,16 +3566,6 @@ d0084d19c',
 2e6578616d706c65'
   },
   {
-    -1: 1,
-    -2: h'98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b
-4d91d6280',
-    -3: h'f01400b089867804b8e9fc96c3932161f1934f4223069170d924b7e
-03bf822bb',
-    1: 2,
-    2: h'706572656772696e2e746f6f6b407475636b626f726f7567682e6578
-616d706c65'
-  },
-  {
     -1: 3,
     -2: h'0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737b
 f5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620
@@ -3578,6 +3576,16 @@ f5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620
     1: 2,
     2: h'62696c626f2e62616767696e7340686f626269746f6e2e6578616d70
 6c65'
+  },
+  {
+    -1: 1,
+    -2: h'98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b
+4d91d6280',
+    -3: h'f01400b089867804b8e9fc96c3932161f1934f4223069170d924b7e
+03bf822bb',
+    1: 2,
+    2: h'706572656772696e2e746f6f6b407475636b626f726f7567682e6578
+616d706c65'
   },
   {
     -2: h'9f810fb4038273d02591e4073f31d2b6001b82cedb4d92f050165d4
@@ -3632,6 +3640,21 @@ a6c427188'
   },
   {
     1: 2,
+    2: h'62696c626f2e62616767696e7340686f626269746f6e2e6578616d70
+6c65',
+    -1: 3,
+    -2: h'0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737b
+f5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620
+085e5c8f42ad',
+    -3: h'01dca6947bce88bc5790485ac97427342bc35f887d86d65a089377e
+247e60baa55e4e8501e2ada5724ac51d6909008033ebc10ac999b9d7f5cc2519f
+3fe1ea1d9475',
+    -4: h'00085138ddabf5ca975f5860f91a08e91d6d5f9a76ad4018766a476
+680b55cd339e8ab6c72b5facdb2a2a50ac25bd086647dd3e2e6e99e84ca2c3609
+fdf177feb26d'
+  },
+  {
+    1: 2,
     -1: 1,
     2: h'706572656772696e2e746f6f6b407475636b626f726f7567682e6578
 616d706c65',
@@ -3648,21 +3671,6 @@ a848df1c3'
 3134626337303337',
     -1: h'849b57219dae48de646d07dbb533566e976686457c1491be3a76dce
 a6c427188'
-  },
-  {
-    1: 2,
-    2: h'62696c626f2e62616767696e7340686f626269746f6e2e6578616d70
-6c65',
-    -1: 3,
-    -2: h'0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737b
-f5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620
-085e5c8f42ad',
-    -3: h'01dca6947bce88bc5790485ac97427342bc35f887d86d65a089377e
-247e60baa55e4e8501e2ada5724ac51d6909008033ebc10ac999b9d7f5cc2519f
-3fe1ea1d9475',
-    -4: h'00085138ddabf5ca975f5860f91a08e91d6d5f9a76ad4018766a476
-680b55cd339e8ab6c72b5facdb2a2a50ac25bd086647dd3e2e6e99e84ca2c3609
-fdf177feb26d'
   },
   {
     1: 3,
