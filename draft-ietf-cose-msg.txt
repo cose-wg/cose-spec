@@ -81,10 +81,10 @@ Table of Contents
    3.  Header Parameters . . . . . . . . . . . . . . . . . . . . . .   8
      3.1.  Common COSE Headers Parameters  . . . . . . . . . . . . .  10
    4.  Signing Structure . . . . . . . . . . . . . . . . . . . . . .  13
-     4.1.  Externally Supplied Data  . . . . . . . . . . . . . . . .  14
+     4.1.  Externally Supplied Data  . . . . . . . . . . . . . . . .  15
      4.2.  Signing and Verification Process  . . . . . . . . . . . .  15
      4.3.  Computing Counter Signatures  . . . . . . . . . . . . . .  17
-   5.  Encryption objects  . . . . . . . . . . . . . . . . . . . . .  17
+   5.  Encryption objects  . . . . . . . . . . . . . . . . . . . . .  18
      5.1.  Enveloped COSE structure  . . . . . . . . . . . . . . . .  18
        5.1.1.  Recipient Algorithm Classes . . . . . . . . . . . . .  19
      5.2.  Encrypted COSE structure  . . . . . . . . . . . . . . . .  20
@@ -601,15 +601,15 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
       signature can be computed.  Details on computing counter
       signatures are found in Section 4.3.
 
+   creation time  This parameter provides the time the content was
+      created.  For signatures and recipient structures, this would be
+      the time that the signature or recipient key object was created.
+      For content structures, this would be the time that the content
+      was created.  The unsigned integer value is the number of seconds,
+      excluding leap seconds; after midnight UTC, January 1, 1970.
 
-
-
-
-
-
-
-
-
+   sequence number  This parameter provides a counter field.  The use of
+      this parameter is application specific.
 
 
 
@@ -651,19 +651,19 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    | counter  | 6     | COSE_signatur |                | CBOR encoded  |
    | signatur |       | e             |                | signature     |
    | e        |       |               |                | structure     |
+   |          |       |               |                |               |
+   | creation | *     | uint          |                | Time the      |
+   | time     |       |               |                | content was   |
+   |          |       |               |                | created       |
+   |          |       |               |                |               |
+   | sequence | *     | uint          |                | Application   |
+   | number   |       |               |                | specific      |
+   |          |       |               |                | Integer value |
    +----------+-------+---------------+----------------+---------------+
 
                      Table 1: Common Header Parameters
 
    OPEN ISSUES:
-
-   1.  I am currently torn on the question "Should epk and iv/nonce be
-       algorithm specific or generic headers?"  They are really specific
-       to an algorithm and can potentially be defined in different ways
-       for different algorithms.  As an example, it would make sense to
-       defined nonce for CCM and GCM modes that can have the leading
-       zero bytes stripped, while for other algorithms this might be
-       undesirable.
 
 
 
@@ -673,6 +673,14 @@ Schaad                   Expires April 16, 2016                [Page 12]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
+
+   1.  I am currently torn on the question "Should epk and iv/nonce be
+       algorithm specific or generic headers?"  They are really specific
+       to an algorithm and can potentially be defined in different ways
+       for different algorithms.  As an example, it would make sense to
+       defined nonce for CCM and GCM modes that can have the leading
+       zero bytes stripped, while for other algorithms this might be
+       undesirable.
 
    2.  We might want to define some additional items.  What are they?  A
        possible example would be a sequence number as this might be
@@ -713,6 +721,15 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    is [RFC5652].)  More detailed information on multiple signature
    evaluation can be found in [RFC5752].
 
+
+
+
+
+Schaad                   Expires April 16, 2016                [Page 13]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
+
    The COSE_Sign structure is a CBOR array.  The fields of the array in
    order are:
 
@@ -722,14 +739,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
    payload  contains the serialized content to be signed.  If the
       payload is not present in the message, the application is required
-
-
-
-Schaad                   Expires April 16, 2016                [Page 13]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
-
       to supply the payload separately.  The payload is wrapped in a
       bstr to ensure that it is transported without changes.  If the
       payload is transported separately, then a nil CBOR object is
@@ -765,6 +774,18 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
        signature : bstr
    ]
 
+
+
+
+
+
+
+
+Schaad                   Expires April 16, 2016                [Page 14]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
+
 4.1.  Externally Supplied Data
 
    One of the features that we supply in the COSE document is the
@@ -778,14 +799,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    data is in the options section, then it is available for routers to
    help in performing the replay detection and prevention.  However, it
    may also be desired to protect these values so that they cannot be
-
-
-
-Schaad                   Expires April 16, 2016                [Page 14]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
-
    modified in transit.  This is the purpose of the externally supplied
    data field.
 
@@ -819,6 +832,16 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    2.  The signature protected attributes.  This is a bstr type
        containing the protected attributes of the signature.
 
+
+
+
+
+
+Schaad                   Expires April 16, 2016                [Page 15]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
+
    3.  The external protected attributes.  This is a bstr type
        containing the protected attributes external to the
        COSE_Signature structure.
@@ -832,15 +855,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
        For body_protected and sign_protected, if the fields are not
        present in their corresponding maps, an bstr of length zero is
        used.
-
-
-
-
-
-Schaad                   Expires April 16, 2016                [Page 15]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
 
    2.  If the application has supplied external additional authenticated
        data to be included in the computation, then it is placed in the
@@ -876,6 +890,14 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
        to verify with), alg (the algorithm to sign with), ToBeSigned
        (the value to sign), and sig (the signature to be verified).
 
+
+
+
+Schaad                   Expires April 16, 2016                [Page 16]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
+
    In addition to performing the signature verification, one must also
    perform the appropriate checks to ensure that the key is correctly
    paired with the signing identity and that the appropriate
@@ -885,18 +907,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
    The COSE structure used to create the byte stream to be signed uses
    the following CDDL grammar structure:
-
-
-
-
-
-
-
-
-Schaad                   Expires April 16, 2016                [Page 16]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
 
    Sig_structure = [
        body_protected: bstr,
@@ -933,16 +943,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    array.  It is strongly suggested that it not be done, but it is not
    banned.
 
-5.  Encryption objects
-
-   COSE supports two different encryption structures.  OOSE_enveloped is
-   used when the key needs to be explicitly identified.  This structure
-   supports the use of recipient structures to allow for random content
-   encryption keys to be used..  COSE_encrypted is used when the a
-   recipient structure is not needed because the key to be used is known
-   implicitly.
-
-
 
 
 
@@ -953,6 +953,15 @@ Schaad                   Expires April 16, 2016                [Page 17]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
+
+5.  Encryption objects
+
+   COSE supports two different encryption structures.  OOSE_enveloped is
+   used when the key needs to be explicitly identified.  This structure
+   supports the use of recipient structures to allow for random content
+   encryption keys to be used..  COSE_encrypted is used when the a
+   recipient structure is not needed because the key to be used is known
+   implicitly.
 
 5.1.  Enveloped COSE structure
 
@@ -993,6 +1002,14 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    The COSE_recipient structure is a CBOR array.  The fields of the
    array in order are:
 
+
+
+
+Schaad                   Expires April 16, 2016                [Page 18]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
+
    protected  is described in Section 3.
 
    unprotected  is described in Section 3.
@@ -1002,14 +1019,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
    recipients  contains an array of recipient information structures.
       The type for the recipient information structure is a
-
-
-
-Schaad                   Expires April 16, 2016                [Page 18]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
-
       COSE_recipient.  If there are no recipient information structures,
       this element is absent.
 
@@ -1050,21 +1059,19 @@ COSE_recipient = [
    symmetric key-encryption keys:  The CEK is encrypted using a
       previously distributed symmetric key-encryption key.
 
-   key agreement:  the recipient's public key and a sender's private key
-      are used to generate a pairwise secret, a KDF is applied to derive
-      a key, and then the CEK is either the derived key or encrypted by
-      the derived key.
-
-   key transport:  the CEK is encrypted in the recipient's public key
-
-
-
 
 
 Schaad                   Expires April 16, 2016                [Page 19]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
+
+   key agreement:  the recipient's public key and a sender's private key
+      are used to generate a pairwise secret, a KDF is applied to derive
+      a key, and then the CEK is either the derived key or encrypted by
+      the derived key.
+
+   key transport:  the CEK is encrypted in the recipient's public key
 
    passwords:  the CEK is encrypted in a key-encryption key that is
       derived from a password.
@@ -1107,13 +1114,6 @@ COSE_encryptData = [
 
    2.  If the application has supplied external additional authenticated
        data to be included in the computation, then it is placed in the
-       'external_aad' field.  If no data was supplied, then a zero
-       length binary value is used.  (See Section 4.1 for application
-       guidance on constructing this field.)
-
-   3.  Encode the Enc_structure using a CBOR Canonical encoding
-       Section 14 to get the AAD value.
-
 
 
 
@@ -1121,6 +1121,13 @@ Schaad                   Expires April 16, 2016                [Page 20]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
+
+       'external_aad' field.  If no data was supplied, then a zero
+       length binary value is used.  (See Section 4.1 for application
+       guidance on constructing this field.)
+
+   3.  Encode the Enc_structure using a CBOR Canonical encoding
+       Section 14 to get the AAD value.
 
    4.  Determine the encryption key.  This step is dependent on the
        class of recipient algorithm being used.  For:
@@ -1163,13 +1170,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    3.  Determine the encryption key.  This step is dependent on the
        class of recipient algorithm being used.  For:
 
-       No Recipients:  The key to be used is determined by the algorithm
-          and key at the current level.
-
-       Direct and Direct Key Agreement:  The key is determined by the
-          key and algorithm in the recipient structure.  The encryption
-          algorithm and size of the key to be used are inputs into the
-
 
 
 
@@ -1178,6 +1178,12 @@ Schaad                   Expires April 16, 2016                [Page 21]
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
+       No Recipients:  The key to be used is determined by the algorithm
+          and key at the current level.
+
+       Direct and Direct Key Agreement:  The key is determined by the
+          key and algorithm in the recipient structure.  The encryption
+          algorithm and size of the key to be used are inputs into the
           KDF used for the recipient.  (For direct, the KDF can be
           thought of as the identity operation.)
 
@@ -1220,12 +1226,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
    payload  contains the serialized content to be MACed.  If the payload
       is not present in the message, the application is required to
-      supply the payload separately.  The payload is wrapped in a bstr
-      to ensure that it is transported without changes.  If the payload
-      is transported separately, then a null CBOR object is placed in
-      this location and it is the responsibility of the application to
-      ensure that it will be transported without changes.
-
 
 
 
@@ -1233,6 +1233,12 @@ Schaad                   Expires April 16, 2016                [Page 22]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
+
+      supply the payload separately.  The payload is wrapped in a bstr
+      to ensure that it is transported without changes.  If the payload
+      is transported separately, then a null CBOR object is placed in
+      this location and it is the responsibility of the application to
+      ensure that it will be transported without changes.
 
    tag  contains the MAC value.
 
@@ -1274,12 +1280,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
    Text from here to start of next section to be removed
 
-   MAC_structure = [
-        protected: bstr,
-        external_aad: bstr,
-        payload: bstr
-   ]
-
 
 
 
@@ -1289,6 +1289,12 @@ Schaad                   Expires April 16, 2016                [Page 23]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
+
+   MAC_structure = [
+        protected: bstr,
+        external_aad: bstr,
+        payload: bstr
+   ]
 
 7.  Key Structure
 
@@ -1325,12 +1331,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    section.  There are also a set of parameters that are defined for a
    specific key type.  Key type specific parameters can be found in
    Section 13.
-
-
-
-
-
-
 
 
 
