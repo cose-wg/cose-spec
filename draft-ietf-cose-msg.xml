@@ -585,6 +585,18 @@ Headers = (
               These structures all have the same basic structure so that a consistent calculation of the counter signature can be computed.
               Details on computing counter signatures are found in <xref target="counter_signature"/>.
             </t>
+
+            <t hangText='creation time'>
+              This parameter provides the time the content was created.
+              For signatures and recipient structures, this would be the time that the signature or recipient key object was created.
+              For content structures, this would be the time that the content was created.
+              The unsigned integer value is the number of seconds, excluding leap seconds; after midnight UTC, January 1, 1970.
+            </t>
+
+            <t hangText='sequence number'>
+              This parameter provides a counter field.
+              The use of this parameter is application specific.
+            </t>
           </list>
         </t>
 
@@ -602,6 +614,8 @@ Headers = (
         <c>kid</c>        <c>4</c>        <c>bstr</c>              <c></c>                              <c>key identifier</c>
         <c>nonce</c>      <c>5</c>        <c>bstr</c>              <c></c>                              <c>Nonce or Initialization Vector (IV)</c>
         <c>counter signature</c> <c>6</c> <c>COSE_signature</c>    <c></c>                              <c>CBOR encoded signature structure</c>
+        <c>creation time</c><c>*</c>      <c>uint</c>              <c></c>                              <c>Time the content was created</c>
+        <c>sequence number</c><c>*</c>    <c>uint</c>              <c></c>                              <c>Application specific Integer value</c>
       </texttable>
 
       <t>
@@ -1303,9 +1317,12 @@ MAC_structure = [
         A COSE Key Set uses a CBOR array object as its underlying type.
         The values of the array elements are COSE Keys.
         A Key Set MUST have at least one element in the array.
+        <!--
         <cref source="JLS">
           Is there a reason to assign a CBOR tag to identify keys and/or key sets?
-        </cref>
+          </cref>
+          Done
+        -->
       </t>
 
       <t>
@@ -2733,9 +2750,12 @@ COSE_KDF_Context = [
                 The integer is converted to an octet string as defined in <xref target="SEC1"/>.
                 Zero octets MUST NOT be removed from the front of the octet string.
 
+                <!--
                 <cref source="JLS">
                   Should we use the bignum encoding for x, y and d instead of bstr?
-                </cref>
+                  </cref>
+                  No because some implementations will remove the leading zeros and we don't want that.
+                -->
               </t>
               
               <t hangText="y">
