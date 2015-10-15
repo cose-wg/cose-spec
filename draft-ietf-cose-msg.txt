@@ -4,8 +4,8 @@
 
 COSE Working Group                                             J. Schaad
 Internet-Draft                                            August Cellars
-Intended status: Informational                          October 14, 2015
-Expires: April 16, 2016
+Intended status: Informational                          October 15, 2015
+Expires: April 17, 2016
 
 
                       CBOR Encoded Message Syntax
@@ -42,7 +42,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on April 16, 2016.
+   This Internet-Draft will expire on April 17, 2016.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Schaad                   Expires April 16, 2016                 [Page 1]
+Schaad                   Expires April 17, 2016                 [Page 1]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -97,100 +97,96 @@ Table of Contents
    8.  Signature Algorithms  . . . . . . . . . . . . . . . . . . . .  27
      8.1.  ECDSA . . . . . . . . . . . . . . . . . . . . . . . . . .  28
        8.1.1.  Security Considerations . . . . . . . . . . . . . . .  29
-     8.2.  RSASSA-PSS  . . . . . . . . . . . . . . . . . . . . . . .  30
-       8.2.1.  Security Considerations . . . . . . . . . . . . . . .  30
-   9.  Message Authentication (MAC) Algorithms . . . . . . . . . . .  31
-     9.1.  Hash-based Message Authentication Codes (HMAC)  . . . . .  31
-       9.1.1.  Security Considerations . . . . . . . . . . . . . . .  32
-     9.2.  AES Message Authentication Code (AES-CBC-MAC) . . . . . .  33
-       9.2.1.  Security Considerations . . . . . . . . . . . . . . .  33
-   10. Content Encryption Algorithms . . . . . . . . . . . . . . . .  34
-     10.1.  AES GCM  . . . . . . . . . . . . . . . . . . . . . . . .  34
+   9.  Message Authentication (MAC) Algorithms . . . . . . . . . . .  30
+     9.1.  Hash-based Message Authentication Codes (HMAC)  . . . . .  30
+       9.1.1.  Security Considerations . . . . . . . . . . . . . . .  31
+     9.2.  AES Message Authentication Code (AES-CBC-MAC) . . . . . .  32
+       9.2.1.  Security Considerations . . . . . . . . . . . . . . .  32
+   10. Content Encryption Algorithms . . . . . . . . . . . . . . . .  33
+     10.1.  AES GCM  . . . . . . . . . . . . . . . . . . . . . . . .  33
+       10.1.1.  Security Considerations  . . . . . . . . . . . . . .  34
+     10.2.  AES CCM  . . . . . . . . . . . . . . . . . . . . . . . .  34
 
 
 
-Schaad                   Expires April 16, 2016                 [Page 2]
+Schaad                   Expires April 17, 2016                 [Page 2]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
-       10.1.1.  Security Considerations  . . . . . . . . . . . . . .  35
-     10.2.  AES CCM  . . . . . . . . . . . . . . . . . . . . . . . .  35
-       10.2.1.  Security Considerations  . . . . . . . . . . . . . .  38
-     10.3.  ChaCha20 and Poly1305  . . . . . . . . . . . . . . . . .  38
-       10.3.1.  Security Considerations  . . . . . . . . . . . . . .  39
-   11. Key Derivation Functions (KDF)  . . . . . . . . . . . . . . .  39
+       10.2.1.  Security Considerations  . . . . . . . . . . . . . .  37
+     10.3.  ChaCha20 and Poly1305  . . . . . . . . . . . . . . . . .  37
+       10.3.1.  Security Considerations  . . . . . . . . . . . . . .  38
+   11. Key Derivation Functions (KDF)  . . . . . . . . . . . . . . .  38
      11.1.  HMAC-based Extract-and-Expand Key Derivation Function
-            (HKDF) . . . . . . . . . . . . . . . . . . . . . . . . .  40
-     11.2.  Context Information Structure  . . . . . . . . . . . . .  41
-   12. Recipient Algorithm Classes . . . . . . . . . . . . . . . . .  45
-     12.1.  Direct Encryption  . . . . . . . . . . . . . . . . . . .  45
-       12.1.1.  Direct Key . . . . . . . . . . . . . . . . . . . . .  46
-       12.1.2.  Direct Key with KDF  . . . . . . . . . . . . . . . .  46
-     12.2.  Key Wrapping . . . . . . . . . . . . . . . . . . . . . .  48
-       12.2.1.  AES Key Wrapping . . . . . . . . . . . . . . . . . .  48
-     12.3.  Key Encryption . . . . . . . . . . . . . . . . . . . . .  49
-       12.3.1.  RSAES-OAEP . . . . . . . . . . . . . . . . . . . . .  49
-     12.4.  Direct Key Agreement . . . . . . . . . . . . . . . . . .  50
-       12.4.1.  ECDH . . . . . . . . . . . . . . . . . . . . . . . .  51
-     12.5.  Key Agreement with KDF . . . . . . . . . . . . . . . . .  54
-       12.5.1.  ECDH . . . . . . . . . . . . . . . . . . . . . . . .  55
-   13. Keys  . . . . . . . . . . . . . . . . . . . . . . . . . . . .  55
-     13.1.  Elliptic Curve Keys  . . . . . . . . . . . . . . . . . .  56
-       13.1.1.  Double Coordinate Curves . . . . . . . . . . . . . .  56
-     13.2.  RSA Keys . . . . . . . . . . . . . . . . . . . . . . . .  57
-     13.3.  Symmetric Keys . . . . . . . . . . . . . . . . . . . . .  58
-   14. CBOR Encoder Restrictions . . . . . . . . . . . . . . . . . .  59
-   15. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  59
-     15.1.  CBOR Tag assignment  . . . . . . . . . . . . . . . . . .  59
-     15.2.  COSE Header Parameter Registry . . . . . . . . . . . . .  60
-     15.3.  COSE Header Algorithm Label Table  . . . . . . . . . . .  61
-     15.4.  COSE Algorithm Registry  . . . . . . . . . . . . . . . .  61
-     15.5.  COSE Key Common Parameter Registry . . . . . . . . . . .  62
-     15.6.  COSE Key Type Parameter Registry . . . . . . . . . . . .  63
-     15.7.  COSE Elliptic Curve Registry . . . . . . . . . . . . . .  63
-     15.8.  Media Type Registrations . . . . . . . . . . . . . . . .  64
-       15.8.1.  COSE Security Message  . . . . . . . . . . . . . . .  64
-       15.8.2.  COSE Key media type  . . . . . . . . . . . . . . . .  66
-     15.9.  CoAP Content Format Registrations  . . . . . . . . . . .  68
-   16. Security Considerations . . . . . . . . . . . . . . . . . . .  68
-   17. References  . . . . . . . . . . . . . . . . . . . . . . . . .  69
-     17.1.  Normative References . . . . . . . . . . . . . . . . . .  69
-     17.2.  Informative References . . . . . . . . . . . . . . . . .  69
-   Appendix A.  CDDL Grammar . . . . . . . . . . . . . . . . . . . .  72
-   Appendix B.  Three Levels of Recipient Information  . . . . . . .  72
-   Appendix C.  Examples . . . . . . . . . . . . . . . . . . . . . .  74
-     C.1.  Examples of MAC messages  . . . . . . . . . . . . . . . .  75
-       C.1.1.  Shared Secret Direct MAC  . . . . . . . . . . . . . .  75
+            (HKDF) . . . . . . . . . . . . . . . . . . . . . . . . .  39
+     11.2.  Context Information Structure  . . . . . . . . . . . . .  40
+   12. Recipient Algorithm Classes . . . . . . . . . . . . . . . . .  44
+     12.1.  Direct Encryption  . . . . . . . . . . . . . . . . . . .  44
+       12.1.1.  Direct Key . . . . . . . . . . . . . . . . . . . . .  45
+       12.1.2.  Direct Key with KDF  . . . . . . . . . . . . . . . .  45
+     12.2.  Key Wrapping . . . . . . . . . . . . . . . . . . . . . .  47
+       12.2.1.  AES Key Wrapping . . . . . . . . . . . . . . . . . .  47
+     12.3.  Key Encryption . . . . . . . . . . . . . . . . . . . . .  48
+     12.4.  Direct Key Agreement . . . . . . . . . . . . . . . . . .  48
+       12.4.1.  ECDH . . . . . . . . . . . . . . . . . . . . . . . .  49
+     12.5.  Key Agreement with KDF . . . . . . . . . . . . . . . . .  53
+       12.5.1.  ECDH . . . . . . . . . . . . . . . . . . . . . . . .  53
+   13. Keys  . . . . . . . . . . . . . . . . . . . . . . . . . . . .  53
+     13.1.  Elliptic Curve Keys  . . . . . . . . . . . . . . . . . .  54
+       13.1.1.  Double Coordinate Curves . . . . . . . . . . . . . .  54
+     13.2.  Symmetric Keys . . . . . . . . . . . . . . . . . . . . .  55
+   14. CBOR Encoder Restrictions . . . . . . . . . . . . . . . . . .  56
+   15. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  56
+     15.1.  CBOR Tag assignment  . . . . . . . . . . . . . . . . . .  56
+     15.2.  COSE Header Parameter Registry . . . . . . . . . . . . .  57
+     15.3.  COSE Header Algorithm Label Table  . . . . . . . . . . .  58
+     15.4.  COSE Algorithm Registry  . . . . . . . . . . . . . . . .  58
+     15.5.  COSE Key Common Parameter Registry . . . . . . . . . . .  59
+     15.6.  COSE Key Type Parameter Registry . . . . . . . . . . . .  60
+     15.7.  COSE Elliptic Curve Registry . . . . . . . . . . . . . .  60
+     15.8.  Media Type Registrations . . . . . . . . . . . . . . . .  61
+       15.8.1.  COSE Security Message  . . . . . . . . . . . . . . .  61
+       15.8.2.  COSE Key media type  . . . . . . . . . . . . . . . .  63
+     15.9.  CoAP Content Format Registrations  . . . . . . . . . . .  65
+   16. Security Considerations . . . . . . . . . . . . . . . . . . .  65
+   17. References  . . . . . . . . . . . . . . . . . . . . . . . . .  66
+     17.1.  Normative References . . . . . . . . . . . . . . . . . .  66
+     17.2.  Informative References . . . . . . . . . . . . . . . . .  66
+   Appendix A.  CDDL Grammar . . . . . . . . . . . . . . . . . . . .  69
+   Appendix B.  Three Levels of Recipient Information  . . . . . . .  69
+   Appendix C.  Examples . . . . . . . . . . . . . . . . . . . . . .  71
+     C.1.  Examples of MAC messages  . . . . . . . . . . . . . . . .  72
+       C.1.1.  Shared Secret Direct MAC  . . . . . . . . . . . . . .  72
+       C.1.2.  ECDH Direct MAC . . . . . . . . . . . . . . . . . . .  73
+       C.1.3.  Wrapped MAC . . . . . . . . . . . . . . . . . . . . .  74
+       C.1.4.  Multi-recipient MAC message . . . . . . . . . . . . .  75
+     C.2.  Examples of Encrypted Messages  . . . . . . . . . . . . .  76
 
 
 
-Schaad                   Expires April 16, 2016                 [Page 3]
+Schaad                   Expires April 17, 2016                 [Page 3]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
-       C.1.2.  ECDH Direct MAC . . . . . . . . . . . . . . . . . . .  76
-       C.1.3.  Wrapped MAC . . . . . . . . . . . . . . . . . . . . .  77
-       C.1.4.  Multi-recipient MAC message . . . . . . . . . . . . .  78
-     C.2.  Examples of Encrypted Messages  . . . . . . . . . . . . .  80
-       C.2.1.  Direct ECDH . . . . . . . . . . . . . . . . . . . . .  80
-       C.2.2.  Direct plus Key Derivation  . . . . . . . . . . . . .  80
-     C.3.  Examples of Signed Message  . . . . . . . . . . . . . . .  81
-       C.3.1.  Single Signature  . . . . . . . . . . . . . . . . . .  81
-       C.3.2.  Multiple Signers  . . . . . . . . . . . . . . . . . .  82
-     C.4.  COSE Keys . . . . . . . . . . . . . . . . . . . . . . . .  83
-       C.4.1.  Public Keys . . . . . . . . . . . . . . . . . . . . .  83
-       C.4.2.  Private Keys  . . . . . . . . . . . . . . . . . . . .  85
-   Appendix D.  Document Updates . . . . . . . . . . . . . . . . . .  87
-     D.1.  Version -05 to -06  . . . . . . . . . . . . . . . . . . .  87
-     D.2.  Version -04 to -05  . . . . . . . . . . . . . . . . . . .  88
-     D.3.  Version -03 to -04  . . . . . . . . . . . . . . . . . . .  88
-     D.4.  Version -02 to -03  . . . . . . . . . . . . . . . . . . .  88
-     D.5.  Version -02 to -03  . . . . . . . . . . . . . . . . . . .  88
-     D.6.  Version -01 to -2 . . . . . . . . . . . . . . . . . . . .  89
-     D.7.  Version -00 to -01  . . . . . . . . . . . . . . . . . . .  89
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  90
+       C.2.1.  Direct ECDH . . . . . . . . . . . . . . . . . . . . .  76
+       C.2.2.  Direct plus Key Derivation  . . . . . . . . . . . . .  77
+     C.3.  Examples of Signed Message  . . . . . . . . . . . . . . .  78
+       C.3.1.  Single Signature  . . . . . . . . . . . . . . . . . .  78
+       C.3.2.  Multiple Signers  . . . . . . . . . . . . . . . . . .  79
+     C.4.  COSE Keys . . . . . . . . . . . . . . . . . . . . . . . .  79
+       C.4.1.  Public Keys . . . . . . . . . . . . . . . . . . . . .  79
+       C.4.2.  Private Keys  . . . . . . . . . . . . . . . . . . . .  82
+   Appendix D.  Document Updates . . . . . . . . . . . . . . . . . .  83
+     D.1.  Version -05 to -06  . . . . . . . . . . . . . . . . . . .  83
+     D.2.  Version -04 to -05  . . . . . . . . . . . . . . . . . . .  84
+     D.3.  Version -03 to -04  . . . . . . . . . . . . . . . . . . .  84
+     D.4.  Version -02 to -03  . . . . . . . . . . . . . . . . . . .  84
+     D.5.  Version -02 to -03  . . . . . . . . . . . . . . . . . . .  84
+     D.6.  Version -01 to -2 . . . . . . . . . . . . . . . . . . . .  85
+     D.7.  Version -00 to -01  . . . . . . . . . . . . . . . . . . .  85
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  86
 
 1.  Introduction
 
@@ -218,16 +214,17 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
    o  CBOR has capabilities that are not present in JSON and should be
       used.  One example of this is the fact that CBOR has a method of
+      encoding binary directly without first converting it into a base64
+      encoded string.
 
 
 
-Schaad                   Expires April 16, 2016                 [Page 4]
+
+
+Schaad                   Expires April 17, 2016                 [Page 4]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
-
-      encoding binary directly without first converting it into a base64
-      encoded string.
 
    o  COSE is not a direct copy of the JOSE specification.  In the
       process of creating COSE, decisions that were made for JOSE were
@@ -277,7 +274,10 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                 [Page 5]
+
+
+
+Schaad                   Expires April 17, 2016                 [Page 5]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -333,7 +333,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                 [Page 6]
+Schaad                   Expires April 17, 2016                 [Page 6]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -389,7 +389,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                 [Page 7]
+Schaad                   Expires April 17, 2016                 [Page 7]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -445,7 +445,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                 [Page 8]
+Schaad                   Expires April 17, 2016                 [Page 8]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -501,7 +501,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                 [Page 9]
+Schaad                   Expires April 17, 2016                 [Page 9]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -557,7 +557,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 10]
+Schaad                   Expires April 17, 2016                [Page 10]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -613,7 +613,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 11]
+Schaad                   Expires April 17, 2016                [Page 11]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -669,7 +669,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 12]
+Schaad                   Expires April 17, 2016                [Page 12]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -725,7 +725,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 13]
+Schaad                   Expires April 17, 2016                [Page 13]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -781,7 +781,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 14]
+Schaad                   Expires April 17, 2016                [Page 14]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -837,7 +837,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 15]
+Schaad                   Expires April 17, 2016                [Page 15]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -893,7 +893,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 16]
+Schaad                   Expires April 17, 2016                [Page 16]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -949,7 +949,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 17]
+Schaad                   Expires April 17, 2016                [Page 17]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -1005,7 +1005,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 18]
+Schaad                   Expires April 17, 2016                [Page 18]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -1061,7 +1061,7 @@ COSE_recipient = [
 
 
 
-Schaad                   Expires April 16, 2016                [Page 19]
+Schaad                   Expires April 17, 2016                [Page 19]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -1117,7 +1117,7 @@ COSE_encryptData = [
 
 
 
-Schaad                   Expires April 16, 2016                [Page 20]
+Schaad                   Expires April 17, 2016                [Page 20]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -1173,7 +1173,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 21]
+Schaad                   Expires April 17, 2016                [Page 21]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -1229,7 +1229,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 22]
+Schaad                   Expires April 17, 2016                [Page 22]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -1285,7 +1285,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 23]
+Schaad                   Expires April 17, 2016                [Page 23]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -1341,7 +1341,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 24]
+Schaad                   Expires April 17, 2016                [Page 24]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -1373,7 +1373,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
    kty:  This parameter is used to identify the family of keys for this
       structure, and thus the set of key type specific parameters to be
-      found.  The set of values can be found in Table 20.  This
+      found.  The set of values can be found in Table 18.  This
       parameter MUST be present in a key object.  Implementations MUST
       verify that the key type is appropriate for the algorithm being
       processed.  The key type MUST be included as part of a trust
@@ -1397,7 +1397,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 25]
+Schaad                   Expires April 17, 2016                [Page 25]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -1453,7 +1453,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 26]
+Schaad                   Expires April 17, 2016                [Page 26]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -1509,7 +1509,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 27]
+Schaad                   Expires April 17, 2016                [Page 27]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -1565,7 +1565,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 28]
+Schaad                   Expires April 17, 2016                [Page 28]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -1621,7 +1621,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 29]
+Schaad                   Expires April 17, 2016                [Page 29]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -1634,69 +1634,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
       collide with a SHA-256 bit hash value.)  This attack can be
       mitigated by including the signature algorithm identifier in the
       data to be signed.
-
-8.2.  RSASSA-PSS
-
-   The RSASSA-PSS signature algorithm is defined in [RFC3447].
-
-   The RSASSA-PSS signature algorithm is parameterized with a hash
-   function (h), a mask generation function (mgf) and a salt length
-   (sLen).  For this specification, the mask generation function is
-   fixed to be MGF1 as defined in [RFC3447].  It has been recommended
-   that the same hash function be used for hashing the data as well as
-   in the mask generation function, for this specification we following
-   this recommendation.  The salt length is the same length as the hash
-   function output.
-
-   Implementations need to check that the key type is 'RSA' when
-   creating or verifying a signature.
-
-   The algorithms defined in this document can be found in Table 5.
-
-     +-------+-------+---------+-------------+-----------------------+
-     | name  | value | hash    | salt length | description           |
-     +-------+-------+---------+-------------+-----------------------+
-     | PS256 | -26   | SHA-256 | 32          | RSASSA-PSS w/ SHA-256 |
-     |       |       |         |             |                       |
-     | PS384 | -27   | SHA-384 | 48          | RSASSA-PSS w/ SHA-384 |
-     |       |       |         |             |                       |
-     | PS512 | -28   | SHA-512 | 64          | RSASSA-PSS w/ SHA-512 |
-     +-------+-------+---------+-------------+-----------------------+
-
-                   Table 5: RSASSA-PSS Algorithm Values
-
-8.2.1.  Security Considerations
-
-   In addition to needing to worry about keys that are too small to
-   provide the required security, there are issues with keys that are
-   too large.  Denial of service attacks have been mounted with overly
-   large keys.  This has the potential to consume resources with
-   potentially bad keys.  There are two reasonable ways to address this
-   attack.  First, a key should not be used for a cryptographic
-   operation until it has been matched back to an authorized user.  This
-
-
-
-Schaad                   Expires April 16, 2016                [Page 30]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
-
-   approach means that no cryptography would be done except for
-   authorized users.  Second, applications can impose maximum as well as
-   minimum length requirements on keys.  This limits the resources
-   consumed even if the matching is not performed until the cryptography
-   has been done.
-
-   There is a theoretical hash substitution attack that can be mounted
-   against RSASSA-PSS.  However, the requirement that the same hash
-   function be used consistently for all operations is an effective
-   mitigation against it.  Unlike ECDSA, hash functions are not
-   truncated so that the full hash value is always signed.  The internal
-   padding structure of RSASSA-PSS means that one needs to have multiple
-   collisions between the two hash functions in order to be successful
-   in producing a forgery based on changing the hash function.  This is
-   highly unlikely.
 
 9.  Message Authentication (MAC) Algorithms
 
@@ -1731,25 +1668,26 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    security of HMAC combined with MD5 has not yet been shown to be
    compromised [RFC6151].
 
-
-
-Schaad                   Expires April 16, 2016                [Page 31]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
-
    The HMAC algorithm is parameterized by an inner and outer padding, a
    hash function (h) and an authentication tag value length.  For this
    specification, the inner and outer padding are fixed to the values
    set in [RFC2104].  The length of the authentication tag corresponds
    to the difficulty of producing a forgery.  For use in constrained
    environments, we define a set of HMAC algorithms that are truncated.
+
+
+
+Schaad                   Expires April 17, 2016                [Page 30]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
+
    There are currently no known issues when truncating, however the
    security strength of the message tag is correspondingly reduced in
    strength.  When truncating, the left most tag length bits are kept
    and transmitted.
 
-   The algorithm defined in this document can be found in Table 6.
+   The algorithm defined in this document can be found in Table 5.
 
    +-----------+-------+---------+--------+----------------------------+
    | name      | value | Hash    | Length | description                |
@@ -1767,7 +1705,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    | 512/512   |       |         |        |                            |
    +-----------+-------+---------+--------+----------------------------+
 
-                      Table 6: HMAC Algorithm Values
+                      Table 5: HMAC Algorithm Values
 
    Some recipient algorithms carry the key while others derive a key
    from secret data.  For those algorithms which carry the key (i.e.
@@ -1785,17 +1723,20 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
    HMAC has proved to be resistant even when used with weakening hash
    algorithms.  The current best method appears to be a brute force
+   attack on the key.  This means that key size is going to be directly
+   related to the security of an HMAC operation.
 
 
 
 
-Schaad                   Expires April 16, 2016                [Page 32]
+
+
+
+
+Schaad                   Expires April 17, 2016                [Page 31]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
-
-   attack on the key.  This means that key size is going to be directly
-   related to the security of an HMAC operation.
 
 9.2.  AES Message Authentication Code (AES-CBC-MAC)
 
@@ -1805,7 +1746,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    tag length and the IV used.  For all of these algorithms, the IV is
    fixed to all zeros.  We provide an array of algorithms for various
    key lengths and tag lengths.  The algorithms defined in this document
-   are found in Table 7.
+   are found in Table 6.
 
    +-------------+-------+----------+----------+-----------------------+
    | name        | value | key      | tag      | description           |
@@ -1824,7 +1765,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    | 256/128     |       |          |          | 128-bit tag           |
    +-------------+-------+----------+----------+-----------------------+
 
-                     Table 7: AES-MAC Algorithm Values
+                     Table 6: AES-MAC Algorithm Values
 
    Keys may be obtained either from a key structure or from a recipient
    structure.  If the key obtained from a key structure, the key type
@@ -1842,17 +1783,16 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
       This can be addressed by using different keys for different length
       messages.  (CMAC mode also addresses this issue.)
 
-
-
-
-Schaad                   Expires April 16, 2016                [Page 33]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
-
    o  If the same key is used for both encryption and authentication
       operations, using CBC modes an attacker can produce messages with
       a valid authentication code.
+
+
+
+Schaad                   Expires April 17, 2016                [Page 32]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
 
    o  If the IV can be modified, then messages can be forged.  This is
       addressed by fixing the IV to all zeros.
@@ -1896,12 +1836,16 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    values.  For this document however, the size of the authentication
    tag is fixed at 128-bits.
 
-   The set of algorithms defined in this document are in Table 8.
+   The set of algorithms defined in this document are in Table 7.
 
 
 
 
-Schaad                   Expires April 16, 2016                [Page 34]
+
+
+
+
+Schaad                   Expires April 17, 2016                [Page 33]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -1916,7 +1860,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
              | A256GCM | 3     | AES-GCM mode w/ 256-bit key |
              +---------+-------+-----------------------------+
 
-                   Table 8: Algorithm Value for AES-GCM
+                   Table 7: Algorithm Value for AES-GCM
 
    Keys may be obtained either from a key structure or from a recipient
    structure.  If the key obtained from a key structure, the key type
@@ -1957,7 +1901,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 35]
+Schaad                   Expires April 17, 2016                [Page 34]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -2013,7 +1957,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 36]
+Schaad                   Expires April 17, 2016                [Page 35]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -2058,7 +2002,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    |                    |       |    |     |     | nonce               |
    +--------------------+-------+----+-----+-----+---------------------+
 
-                   Table 9: Algorithm Values for AES-CCM
+                   Table 8: Algorithm Values for AES-CCM
 
    Keys may be obtained either from a key structure or from a recipient
    structure.  If the key obtained from a key structure, the key type
@@ -2069,7 +2013,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 37]
+Schaad                   Expires April 17, 2016                [Page 36]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -2109,7 +2053,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    parameterization.  It takes a 256-bit key and an a 96-bit nonce as
    well as the plain text and additional data as inputs and produces the
    cipher text as an option.  We define one algorithm identifier for
-   this algorithm in Table 10.
+   this algorithm in Table 9.
 
      +-------------------+-------+----------------------------------+
      | name              | value | description                      |
@@ -2117,7 +2061,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
      | ChaCha20/Poly1305 | 11    | ChaCha20/Poly1305 w/ 256-bit key |
      +-------------------+-------+----------------------------------+
 
-                   Table 10: Algorithm Value for AES-GCM
+                   Table 9: Algorithm Value for AES-GCM
 
    Keys may be obtained either from a key structure or from a recipient
    structure.  If the key obtained from a key structure, the key type
@@ -2125,7 +2069,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 38]
+Schaad                   Expires April 17, 2016                [Page 37]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -2181,7 +2125,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 39]
+Schaad                   Expires April 17, 2016                [Page 38]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -2203,7 +2147,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
       length of the salt be the same as the length of the underlying
       hash value, any amount of salt will improve the security as
       different key values will be generated.  A parameter to carry the
-      salt is defined in Table 12.  This parameter is protected by being
+      salt is defined in Table 11.  This parameter is protected by being
       included in the key computation and does not need to be separately
       authenticated.
 
@@ -2229,7 +2173,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    uniformly random, for example if it is the result of a ECDH key
    agreement step.
 
-   The algorithms defined in this document are found in Table 11
+   The algorithms defined in this document are found in Table 10
 
 
 
@@ -2237,7 +2181,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 40]
+Schaad                   Expires April 17, 2016                [Page 39]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -2259,7 +2203,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    | MAC-256     |             |          | PRF w/ 256-bit key         |
    +-------------+-------------+----------+----------------------------+
 
-                         Table 11: HKDF algorithms
+                         Table 10: HKDF algorithms
 
                    +------+-------+------+-------------+
                    | name | label | type | description |
@@ -2267,7 +2211,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
                    | salt | -20   | bstr | Random salt |
                    +------+-------+------+-------------+
 
-                    Table 12: HKDF Algorithm Parameters
+                    Table 11: HKDF Algorithm Parameters
 
 11.2.  Context Information Structure
 
@@ -2293,7 +2237,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 41]
+Schaad                   Expires April 17, 2016                [Page 40]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -2313,7 +2257,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    some is implied based on the application and some is explicitly
    transported as part of the message.  The information that can be
    carried in the message, parameters have been defined and can be found
-   in Table 13.  These parameters are designed to be placed in the
+   in Table 12.  These parameters are designed to be placed in the
    unprotected bucket of the recipient structure.  (They do not need to
    be in the protected bucket since they already are included in the
    cryptographic computation by virtue of being included in the context
@@ -2349,7 +2293,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 42]
+Schaad                   Expires April 17, 2016                [Page 41]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -2405,7 +2349,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 43]
+Schaad                   Expires April 17, 2016                [Page 42]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -2439,7 +2383,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    |               |       |           | information                   |
    +---------------+-------+-----------+-------------------------------+
 
-                  Table 13: Context Algorithm Parameters
+                  Table 12: Context Algorithm Parameters
 
    Text from here to start of next section to be removed
 
@@ -2461,7 +2405,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 44]
+Schaad                   Expires April 17, 2016                [Page 43]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -2517,7 +2461,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 45]
+Schaad                   Expires April 17, 2016                [Page 44]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -2529,7 +2473,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    This recipient algorithm is the simplest, the supplied key is
    directly used as the key for the next layer down in the message.
    There are no algorithm parameters defined for this algorithm.  The
-   algorithm identifier value is assigned in Table 14.
+   algorithm identifier value is assigned in Table 13.
 
    When this algorithm is used, the protected field MUST be zero length.
    The key type MUST be 'Symmetric'.
@@ -2540,7 +2484,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
                   | direct | -6    | Direct use of CEK |
                   +--------+-------+-------------------+
 
-                           Table 14: Direct Key
+                           Table 13: Direct Key
 
 12.1.1.1.  Security Considerations
 
@@ -2573,7 +2517,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 46]
+Schaad                   Expires April 17, 2016                [Page 45]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -2598,7 +2542,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    When these algorithms are used, the key type MUST be 'symmetric'.
 
    The set of algorithms defined in this document can be found in
-   Table 15.
+   Table 14.
 
    +---------------------+-------+-------------+-----------------------+
    | name                | value | KDF         | description           |
@@ -2616,7 +2560,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    |                     |       | MAC-256     | MAC 256-bit key       |
    +---------------------+-------+-------------+-----------------------+
 
-                           Table 15: Direct Key
+                           Table 14: Direct Key
 
 12.1.2.1.  Security Considerations
 
@@ -2629,7 +2573,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 47]
+Schaad                   Expires April 17, 2016                [Page 46]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -2685,7 +2629,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 48]
+Schaad                   Expires April 17, 2016                [Page 47]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -2700,7 +2644,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
         | A256KW | -5    | 256      | AES Key Wrap w/ 256-bit key |
         +--------+-------+----------+-----------------------------+
 
-                  Table 16: AES Key Wrap Algorithm Values
+                  Table 15: AES Key Wrap Algorithm Values
 
 12.2.1.1.  Security Considerations for AES-KW
 
@@ -2728,54 +2672,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
       parameter and SHOULD contain a parameter identifying the
       asymmetric key.
 
-12.3.1.  RSAES-OAEP
-
-   RSAES-OAEP is an asymmetric key encryption algorithm.  The definition
-   of RSAEA-OAEP can be found in Section 7.1 of [RFC3447].  The
-   algorithm is parameterized using a masking generation function (mgf),
-   a hash function (h) and encoding parameters (P).  For the algorithm
-   identifiers defined in this section:
-
-   o  mgf is always set to MFG1 from [RFC3447] and uses the same hash
-      function as h.
-
-
-
-Schaad                   Expires April 16, 2016                [Page 49]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
-
-   o  P is always set to the empty octet string.
-
-   Table 17 summarizes the rest of the values.
-
-    +----------------------+-------+---------+-----------------------+
-    | name                 | value | hash    | description           |
-    +----------------------+-------+---------+-----------------------+
-    | RSAES-OAEP w/SHA-256 | -25   | SHA-256 | RSAES OAEP w/ SHA-256 |
-    |                      |       |         |                       |
-    | RSAES-OAEP w/SHA-512 | -26   | SHA-512 | RSAES OAEP w/ SHA-512 |
-    +----------------------+-------+---------+-----------------------+
-
-                   Table 17: RSAES-OAEP Algorithm Values
-
-   The key type MUST be 'RSA'.
-
-12.3.1.1.  Security Considerations for RSAES-OAEP
-
-   A key size of 2048 bits or larger MUST be used with these algorithms.
-   This key size corresponds roughly to the same strength as provided by
-   a 128-bit symmetric encryption algorithm.
-
-   It is highly recommended that checks on the key length be done before
-   starting a decryption operation.  One potential denial of service
-   operation is to provide encrypted objects using either abnormally
-   long or oddly sized RSA modulus values.  Implementations SHOULD be
-   able to encrypt and decrypt with modulus between 2048 and 16K bits in
-   length.  Applications can impose additional restrictions on the
-   length of the modulus.
-
 12.4.  Direct Key Agreement
 
    The 'direct key agreement' class of recipient algorithms uses a key
@@ -2786,6 +2682,14 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
    The most commonly used key agreement algorithm used is Diffie-
    Hellman, but other variants exist.  Since COSE is designed for a
+
+
+
+Schaad                   Expires April 17, 2016                [Page 48]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
+
    store and forward environment rather than an on-line environment,
    many of the DH variants cannot be used as the receiver of the message
    cannot provide any key material.  One side-effect of this is that
@@ -2793,14 +2697,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    be used for the receiver of the COSE message.
 
    Two variants of DH that are easily supported are:
-
-
-
-
-Schaad                   Expires April 16, 2016                [Page 50]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
 
       - Ephemeral-Static DH: where the sender of the message creates a
       one time DH key and uses a static key for the recipient.  The use
@@ -2841,22 +2737,24 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
    ECDH is parameterized by the following:
 
+
+
+
+
+Schaad                   Expires April 17, 2016                [Page 49]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
+
    o  Curve Type/Curve: The curve selected controls not only the size of
       the shared secret, but the mathematics for computing the shared
       secret.  The curve selected also controls how a point in the curve
       is represented and what happens for the identity points on the
       curve.  In this specification we allow for a number of different
-      curves to be used.  The curves are defined in Table 21.
+      curves to be used.  The curves are defined in Table 19.
       Since the only the math is changed by changing the curve, the
       curve is not fixed for any of the algorithm identifiers we define,
       instead it is defined by the points used.
-
-
-
-Schaad                   Expires April 16, 2016                [Page 51]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
 
    o  Ephemeral-static or static-static: The key agreement process may
       be done using either a static or an ephemeral key at the senders
@@ -2867,8 +2765,8 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
       using static keys, the sender MUST either generate a new random
       value placed in either in the KDF parameters or the context
       structure.  For the KDF functions used, this means either in the
-      'salt' parameter for HKDF (Table 12) or in the 'PartyU nonce'
-      parameter for the context structure (Table 13) MUST be present.
+      'salt' parameter for HKDF (Table 11) or in the 'PartyU nonce'
+      parameter for the context structure (Table 12) MUST be present.
       (Both may be present if desired.)  The value in the parameter MUST
       be unique for the key pair being used.  It is acceptable to use a
       global counter which is incremented for every static-static
@@ -2876,7 +2774,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
       the static key needs to be identified to the recipient.  The
       static key can be identified either by providing the key ('static
       key') or by providing a key identifier for the static key ('static
-      key id').  Both of these parameters are defined in Table 19
+      key id').  Both of these parameters are defined in Table 17
 
    o  Key derivation algorithm: The result of an ECDH key agreement
       process does not provide a uniformly random secret, as such it
@@ -2896,8 +2794,16 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
       options is used, the input key size to the key wrap algorithm is
       the value fed into the context structure as the key size.
 
+
+
+
+Schaad                   Expires April 17, 2016                [Page 50]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
+
    The set of algorithms direct ECDH defined in this document are found
-   in Table 18.
+   in Table 16.
 
    +-------------+------+-------+----------------+--------+------------+
    | name        | valu | KDF   | Ephemeral-     | Key    | descriptio |
@@ -2906,14 +2812,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    | ECDH-ES +   | 50   | HKDF  | yes            | none   | ECDH ES w/ |
    | HKDF-256    |      | - SHA |                |        | HKDF -     |
    |             |      | -256  |                |        | generate   |
-
-
-
-Schaad                   Expires April 16, 2016                [Page 52]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
-
    |             |      |       |                |        | key        |
    |             |      |       |                |        | directly   |
    |             |      |       |                |        |            |
@@ -2952,6 +2850,14 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    | ECDH-       | 56   | HKDF  | yes            | A256KW | ECDH ES w/ |
    | ES+A256KW   |      | - SHA |                |        | Concat KDF |
    |             |      | -256  |                |        | and AES    |
+
+
+
+Schaad                   Expires April 17, 2016                [Page 51]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
+
    |             |      |       |                |        | Key wrap   |
    |             |      |       |                |        | w/ 256 bit |
    |             |      |       |                |        | key        |
@@ -2962,14 +2868,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    |             |      |       |                |        | Key wrap   |
    |             |      |       |                |        | w/ 128 bit |
    |             |      |       |                |        | key        |
-
-
-
-Schaad                   Expires April 16, 2016                [Page 53]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
-
    |             |      |       |                |        |            |
    | ECDH-       | 58   | HKDF  | no             | A192KW | ECDH SS w/ |
    | SS+A192KW   |      | - SHA |                |        | Concat KDF |
@@ -2986,7 +2884,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    |             |      |       |                |        | key        |
    +-------------+------+-------+----------------+--------+------------+
 
-                      Table 18: ECDH Algorithm Values
+                      Table 16: ECDH Algorithm Values
 
    +-----------+-------+----------+-----------+------------------------+
    | name      | label | type     | algorithm | description            |
@@ -3002,11 +2900,20 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    |           |       |          |           | sender                 |
    +-----------+-------+----------+-----------+------------------------+
 
-                    Table 19: ECDH Algorithm Parameters
+                    Table 17: ECDH Algorithm Parameters
 
    This document defines these algorithms to be used with the curves
    P-256, P-384, P-521.  Implementations MUST verify that the key type
    and curve are correct, different curves are restricted to different
+
+
+
+
+Schaad                   Expires April 17, 2016                [Page 52]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
+
    key types.  Implementations MUST verify that the curve and algorithm
    are appropriate for the entities involved.
 
@@ -3018,13 +2925,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    algorithm.
 
    The COSE_encrypt structure for the recipient is organized as follows:
-
-
-
-Schaad                   Expires April 16, 2016                [Page 54]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
 
    o  The 'protected' field is fed into the KDF context structure.
 
@@ -3038,7 +2938,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 12.5.1.  ECDH
 
-   These algorithms are defined in Table 18.
+   These algorithms are defined in Table 16.
 
 13.  Keys
 
@@ -3060,27 +2960,27 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    Key types are identified by the 'kty' member of the COSE_Key object.
    In this document we define four values for the member.
 
+
+
+
+
+
+Schaad                   Expires April 17, 2016                [Page 53]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
+
     +-----------+-------+--------------------------------------------+
     | name      | value | description                                |
     +-----------+-------+--------------------------------------------+
     | EC2       | 2     | Elliptic Curve Keys w/ X,Y Coordinate pair |
-    |           |       |                                            |
-    | RSA       | 3     | RSA Keys                                   |
     |           |       |                                            |
     | Symmetric | 4     | Symmetric Keys                             |
     |           |       |                                            |
     | Reserved  | 0     | This value is reserved                     |
     +-----------+-------+--------------------------------------------+
 
-                         Table 20: Key Type Values
-
-
-
-
-Schaad                   Expires April 16, 2016                [Page 55]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
+                         Table 18: Key Type Values
 
 13.1.  Elliptic Curve Keys
 
@@ -3102,7 +3002,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
      | P-521 | EC2      | 3     | NIST P-521 also known as secp521r1 |
      +-------+----------+-------+------------------------------------+
 
-                            Table 21: EC Curves
+                            Table 19: EC Curves
 
 13.1.1.  Double Coordinate Curves
 
@@ -3115,11 +3015,20 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
    For EC keys with both coordinates, the 'kty' member is set to 2
    (EC2).  The key parameters defined in this section are summarized in
-   Table 22.  The members that are defined for this key type are:
+   Table 20.  The members that are defined for this key type are:
+
+
+
+
+
+Schaad                   Expires April 17, 2016                [Page 54]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
 
    crv  contains an identifier of the curve to be used with the key.
       The curves defined in this document for this key type can be found
-      in Table 21.  Other curves may be registered in the future and
+      in Table 19.  Other curves may be registered in the future and
       private curves can be used as well.
 
    x  contains the x coordinate for the EC point.  The integer is
@@ -3129,15 +3038,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    y  contains either the sign bit or the value of y coordinate for the
       EC point.  For the value, the integer is converted to an octet
       string as defined in [SEC1].  Zero octets MUST NOT be removed from
-
-
-
-
-Schaad                   Expires April 16, 2016                [Page 56]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
-
       the front of the octet string.  For the sign bit, the value is
       true if the value of y is positive.
 
@@ -3164,94 +3064,23 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    | d    | 2     | -4    | bstr    | Private key                      |
    +------+-------+-------+---------+----------------------------------+
 
-                        Table 22: EC Key Parameters
+                        Table 20: EC Key Parameters
 
-13.2.  RSA Keys
-
-   This document defines a key structure for both the public and private
-   halves of RSA keys.  Together, an RSA public key and an RSA private
-   key form an RSA key pair.
-
-   The document also provides support for the so-called "multi-prime"
-   RSA where the modulus may have more than two prime factors.  The
-   benefit of multi-prime RSA is lower computational cost for the
-   decryption and signature primitives.  For a discussion on how multi-
-   prime affects the security of RSA crypto-systems, the reader is
-   referred to [MultiPrimeRSA].
-
-   This document follows the naming convention of [RFC3447] for the
-   naming of the fields of an RSA public or private key.  The table
-   Table 23 provides a summary of the label values and the types
-   associated with each of those labels.  The requirements for fields
-   for RSA keys are as follows:
-
-   o  For all keys, 'kty' MUST be present and MUST have a value of 3.
-
-
-
-Schaad                   Expires April 16, 2016                [Page 57]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
-
-   o  For public keys, the fields 'n' and 'e' MUST be present.  All
-      other fields defined in Table 23 MUST be absent.
-
-   o  For private keys with two primes, the fields 'other', 'r_i', 'd_i'
-      and 't_i' MUST be absent, all other fields MUST be present.
-
-   o  For private keys with more than two primes, all fields MUST be
-      present.  For the third to nth primes, each of the primes is
-      represented as a map containing the fields 'r_i', 'd_i' and 't_i'.
-      The field 'other' is an array of those maps.
-
-   +-------+----------+-------+-------+--------------------------------+
-   | name  | key type | value | type  | description                    |
-   +-------+----------+-------+-------+--------------------------------+
-   | n     | 3        | -1    | bstr  | Modulus Parameter              |
-   |       |          |       |       |                                |
-   | e     | 3        | -2    | int   | Exponent Parameter             |
-   |       |          |       |       |                                |
-   | d     | 3        | -3    | bstr  | Private Exponent Parameter     |
-   |       |          |       |       |                                |
-   | p     | 3        | -4    | bstr  | First Prime Factor             |
-   |       |          |       |       |                                |
-   | q     | 3        | -5    | bstr  | Second Prime Factor            |
-   |       |          |       |       |                                |
-   | dP    | 3        | -6    | bstr  | First Factor CRT Exponent      |
-   |       |          |       |       |                                |
-   | dQ    | 3        | -7    | bstr  | Second Factor CRT Exponent     |
-   |       |          |       |       |                                |
-   | qInv  | 3        | -8    | bstr  | First CRT Coefficient          |
-   |       |          |       |       |                                |
-   | other | 3        | -9    | array | Other Primes Info              |
-   |       |          |       |       |                                |
-   | r_i   | 3        | -10   | bstr  | i-th factor, Prime Factor      |
-   |       |          |       |       |                                |
-   | d_i   | 3        | -11   | bstr  | i-th factor, Factor CRT        |
-   |       |          |       |       | Exponent                       |
-   |       |          |       |       |                                |
-   | t_i   | 3        | -12   | bstr  | i-th factor, Factor CRT        |
-   |       |          |       |       | Coefficient                    |
-   +-------+----------+-------+-------+--------------------------------+
-
-                       Table 23: RSA Key Parameters
-
-13.3.  Symmetric Keys
+13.2.  Symmetric Keys
 
    Occasionally it is required that a symmetric key be transported
    between entities.  This key structure allows for that to happen.
 
+   For symmetric keys, the 'kty' member is set to 3 (Symmetric).  The
+   member that is defined for this key type is:
 
 
 
-Schaad                   Expires April 16, 2016                [Page 58]
+
+Schaad                   Expires April 17, 2016                [Page 55]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
-
-   For symmetric keys, the 'kty' member is set to 3 (Symmetric).  The
-   member that is defined for this key type is:
 
    k  contains the value of the key.
 
@@ -3266,7 +3095,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
              | k    | 4        | -1    | bstr | Key Value   |
              +------+----------+-------+------+-------------+
 
-                    Table 24: Symmetric Key Parameters
+                    Table 21: Symmetric Key Parameters
 
 14.  CBOR Encoder Restrictions
 
@@ -3301,7 +3130,10 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 59]
+
+
+
+Schaad                   Expires April 17, 2016                [Page 56]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -3357,7 +3189,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 60]
+Schaad                   Expires April 17, 2016                [Page 57]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -3397,8 +3229,8 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    specification  This contains a pointer to the specification defining
       the header field (where public).
 
-   The initial contents of the registry can be found in: Table 12,
-   Table 13, Table 19.  The specification column for all rows in that
+   The initial contents of the registry can be found in: Table 11,
+   Table 12, Table 17.  The specification column for all rows in that
    table should be this document.
 
 15.4.  COSE Algorithm Registry
@@ -3413,7 +3245,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 61]
+Schaad                   Expires April 17, 2016                [Page 58]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -3434,9 +3266,9 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
       available).
 
    The initial contents of the registry can be found in the following:
-   Table 9, Table 8, Table 10, Table 4, Table 5, Table 6, Table 7,
-   Table 14, Table 15, Table 16, Table 17, Table 18.  The specification
-   column for all rows in that table should be this document.
+   Table 8, Table 7, Table 9, Table 4, Table 5, Table 6, Table 13,
+   Table 14, Table 15, Table 16.  The specification column for all rows
+   in that table should be this document.
 
 15.5.  COSE Key Common Parameter Registry
 
@@ -3469,7 +3301,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 62]
+Schaad                   Expires April 17, 2016                [Page 59]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -3506,9 +3338,9 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    specification  This contains a pointer to the public specification
       for the field if one exists
 
-   This registry will be initially populated by the values in Table 22,
-   Table 23, and Table 24.  The specification column for all of these
-   entries will be this document.
+   This registry will be initially populated by the values in Table 20,
+   and Table 21.  The specification column for all of these entries will
+   be this document.
 
 15.7.  COSE Elliptic Curve Registry
 
@@ -3525,7 +3357,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 63]
+Schaad                   Expires April 17, 2016                [Page 60]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -3544,7 +3376,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    specification  This contains a pointer to the public specification
       for the curve if one exists.
 
-   This registry will be initially populated by the values in Table 20.
+   This registry will be initially populated by the values in Table 18.
    The specification column for all of these entries will be this
    document.
 
@@ -3581,7 +3413,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 64]
+Schaad                   Expires April 17, 2016                [Page 61]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -3637,7 +3469,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 65]
+Schaad                   Expires April 17, 2016                [Page 62]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -3693,7 +3525,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 66]
+Schaad                   Expires April 17, 2016                [Page 63]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -3749,7 +3581,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 67]
+Schaad                   Expires April 17, 2016                [Page 64]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -3805,7 +3637,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 68]
+Schaad                   Expires April 17, 2016                [Page 65]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -3861,7 +3693,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 69]
+Schaad                   Expires April 17, 2016                [Page 66]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -3917,7 +3749,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 70]
+Schaad                   Expires April 17, 2016                [Page 67]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -3973,7 +3805,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 71]
+Schaad                   Expires April 17, 2016                [Page 68]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -4029,7 +3861,7 @@ Appendix B.  Three Levels of Recipient Information
 
 
 
-Schaad                   Expires April 16, 2016                [Page 72]
+Schaad                   Expires April 17, 2016                [Page 69]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -4085,7 +3917,7 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
 
 
-Schaad                   Expires April 16, 2016                [Page 73]
+Schaad                   Expires April 17, 2016                [Page 70]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -4141,7 +3973,7 @@ Appendix C.  Examples
 
 
 
-Schaad                   Expires April 16, 2016                [Page 74]
+Schaad                   Expires April 17, 2016                [Page 71]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -4197,7 +4029,7 @@ C.1.1.  Shared Secret Direct MAC
 
 
 
-Schaad                   Expires April 16, 2016                [Page 75]
+Schaad                   Expires April 17, 2016                [Page 72]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -4253,7 +4085,7 @@ C.1.2.  ECDH Direct MAC
 
 
 
-Schaad                   Expires April 16, 2016                [Page 76]
+Schaad                   Expires April 17, 2016                [Page 73]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -4309,7 +4141,7 @@ C.1.3.  Wrapped MAC
 
 
 
-Schaad                   Expires April 16, 2016                [Page 77]
+Schaad                   Expires April 17, 2016                [Page 74]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -4344,11 +4176,31 @@ C.1.4.  Multi-recipient MAC message
       1.  ECDH Ephemeral-Static, Curve P-521, AES-Key Wrap w/ 128-bit
           key
 
-      2.  RSA-OAEP w/ SHA-256
+      2.  AES-Key Wrap w/ 256-bit key
 
-      3.  AES-Key Wrap w/ 256-bit key
+   Size of binary file is 374 bytes
 
-   Size of binary file is 672 bytes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Schaad                   Expires April 17, 2016                [Page 75]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
 
    996( [
      h'a10104',
@@ -4362,14 +4214,6 @@ C.1.4.  Multi-recipient MAC message
          h'',
          {
            1: 55,
-
-
-
-Schaad                   Expires April 16, 2016                [Page 78]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
-
            4: h'62696c626f2e62616767696e7340686f626269746f6e2e657861
    6d706c65',
            -1: {
@@ -4389,23 +4233,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
        [
          h'',
          {
-           1: -26,
-           4: h'62696c626f2e62616767696e7340686f626269746f6e2e657861
-   6d706c65'
-         },
-         h'46c4f88069b650909a891e84013614cd58a3668f88fa18f3852940a20
-   b35098591d3aacf91c125a2595cda7bee75a490579f0e2f20fd6bc956623bfde3
-   029c318f82c426dac3463b261c981ab18b72fe9409412e5c7f2d8f2b5abaf780d
-   f6a282db033b3a863fa957408b81741878f466dcc437006ca21407181a016ca60
-   8ca8208bd3c5a1ddc828531e30b89a67ec6bb97b0c3c3c92036c0cb84aa0f0ce8
-   c3e4a215d173bfa668f116ca9f1177505afb7629a9b0b5e096e81d37900e06f56
-   1a32b6bc993fc6d0cb5d4bb81b74e6ffb0958dac7227c2eb8856303d989f93b4a
-   051830706a4c44e8314ec846022eab727e16ada628f12ee7978855550249ccb58
-   '
-       ],
-       [
-         h'',
-         {
            1: -5,
            4: h'30313863306165352d346439622d343731622d626664362d6565
    66333134626337303337'
@@ -4416,16 +4243,6 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
      ]
    ])
 
-
-
-
-
-
-Schaad                   Expires April 16, 2016                [Page 79]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
-
 C.2.  Examples of Encrypted Messages
 
 C.2.1.  Direct ECDH
@@ -4433,6 +4250,13 @@ C.2.1.  Direct ECDH
    This example uses the following:
 
    o  CEK: AES-GCM w/ 128-bit key
+
+
+
+Schaad                   Expires April 17, 2016                [Page 76]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
 
    o  Recipient class: ECDH Ephemeral-Static, Curve P-256
 
@@ -4475,13 +4299,6 @@ C.2.2.  Direct plus Key Derivation
    o  Recipient class: Use HKDF on a shared secret with the following
       implicit fields as part of the context.
 
-
-
-Schaad                   Expires April 16, 2016                [Page 80]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
-
       *  APU identity: "lighting-client"
 
       *  APV identity: "lighting-server"
@@ -4489,6 +4306,13 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
       *  Supplementary Public Other: "Encryption Example 02"
 
    Size of binary file is 97 bytes
+
+
+
+Schaad                   Expires April 17, 2016                [Page 77]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
 
    998( [
      h'a1010a',
@@ -4515,28 +4339,9 @@ C.3.1.  Single Signature
 
    This example uses the following:
 
-   o  Signature Algorithm: RSA-PSS w/ SHA-384, MGF-1
+   o  Signature Algorithm: ECDSA w/ SHA-256, Curve P-256-1
 
-   Size of binary file is 332 bytes
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Schaad                   Expires April 16, 2016                [Page 81]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
+   Size of binary file is 105 bytes
 
    999( [
      h'',
@@ -4545,54 +4350,35 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
      h'546869732069732074686520636f6e74656e742e',
      [
        [
-         h'a20165505333383404581e62696c626f2e62616767696e7340686f626
-   269746f6e2e6578616d706c65',
+         h'a10126',
          {
+           4: h'3131'
          },
-         h'6d9d88a90ef4d6d7c0079fb11a33c855e2274c773f358df43b68f7873
-   eeda210692a61d70cd6a24ba0e3d82e359384be09faafea496bb0ed16f02091c4
-   8c02f33574edab5b3e334bae68d19580021327cc131fbee38eb0b28289dbce118
-   3f9067891b17fe752674b80437da02e9928ab7a155fef707b11d2bd38a71f224f
-   53170480116d96cc3f7266487b268679a13cdedffa93252a550371acc19971369
-   b58039056b308cc4e158bebe7c55db7874442d4321fd27f17dbb820ef19f43dcc
-   16cd50ccdd1b7dfd7cdde239a9245af41d949cdbbf1337ca254af20eeb167a62d
-   a5a51c83899c6f6e7c7e01dc3db21a250092a69fc635b74a2e54f5c98cb955d83
-   '
+         h'4358e9e92b46d45134548b6e3b4eae3d2f801bce85236c7aab42968ad
+   8e3e92400873ed761735222a6d1f442c4bb3a3151946b16900048572455e65451
+   d89aaba7'
        ]
      ]
    ])
+
+
+
+
+
+Schaad                   Expires April 17, 2016                [Page 78]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
 
 C.3.2.  Multiple Signers
 
    This example uses the following:
 
-   o  Signature Algorithm: RSA-PSS w/ SHA-256, MGF-1
+   o  Signature Algorithm: ECDSA w/ SHA-256, Curve P-256-1
 
    o  Signature Algorithm: ECDSA w/ SHA-512, Curve P-521
 
-   Size of binary file is 498 bytes
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Schaad                   Expires April 16, 2016                [Page 82]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
+   Size of binary file is 277 bytes
 
    999( [
      h'',
@@ -4601,20 +4387,13 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
      h'546869732069732074686520636f6e74656e742e',
      [
        [
-         h'a1013819',
+         h'a10126',
          {
-           4: h'62696c626f2e62616767696e7340686f626269746f6e2e657861
-   6d706c65'
+           4: h'3131'
          },
-         h'0ee972d931c7ab906e4bb71b80da0cc99c104fa53ebbf1f2cf7b668b9
-   3d766d3d2da28299f074675bb0db3cd0792ba83050c23c96795d58f9c7d68f66a
-   bbb8f35af8a0b5df369517b6db85e2cb62d852b666bc135c9022e46b538f78c26
-   adc2668963e74a019de718254385bb9cb137926ad6a88d1ff70043f85e555fb57
-   84107ce6e9de7c89c4fbadf8eca363a35f415f7a23523a8331b1aa2dfbac59a06
-   3e4357bde8e53fe34195d59bcda37d2c604804fffe60362e81476436aaa677129
-   f34b26639fc41b8e758e5edf273079c61b30130f0f83c57aa6856347e2556f718
-   eaf79a1fee1397a4f0b16b1b34db946eaaff10c793e5d1e681cb21c4fd20c5fdf
-   '
+         h'0dc1c5e62719d8f3cce1468b7c881eee6a8088b46bf836ae956dd38fe
+   931991900823ea760648f2425b96c39e23ddc4b7faed56d4a9bd0f3752cfdc628
+   254ed0f2'
        ],
        [
          h'',
@@ -4623,11 +4402,11 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
            4: h'62696c626f2e62616767696e7340686f626269746f6e2e657861
    6d706c65'
          },
-         h'0118eaa7d62778b5a9525a583f06b115d80cd246bc930f0c2850588ee
-   c85186b427026e096a076bfab738215f354be59f57643a7f6b2c92535cf3c37ee
-   2746a908ab1dcc673a63f327d9eff852b874f7a98b6638c7054fdeeaa3dce6542
-   4a21bd5dc728acedda7fcae6df6fc3298ff51ac911603a0f26d066935dccb85ea
-   eb0ae6d0e6'
+         h'012ce5b1dfe8b5aa6eaa09a54c58a84ad0900e4fdf2759ec22d1c861c
+   ccd75c7e1c4025a2da35e512fc2874d6ac8fd862d09ad07ed2deac297b897561e
+   04a8d42476011eb209c016416b4247b4d1475c398d35c4ac24d1c9fadda7eefe2
+   857e25a500d29aea539e58e8ca7737fe450d4e87ed3f78e637c12bbd213e78ba8
+   3a55f7e89934'
        ]
      ]
    ])
@@ -4639,24 +4418,69 @@ C.4.1.  Public Keys
    This is an example of a COSE Key set.  This example includes the
    public keys for all of the previous examples.
 
-   In order the keys are:
-
-   o  An EC key with a kid of "meriadoc.brandybuck@buckland.example"
 
 
 
-Schaad                   Expires April 16, 2016                [Page 83]
+Schaad                   Expires April 17, 2016                [Page 79]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
+
+   In order the keys are:
+
+   o  An EC key with a kid of "meriadoc.brandybuck@buckland.example"
 
    o  An EC key with a kid of "peregrin.took@tuckborough.example"
 
    o  An EC key with a kid of "bilbo.baggins@hobbiton.example"
 
-   o  An RSA key with a kid of "bilbo.baggins@hobbiton.example"
+   o  An EC key with a kid of "11"
 
-   Size of binary file is 703 bytes
+   Size of binary file is 481 bytes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Schaad                   Expires April 17, 2016                [Page 80]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
 
    [
      {
@@ -4692,29 +4516,27 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    616d706c65'
      },
      {
-       -2: h'9f810fb4038273d02591e4073f31d2b6001b82cedb4d92f050165d4
-   7cfcab8a3c41cb778ac7553793f8ef975768d1a2374d8712564c3bcd77b9ea434
-   544899407cff0099920a931a24c4414852ab29bdb0a95c0653f36c60e60bf90b6
-   258dda56f37047ba5c2d1d029af9c9d40bac7aa41c78a0dd1068add699e808fea
-   011ea1441d8a4f7bb4e97be39f55f1ddd44e9c4ba335159703d4d34b603e65147
-   a4f23d6d3c0996c75edee846a82d190ae10783c961cf0387aed2106d2d0555b6f
+       -1: 1,
+       -2: h'bac5b11cad8f99f9c72b05cf4b9e26d244dc189f745228255a219a8
+   6d6a09eff',
+       -3: h'20138bf82dc1b6d562be0fa54ab7804a3a64b6d72ccfed6b6fb6ed2
+   8bbfc117e',
+       1: 2,
+       2: h'3131'
+     }
+   ]
 
 
 
-Schaad                   Expires April 16, 2016                [Page 84]
+
+
+
+
+
+Schaad                   Expires April 17, 2016                [Page 81]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
-
-   d937fad5535387e0ff72ffbe78941402b0b822ea2a74b6058c1dabf9b34a76cb6
-   3b87faa2c6847b8e2837fff91186e6b1c14911cf989a89092a81ce601ddacd3f9
-   cf',
-       -1: h'010001',
-       1: 3,
-       2: h'62696c626f2e62616767696e7340686f626269746f6e2e6578616d70
-   6c65'
-     }
-   ]
 
 C.4.2.  Private Keys
 
@@ -4734,9 +4556,9 @@ C.4.2.  Private Keys
 
    o  An EC key with a kid of "bilbo.baggins@hobbiton.example"
 
-   o  An RSA key with a kid of "bilbo.baggins@hobbiton.example"
+   o  An EC key with a kid of "11"
 
-   Size of binary file is 1884 bytes
+   Size of binary file is 782 bytes
 
    [
      {
@@ -4754,14 +4576,6 @@ C.4.2.  Private Keys
      {
        1: 4,
        2: h'6f75722d736563726574',
-
-
-
-Schaad                   Expires April 16, 2016                [Page 85]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
-
        -1: h'849b57219dae48de646d07dbb533566e976686457c1491be3a76dce
    a6c427188'
      },
@@ -4772,6 +4586,14 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
        -1: 3,
        -2: h'0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737b
    f5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620
+
+
+
+Schaad                   Expires April 17, 2016                [Page 82]
+
+Internet-Draft         CBOR Encoded Message Syntax          October 2015
+
+
    085e5c8f42ad',
        -3: h'01dca6947bce88bc5790485ac97427342bc35f887d86d65a089377e
    247e60baa55e4e8501e2ada5724ac51d6909008033ebc10ac999b9d7f5cc2519f
@@ -4800,61 +4622,15 @@ Internet-Draft         CBOR Encoded Message Syntax          October 2015
    a6c427188'
      },
      {
-       1: 3,
-       2: h'62696c626f2e62616767696e7340686f626269746f6e2e6578616d70
-   6c65',
-       -2: h'9f810fb4038273d02591e4073f31d2b6001b82cedb4d92f050165d4
-   7cfcab8a3c41cb778ac7553793f8ef975768d1a2374d8712564c3bcd77b9ea434
-   544899407cff0099920a931a24c4414852ab29bdb0a95c0653f36c60e60bf90b6
-   258dda56f37047ba5c2d1d029af9c9d40bac7aa41c78a0dd1068add699e808fea
-   011ea1441d8a4f7bb4e97be39f55f1ddd44e9c4ba335159703d4d34b603e65147
-   a4f23d6d3c0996c75edee846a82d190ae10783c961cf0387aed2106d2d0555b6f
-   d937fad5535387e0ff72ffbe78941402b0b822ea2a74b6058c1dabf9b34a76cb6
-
-
-
-Schaad                   Expires April 16, 2016                [Page 86]
-
-Internet-Draft         CBOR Encoded Message Syntax          October 2015
-
-
-   3b87faa2c6847b8e2837fff91186e6b1c14911cf989a89092a81ce601ddacd3f9
-   cf',
-       -1: h'010001',
-       -3: h'6d6502f41f84151228f24a467e1d19bb218fbcc34abd858db41fe29
-   221fd936d1e4fe3b5abf23bf1e8999295f15d0d144c4b362ec3514bef2e25bbd0
-   f80d62ae4c0c48c90ad49dd74c681dae10a4bbd81195d63bb0d03f00a64687e43
-   aeb5ff8dab20d2d109ef16fa7677e2e8bfa8e7e42e72bd4160c3aa9688b00f9b3
-   3059648316ed8c5016309074cc1332d81aa39ed389e8a9eab5844c414c704e05d
-   90c5e2b85854ab5054ea5f83a84896c6a83cdac5edda1f8b3274f7d38e8039826
-   8462a33ef9b525107c60ac8564c19cfe6e0e3775f242a1cafd3b9617d225dacf7
-   4ce4f972976d61b057f82ff9870aea056aeee076c3df1cfc718d539c3a906b433
-   c1',
-       -4: h'dd297183f0f04d725c6fad3de51a17ca0402019e519c0bd9967a35c
-   a11ed9d47b1fdfa7b019ffd9d168eec75fff9215f1907aeb5aa364c38c3016538
-   56ea64f2bc3d251d00cd9d0dd9fbee2009abfd60ac986a5e36a4277afd53ec8c8
-   4b2787c50cb7e9f909a7e1922933844b2b9a7747e8bc4eaef44996c3e9e99bfc6
-   d4ab49',
-       -5: h'b8a136761f9c4dfe84445e24e1efe3cbbf067cf61421a532a12489b
-   81ce9dc2b9b937382aacea0ad3f1b47f72ed039b5319c169ad76a0f223de47ad4
-   7aadcc3f5e6f30c38df251d3799bb69662afc2a5bb6a757953384cd6267bcf8c8
-   c92e530156a01bf263cf7c117bd10fe85da91c47952a80675f76cc1de9545274b
-   3ba457',
-       -6: h'07c3d5bd792f26b8f62fe19843bbf7cbdafa2b0e60f526a15c1c2c5
-   94ce9d7d4d596023e615f39ab53486f5af142d0fe22c5d7477f936a77afb913d1
-   b7938139d88c190a7ca5bb76ea096361f294fc4f719fe4542c7cf4f9e77d13d81
-   72ca0f85469e0a73f8f7d0feadbda64e71587a09a74d3d41fd47bc2862c515f9f
-   5e8629',
-       -7: h'08b0e60c676e87295cf68eebf38ac45159fba7343a3c5f3763e8816
-   71e4d4fe4e99ce64a175a44ac031578acc5125e350e51c7aaa04b48cd16d6c385
-   6f04f16166439bab08ea88398936f0406202de09c929b8bfee4fef260187c07c6
-   03da5f63e7bcffb3c84903111b9ffabcb873f675d42abd02a0b6c9e2fa91d293d
-   5c605f',
-       -8: h'dcf8aabd740dd33c0c784fac06f6608b6f3d5cff57090177556a8fc
-   cc2a7220429eff4ee828ebe35904a090b0c7f71da1060634d526cfe370af3e4d1
-   5ef68a7beed931a423f157c175892cb1bbb434a0c386327e1ad8ac79a0d55aded
-   d707d1c7f0c601541e9421ec5a02ae3149ea1e99129305eb19ae8ece2a3293f3f
-   1a688e'
+       1: 2,
+       2: h'3131',
+       -1: 1,
+       -2: h'bac5b11cad8f99f9c72b05cf4b9e26d244dc189f745228255a219a8
+   6d6a09eff',
+       -3: h'20138bf82dc1b6d562be0fa54ab7804a3a64b6d72ccfed6b6fb6ed2
+   8bbfc117e',
+       -4: h'57c92077664146e876760c9520d054aa93c3afb04e306705db60903
+   08507b4d3'
      }
    ]
 
@@ -4864,12 +4640,12 @@ D.1.  Version -05 to -06
 
    o  Remove new CFRG Elliptical Curve key agreement algorithms.
 
+   o  Remove RSA algorithms
 
 
 
 
-
-Schaad                   Expires April 16, 2016                [Page 87]
+Schaad                   Expires April 17, 2016                [Page 83]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -4925,7 +4701,7 @@ D.5.  Version -02 to -03
 
 
 
-Schaad                   Expires April 16, 2016                [Page 88]
+Schaad                   Expires April 17, 2016                [Page 84]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -4981,7 +4757,7 @@ Editorial Comments
 
 
 
-Schaad                   Expires April 16, 2016                [Page 89]
+Schaad                   Expires April 17, 2016                [Page 85]
 
 Internet-Draft         CBOR Encoded Message Syntax          October 2015
 
@@ -5037,4 +4813,4 @@ Author's Address
 
 
 
-Schaad                   Expires April 16, 2016                [Page 90]
+Schaad                   Expires April 17, 2016                [Page 86]
