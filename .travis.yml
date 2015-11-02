@@ -1,15 +1,22 @@
 language: python
+sudo: false
 python:
 - 2.7
-sudo: required
 rvm:
   - 2.2.0
-before_install:
-- sudo apt-get update -qq
-- sudo apt-get install -y python-lxml python-pip
+addons:
+  apt:
+    packages:
+    - python-lxml
+    - python-pip
+    
+before_script:
+- composer self-update -q
+- if [ -n "$GH_TOKEN" ]; then composer config github-oauth.github.com ${GH_TOKEN}
 install:
+- gem install kramdown-rfc2629
+- pip install xml2rfc
 - deactivate
-- sudo pip install xml2rfc
 - rvm install 2.2.0
 - rvm use 2.2.0
 - ruby --version
@@ -19,19 +26,3 @@ script:
 - xml2rfc draft-ietf-cose-msg.xml -o cose.xml --exp
 - rake verify
 - make ghpages
-env:
-  global:
-  - secure: UxxrSOF4wfTh1Y6zkFUqfROIdOibTtWZ7qK6HY1CDdzwl2kpXaJZ0g0FMV7fSfJsrLRjbUv3jl7Ob2JSDtIsWNE1OlG0bb+IqwG4cSTU5avDFJeDwqFGRYCmoqdeEUzyXuwfzhwq+6iVmwONMXsZal6Ww3yegcENnOYX9x/GmKI=
-before_deploy: make submit
-deploy:
-  provider: releases
-  api-key:
-    secure: <insert encrypted API key here>
-  file:
-  - $TRAVIS_TAG.txt
-  - $TRAVIS_TAG.html
-  - $TRAVIS_TAG.xml
-  skip_cleanup: true
-  on:
-    branch: master
-    tags: true
