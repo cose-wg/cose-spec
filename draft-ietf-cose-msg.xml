@@ -71,7 +71,7 @@
       <t>
         Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.
         There is a need for the ability to have the basic security services defined for this data format.
-        This document specifies how to do signatures, message authentication codes and encryption using this data format.
+        This document specifies how to perform signatures, message authentication codes, and encryption and how to represent cryptographic keys using this data format.
       </t>
     </abstract>
 
@@ -100,7 +100,7 @@
       </t>
 
       <t>
-        The JOSE working group produced a set of documents <xref target="RFC7515"/><xref target="RFC7516"/><xref target="RFC7517"/><xref target="RFC7518"/> that defined how to perform encryption, signatures and message authentication (MAC) operations for JSON documents and then to encode the results using the JSON format <xref target="RFC7159"/>.
+        The JOSE working group produced a set of documents <xref target="RFC7515"/><xref target="RFC7516"/><xref target="RFC7517"/><xref target="RFC7518"/> that defined how to perform encryption, signatures and message authentication (MAC) operations for JSON documents and then to encode the results and cryptographic keys using the JSON format <xref target="RFC7159"/>.
         This document does the same work for use with the CBOR <xref target="RFC7049"/> document format.
         While there is a strong attempt to keep the flavor of the original JOSE documents, two considerations are taken into account:
       </t>
@@ -198,7 +198,7 @@
         <t>
           The document was developed by first working on the grammar and then developing the prose to go with it.
           An artifact of this is that the prose was written using the primitive type strings defined by early versions CDDL.
-          In this specification the following primitive types are used:
+          In this specification, the following primitive types are used:
           <list style="empty">
             <t>bstr - byte string (major type 2).</t>
             <t>int - an unsigned integer or a negative integer.</t>
@@ -258,7 +258,7 @@ values = any
           In this document we use the following terminology:
           <cref source="JLS">
             I have not gone through the document to determine what needs to be here yet.
-            We mostly want to grab terms which are used in unusual ways or are not generally understood.
+            We mostly want to grab terms that are used in unusual ways or are not generally understood.
           </cref>
         </t>
         
@@ -278,7 +278,7 @@ values = any
         <t>
           One of the issues that needs to be addressed is a requirement that a standard specify a set of algorithms that are required to be implemented.
           <cref source="JLS">
-            It would be possible to extend this section to talk about those decisions which an application needs to think about rather than just talking about MTI algorithms.
+            It would be possible to extend this section to talk about those decisions that an application needs to think about rather than just talking about MTI algorithms.
           </cref>
           This is done to promote interoperability as it provides a minimal set of algorithms that all devices can be sure will exist at both ends.
           However, we have elected not to specify a set of mandatory algorithms in this document.
@@ -297,7 +297,7 @@ values = any
           <list style="symbols">
             <t>Advertising in the message (S/MIME capabilities) <xref target="RFC5751"/>.</t>
             <t>Advertising in the certificate (capabilities extension) <xref target="RFC4262"/></t>
-            <t>Minimum requirements for the S/MIME which have been updated over time <xref target="RFC2633"/><xref target="RFC5751"/></t>
+            <t>Minimum requirements for the S/MIME, which have been updated over time <xref target="RFC2633"/><xref target="RFC5751"/></t>
           </list>
         </t>
       </section>
@@ -488,7 +488,7 @@ tag=10
 
         Only parameters that deal with the current layer are to be placed at that layer.
         As an example of this, the parameter 'content type' describes the content of the message being carried in the message.
-        As such this parameter is placed only in the content layer and is not placed in the recipient or signature layers.
+        As such, this parameter is placed only in the content layer and is not placed in the recipient or signature layers.
         In principle, one should be able to process any given layer without reference to any other layer.
         (The only data that should need to cross layers is the cryptographic key.)
       </t>
@@ -571,7 +571,9 @@ Headers = (
               Applications MUST NOT assume that 'kid' values are unique.
               There may be more than one key with the same 'kid' value, it may be required that all of the keys need to be checked to find the correct one.
               The internal structure of 'kid' values is not defined and generally cannot be relied on by applications.
-              Key identifier values are hints about which key to use, they are not directly a security critical field, for this reason they can be placed in the unprotected headers bucket.
+              Key identifier values are hints about which key to use.
+	      They are not directly a security critical field.
+	      For this reason, they can be placed in the unprotected headers bucket.
             </t>
 
             <t hangText='nonce'>
@@ -581,7 +583,8 @@ Headers = (
 
             <t hangText='counter signature'>
               This parameter holds a counter signature value.
-              Counter signatures provide a method of having a second party sign some data, the counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_signature, COSE_enveloped, COSE_recipient, COSE_encryptedData, COSE_mac.
+              Counter signatures provide a method of having a second party sign some data.
+	      The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_signature, COSE_enveloped, COSE_recipient, COSE_encryptedData, COSE_mac.
               These structures all have the same basic structure so that a consistent calculation of the counter signature can be computed.
               Details on computing counter signatures are found in <xref target="counter_signature"/>.
             </t>
@@ -644,7 +647,7 @@ Headers = (
         These parameters may be authenticated by the signature, or just present.
         Examples of parameters about the content would be the type of content, when the content was created, and who created the content.
         <cref source="Hannes">
-          Ensure that the list of examples only includes items which are implemented in this specification.
+          Ensure that the list of examples only includes items that are implemented in this specification.
           Check the other places where such lists occur and ensure that they also follow this rule.
         </cref>
         Examples of parameters about the signature would be the algorithm and key used to create the signature, when the signature was created, and counter-signatures.
@@ -751,7 +754,7 @@ COSE_signature =  [
         <t>
           One of the features that we supply in the COSE document is the ability for applications to provide additional data to be authenticated as part of the security, but that is not carried as part of the COSE object.
           The primary reason for supporting this can be seen by looking at the CoAP message structure <xref target="RFC7252"/> where the facility exists for options to be carried before the payload.
-          An example of data that can be placed in this location would be transaction ids and nonces to check for replay protection.
+          An example of data that can be placed in this location would be transaction IDs and nonces to check for replay protection.
           If the data is in the options section, then it is available for routers to help in performing the replay detection and prevention.
           However, it may also be desired to protect these values so that they cannot be modified in transit.
           This is the purpose of the externally supplied data field.
@@ -759,7 +762,7 @@ COSE_signature =  [
 
         <t>
           This document describes the process for using a byte array of externally supplied authenticated data, however the method of constructing the byte array is a function of the application.
-          Applications which use this feature need to define how the externally supplied authenticated data is to be constructed.
+          Applications that use this feature need to define how the externally supplied authenticated data is to be constructed.
           Such a construction needs to take into account the following issues:
           <list style="symbols">
             <t>
@@ -924,7 +927,7 @@ Sig_structure = [
       </t>
       
       <t>
-        In COSE, the same techniques and structures for encrypting both the plain text and the keys used to protect the text.
+        In COSE, the same techniques and structures are used for encrypting both the plain text and the keys used to protect the text.
         This is different from the approach used by both <xref target="RFC5652"/> and <xref target="RFC7516"/> where different structures are used for the content layer and for the recipient layer.
       </t>
 
@@ -976,7 +979,7 @@ Sig_structure = [
           
           <t hangText='ciphertext'>
             contains the encrypted key encoded as a bstr.
-            If there is not an encrypted key, then this field is encoded as a nil type.
+            If there is not an encrypted key, then this field is encoded as a nil value.
           </t>
           
           <t hangText='recipients'>
@@ -1199,9 +1202,9 @@ Enc_structure = [
         When using MAC operations, there are two modes in which it can be used. 
         The first is just a check that the content has not been changed since the MAC was computed. 
         Any class of recipient algorithm can be used for this purpose. 
-        The second mode is to both check that the content has not been changed since the MAC was computed, and to use recipient algorithm to verify who sent it.
+        The second mode is to both check that the content has not been changed since the MAC was computed, and to use the recipient algorithm to verify who sent it.
         The classes of recipient algorithms that support this are those that use a pre-shared secret or do static-static key agreement (without the key wrap step).
-        In both of these cases the entity MACing the message can be validated by a key binding. 
+        In both of these cases, the entity MACing the message can be validated by a key binding. 
         (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.)
       </t>
 
@@ -1476,13 +1479,14 @@ valid = Verification(message content, key, signature)
       <t>
         The second is a signature with message recovery.
         (An example of such an algorithm is <xref target="PVSig"/>.)
-        In this structure, the message content is processed, but part of is included in the signature.
+        In this structure, the message content is processed, but part of it is included in the signature.
         Moving bytes of the message content into the signature allows for an effectively smaller signature, the signature size is still potentially large, but the message content is shrunk.
         This has implications for systems implementing these algorithms and for applications that use them.
         The first is that the message content is not fully available until after a signature has been validated.
         Until that point the part of the message contained inside of the signature is unrecoverable.
         The second is that the security analysis of the strength of the signature is very much based on the structure of the message content.
-        Messages which are highly predictable require additional randomness to be supplied as part of the signature process, in the worst case it becomes the same as doing a signature with appendix.
+        Messages which are highly predictable require additional randomness to be supplied as part of the signature process.
+	In the worst case, it becomes the same as doing a signature with appendix.
         Thirdly, in the event that multiple signatures are applied to a message, all of the signature algorithms are going to be required to consume the same number of bytes of message content.
       </t>
 
@@ -1506,7 +1510,7 @@ valid, message content = Verification(message sent, key, signature)
 
         <t>
           The ECDSA signature algorithm is parameterized with a hash function (h).
-          In the event that the length of the hash function output is greater than group of the key, the left most bytes of the hash output are used.
+          In the event that the length of the hash function output is greater than the group of the key, the left-most bytes of the hash output are used.
         </t>
 
         <t>
@@ -1557,15 +1561,15 @@ valid, message content = Verification(message sent, key, signature)
         </t>
 
         <t>
-          System which have poor random number generation can leak their keys by signing two different messages with the same value of 'k'.
+          Systems that have poor random number generation can leak their keys by signing two different messages with the same value of 'k'.
           <xref target="RFC6979"/> provides a method to deal with this problem by making 'k' be deterministic based on the message content rather than randomly generated.
-          Applications which specify ECDSA should evaluate the ability to get good random number generation and require this when it is not possible.
+          Applications that specify ECDSA should evaluate the ability to get good random number generation and require this when it is not possible.
           Note: Use of this technique a good idea even when good random number generation exists.
           Doing so both reduces the possibility of having the same value of 'k' in two signature operations, but allows for reproducible signature values which helps testing.
         </t>
 
         <t>
-          There are two substitution that can theoretically be mounted against the ECDSA signature algorithm.
+          There are two substitutions that can theoretically be mounted against the ECDSA signature algorithm.
           <list style="symbols">
             <t>
               Changing the curve used to validate the signature:
@@ -1598,8 +1602,9 @@ valid, message content = Verification(message sent, key, signature)
       </t>
 
       <t>
-        MACs are designed in the same basic structure as signature with appendix algorithms.
-        The message content is processed and an authentication code is produced, the authentication code is frequently called a tag.
+        MACs use the same basic structure as signature with appendix algorithms.
+        The message content is processed and an authentication code is produced.
+	The authentication code is frequently called a tag.
         The basic structure becomes:
       </t>
       <figure><artwork>
@@ -1629,7 +1634,7 @@ valid = MAC_Verify(message content, key, tag)
           The length of the authentication tag corresponds to the difficulty of producing a forgery.
           For use in constrained environments, we define a set of HMAC algorithms that are truncated.
           There are currently no known issues when truncating, however the security strength of the message tag is correspondingly reduced in strength.
-          When truncating, the left most tag length bits are kept and transmitted.
+          When truncating, the left-most tag length bits are kept and transmitted.
         </t>
 
         <t>
@@ -1650,18 +1655,18 @@ valid = MAC_Verify(message content, key, tag)
 
         <t>
           Some recipient algorithms carry the key while others derive a key from secret data.
-          For those algorithms which carry the key (i.e. RSA-OAEP and AES-KeyWrap), the size of the HMAC key SHOULD be the same size as the underlying hash function.
-          For those algorithms which derive the key, the derived key MUST be the same size as the underlying hash function.
+          For those algorithms that carry the key (i.e. RSA-OAEP and AES-KeyWrap), the size of the HMAC key SHOULD be the same size as the underlying hash function.
+          For those algorithms that derive the key, the derived key MUST be the same size as the underlying hash function.
         </t>
 
         <t>
-          If the key obtained from a key structure, the key type MUST be 'Symmetric'.
-          Implementations creating and validating MAC values MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+          If the key is obtained from a key structure, the key type MUST be 'Symmetric'.
+          Implementations creating and validating MAC values MUST validate that the key type, key length, and algorithm are correct and appropriate for the entities involved.
         </t>
 
         <section title="Security Considerations">
           <t>
-            HMAC has proved to be resistant even when used with weakening hash algorithms.
+            HMAC has proved to be resistant to attack even when used with weakening hash algorithms.
             The current best method appears to be a brute force attack on the key.
             This means that key size is going to be directly related to the security of an HMAC operation.
           </t>
@@ -1734,7 +1739,7 @@ valid = MAC_Verify(message content, key, tag)
       </t>
 
       <t>
-        We restrict the set of legal content encryption algorithms to those which support authentication both of the content and additional data.
+        We restrict the set of legal content encryption algorithms to those that support authentication both of the content and additional data.
         The encryption process will generate some type of authentication value, but that value may be either explicit or implicit in terms of the algorithm definition.
         For simplicity sake, the authentication code will normally be defined as being appended to the cipher text stream.
         The basic structure becomes:
@@ -1762,7 +1767,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
         <t>
           The GCM mode is parameterized with by the size of the authentication tag.
           The size of the authentication tag is limited to a small set of values.
-          For this document however, the size of the authentication tag is fixed at 128-bits.
+          For this document however, the size of the authentication tag is fixed at 128 bits.
         </t>
 
         <t>
@@ -1786,7 +1791,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
         <section title="Security Considerations">
           <t>
-            When using AES-GCM the following restrictions MUST be enforced:
+            When using AES-CCM, the following restrictions MUST be enforced:
             <list style="symbols">
               <t>
                 The key and nonce pair MUST be unique for every message encrypted.
@@ -1818,7 +1823,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
         <t>
           It is unfortunate that the specification for CCM specified L and M as a count of bytes rather than a count of bits.
-          This leads to possible misunderstandings where AES-CCM-8 is frequently used to refer to a version of CCM mode where the size of the authentication is 64-bits and not 8-bits.
+          This leads to possible misunderstandings where AES-CCM-8 is frequently used to refer to a version of CCM mode where the size of the authentication is 64 bits and not 8 bits.
           These values have traditionally been specified as bit counts rather than byte counts.
           This document will follow the tradition of using bit counts so that it is easier to compare the different algorithms presented in this document.
         </t>
@@ -1835,12 +1840,12 @@ valid, message content = Decrypt(cipher text, key, additional data)
         <t>
           The following values are used for L:
           <list style="hanging">
-            <t hangText="16-bits (2)">
+            <t hangText="16 bits (2)">
               limits messages to 2^16 bytes (64 KiB) in length.
               This sufficiently long for messages in the constrained world.
               The nonce length is 13 bytes allowing for 2^(13*8) possible values of the nonce without repeating.
             </t>
-            <t hangText="64-bits (8)"> 
+            <t hangText="64 bits (8)"> 
               limits messages to 2^64 bytes in length.
               The nonce length is 7 bytes allowing for 2^56 possible values of the nonce without repeating.
             </t>
@@ -1850,11 +1855,11 @@ valid, message content = Decrypt(cipher text, key, additional data)
         <t>
           The following values are used for M:
           <list style="hanging">
-            <t hangText="64-bits (8)">
+            <t hangText="64 bits (8)">
               produces a 64-bit authentication tag.
               This implies that there is a 1 in 2^64 chance that a modified message will authenticate.
             </t>
-            <t hangText="128-bits (16)">
+            <t hangText="128 bits (16)">
               produces a 128-bit authentication tag.
               This implies that there is a 1 in 2^128 chance that a modified message will authenticate.
             </t>
@@ -1886,7 +1891,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
         <section title="Security Considerations">
           <t>
-            When using AES-CCM the following restrictions MUST be enforced:
+            When using AES-CCM, the following restrictions MUST be enforced:
             <list style="symbols">
               <t>
                 The key and nonce pair MUST be unique for every message encrypted.
@@ -1915,8 +1920,8 @@ valid, message content = Decrypt(cipher text, key, additional data)
       <section title="ChaCha20 and Poly1305">
         <t>
           ChaCha20 and Poly1305 combined together is a new AEAD mode that is defined in <xref target="RFC7539"/>.
-          This is a new algorithm defined to be a cipher which is not AES and thus would not suffer from any future weaknesses found in AES.
-          These cryptographic functions are designed to be fast in software only implementations.
+          This is a new algorithm defined to be a cipher that is not AES and thus would not suffer from any future weaknesses found in AES.
+          These cryptographic functions are designed to be fast in software-only implementations.
         </t>
 
         <t>
@@ -1952,9 +1957,9 @@ valid, message content = Decrypt(cipher text, key, additional data)
         Key Derivation Functions (KDFs) are used to take some secret value and generate a different one.
         The original secret values come in three basic flavors:
         <list style="symbols">
-          <t>Secrets which are uniformly random:  This is the type of secret which is created by a good random number generator.</t>
-          <t>Secrets which are not uniformly random: This is type of secret which is created by operations like key agreement.</t>
-          <t>Secrets which are not random: This is the type of secret that people generate for things like passwords.</t>
+          <t>Secrets that are uniformly random:  This is the type of secret which is created by a good random number generator.</t>
+          <t>Secrets that are not uniformly random: This is type of secret which is created by operations like key agreement.</t>
+          <t>Secrets that are not random: This is the type of secret that people generate for things like passwords.</t>
         </list>
       </t>
 
@@ -1983,8 +1988,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
         </t>
 
         <t>
-          The HKDF algorithm is defined to take a number of inputs.
-          These inputs are:
+          The HKDF algorithm takes these inputs:
 
           <list style="empty">
             <t>
@@ -2027,7 +2031,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
         </t>
 
         <t>
-          The algorithms defined in this document are found in <xref target="table-hkdf"/>
+          The algorithms defined in this document are found in <xref target="table-hkdf"/>.
         </t>
 
         <texttable title="HKDF algorithms" anchor="table-hkdf">
@@ -2228,7 +2232,7 @@ COSE_KDF_Context = [
         Recipient algorithms can be defined into a number of different classes.
         COSE has the ability to support many classes of recipient algorithms.
         In this section, a number of classes are listed and then a set of algorithms are specified for each of the classes.
-        The names of the recipient algorithm classes used here are the same as are defined in <xref target="RFC7517"/>.
+        The names of the recipient algorithm classes used here are the same as are defined in <xref target="RFC7516"/>.
         Other specifications use different terms for the recipient algorithm classes or do not support some of our recipient algorithm classes.
       </t>
 
@@ -2315,7 +2319,8 @@ COSE_KDF_Context = [
             <t>
               These recipient algorithms take a common shared secret between the two parties and applies the HKDF function (<xref target="HKDF"/>) using the context structure defined in <xref target="context"/> to transform the shared secret into the necessary key.
               Either the 'salt' parameter of HKDF or the partyU 'nonce' parameter of the context structure MUST be present.
-              This parameter can be generated either randomly or deterministically, the requirement is that it be a unique value for the key pair in question.
+              This parameter can be generated either randomly or deterministically.
+	      The requirement is that it be a unique value for the key pair in question.
             </t>
 
             <t>
@@ -2352,8 +2357,9 @@ COSE_KDF_Context = [
 
             <section title="Security Considerations">
               <t>
-                The shared secret need to have some method to be regularly updated over time.
-                The shared secret is forming the basis of trust, although not used directly it should still be subject to scheduled rotation.
+                The shared secret needs to have some method to be regularly updated over time.
+                The shared secret forms the basis of trust.
+		Although not used directly, it should still be subject to scheduled rotation.
               </t>
             </section>
           </section>
@@ -2395,7 +2401,8 @@ COSE_KDF_Context = [
         <section title="AES Key Wrapping" anchor="key_wrap_algs">
           <t>
             The AES Key Wrapping algorithm is defined in <xref target="RFC3394"/>.
-            This algorithm uses an AES key to wrap a value that is a multiple of 64-bits, as such it can be used to wrap a key for any of the content encryption algorithms defined in this document.
+            This algorithm uses an AES key to wrap a value that is a multiple of 64 bits.
+	    As such, it can be used to wrap a key for any of the content encryption algorithms defined in this document.
             <!--  Don't care about this anymore
             <cref source="JLS">
               Do we also want to document the use of RFC 5649 as well?  
@@ -2472,7 +2479,8 @@ COSE_KDF_Context = [
         <t>
           The most commonly used key agreement algorithm used is Diffie-Hellman, but other variants exist.
           Since COSE is designed for a store and forward environment rather than an on-line environment, many of the DH variants cannot be used as the receiver of the message cannot provide any key material.
-          One side-effect of this is that perfect forward security is not achievable, a static key will always be used for the receiver of the COSE message.
+          One side-effect of this is that perfect forward security is not achievable.
+	  A static key will always be used for the receiver of the COSE message.
         </t>
 
         <t>
@@ -2486,7 +2494,7 @@ COSE_KDF_Context = [
             <t>
               Static-Static DH: where a static key is used for both the sender and the recipient.
               The use of static keys allows for recipient to get a weak version of data origination for the message.
-              When static-static key agreement is used, then some piece of unique data is require to ensure that a different key is created for each message
+              When static-static key agreement is used, then some piece of unique data is required to ensure that a different key is created for each message.
             </t>
           </list>
           
@@ -2530,22 +2538,23 @@ COSE_KDF_Context = [
                 Curve Type/Curve: 
                 The curve selected controls not only the size of the shared secret, but the mathematics for computing the shared secret.
                 The curve selected also controls how a point in the curve is represented and what happens for the identity points on the curve.
-                In this specification we allow for a number of different curves to be used.
+                In this specification, we allow for a number of different curves to be used.
                 The curves are defined in <xref target="table-ec-curves"/>.
                 <vspace/>
-                Since the only the math is changed by changing the curve, the curve is not fixed for any of the algorithm identifiers we define, instead it is defined by the points used.
+                Since the only the math is changed by changing the curve, the curve is not fixed for any of the algorithm identifiers we define.
+		Instead, it is defined by the points used.
               </t>
               
               <t>
                 Ephemeral-static or static-static:
                 The key agreement process may be done using either a static or an ephemeral key at the sender's side.
                 When using ephemeral keys, the sender MUST generate a new ephemeral key for every key agreement operation.
-                The ephemeral key is placed in the 'ephemeral key' parameter and MUST be present for all algorithm identifiers which use ephemeral keys.
+                The ephemeral key is placed in the 'ephemeral key' parameter and MUST be present for all algorithm identifiers that use ephemeral keys.
                 When using static keys, the sender MUST either generate a new random value placed in either in the KDF parameters or the context structure.
                 For the KDF functions used, this means either in the 'salt' parameter for HKDF (<xref target="HKDF_Alg_Params"/>) or in the 'PartyU nonce' parameter for the context structure (<xref target="KDF_Context_Alg_Params"/>) MUST be present.
                 (Both may be present if desired.)
                 The value in the parameter MUST be unique for the key pair being used.
-                It is acceptable to use a global counter which is incremented for every static-static operation and use the resulting value.
+                It is acceptable to use a global counter that is incremented for every static-static operation and use the resulting value.
                 When using static keys, the static key needs to be identified to the recipient.
                 The static key can be identified either by providing the key ('static key') or by providing a key identifier for the static key ('static key id').
                 Both of these parameters are defined in <xref target="table-ecdh-es-parameter-table"/>
@@ -2553,7 +2562,8 @@ COSE_KDF_Context = [
               
               <t>
                 Key derivation algorithm:
-                The result of an ECDH key agreement process does not provide a uniformly random secret, as such it needs to be run through a KDF in order to produce a usable key.
+                The result of an ECDH key agreement process does not provide a uniformly random secret.
+		As such, it needs to be run through a KDF in order to produce a usable key.
                 Processing the secret through a KDF also allows for the introduction of both context material, how the key is going to be used, and one time material in the even to of a static-static key agreement.
               </t>
 
@@ -2561,7 +2571,7 @@ COSE_KDF_Context = [
                 Key Wrap algorithm:
                 The key wrap algorithm can be 'none' if the result of the KDF is going to be used as the key directly.
                 This option, along with static-static, should be used if knowledge about the sender is desired.
-                If 'none' is used then the content layer encryption algorithm size is value fed to the context structure.
+                If 'none' is used, then the content layer encryption algorithm size is value fed to the context structure.
                 Support is also provided for any of the key wrap algorithms defined in <xref target="key_wrap_algs"/>.
                 If one of these options is used, the input key size to the key wrap algorithm is the value fed into the context structure as the key size.
               </t>
@@ -2569,7 +2579,7 @@ COSE_KDF_Context = [
           </t>
 
           <t>
-            The set of algorithms direct ECDH defined in this document are found in <xref target="table-ecdh-es-table"/>.
+            The set of direct ECDH algorithms defined in this document are found in <xref target="table-ecdh-es-table"/>.
           </t>
 
           <texttable title="ECDH Algorithm Values" anchor="table-ecdh-es-table">
@@ -2607,7 +2617,8 @@ COSE_KDF_Context = [
 
           <t>
             This document defines these algorithms to be used with the curves P-256, P-384, P-521.
-            Implementations MUST verify that the key type and curve are correct, different curves are restricted to different key types.
+            Implementations MUST verify that the key type and curve are correct.
+	    Different curves are restricted to different key types.
             Implementations MUST verify that the curve and algorithm are appropriate for the entities involved.
           </t>
 
@@ -2677,7 +2688,8 @@ COSE_KDF_Context = [
 
     <section title="Keys" anchor="Key-specific-labels">
       <t>
-        The COSE_Key object defines a way to hold a single key object, it is still required that the members of individual key types be defined.
+        The COSE_Key object defines a way to hold a single key object.
+	It is still required that the members of individual key types be defined.
         This section of the document is where we define an initial set of members for specific key types.
       </t>
 
@@ -2685,15 +2697,15 @@ COSE_KDF_Context = [
         For each of the key types, we define both public and private members.
         The public members are what is transmitted to others for their usage.
         We define private members mainly for the purpose of archival of keys by individuals.
-        However, there are some circumstances where private keys may be distributed by various entities in a protocol.
-        Examples include:  Entities which have poor random number generation.
-        Centralized key creation for multi-cast type operations.
-        Protocols where a shared secret is used as a bearer token for authorization purposes.
+        However, there are some circumstances in which private keys may be distributed by various entities in a protocol.
+        Examples include:  entities that have poor random number generation,
+        centralized key creation for multi-cast type operations,
+        and protocols in which a shared secret is used as a bearer token for authorization purposes.
       </t>
 
       <t>
         Key types are identified by the 'kty' member of the COSE_Key object.
-        In this document we define four values for the member.
+        In this document, we define four values for the member:
       </t>
 
       <texttable title="Key Type Values" anchor="table_key_types">
@@ -2712,7 +2724,7 @@ COSE_KDF_Context = [
           One version uses both an x and a y coordinate, potentially with point compression.
           This is the traditional EC point representation that is used in <xref target="RFC5480"/>.
           
-          The other version uses only the x coordinate as the y coordinate is either to be recomputed or not needed for the key agreement operation
+          The other version uses only the x coordinate as the y coordinate is either to be recomputed or not needed for the key agreement operation.
           Currently no algorithms are defined using this key structure.
         </t>
         
@@ -2919,7 +2931,7 @@ COSE_KDF_Context = [
               Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.
 
               <!-- These are >= 5 byte items -->
-              Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.
+              Integer values of greater than 65535 and strings of length greater than 2 are designated as first come, first served.
 
               <!-- These are 1, 2 and 3 byte items -->
               Integer values in the range -1 to -65536 are delegated to the "COSE Header Algorithm Label" registry.
@@ -3002,7 +3014,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          The initial contents of the registry can be found in: <xref target="HKDF_Alg_Params"/>,  <xref target="KDF_Context_Alg_Params"/>, <xref target="table-ecdh-es-parameter-table"/>.
+          The initial contents of the registry can be found in <xref target="HKDF_Alg_Params"/>, <xref target="KDF_Context_Alg_Params"/>, and <xref target="table-ecdh-es-parameter-table"/>.
           The specification column for all rows in that table should be this document.
         </t>
 
@@ -3024,7 +3036,7 @@ COSE_KDF_Context = [
               The value can be a positive integer, a negative integer or a string.
               Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.
               Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.
-              Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.
+              Integer values of greater than 65535 and strings of length greater than 2 are designated as first come, first served.
               Integer values in the range -1 to -65536 are delegated to the "COSE Header Algorithm Label" registry.
               Integer values beyond -65536 are marked as private use.
             </t>
@@ -3038,8 +3050,8 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          The initial contents of the registry can be found in the following:
-          <xref target="table-AES-CCM"/>, <xref target="table-AES-GCM"/>, <xref target="Table-CHACHA"/>, <xref target="table_ecdsa"/>, <xref target="table-hmac"/>, <xref target="table-aes-mac"/>, <xref target="table-direct"/>, <xref target="table-direct-kdf"/>, <xref target="table_aes_keywrap"/>, <xref target="table-ecdh-es-table"/>.
+          The initial contents of the registry can be found in
+          <xref target="table-AES-CCM"/>, <xref target="table-AES-GCM"/>, <xref target="Table-CHACHA"/>, <xref target="table_ecdsa"/>, <xref target="table-hmac"/>, <xref target="table-aes-mac"/>, <xref target="table-direct"/>, <xref target="table-direct-kdf"/>, <xref target="table_aes_keywrap"/>, and <xref target="table-ecdh-es-table"/>.
           The specification column for all rows in that table should be this document.
         </t>
 
@@ -3065,7 +3077,7 @@ COSE_KDF_Context = [
               The label can be a positive integer, a negative integer or a string.
               Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.
               Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.
-              Integer values of greater than 65535 and strings of length greater than 2 are designated as first come first server.
+              Integer values of greater than 65535 and strings of length greater than 2 are designated as first come, first served.
               Integer values in the range -1 to -65536 are used for key parameters specific to a single algorithm delegated to the "COSE Key Parameter Label" registry.
               Integer values beyond -65536 are marked as private use.
             </t>
@@ -3129,7 +3141,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          This registry will be initially populated by the values in <xref target="table-ec2-keys"/>, and <xref target="table-symmetric-keys"/>.
+          This registry will be initially populated by the values in <xref target="table-ec2-keys"/> and <xref target="table-symmetric-keys"/>.
           The specification column for all of these entries will be this document.
         </t>
 
@@ -3156,7 +3168,7 @@ COSE_KDF_Context = [
               These values MUST be unique.
               The integer values from -256 to 255 are designated as Standards Track Document Required.
               The integer values from 256 to 65535 and -65536 to -257 are designated as Specification Required.
-              Integer values over 65535 are designated as first come first serve.
+              Integer values over 65535 are designated as first come, first served.
               Integer values less than -65536 are marked as private use.
             </t>
             <t hangText='key type'>
@@ -3251,7 +3263,7 @@ COSE_KDF_Context = [
         <section title="COSE Key media type">
 
           <t>
-            This section registers the "application/cose+json" and "application/cose-set+json" media types in the "Media Types" registry.
+            This section registers the "application/cose-key+cbor" and "application/cose-key-set+cbor" media types in the "Media Types" registry.
             These media types are used to indicate, respectively, that content is a COSE_Key or COSE_KeySet object.
           </t>
 
@@ -3316,7 +3328,7 @@ COSE_KDF_Context = [
       <section title="CoAP Content Format Registrations">
         <t>
           This section registers a set of content formats for CoAP.
-          ID assignment in the 24-255 range requested.
+          ID assignment in the 24-255 range is requested.
         </t>
 
         <texttable>
@@ -3342,13 +3354,13 @@ COSE_KDF_Context = [
       <t>
         <list style="numbers">
           <t>
-            Protect private keys
+            Protect private keys.
           </t>
           <t>
-            MAC messages with more than one recipient means one cannot figure out who sent the message
+            MAC messages with more than one recipient means one cannot figure out which party sent the message.
           </t>
           <t>
-            Use of direct key with other recipient structures hands the key to other recipients.
+            Use of a direct key with other recipient structures hands the key to the other recipients.
           </t>
           <t>
             Use of direct ECDH direct encryption is easy for people to leak information on if there are other recipients in the message.
@@ -3358,9 +3370,10 @@ COSE_KDF_Context = [
           </t>
           <t>
             Need to verify that:
-            1) the kty field of the key matches the key and algorithm being used. 
-            2) the kty field needs to be included in the trust decision as well as the other key fields.
-            3) the algorithm be included in the trust decision.
+            1) the kty field of the key matches the key and algorithm being used,
+            2) the kty field needs to be included in the trust decision as well as the other key fields,
+	    and
+            3) the algorithm is included in the trust decision.
           </t>
         </list>
       </t>
@@ -3564,7 +3577,8 @@ COSE_KDF_Context = [
 
       <t>
         For people who prefer using a formal language to describe the syntax of the CBOR, in this section a CDDL grammar is given that corresponds to <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>.
-        This grammar is informational, in the event of differences between this grammar and the prose, the prose is considered to be authoritative.
+        This grammar is informational.
+	In the event of differences between this grammar and the prose, the prose is considered to be authoritative.
       </t>
       
       <t>
@@ -3636,7 +3650,7 @@ COSE_KDF_Context = [
       </t>
 
       <t>
-        Examples may have some features that are in questions but not yet incorporated in the document.
+        Examples may have some features that are in question but not yet incorporated in the document.
       </t>
 
       <t>
@@ -3751,7 +3765,7 @@ COSE_KDF_Context = [
           <t>
             This example uses the following:
             <list style="symbols">
-              <t>CEK: AES-CCM w/128-bit key, truncate the tag to 64-bits</t>
+              <t>CEK: AES-CCM w/128-bit key, truncate the tag to 64 bits</t>
               <t>Recipient class: Use HKDF on a shared secret with the following implicit fields as part of the context.
               <list style="symbols">
                 <t>APU identity: "lighting-client"</t>
