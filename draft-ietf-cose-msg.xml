@@ -71,7 +71,8 @@
       <t>
         Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.
         There is a need for the ability to have the basic security services defined for this data format.
-        This document specifies how to do signatures, message authentication codes and encryption using this data format.
+        This document specifies processing for signatures, message authentication codes and encryption using CBOR.
+        The document also specifies a key transport format using CBOR.
       </t>
     </abstract>
 
@@ -100,7 +101,7 @@
       </t>
 
       <t>
-        The JOSE working group produced a set of documents <xref target="RFC7515"/><xref target="RFC7516"/><xref target="RFC7517"/><xref target="RFC7518"/> that defined how to perform encryption, signatures and message authentication (MAC) operations for JSON documents and then to encode the results using the JSON format <xref target="RFC7159"/>.
+        The JOSE working group produced a set of documents <xref target="RFC7515"/><xref target="RFC7516"/><xref target="RFC7517"/><xref target="RFC7518"/> using JSON <xref target="RFC7159"/> that specified how to process encryption, signatures and message authentication (MAC) operations, and how to encode keys using JSON.
         This document does the same work for use with the CBOR <xref target="RFC7049"/> document format.
         While there is a strong attempt to keep the flavor of the original JOSE documents, two considerations are taken into account:
       </t>
@@ -295,9 +296,9 @@ values = any
           The discovery method may be as simple as requiring preconfiguration of the set of algorithms to providing a discovery method built into the protocol.
           S/MIME provided a number of different ways to approach the problem:
           <list style="symbols">
-            <t>Advertising in the message (S/MIME capabilities) <xref target="RFC5751"/>.</t>
-            <t>Advertising in the certificate (capabilities extension) <xref target="RFC4262"/></t>
-            <t>Minimum requirements for the S/MIME which have been updated over time <xref target="RFC2633"/><xref target="RFC5751"/></t>
+            <t>Advertising in the message (S/MIME capabilities <xref target="RFC5751"/>).</t>
+            <t>Advertising in the certificate (capabilities extension <xref target="RFC4262"/></t>
+            <t>Minimum requirements and defaults (updates <xref target="RFC2633"/><xref target="RFC5751"/>)</t>
           </list>
         </t>
       </section>
@@ -751,6 +752,7 @@ COSE_signature =  [
         <t>
           One of the features that we supply in the COSE document is the ability for applications to provide additional data to be authenticated as part of the security, but that is not carried as part of the COSE object.
           The primary reason for supporting this can be seen by looking at the CoAP message structure <xref target="RFC7252"/> where the facility exists for options to be carried before the payload.
+          <cref source="JLS">Don't talk about items which we do not define in this specification.</cref>
           An example of data that can be placed in this location would be transaction ids and nonces to check for replay protection.
           If the data is in the options section, then it is available for routers to help in performing the replay detection and prevention.
           However, it may also be desired to protect these values so that they cannot be modified in transit.
@@ -1557,15 +1559,15 @@ valid, message content = Verification(message sent, key, signature)
         </t>
 
         <t>
-          System which have poor random number generation can leak their keys by signing two different messages with the same value of 'k'.
+          System which have poor random number generation can leak their keys by signing two different messages with the same value 'k' (the per-message random value).
           <xref target="RFC6979"/> provides a method to deal with this problem by making 'k' be deterministic based on the message content rather than randomly generated.
           Applications which specify ECDSA should evaluate the ability to get good random number generation and require this when it is not possible.
           Note: Use of this technique a good idea even when good random number generation exists.
           Doing so both reduces the possibility of having the same value of 'k' in two signature operations, but allows for reproducible signature values which helps testing.
         </t>
 
-        <t>
-          There are two substitution that can theoretically be mounted against the ECDSA signature algorithm.
+     <t>
+          There are two substitution attacks that can theoretically be mounted against the ECDSA signature algorithm.
           <list style="symbols">
             <t>
               Changing the curve used to validate the signature:
