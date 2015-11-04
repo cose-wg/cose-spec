@@ -71,7 +71,8 @@
       <t>
         Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.
         There is a need for the ability to have the basic security services defined for this data format.
-        This document specifies how to perform signatures, message authentication codes, and encryption and how to represent cryptographic keys using this data format.
+        This document specifies procesing for signatures, message authentication codes, and encryption using CBOR.
+        This document also specifies a represention for cryptographic keys using CBOR.
       </t>
     </abstract>
 
@@ -100,7 +101,7 @@
       </t>
 
       <t>
-        The JOSE working group produced a set of documents <xref target="RFC7515"/><xref target="RFC7516"/><xref target="RFC7517"/><xref target="RFC7518"/> that defined how to perform encryption, signatures and message authentication (MAC) operations for JSON documents and then to encode the results and cryptographic keys using the JSON format <xref target="RFC7159"/>.
+        The JOSE working group produced a set of documents <xref target="RFC7515"/><xref target="RFC7516"/><xref target="RFC7517"/><xref target="RFC7518"/> using JSON <xref target="RFC7159"/> that specified how to process encryption, signatures and message authentication (MAC) operations, and how to encode keys using JSON.
         This document does the same work for use with the CBOR <xref target="RFC7049"/> document format.
         While there is a strong attempt to keep the flavor of the original JOSE documents, two considerations are taken into account:
       </t>
@@ -206,6 +207,7 @@
             <t>nint - a negative integer (major type 1).</t>
             <t>tstr - a UTF-8 text string (major type 3).</t>
             <t>uint - an unsigned integer (major type 0).</t>
+            <t>bool - a boolean value (true: major type 7, value 21, false: major type 7, value 20).</t>
           </list>
         </t>
 
@@ -224,7 +226,7 @@
         <figure><artwork type='CDDL'>
 <![CDATA[
 start = COSE_Untagged_Message / COSE_Tagged_Message /
-        COSE_Key / COSE_KeySet
+        COSE_Key / COSE_KeySet / Internal_Types
 ]]></artwork></figure>
 
         
@@ -754,7 +756,8 @@ COSE_signature =  [
         <t>
           One of the features that we supply in the COSE document is the ability for applications to provide additional data to be authenticated as part of the security, but that is not carried as part of the COSE object.
           The primary reason for supporting this can be seen by looking at the CoAP message structure <xref target="RFC7252"/> where the facility exists for options to be carried before the payload.
-          An example of data that can be placed in this location would be transaction IDs and nonces to check for replay protection.
+          <cref source="JLS">Don't talk about items which we do not define in this specification.</cref>
+          An example of data that can be placed in this location would be transaction ids and nonces to check for replay protection.
           If the data is in the options section, then it is available for routers to help in performing the replay detection and prevention.
           However, it may also be desired to protect these values so that they cannot be modified in transit.
           This is the purpose of the externally supplied data field.
@@ -783,27 +786,25 @@ COSE_signature =  [
 
         <t>
           In order to create a signature, a consistent byte stream is needed in order to process.
+          This algorithm takes in the body information (COSE_Sign), the signer information (COSE_Signer), and the application data (External).
           This document uses a CBOR array to construct the byte stream to be processed.
           The fields of the array in order are:
           <list style="numbers">
             <t>
-              The body protected attributes.
-              This is a bstr type containing the protected attributes of the body.
+              The protected attributes from the body structure encoded in a bstr type.
             </t>
 
             <t>
-              The signature protected attributes.
-              This is a bstr type containing the protected attributes of the signature.
+              The protected attributes from the signer structure encoded in a bstr type.
             </t>
 
             <t>
-              The external protected attributes.
-              This is a bstr type containing the protected attributes external to the COSE_Signature structure.
+              The protected attributes from the application encoded in a bstr type.
+              If this field is not supplied, it defaults to a zero length binary string.
             </t>
 
             <t>
-              The payload to be signed.
-              The payload is encoded in a bstr.
+              The payload to be signed encoded in a bstr type.
               The payload is placed here independent of how it is transported.
             </t>
           </list>
@@ -1022,12 +1023,12 @@ COSE_recipient = [
           The content-encryption key is encrypted for each recipient, using a key specific to that recipient.
           The details of this encryption depends on which class the recipient algorithm falls into.
           Specific details on each of the classes can be found in <xref target="key-management-algs"/>.
-          A short summary of the six recipient algorithm classes is:
+          A short summary of the five recipient algorithm classes is:
           <list style="hanging">
             <t hangText="none:"> The CEK is the same as the identified previously distributed symmetric key or derived from a previously distributed secret.</t>
             <t hangText="symmetric key-encryption keys:"> The CEK is encrypted using a previously distributed symmetric key-encryption key.</t>
             <t hangText="key agreement:"> the recipient's public key and a sender's private key are used to generate a pairwise secret, a KDF is applied to derive a key, and then the CEK is either the derived key or encrypted by the derived key.</t>
-            <t hangText="key transport:"> the CEK is encrypted in the recipient's public key</t>
+            <t hangText="key transport:"> the CEK is encrypted with the recipient's public key</t>
             <t hangText="passwords:"> the CEK is encrypted in a key-encryption key that is derived from a password.</t>
           </list>
         </t>
@@ -1445,13 +1446,10 @@ key_alg=3
 key_ops=4
 
 ;key_ops values
-key_ops_sign=1
-key_ops_verify=2
-key_ops_encrypt=3
-key_ops_decrypt=4
-key_ops_wrap=5
-key_ops_unwrap=6
-key_ops_agree=7
+key_ops_values = (key_ops_sign:1, key_ops_verify:2, key_ops_encrypt:3,
+        key_ops_decrypt:4, key_ops_wrap:5, key_ops_unwrap:6,
+        key_ops_agree:7)
+        
 ]]></artwork></figure>
 
     </section>
@@ -1561,7 +1559,7 @@ valid, message content = Verification(message sent, key, signature)
         </t>
 
         <t>
-          Systems that have poor random number generation can leak their keys by signing two different messages with the same value of 'k'.
+          System which have poor random number generation can leak their keys by signing two different messages with the same value 'k' (the per-message random value).
           <xref target="RFC6979"/> provides a method to deal with this problem by making 'k' be deterministic based on the message content rather than randomly generated.
           Applications that specify ECDSA should evaluate the ability to get good random number generation and require this when it is not possible.
           Note: Use of this technique a good idea even when good random number generation exists.
@@ -1569,7 +1567,7 @@ valid, message content = Verification(message sent, key, signature)
         </t>
 
         <t>
-          There are two substitutions that can theoretically be mounted against the ECDSA signature algorithm.
+          There are two substitution attacks that can theoretically be mounted against the ECDSA signature algorithm.
           <list style="symbols">
             <t>
               Changing the curve used to validate the signature:
@@ -1786,7 +1784,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
         <t>
           Keys may be obtained either from a key structure or from a recipient structure.
           If the key obtained from a key structure, the key type MUST be 'Symmetric'.
-          Implementations creating and validating MAC values MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+          Implementations encrypting and decrrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
         </t>
 
         <section title="Security Considerations">
@@ -1886,7 +1884,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
         <t>
           Keys may be obtained either from a key structure or from a recipient structure.
           If the key obtained from a key structure, the key type MUST be 'Symmetric'.
-          Implementations creating and validating MAC values MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+          Implementations encrypting and decrrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
         </t>
 
         <section title="Security Considerations">
@@ -1940,7 +1938,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
         <t>
           Keys may be obtained either from a key structure or from a recipient structure.
           If the key obtained from a key structure, the key type MUST be 'Symmetric'.
-          Implementations creating and validating MAC values MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+          Implementations encrypting and decrrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
         </t>
 
         <section title="Security Considerations">
@@ -2418,7 +2416,7 @@ COSE_KDF_Context = [
           <t>
             Keys may be obtained either from a key structure or from a recipient structure.
             If the key obtained from a key structure, the key type MUST be 'Symmetric'.
-            Implementations creating and validating MAC values MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+            Implementations encrypting and decrrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
           </t>
           
           
@@ -2772,9 +2770,9 @@ COSE_KDF_Context = [
               
               <t hangText="y">
                 contains either the sign bit or the value of y coordinate for the EC point.
-                For the value, the integer is converted to an octet string as defined in <xref target="SEC1"/>.
-                Zero octets MUST NOT be removed from the front of the octet string.
-                For the sign bit, the value is true if the value of y is positive.
+                When encoding the value y, the integer is converted to an octet string (as defined in <xref target="SEC1"/>) and encoded as a CBOR bstr.
+                Leading zero octets MUST be preserved.
+                When encoding the sign of y, the expression 'y > 0' is evaluated and encoded a CBOR boolean.
               </t>
               
               <t hangText="d">
@@ -2907,6 +2905,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry entitled "COSE Header Parameters".
+          The registery is to be created as Expert Review Required.
         </t>
 
         <t>
@@ -2974,6 +2973,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry entitled "COSE Header Algorithm Labels".
+          The registery is to be created as Expert Review Required.
         </t>
 
         <t>
@@ -3023,6 +3023,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry entitled "COSE Algorithm Registry".
+          The registery is to be created as Expert Review Required.
         </t>
 
         <t>
@@ -3060,6 +3061,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry entitled "COSE Key Common Parameter" Registry.
+          The registery is to be created as Expert Review Required.
         </t>
 
         <t>
@@ -3108,6 +3110,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry "COSE Key Type Parameters".
+          The registery is to be created as Expert Review Required.
         </t>
 
         <t>
@@ -3151,6 +3154,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry "COSE Elliptic Curve Parameters".
+          The registery is to be created as Expert Review Required.
         </t>
 
         <t>
@@ -3592,9 +3596,16 @@ COSE_KDF_Context = [
 //artwork[@type='CDDL']/text()
 ]]></artwork></figure>         
       </t>
+
+      <figure><artwork type='CDDL'>
+        <![CDATA[
+; This is define to make the tool quieter
+Internal_Types = Sig_structure / Enc_structure / MAC_structure /
+        COSE_KDF_Context
+]]></artwork></figure>
       
     </section>
-    
+
     <section anchor="three-layer" title="Three Levels of Recipient Information">
 
       <t>
