@@ -11,6 +11,7 @@
   <!ENTITY RFC3610 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3610.xml" >
   <!ENTITY RFC4231 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4231.xml" >
   <!ENTITY RFC4262 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4262.xml" >
+  <!ENTITY RFC4949 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4949.xml" >
   <!ENTITY RFC5480 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5480.xml" >
   <!ENTITY RFC5652 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5652.xml" >
   <!ENTITY RFC5751 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5751.xml" >
@@ -193,21 +194,21 @@
           We therefore describe the CBOR structures in prose.
           There is a version of a CBOR grammar in the CBOR Data Definition Language (CDDL) <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>.
           An informational version of the CBOR grammar that reflects what is in the prose can be found in <xref target="Grammar_Appendix"/>.
-          CDDL has not been fixed, so this grammar may will only work with the version of CDDL at the time of publishing.
+          Since CDDL has not be published as an RFC, this grammar may not work with the final version of CDDL when it is published.
         </t>
 
         <t>
           The document was developed by first working on the grammar and then developing the prose to go with it.
-          An artifact of this is that the prose was written using the primitive type strings defined by early versions CDDL.
-          In this specification, the following primitive types are used:
+          An artifact of this is that the prose was written using the primitive type strings defined by CDDL.
+         In this specification, the following primitive types are used:
           <list style="empty">
+            <t>bool - a boolean value (true: major type 7, value 21; false: major type 7, value 20).</t>
             <t>bstr - byte string (major type 2).</t>
             <t>int - an unsigned integer or a negative integer.</t>
             <t>nil - a null value (major type 7, value 22).</t>
             <t>nint - a negative integer (major type 1).</t>
             <t>tstr - a UTF-8 text string (major type 3).</t>
             <t>uint - an unsigned integer (major type 0).</t>
-            <t>bool - a boolean value (true: major type 7, value 21, false: major type 7, value 20).</t>
           </list>
         </t>
 
@@ -228,14 +229,13 @@
 start = COSE_Untagged_Message / COSE_Tagged_Message /
         COSE_Key / COSE_KeySet / Internal_Types
 ]]></artwork></figure>
-
         
       </section>
 
       <section title="CBOR Related Terminology" anchor="label">
         <t>
           In JSON, maps are called objects and only have one kind of map key: a string.
-          In COSE, we use both strings and integers (both negative and non-negative integers) as map keys.
+          In COSE, we use both strings and integers (both negative and unsigned integers) as map keys.
           The integers are used for compactness of encoding and easy comparison.
           (Generally, in this document the value zero is going to be reserved and not used.)
           Since the work "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage as a map keys.
@@ -276,34 +276,6 @@ values = any
         </t>
       </section>
 
-      <section title="Mandatory to Implement Algorithms">
-        <t>
-          One of the issues that needs to be addressed is a requirement that a standard specify a set of algorithms that are required to be implemented.
-          <cref source="JLS">
-            It would be possible to extend this section to talk about those decisions that an application needs to think about rather than just talking about MTI algorithms.
-          </cref>
-          This is done to promote interoperability as it provides a minimal set of algorithms that all devices can be sure will exist at both ends.
-          However, we have elected not to specify a set of mandatory algorithms in this document.
-        </t>
-
-        <t>
-          It is expected that COSE is going to be used in a wide variety of applications and on a wide variety of devices.
-          Many of the constrained devices are going to be setup to use a small fixed set of algorithms, and this set of algorithms may not match those available on a device.
-          We therefore have deferred to the application protocols the decision of what to specify for mandatory algorithms.
-        </t>
-
-        <t>
-          Since the set of algorithms in an environment of constrained devices may depend on what the set of devices are and how long they have been in operation, we want to highlight that application protocols will need to specify some type of discovery method of algorithm capabilities.
-          The discovery method may be as simple as requiring preconfiguration of the set of algorithms to providing a discovery method built into the protocol.
-          S/MIME provided a number of different ways to approach the problem:
-          <list style="symbols">
-            <t>Advertising in the message (S/MIME capabilities) <xref target="RFC5751"/>.</t>
-            <t>Advertising in the certificate (capabilities extension) <xref target="RFC4262"/></t>
-            <t>Minimum requirements for the S/MIME, which have been updated over time <xref target="RFC2633"/><xref target="RFC5751"/></t>
-          </list>
-        </t>
-      </section>
-
     </section>
     
     <section anchor="the-cosemsg-structure" title="Basic COSE Structure">
@@ -311,9 +283,15 @@ values = any
         The COSE Message structure is designed so that there can be a large amount of common code when parsing and processing the different security messages.
         All of the message structures are built on a CBOR array type.
         The first three elements of the array contains the same basic information.
-        The first element is a set of protected header information.
-        The second element is a set of unprotected header information.
-        The third element is the content of the message (either as plain text or encrypted).
+        <list style="numbers">
+          <t>The set of protected header parameters wrapped in a bstr.</t>
+          <t>The set of unprotected header parameters as a map.</t>
+          <t>
+            The content of the message.  
+            The content is either the plain text or the encrypted text as appropriate.
+            (The content may be absent, but the location is still used.)
+          </t>
+        </list>
         Elements after this point are dependent on the specific message type.
       </t>
 
@@ -538,6 +516,7 @@ Headers = (
             <t hangText='alg'>
               This parameter is used to indicate the algorithm used for the security processing.
               This parameter MUST be present at each level of a signed, encrypted or authenticated message.
+              This parameter MUST be in the protected header bucket.
               The value is taken from the 'COSE Algorithm Registry' (see <xref target="cose-algorithm-registry"/>).
             </t>
             
@@ -578,9 +557,20 @@ Headers = (
 	      For this reason, they can be placed in the unprotected headers bucket.
             </t>
 
-            <t hangText='nonce'>
-              This parameter holds either a nonce or Initialization Vector value.
-              The value can be used either as a counter value for a protocol or as an IV for an algorithm.
+            <t hangText="Initialization Vector">
+              This parameter holds the Initialization Vector (IV) value.
+              For some symmetric encryption algorithms this may be referred to as a nonce.
+              As the IV is authenticated by encryption process, it can be placed in the unprotected header bucket.
+            </t>
+
+            <t hangText='Partial Initialization Vector'>
+              This parameter holds a part of the IV value.
+              When using the COSE_EncryptedData structure, frequently a portion of the IV is part of the context associated with the key value.
+              This field is used to carry the portion of the IV that changes for each message.
+              As the IV is authenticated by the encryption process, it can be placed in the unprotected header bucket.
+              <vspace blankLines="1"/>
+              Some applications may also use this value for doing replay protection.
+              When this is done, the value will normally be defined by the application to be increasing in value for every message.
             </t>
 
             <t hangText='counter signature'>
@@ -598,45 +588,26 @@ Headers = (
               The unsigned integer value is the number of seconds, excluding leap seconds; after midnight UTC, January 1, 1970.
             </t>
 
-            <t hangText='sequence number'>
-              This parameter provides a counter field.
-              The use of this parameter is application specific.
-            </t>
           </list>
         </t>
 
 
-      <texttable anchor="Header-Table" title="Common Header Parameters">
-        <ttcol align='left'>name</ttcol>
-        <ttcol align='left'>label</ttcol>
-        <ttcol align='left'>value type</ttcol>
-        <ttcol align='left'>value registry</ttcol>
-        <ttcol align='left'>description</ttcol>
-        
-        <c>alg</c>        <c>1</c>        <c>int / tstr</c>        <c>COSE Algorithm Registry</c>       <c>Integers are taken from table --POINT TO REGISTRY--</c>
-        <c>crit</c>       <c>2</c>        <c>[+ label]</c>         <c>COSE Header Label Registry</c>    <c>integer values are from  -- POINT TO REGISTRY --</c>
-        <c>content type</c> <c>3</c>        <c>tstr / int</c>        <c>CoAP Content-Formats or Media Types registry</c>          <c>Value is either a Media Type or an integer from the CoAP Content Format registry</c>
-        <c>kid</c>        <c>4</c>        <c>bstr</c>              <c></c>                              <c>key identifier</c>
-        <c>nonce</c>      <c>5</c>        <c>bstr</c>              <c></c>                              <c>Nonce or Initialization Vector (IV)</c>
-        <c>counter signature</c> <c>6</c> <c>COSE_signature</c>    <c></c>                              <c>CBOR encoded signature structure</c>
-        <c>creation time</c><c>*</c>      <c>uint</c>              <c></c>                              <c>Time the content was created</c>
-        <c>sequence number</c><c>*</c>    <c>uint</c>              <c></c>                              <c>Application specific Integer value</c>
-      </texttable>
-
-      <t>
-        OPEN ISSUES:
-        <list style="numbers">
-          <t>
-            I am currently torn on the question "Should epk and iv/nonce be algorithm specific or generic headers?"
-            They are really specific to an algorithm and can potentially be defined in different ways for different algorithms.
-            As an example, it would make sense to defined nonce for CCM and GCM modes that can have the leading zero bytes stripped, while for other algorithms this might be undesirable.
-          </t>
-          <t>
-            We might want to define some additional items.  What are they?  A possible example would be a sequence number as this might be common.  On the other hand, this is the type of things that is frequently used as the nonce in some places and thus should not be used in the same way.  Other items might be challenge/response fields for freshness as these are likely to be common.
-          </t>
-        </list>
-      </t>
-
+        <texttable anchor="Header-Table" title="Common Header Parameters">
+          <ttcol align='left'>name</ttcol>
+          <ttcol align='left'>label</ttcol>
+          <ttcol align='left'>value type</ttcol>
+          <ttcol align='left'>value registry</ttcol>
+          <ttcol align='left'>description</ttcol>
+          
+          <c>alg</c>        <c>1</c>        <c>int / tstr</c>        <c>COSE Algorithm Registry</c>       <c>Integers are taken from table --POINT TO REGISTRY--</c>
+          <c>crit</c>       <c>2</c>        <c>[+ label]</c>         <c>COSE Header Label Registry</c>    <c>integer values are from  -- POINT TO REGISTRY --</c>
+          <c>content type</c> <c>3</c>      <c>tstr / int</c>        <c>CoAP Content-Formats or Media Types registry</c>          <c>Value is either a Media Type or an integer from the CoAP Content Format registry</c>
+          <c>kid</c>        <c>4</c>        <c>bstr</c>              <c></c>                              <c>key identifier</c>
+          <c>IV</c>         <c>5</c>        <c>bstr</c>              <c></c>                              <c>Full Initialization Vector</c>
+          <c>Partial IV</c> <c>6</c>        <c>uint</c>              <c></c>                              <c>Partial Initialization Vector</c>
+          <c>counter signature</c> <c>7</c> <c>COSE_signature</c>    <c></c>                              <c>CBOR encoded signature structure</c>
+          <c>creation time</c><c>*</c>      <c>uint</c>              <c></c>                              <c>Time the content was created</c>
+        </texttable>
       </section>
     </section>
 
@@ -1025,7 +996,7 @@ COSE_recipient = [
           Specific details on each of the classes can be found in <xref target="key-management-algs"/>.
           A short summary of the five recipient algorithm classes is:
           <list style="hanging">
-            <t hangText="none:"> The CEK is the same as the identified previously distributed symmetric key or derived from a previously distributed secret.</t>
+            <t hangText="direct:"> The CEK is the same as the identified previously distributed symmetric key or derived from a previously distributed secret.</t>
             <t hangText="symmetric key-encryption keys:"> The CEK is encrypted using a previously distributed symmetric key-encryption key.</t>
             <t hangText="key agreement:"> the recipient's public key and a sender's private key are used to generate a pairwise secret, a KDF is applied to derive a key, and then the CEK is either the derived key or encrypted by the derived key.</t>
             <t hangText="key transport:"> the CEK is encrypted with the recipient's public key</t>
@@ -1784,7 +1755,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
         <t>
           Keys may be obtained either from a key structure or from a recipient structure.
           If the key obtained from a key structure, the key type MUST be 'Symmetric'.
-          Implementations encrypting and decrrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+          Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
         </t>
 
         <section title="Security Considerations">
@@ -1884,7 +1855,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
         <t>
           Keys may be obtained either from a key structure or from a recipient structure.
           If the key obtained from a key structure, the key type MUST be 'Symmetric'.
-          Implementations encrypting and decrrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+          Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
         </t>
 
         <section title="Security Considerations">
@@ -1938,7 +1909,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
         <t>
           Keys may be obtained either from a key structure or from a recipient structure.
           If the key obtained from a key structure, the key type MUST be 'Symmetric'.
-          Implementations encrypting and decrrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+          Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
         </t>
 
         <section title="Security Considerations">
@@ -2249,7 +2220,7 @@ COSE_KDF_Context = [
           <t>
             <list style="symbols">
               <t>
-                The 'protected' field MUST be a zero length item if it is not used in the computation of the content key.
+                The 'protected' field MUST be a zero length item when it is not used in the computation of the content key.
               </t>
               
               <t>
@@ -2416,7 +2387,7 @@ COSE_KDF_Context = [
           <t>
             Keys may be obtained either from a key structure or from a recipient structure.
             If the key obtained from a key structure, the key type MUST be 'Symmetric'.
-            Implementations encrypting and decrrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+            Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
           </t>
           
           
@@ -2477,7 +2448,7 @@ COSE_KDF_Context = [
         <t>
           The most commonly used key agreement algorithm used is Diffie-Hellman, but other variants exist.
           Since COSE is designed for a store and forward environment rather than an on-line environment, many of the DH variants cannot be used as the receiver of the message cannot provide any key material.
-          One side-effect of this is that perfect forward security is not achievable.
+          One side-effect of this is that perfect forward secrecy (see <xref target="RFC4949"/>) is not achievable.
 	  A static key will always be used for the receiver of the COSE message.
         </t>
 
@@ -2860,6 +2831,34 @@ COSE_KDF_Context = [
         </list>
       </t>
 
+    </section>
+
+    <section title="Application Profiling Considerations">
+      <t>
+        One of the issues that needs to be addressed is a requirement that a standard specify a set of algorithms that are required to be implemented.
+        <cref source="JLS">
+          It would be possible to extend this section to talk about those decisions that an application needs to think about rather than just talking about MTI algorithms.
+        </cref>
+        This is done to promote interoperability as it provides a minimal set of algorithms that all devices can be sure will exist at both ends.
+        However, we have elected not to specify a set of mandatory algorithms in this document.
+      </t>
+
+      <t>
+        It is expected that COSE is going to be used in a wide variety of applications and on a wide variety of devices.
+        Many of the constrained devices are going to be setup to use a small fixed set of algorithms, and this set of algorithms may not match those available on a device.
+        We therefore have deferred to the application protocols the decision of what to specify for mandatory algorithms.
+      </t>
+
+      <t>
+        Since the set of algorithms in an environment of constrained devices may depend on what the set of devices are and how long they have been in operation, we want to highlight that application protocols will need to specify some type of discovery method of algorithm capabilities.
+        The discovery method may be as simple as requiring preconfiguration of the set of algorithms to providing a discovery method built into the protocol.
+        S/MIME provided a number of different ways to approach the problem:
+        <list style="symbols">
+          <t>Advertising in the message (S/MIME capabilities) <xref target="RFC5751"/>.</t>
+          <t>Advertising in the certificate (capabilities extension) <xref target="RFC4262"/></t>
+          <t>Minimum requirements for the S/MIME, which have been updated over time <xref target="RFC2633"/><xref target="RFC5751"/></t>
+        </list>
+      </t>
     </section>
 
     <section anchor="iana-considerations" title="IANA Considerations">
@@ -3371,6 +3370,7 @@ COSE_KDF_Context = [
           </t>
           <t>
             Considerations about protected vs unprotected header fields.
+            WHy the algorithm parameter needs to be protected.
           </t>
           <t>
             Need to verify that:
@@ -3421,6 +3421,7 @@ COSE_KDF_Context = [
       &RFC7517;
       &RFC7518;
       &RFC7539;
+      &RFC4949;
       
       <!-- &CFRG-EC; -->
 
@@ -3889,6 +3890,14 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
 
     <section title="Document Updates">
       <!-- RFC Editor - Please remove this appendix before publishing -->
+      <section title="Version -06 to -07">
+        <t>
+          <list style="symbols">
+            <t>Editorial Changes</t>
+            <t>Make new IANA registries be Expert Review</t>
+          </list>
+        </t>
+      </section>
       <section title="Version -05 to -06">
         <t>
           <list style="symbols">
