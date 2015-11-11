@@ -379,8 +379,8 @@ values = any
       <figure><artwork type="CDDL"><![CDATA[
 
 COSE_Untagged_Message = COSE_Sign / 
-    COSE_enveloped /
-    COSE_encryptData /
+    COSE_Enveloped /
+    COSE_Encrypted /
     COSE_Mac
 
 COSE_Tagged_Message = COSE_Sign_Tagged /
@@ -403,7 +403,7 @@ COSE_Tagged_Message = COSE_Sign_Tagged /
         <c>signatures</c>       <c>5</c>        <c>For COSE_Sign - array of signatures</c>
         <c>signature</c>        <c>6</c>        <c>For COSE_signature only</c>
         <c>ciphertext</c>       <c>4</c>        <c>TODO: Should we reuse the same as payload or not?</c>
-        <c>recipients</c>       <c>9</c>        <c>For COSE_encrypt and COSE_mac</c>
+        <c>recipients</c>       <c>9</c>        <c>For COSE_Enveloped and COSE_mac</c>
         <c>tag</c>              <c>10</c>       <c>For COSE_mac only</c>
       </texttable>
 
@@ -523,7 +523,7 @@ Headers = (
             <t hangText='crit'>
               This parameter is used to ensure that applications will take appropriate action based on the values found.
               The parameter is used to indicate which protected header labels an application that is processing a message is required to understand.
-              The value is an array of COSE Header Labels.
+
               When present, this parameter MUST be placed in the protected header bucket.
               <vspace/>
               <list style="symbols">
@@ -542,6 +542,7 @@ Headers = (
             <t hangText='content type'>
               This parameter is used to indicate the content type of the data in the payload or ciphertext fields.
               Integers are from the 'CoAP Content-Formats' IANA registry table.
+              <cref source="JLS">Expand CoAP?</cref>
               Strings are from the IANA 'Media Types' registry.
               Applications SHOULD provide this parameter if the content structure is potentially ambiguous.
             </t>
@@ -576,7 +577,7 @@ Headers = (
             <t hangText='counter signature'>
               This parameter holds a counter signature value.
               Counter signatures provide a method of having a second party sign some data.
-	      The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_signature, COSE_enveloped, COSE_recipient, COSE_encryptedData, COSE_mac.
+	      The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_signature, COSE_Enveloped, COSE_recipient, COSE_EnvelopededData, COSE_mac.
               These structures all have the same basic structure so that a consistent calculation of the counter signature can be computed.
               Details on computing counter signatures are found in <xref target="counter_signature"/>.
             </t>
@@ -640,11 +641,16 @@ Headers = (
       </t>
 
       <t>
+        A COSE Signing Message is divided into two parts.
+        The CBOR object that carries the body and information about the body is called the COSE_Sign structure.
+        The CBOR object that carries the signature and information about the signature is called the COSE_Signature structure.
+        Examples of COSE Signing Messages can be found in <xref target="SignedExamples"/>.
+      </t>
+      
+      <t>
         The COSE_Sign structure is a CBOR array.
         The fields of the array in order are:
-      </t>
 
-      <t>
         <list style="hanging">
           <!--
           <t hangText='msg_type'>
@@ -669,8 +675,8 @@ Headers = (
           </t>
           
           <t hangText='signatures'>
-            is an array of signature items.
-            Each of these items uses the COSE_signature structure for its representation.
+            is an array of signatures.
+            Each signature is represented as a COSE_signature structure.
           </t>
           
         </list>
@@ -679,9 +685,7 @@ Headers = (
       <t>
         The COSE_signature structure is a CBOR array.
         The fields of the array in order are:
-      </t>
 
-      <t>
         <list style="hanging">
           <t hangText='protected'>
             is described in <xref target="header-parameters"/>.
@@ -707,7 +711,6 @@ Headers = (
 
 
       <figure><artwork type="CDDL"><![CDATA[
-
 COSE_Sign_Tagged = #6.999(COSE_Sign) ; Replace 999 with TBD1
       
 COSE_Sign = [
@@ -727,7 +730,7 @@ COSE_signature =  [
         <t>
           One of the features that we supply in the COSE document is the ability for applications to provide additional data to be authenticated as part of the security, but that is not carried as part of the COSE object.
           The primary reason for supporting this can be seen by looking at the CoAP message structure <xref target="RFC7252"/> where the facility exists for options to be carried before the payload.
-          <cref source="JLS">Don't talk about items which we do not define in this specification.</cref>
+          <cref source="JLS">Don't talk about items which we do not define in this specification? Only talk about...</cref>
           An example of data that can be placed in this location would be transaction ids and nonces to check for replay protection.
           If the data is in the options section, then it is available for routers to help in performing the replay detection and prevention.
           However, it may also be desired to protect these values so that they cannot be modified in transit.
@@ -742,7 +745,7 @@ COSE_signature =  [
             <t>
               If multiple items are included, care needs to be taken that data cannot bleed between the items.
               This is usually addressed by making fields fixed width and/or encoding the length of the field.
-              Using options from CoAP as an example, these fields use a TLV structure so they can be concatenated without any problems.
+              Using options from CoAP <xref target="COAP"/> as an example, these fields use a TLV structure so they can be concatenated without any problems.
             </t>
             <t>
               If multiple items are included, a defined order for the items needs to be defined.
@@ -758,7 +761,7 @@ COSE_signature =  [
         <t>
           In order to create a signature, a consistent byte stream is needed in order to process.
           This algorithm takes in the body information (COSE_Sign), the signer information (COSE_Signer), and the application data (External).
-          This document uses a CBOR array to construct the byte stream to be processed.
+          A CBOR array is used to construct the byte stream to be processed.
           The fields of the array in order are:
           <list style="numbers">
             <t>
@@ -787,12 +790,12 @@ COSE_signature =  [
           <list style="numbers">
             <t>
               Create a CBOR array and populate it with the appropriate fields. 
-              For body_protected and sign_protected, if the fields are not present in their corresponding maps, a bstr of length zero is used.
+              For body_protected and sign_protected, if the map is empty, a bstr of length zero is used.
             </t>
 
             <t>
               If the application has supplied external additional authenticated data to be included in the computation, then it is placed in the third field.
-              If no data was supplied, then a zero length binary value is used.
+              If no data was supplied, then a zero length binary string is used.
             </t>
 
             <t>
@@ -815,12 +818,12 @@ COSE_signature =  [
           <list style="numbers">
             <t>
               Create a Sig_structure object and populate it with the appropriate fields. 
-              For body_protected and sign_protected, if the fields are not present in their corresponding maps, a bstr of length zero is used.
+              For body_protected and sign_protected, if the map is empty, a bstr of length zero is used.
             </t>
             
             <t>
               If the application has supplied external additional authenticated data to be included in the computation, then it is placed in the third field.
-              If no data was supplied, then a zero length binary value is used.
+              If no data was supplied, then a zero length binary string is used.
             </t>
 
             <t>
@@ -828,7 +831,7 @@ COSE_signature =  [
             </t>
             
             <t>
-              Call the signature verification algorithm passing in K (the key to verify with), alg (the algorithm to sign with), ToBeSigned (the value to sign), and sig (the signature to be verified).
+              Call the signature verification algorithm passing in K (the key to verify with), alg (the algorithm used sign with), ToBeSigned (the value to sign), and sig (the signature to be verified).
             </t>
           </list>
         </t>
@@ -861,33 +864,36 @@ Sig_structure = [
       <section anchor="counter_signature" title="Computing Counter Signatures">
         <t>
           Counter signatures provide a method of having a different signature occur on some piece of content.
-          This is normally used to provide a signature on a signature allowing for a proof that a signature existed at a given time.
+          This is normally used to provide a signature on a signature allowing for a proof that a signature existed at a given time (i.e. a Timestamp).
           In this document we allow for counter signatures to exist in a greater number of environments.
-          A counter signature can exist, for example, on a COSE_encryptedData object and allow for a signature to be present on the encrypted content of a message.
+          As an example, it is possible to place a counter signature in the unprotected attributes of a COSE_EnvelopededData object.
+          This would allow for an intermediary to either verify that the encrypted byte stream has not been modified, without being able to decrypt it.
+          Or for the intermediary to assert that an encrypted byte stream either existed at a given time or passed through it in terms of routing (i.e. a proxy signature).
+        </t>
+
+        <t>
+          An example of a proxy signature on a signature can be found in <xref target="Sig-03"/>.
+          An example of a proxy signature on an encryption object can be found in <xreef target="Enc-03"/>.
         </t>
 
         <t>
           The creation and validation of counter signatures over the different items relies on the fact that the structure all of our objects have the same structure.
-          The first element may be a message type, this is followed by a set of protected attributes, a set of unprotected attributes and a body in that order.
+          The elements are a set of protected attributes, a set of unprotected attributes and a body in that order.
           This means that the Sig_structure can be used for in a uniform manner to get the byte stream for processing a signature.
-          If the counter signature is going to be computed over a COSE_encryptedData structure, the body_protected and payload items can be mapped into the Sig_structure in the same manner as from the COSE_Sign structure.
-        </t>
-
-        <t>
-          While one can create a counter signature for a COSE_Sign structure, there is not much of a point to doing so.  It is equivalent to create a new COSE_signature structure and placing it in the signatures array.  It is strongly suggested that it not be done, but it is not banned.
+          If the counter signature is going to be computed over a COSE_EnvelopededData structure, the body_protected and payload items can be mapped into the Sig_structure in the same manner as from the COSE_Sign structure.
         </t>
       </section>
     </section>
 
-    <section anchor="encryption-object" title="Encryption objects">
+    <section anchor="encryption-object" title="Encryption Objects">
       <t>
         COSE supports two different encryption structures.
-        COSE_enveloped is used when the key needs to be explicitly identified.
+        COSE_Enveloped is used when the key needs to be explicitly identified.
         This structure supports the use of recipient structures to allow for random content encryption keys to be used.
-        COSE_encrypted is used when a recipient structure is not needed because the key to be used is known implicitly.
+        COSE_Envelopeded is used when a recipient structure is not needed because the key to be used is known implicitly.
       </t>
 
-      <section title="Enveloped COSE structure">
+      <section title="Enveloped COSE Structure">
 
       <t>
         The enveloped structure allows for one or more recipients of a message.
@@ -896,15 +902,20 @@ Sig_structure = [
         The parameters associated with the recipient can be authenticated by the recipient algorithm (when the algorithm supports it).
         Examples of parameters about the content are the type of the content, when the content was created, and the content encryption algorithm.
         Examples of parameters about the recipient are the recipient's key identifier, the recipient encryption algorithm.
+        <cref source="JLS">Restrict to the set of supported parameters.</cref>
       </t>
       
       <t>
         In COSE, the same techniques and structures are used for encrypting both the plain text and the keys used to protect the text.
+        
         This is different from the approach used by both <xref target="RFC5652"/> and <xref target="RFC7516"/> where different structures are used for the content layer and for the recipient layer.
+        Two structures are defined COSE_Enveloped to hold the encrypted content and COSE_recipient to hold the encrypted keys for recipients.
+        
+        Examples of encrypted messages can be found in <xref target="EncryptedExamples"/>.
       </t>
 
       <t>
-        The COSE_encrypt structure is a CBOR array.
+o        The COSE_Enveloped structure is a CBOR array.
         The fields of the array in order are:
 
         <list style="hanging">
@@ -970,37 +981,40 @@ Sig_structure = [
 
       <figure><artwork type="CDDL"><![CDATA[
 
-COSE_Enveloped_Tagged = #6.998(COSE_enveloped)    ; Replace 998 with TBD32
+COSE_Enveloped_Tagged = #6.998(COSE_Enveloped)    ; Replace 998 with TBD32
       
-COSE_enveloped = [
-    COSE_encrypt_fields
+COSE_Enveloped = [
+    COSE_Enveloped_fields
     recipients: [+COSE_recipient]
 ]
 
-COSE_encrypt_fields = (
+COSE_Enveloped_fields = (
     Headers,
     ciphertext: bstr / nil,
 )
 
 COSE_recipient = [    
-    COSE_encrypt_fields
+    COSE_Enveloped_fields
     ? recipients: [+COSE_recipient]
 ]
 ]]></artwork></figure>
 
       <section anchor="key-management-methods" title="Recipient Algorithm Classes">
         <t>
-          A typical encrypted message consists of an encrypted content and an encrypted CEK for one or more recipients.
-          The content-encryption key is encrypted for each recipient, using a key specific to that recipient.
+          A typical encrypted message consists of an encrypted content and an encrypted content encryption key (CEK) for one or more recipients.
+          The CEK is encrypted for each recipient, using a key specific to that recipient.
           The details of this encryption depends on which class the recipient algorithm falls into.
           Specific details on each of the classes can be found in <xref target="key-management-algs"/>.
           A short summary of the five recipient algorithm classes is:
           <list style="hanging">
-            <t hangText="direct:"> The CEK is the same as the identified previously distributed symmetric key or derived from a previously distributed secret.</t>
-            <t hangText="symmetric key-encryption keys:"> The CEK is encrypted using a previously distributed symmetric key-encryption key.</t>
-            <t hangText="key agreement:"> the recipient's public key and a sender's private key are used to generate a pairwise secret, a KDF is applied to derive a key, and then the CEK is either the derived key or encrypted by the derived key.</t>
-            <t hangText="key transport:"> the CEK is encrypted with the recipient's public key</t>
-            <t hangText="passwords:"> the CEK is encrypted in a key-encryption key that is derived from a password.</t>
+            <t hangText="direct:">
+              The CEK is the same as the identified previously distributed symmetric key or derived from a previously distributed secret.  
+              No CEK is transported in the message.
+            </t>
+            <t hangText="symmetric key-encryption keys:"> The CEK is encrypted using a previously distributed symmetric KEK.</t>
+            <t hangText="key agreement:"> The recipient's public key and a sender's private key are used to generate a pairwise secret, a KDF is applied to derive a key, and then the CEK is either the derived key or encrypted by the derived key.</t>
+            <t hangText="key transport:"> The CEK is encrypted with the recipient's public key.</t>
+            <t hangText="passwords:"> The CEK is encrypted in a KEK that is derived from a password.</t>
           </list>
         </t>
 
@@ -1012,23 +1026,28 @@ COSE_recipient = [
       <t>
         The encrypted structure does not have the ability to specify recipients of the message.
         The structure assumes that the recipient of the object will already know the identity of the key to be used in order to decrypt the message.
-        If a key needs to be identified to the recipient, the enveloped structure is used.
+        If a key needs to be identified to the recipient, the enveloped structure ought to be used.
       </t>
 
       <t>
-        The CDDL grammar structure for encrypted data is:
+        The structure defined to hold an encrypted message is COSE_Encrypted.
+        Examples of encrypted messages can be found in <xref target="EncryptedExamples"/>.
+      </t>
+
+      <t>
+        The CDDL grammar structure for the COSE_Encrypted type is:
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_EncryptedData_Tagged = #6.997(COSE_encryptData)     ; Replace 997 with TBD3
+COSE_EncryptedData_Tagged = #6.997(COSE_Encrypted)     ; Replace 997 with TBD3
       
-COSE_encryptData = [
-    COSE_encrypt_fields
+COSE_Encrypted = [
+    COSE_Enveloped_fields
 ]
 ]]></artwork></figure>
 
       <t>
-        The COSE_encryptedData structure is a CBOR array.
+        The COSE_EnvelopededData structure is a CBOR array.
         The fields of the array in order are:
 
         <list style="hanging">
@@ -1042,7 +1061,7 @@ COSE_encryptData = [
           <t hangText='unprotected'> is described in <xref target="header-parameters"/>.</t>
           <t hangText='ciphertext'>
             contains the encrypted plain text.
-            If the ciphertext is to be transported independently of the control information about the encryption process (i.e. detached content) then the field is encoded as a null object.
+            If the ciphertext is to be transported independently of the control information about the encryption process (i.e. detached content) then the field is encoded as a null value.
           </t>
         </list>
       </t>
@@ -1055,16 +1074,17 @@ COSE_encryptData = [
           The encryption algorithm for AEAD algorithms is fairly simple.
           
           In order to get a consistent encoding of the data to be authenticated, the Enc_structure is used to have canonical form of the AAD.
+          The Enc_structure is a CBOR array.
         </t>
 
         <t>
           <list style="numbers">
             <t>
-              Copy the protected header field from the message to be sent.
+              Copy the protected header field from the message to be sent to the first location in the Enc_structure.
             </t>
 
             <t>
-              If the application has supplied external additional authenticated data to be included in the computation, then it is placed in the 'external_aad' field.
+              If the application has supplied external additional authenticated data to be included in the computation, then it is placed in the second location ('external_aad' field) of the Enc_structure.
               If no data was supplied, then a zero length binary value is used.
               (See <xref target="Extern_AAD"/> for application guidance on constructing this field.)
             </t>
@@ -2214,7 +2234,7 @@ COSE_KDF_Context = [
           </t>
 
           <t>
-            The COSE_encrypt structure for the recipient is organized as follows:
+            The COSE_Enveloped structure for the recipient is organized as follows:
           </t>
 
           <t>
@@ -2244,7 +2264,7 @@ COSE_KDF_Context = [
 
           <section title="Direct Key">
             <t>
-              This recipient algorithm is the simplest, the supplied key is directly used as the key for the next layer down in the message.
+              This recipient algorithm is the simplest, the identified key is directly used as the key for the next layer down in the message.
               There are no algorithm parameters defined for this algorithm.
               The algorithm identifier value is assigned  in <xref target="table-direct"/>.
             </t>
@@ -2343,7 +2363,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          The COSE_encrypt structure for the recipient is organized as follows:
+          The COSE_Enveloped structure for the recipient is organized as follows:
         </t>
 
         <t>
@@ -2418,7 +2438,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          When using a key encryption algorithm, the COSE_encrypt structure for the recipient is organized as follows:
+          When using a key encryption algorithm, the COSE_Enveloped structure for the recipient is organized as follows:
           <list style="symbols">
             <t>
               The 'protected' field MUST be absent.
@@ -2478,7 +2498,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          The COSE_encrypt structure for the recipient is organized as follows:
+          The COSE_Enveloped structure for the recipient is organized as follows:
         </t>
 
         <t>
@@ -2601,7 +2621,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          The COSE_encrypt structure for the recipient is organized as follows:
+          The COSE_Enveloped structure for the recipient is organized as follows:
         </t>
 
         <t>
@@ -2877,8 +2897,8 @@ COSE_KDF_Context = [
           <texttable>
             <ttcol>Tag Value</ttcol>    <ttcol>Data Item</ttcol>  <ttcol>Semantics</ttcol>
             <c>TBD1</c>                 <c>COSE_Sign</c>                <c>COSE Signed Data Object</c>
-            <c>TBD2</c>                 <c>COSE_enveloped</c>           <c>COSE Enveloped Data Object</c>
-            <c>TBD3</c>                 <c>COSE_encryptData</c>         <c>COSE Encrypted Data Object</c>
+            <c>TBD2</c>                 <c>COSE_Enveloped</c>           <c>COSE Enveloped Data Object</c>
+            <c>TBD3</c>                 <c>COSE_Encrypted</c>           <c>COSE Encrypted Data Object</c>
             <c>TBD4</c>                 <c>COSE_Mac</c>                 <c>COSE Mac-ed Data Object</c>
             <c>TBD5</c>                 <c>COSE_Key, COSE_KeySet</c>    <c>COSE Key or COSE Key Set Object</c>
           </texttable>
@@ -3756,7 +3776,7 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
         </section>
       </section>
 
-      <section title="Examples of Encrypted Messages">
+      <section title="Examples of Encrypted Messages" anchor="EncryptedExamples">
         
         <section anchor="Enc-01" title="Direct ECDH">
 
@@ -3791,9 +3811,40 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
           &Enc-02;
           
         </section>
+
+        <section anchor="Enc-03" title="Counter Signature on Encrypted Content">
+          <t>
+            This example uses the following:
+
+            <list style="symbols">
+              <t>CEK: AES-GCM w/ 128-bit key</t>
+              <t>Recipient class: ECDH Ephemeral-Static, Curve P-256</t>
+            </list>
+          </t>
+          
+          <!-- &Enc-01; -->
+
+        </section>
+
+        <section anchor="Enc-04" title="Encrypted Content w/ Implicit Recipient">
+          <t>
+            This example uses the following:
+
+            <list style="symbols">
+              <t>CEK: AES-GCM w/ 128-bit key</t>
+              <t>Recipient class: ECDH Ephemeral-Static, Curve P-256</t>
+            </list>
+          </t>
+          
+          <!-- &Enc-04; -->
+
+        </section>
+        
       </section>
 
-      <section title="Examples of Signed Message">
+      <section title="Examples of Signed Message" anchor="SignedExamples">
+        <!-- JLS - Make a signed example with external data and provide the signing byte stream as part of the example -->
+
         <section anchor="Sig-01" title="Single Signature">
 
           <t>
@@ -3823,6 +3874,21 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
           &Sig-02;
 
         </section>
+
+        <section anchor="Sig-03" title="Counter Signature">
+
+          <t>
+            This example uses the following:
+
+            <list style="symbols">
+              <t>Signature Algorithm: ECDSA w/ SHA-256, Curve P-256-1</t>
+            </list>
+          </t>
+
+R          <!-- &Sig-03; -->
+
+        </section>
+
       </section>
 
       <section title="COSE Keys">
