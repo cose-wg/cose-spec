@@ -745,7 +745,7 @@ COSE_signature =  [
             <t>
               If multiple items are included, care needs to be taken that data cannot bleed between the items.
               This is usually addressed by making fields fixed width and/or encoding the length of the field.
-              Using options from CoAP <xref target="COAP"/> as an example, these fields use a TLV structure so they can be concatenated without any problems.
+              Using options from CoAP <xref target="RFC7252"/> as an example, these fields use a TLV structure so they can be concatenated without any problems.
             </t>
             <t>
               If multiple items are included, a defined order for the items needs to be defined.
@@ -873,7 +873,7 @@ Sig_structure = [
 
         <t>
           An example of a proxy signature on a signature can be found in <xref target="Sig-03"/>.
-          An example of a proxy signature on an encryption object can be found in <xreef target="Enc-03"/>.
+          An example of a proxy signature on an encryption object can be found in <xref target="Enc-03"/>.
         </t>
 
         <t>
@@ -893,7 +893,7 @@ Sig_structure = [
         COSE_Envelopeded is used when a recipient structure is not needed because the key to be used is known implicitly.
       </t>
 
-      <section title="Enveloped COSE Structure">
+      <section title="Enveloped COSE Structure" anchor="EnvelopedData">
 
       <t>
         The enveloped structure allows for one or more recipients of a message.
@@ -1183,7 +1183,7 @@ Enc_structure = [
       </section>
     </section>
     
-    <section anchor="mac-objects" title="MAC objects">
+    <section anchor="mac-objects" title="MAC Objects">
 
       <t>
         In this section we describe the structure and methods to be used when doing MAC authentication in COSE. 
@@ -1198,6 +1198,11 @@ Enc_structure = [
         The classes of recipient algorithms that support this are those that use a pre-shared secret or do static-static key agreement (without the key wrap step).
         In both of these cases, the entity MACing the message can be validated by a key binding. 
         (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.)
+      </t>
+
+      <t>
+        The MAC message uses two structures, the COSE_Mac structure defined in this section for carrying the body and the COSE_recipient structure (<xref target="EnvelopedData"/>) to hold the key used for the MAC computation.
+        Examples of MAC messages can be found in <xref target="MacExamples"/>.
       </t>
 
       <t>
@@ -1257,27 +1262,33 @@ COSE_Mac = [
 ]]></artwork></figure>
 
         <section title="How to compute a MAC">
-
           <t>
-            How to compute a MAC:
+            In order to get a consistent encoding of the data to be authenticated, the MAC_structure is used to have a canonical form.
+            The MAC_structure is a CBOR array.
           </t>
 
           <t>
+            The steps to compute a MAC are:
+
             <list style="numbers">
               <t>
                 Create a MAC_structure and copy the protected and payload fields from the COSE_Mac structure.
               </t>
+              
               <t>
                 If the application has supplied external authenticated data, encode it as a binary value and place in the MAC_structure.
                 If there is no external authenticated data, then use a zero length 'bstr'.
                 (See <xref target="Extern_AAD"/> for application guidance on constructing this field.)
               </t>
+              
               <t>
                 Encode the MAC_structure using a canonical CBOR encoder.  The resulting bytes is the value to compute the MAC on.
               </t>
+              
               <t>
                 Compute the MAC and place the result in the 'tag' field of the COSE_Mac structure.
               </t>
+              
               <t>
                 Encrypt and encode the MAC key for each recipient of the message.
               </t>
@@ -1379,7 +1390,7 @@ COSE_KeySet = [+COSE_Key]
         <list style="hanging">
           <t hangText="kty:">
             This parameter is used to identify the family of keys for this structure, and thus the set of key type specific parameters to be found.
-            The set of values can be found in <xref target="table_key_types"/>.
+            The set of values defined in this document can be found in <xref target="table_key_types"/>.
             This parameter MUST be present in a key object.
             Implementations MUST verify that the key type is appropriate for the algorithm being processed.
             The key type MUST be included as part of a trust decision process.
@@ -1553,6 +1564,8 @@ valid, message content = Verification(message sent, key, signature)
           System which have poor random number generation can leak their keys by signing two different messages with the same value 'k' (the per-message random value).
           <xref target="RFC6979"/> provides a method to deal with this problem by making 'k' be deterministic based on the message content rather than randomly generated.
           Applications that specify ECDSA should evaluate the ability to get good random number generation and require this when it is not possible.
+        </t>
+        <t>
           Note: Use of this technique a good idea even when good random number generation exists.
           Doing so both reduces the possibility of having the same value of 'k' in two signature operations, but allows for reproducible signature values which helps testing.
         </t>
@@ -1722,7 +1735,7 @@ valid = MAC_Verify(message content, key, tag)
     <section title="Content Encryption Algorithms">
       <t>
         Content Encryption Algorithms provide data confidentiality for potentially large blocks of data using a symmetric key.
-        They provide either no or very limited data origination.
+        They provide integrity on the data that was encrypted, however they provide either no or very limited data origination.
         (One cannot, for example, be used to prove the identity of the sender to a third party.)
         The ability to provide data origination is linked to how the symmetric key is obtained.
       </t>
@@ -1754,7 +1767,8 @@ valid, message content = Decrypt(cipher text, key, additional data)
         </t>
 
         <t>
-          The GCM mode is parameterized with by the size of the authentication tag.
+          The GCM mode is parameterized with by the size of the authentication tag and the size of the nonce.
+          This document fixes the size of the nonce at 96-bits.
           The size of the authentication tag is limited to a small set of values.
           For this document however, the size of the authentication tag is fixed at 128 bits.
         </t>
@@ -1767,9 +1781,9 @@ valid, message content = Decrypt(cipher text, key, additional data)
           <ttcol align='left'>name</ttcol>
           <ttcol align='left'>value</ttcol>
           <ttcol align='left'>description</ttcol>
-          <c>A128GCM</c>        <c>1</c>        <c>AES-GCM mode w/ 128-bit key</c>
-          <c>A192GCM</c>        <c>2</c>        <c>AES-GCM mode w/ 192-bit key</c>
-          <c>A256GCM</c>        <c>3</c>        <c>AES-GCM mode w/ 256-bit key</c>
+          <c>A128GCM</c>        <c>1</c>        <c>AES-GCM mode w/ 128-bit key, 128-bit tag</c>
+          <c>A192GCM</c>        <c>2</c>        <c>AES-GCM mode w/ 192-bit key, 128-bit tag</c>
+          <c>A256GCM</c>        <c>3</c>        <c>AES-GCM mode w/ 256-bit key, 128-bit tag</c>
         </texttable>
 
         <t>
@@ -1790,6 +1804,13 @@ valid, message content = Decrypt(cipher text, key, additional data)
                 An explicit check is required only in environments where it is expected that it might be exceeded.
               </t>
             </list>
+          </t>
+
+          <t>
+            Consideration was given to supporting smaller tag values, the constrained community would desire tag sizes in the 64-bit range.
+            <!-- Appendix C in NIST SP 800-38D -->
+            Doing show drastically changes both the maximum messages size (generally not an issue) and the number of times that a key can be used.
+            Given that CCM is the usual mode for constrained environments restricted modes are not supported.
           </t>
 
         </section>
@@ -1923,7 +1944,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
           <ttcol align='left'>name</ttcol>
           <ttcol align='left'>value</ttcol>
           <ttcol align='left'>description</ttcol>
-          <c>ChaCha20/Poly1305</c>        <c>11</c>        <c>ChaCha20/Poly1305 w/ 256-bit key</c>
+          <c>ChaCha20/Poly1305</c>        <c>11</c>        <c>ChaCha20/Poly1305 w/ 256-bit key, 128-bit tag</c>
         </texttable>
         
         <t>
@@ -2004,8 +2025,8 @@ valid, message content = Decrypt(cipher text, key, additional data)
             </t>
 
             <t>
-              hash function - The underlying hash function to be used in the HKDF algorithm.
-              The hash function is encoded into the HKDF algorithm selection.
+              PRF - The underlying pseudo-random function to be used in the HKDF algorithm.
+              The PRF is encoded into the HKDF algorithm selection.
             </t>
 
           </list>
@@ -2025,13 +2046,13 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
         <texttable title="HKDF algorithms" anchor="table-hkdf">
           <ttcol>name</ttcol>
-          <ttcol>hash</ttcol>
+          <ttcol>PRF</ttcol>
           <ttcol>Skip extract</ttcol>
           <ttcol>context</ttcol>
-          <c>HKDF SHA-256</c>       <c>SHA-256</c>      <c>no</c>       <c>XXX</c>
-          <c>HKDF SHA-512</c>       <c>SHA-512</c>      <c>no</c>       <c>XXX</c>
+          <c>HKDF SHA-256</c>       <c>HMAC with SHA-256</c>      <c>no</c>       <c>HKDF using HMAC SHA-256 as the PRF</c>
+          <c>HKDF SHA-512</c>       <c>HMAC with SHA-512</c>      <c>no</c>       <c>HKDF using HMAC SHA-512 as the PRF</c>
           <c>HKDF AES-MAC-128</c>   <c>AES-CBC-128</c>  <c>yes</c>      <c>HKDF using AES-MAC as the PRF w/ 128-bit key</c>
-          <c>HKDF AES-MAC-256</c>   <c>AES-CBC-128</c>  <c>yes</c>      <c>HKDF using AES-MAC as the PRF w/ 256-bit key</c>
+          <c>HKDF AES-MAC-256</c>   <c>AES-CBC-256</c>  <c>yes</c>      <c>HKDF using AES-MAC as the PRF w/ 256-bit key</c>
         </texttable>
 
         <texttable title="HKDF Algorithm Parameters" anchor="HKDF_Alg_Params">
@@ -3709,7 +3730,7 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
         The examples can be extracted from the XML version of this document via an XPath expression as all of the artwork is tagged with the attribute  type='CBORdiag'.
       </t>
 
-      <section title="Examples of MAC messages">
+      <section title="Examples of MAC messages" anchor="MacExamples">
         
         <section anchor="Mac-04" title="Shared Secret Direct MAC">
           <t>
@@ -3885,7 +3906,7 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
             </list>
           </t>
 
-R          <!-- &Sig-03; -->
+          <!-- &Sig-03; -->
 
         </section>
 
