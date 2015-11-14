@@ -2069,8 +2069,8 @@ valid, message content = Decrypt(cipher text, key, additional data)
         <t>
           The context information structure is used to ensure that the derived keying material is "bound" to the context of the transaction.
           The context information structure used here is based on that defined in <xref target="SP800-56A"/>.
-          By using CBOR for the encoding of the context information structure, we automatically get the same type of type and length separation of fields that is obtained by the use of ASN.1.
-          This means that there is no need to encode the lengths for the base elements as it is done by the JOSE encoding.
+          By using CBOR for the encoding of the context information structure, we automatically get the same type and length separation of fields that is obtained by the use of ASN.1.
+          This means that there is no need to encode the lengths for the base elements as it is done by the encoding used in JOSE (Section 4.6.2 of <xref target="JWA"/>).
           <cref source="Ilari">
             Look to see if we need to be clearer about how the fields defined in the table are transported and thus why they have labels.
           </cref>
@@ -2085,23 +2085,43 @@ valid, message content = Decrypt(cipher text, key, additional data)
         <t>
           Application protocols are free to define the roles differently.
           For example, they could assign the PartyU role to the entity that initiates the connection and allow directly sending multiple messages over the connection in both directions without changing the role information.
+          It is still reommended that different keys be derived in each direction to avoid reflection problems.
         </t>
 
-        <t>
-          The use of a transaction identifier, either in one of the supplemental fields or as the salt if one is using HKDF, ensures that a unique key is generated for each set of transactions.
-          Combining nonce fields with the transaction identifier provides a method so that a different key is used for each message in each direction.
-        </t>
+        <!--
+            <t>
+            The use of a transaction identifier, either in one of the supplemental fields or as the salt if one is using HKDF, ensures that a unique key is generated for each set of transactions.
+            Combining nonce fields with the transaction identifier provides a method so that a different key is used for each message in each direction.
+            </t>
+          -->
 
         <t>
           The context structure is built from information that is known to both entities.
-          Some of the information is known only to the two entities, some is implied based on the application and some is explicitly transported as part of the message.
-          The information that can be carried in the message, parameters have been defined and can be found in <xref target="KDF_Context_Alg_Params"/>.
-          These parameters are designed to be placed in the unprotected bucket of the recipient structure.
-          (They do not need to be in the protected bucket since they already are included in the cryptographic computation by virtue of being included in the context structure.)
+          This information can be obtained from a variety of sources:
+          <list style="symbols">
+            <t>
+              Fields can be define by the application.
+              This is commonly used to assign names to parties.
+            </t>
+            <t>
+              Fields can be defined by usage of the output.
+              Examples of this are the algorithm and key size that are being generated.
+            </t>
+            <t>
+              Fields can be defined by parameters from the message.
+              We define a set of parameters in <xref target="KDF_Context_Alg_Params"/> which can be used to carry the values associated with the context structure.
+              Examples of this are identities and nonce values.
+              These parameters are designed to be placed in the unprotected bucket of the recipient structure.
+              (They do not need to be in the protected bucket since they already are included in the cryptographic computation by virtue of being included in the context structure.)
+            </t>
+          </list>
         </t>
 
         <t>
-          We encode the context specific information using a CBOR array type.
+          We define a CBOR object to hold the context information.
+          This object is referred to as CBOR_KDF_Context.
+          The object is based on a CBOR array type.
+          
           The fields in the array are:
 
           <list style="hanging">
@@ -2131,9 +2151,6 @@ valid, message content = Decrypt(cipher text, key, additional data)
                   However, identity information is often known as part of the protocol and can thus be inferred rather than made explicit.
                   If identity information is carried in the message, applications SHOULD have a way of validating the supplied identity information.
                   The identity information does not need to be specified and can be left as absent.
-                  <vspace/>
-                  The identity value supplied will be integrity checked as part of the key derivation process.
-                  If the identity string is wrong, then the wrong key will be created.
                 </t>
 
                 <t hangText="nonce">
@@ -2155,7 +2172,43 @@ valid, message content = Decrypt(cipher text, key, additional data)
             </t>
 
             <t hangText="PartyVInfo">
-              M00TODO: Copy down from PartyUInfo when that text is ready.
+              This field holds information about party V.
+              The PartyVInfo is encoded as a CBOR structure.
+              For store and forward environments, the party V information may be minimal or even absent.
+              The elements of PartyVInfo are encoded in the order presented, however if the element does not exist no element is placed in the array.
+              The elements of the PartyVInfo array are:
+              
+              <list style="hanging">
+                <t hangText="identity">
+                  This contains the identity information for party V.
+                  The identities can be assigned in one of two manners.
+                  Firstly, a protocol can assign identities based on roles.
+                  For example, the roles of "client" and "server" may be assigned to different entities in the protocol.
+                  Each entity would then use the correct label for the data they send or receive.
+                  The second way is for a protocol to assign identities is to use a name based on a naming system (i.e. DNS, X.509 names).
+                  <vspace/>
+                  We define an algorithm parameter 'PartyU identity' that can be used to carry identity information in the message.
+                  However, identity information is often known as part of the protocol and can thus be inferred rather than made explicit.
+                  If identity information is carried in the message, applications SHOULD have a way of validating the supplied identity information.
+                  The identity information does not need to be specified and can be left as absent.
+                </t>
+
+                <t hangText="nonce">
+                  This contains a one time nonce value.
+                  The nonce can either be implicit from the protocol or carried as a value in the unprotected headers.
+                  <vspace/>
+                  We define an algorithm parameter 'PartyU nonce' that can be used to carry this value in the message
+                  However, the nonce value could be determined by the application and the value determined from elsewhere.
+                  <vspace/>
+                  This item is optional and can be absent.
+                </t>
+
+                <t hangText="other">
+                  This contains other information that is defined by the protocol.
+                  <vspace/>
+                  This item is optional and can be absent.
+                </t>
+              </list>
             </t>
 
             <t hangText="SuppPubInfo">
@@ -2184,7 +2237,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
               This field contains private information that is mutually known information.
               An example of this information would be a pre-existing shared secret.
               The field is optional and will only be present if the application defines a structure for this information.
-              Applications that define this SHOULD use CBOR to encode the data so that types and lengths are correctly include.
+              Applications that define this SHOULD use CBOR to encode the data so that types and lengths are correctly included.
             </t>
           </list>
         </t>
@@ -2215,7 +2268,8 @@ COSE_KDF_Context = [
     PartyUInfo : [
         ? nonce : bstr / int,
         ? identity : bstr,
-        ? other : bstr
+        ? other : bstr,
+        ? protectedHeaders : btr
     ],
     PartyVInfo : [
         ? nonce : bstr,
@@ -2261,7 +2315,7 @@ COSE_KDF_Context = [
           <t>
             <list style="symbols">
               <t>
-                The 'protected' field MUST be a zero length item when it is not used in the computation of the content key.
+                The 'protected' field MUST be a zero length item unless it is used in the computation of the content key.
               </t>
               
               <t>
@@ -2328,8 +2382,10 @@ COSE_KDF_Context = [
           <section title="Direct Key with KDF">
             <t>
               These recipient algorithms take a common shared secret between the two parties and applies the HKDF function (<xref target="HKDF"/>) using the context structure defined in <xref target="context"/> to transform the shared secret into the necessary key.
+              The 'protected' field can be of non-zero length.
+              The 'protected' field is copied into the SuppPubInfo.protected field of the context structure.
               Either the 'salt' parameter of HKDF or the partyU 'nonce' parameter of the context structure MUST be present.
-              This parameter can be generated either randomly or deterministically.
+              The salt/nonce parameter can be generated either randomly or deterministically.
 	      The requirement is that it be a unique value for the key pair in question.
             </t>
 
@@ -2338,7 +2394,7 @@ COSE_KDF_Context = [
               While there is no way to guarantee that it will be unique, there is a high probability that it will be unique.
               If the salt/nonce value is generated deterministically, it can be guaranteed to be unique and thus there is no length requirement.
             </t>
-
+'
             <t>
               A new IV must be used if the same key is used in more than one message.
               The IV can be modified in a predictable manner, a random manner or an unpredictable manner.
@@ -2378,9 +2434,10 @@ COSE_KDF_Context = [
       <section title="Key Wrapping">
         <t>
           In key wrapping mode, the CEK is randomly generated and that key is then encrypted by a shared secret between the sender and the recipient.
-          All of the currently defined key wrapping algorithms for JOSE (and thus for COSE) are AE algorithms.
+          All of the currently defined key wrapping algorithms for COSE are AE algorithms.
           Key wrapping mode is considered to be superior to direct encryption if the system has any capability for doing random key generation.
           This is because the shared key is used to wrap random data rather than data  has some degree of organization and may in fact be repeating the same content.
+          The use of Key Wrapping loses the weak data origination that is provided by the direct encryption algorithms.
         </t>
 
         <t>
@@ -2445,7 +2502,8 @@ COSE_KDF_Context = [
           <section title="Security Considerations for AES-KW">
               <t>
                 The shared secret need to have some method to be regularly updated over time.
-                The shared secret is forming the basis of trust, although not used directly it should still be subject to scheduled rotation.
+                The shared secret is the basis of trust.
+                
               </t>
           </section>
         </section>
