@@ -2070,7 +2070,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
           The context information structure is used to ensure that the derived keying material is "bound" to the context of the transaction.
           The context information structure used here is based on that defined in <xref target="SP800-56A"/>.
           By using CBOR for the encoding of the context information structure, we automatically get the same type and length separation of fields that is obtained by the use of ASN.1.
-          This means that there is no need to encode the lengths for the base elements as it is done by the encoding used in JOSE (Section 4.6.2 of <xref target="JWA"/>).
+          This means that there is no need to encode the lengths for the base elements as it is done by the encoding used in JOSE (Section 4.6.2 of <xref target="RFC7518"/>).
           <cref source="Ilari">
             Look to see if we need to be clearer about how the fields defined in the table are transported and thus why they have labels.
           </cref>
@@ -2269,7 +2269,6 @@ COSE_KDF_Context = [
         ? nonce : bstr / int,
         ? identity : bstr,
         ? other : bstr,
-        ? protectedHeaders : btr
     ],
     PartyVInfo : [
         ? nonce : bstr,
@@ -2394,7 +2393,7 @@ COSE_KDF_Context = [
               While there is no way to guarantee that it will be unique, there is a high probability that it will be unique.
               If the salt/nonce value is generated deterministically, it can be guaranteed to be unique and thus there is no length requirement.
             </t>
-'
+
             <t>
               A new IV must be used if the same key is used in more than one message.
               The IV can be modified in a predictable manner, a random manner or an unpredictable manner.
@@ -2607,7 +2606,7 @@ COSE_KDF_Context = [
                 The curve selected controls not only the size of the shared secret, but the mathematics for computing the shared secret.
                 The curve selected also controls how a point in the curve is represented and what happens for the identity points on the curve.
                 In this specification, we allow for a number of different curves to be used.
-                The curves are defined in <xref target="table-ec-curves"/>.
+                A set of curves are defined in <xref target="table-ec-curves"/>.
                 <vspace/>
                 Since the only the math is changed by changing the curve, the curve is not fixed for any of the algorithm identifiers we define.
 		Instead, it is defined by the points used.
@@ -2615,10 +2614,10 @@ COSE_KDF_Context = [
               
               <t>
                 Ephemeral-static or static-static:
-                The key agreement process may be done using either a static or an ephemeral key at the sender's side.
+                The key agreement process may be done using either a static or an ephemeral key for the sender's side.
                 When using ephemeral keys, the sender MUST generate a new ephemeral key for every key agreement operation.
                 The ephemeral key is placed in the 'ephemeral key' parameter and MUST be present for all algorithm identifiers that use ephemeral keys.
-                When using static keys, the sender MUST either generate a new random value placed in either in the KDF parameters or the context structure.
+                When using static keys, the sender MUST either generate a new random value or otherwise create a unique value to be  placed in either in the KDF parameters or the context structure.
                 For the KDF functions used, this means either in the 'salt' parameter for HKDF (<xref target="HKDF_Alg_Params"/>) or in the 'PartyU nonce' parameter for the context structure (<xref target="KDF_Context_Alg_Params"/>) MUST be present.
                 (Both may be present if desired.)
                 The value in the parameter MUST be unique for the key pair being used.
@@ -2925,7 +2924,9 @@ COSE_KDF_Context = [
             and the minimum length encoding is used.
           </t>
           <t>
-            All parsers used SHOULD fail on both parsing and generation if the same label is used twice as a key for the same map.
+            Applications MUST not generate messages with the same label used twice as a key in a single map.
+            Applications MUST not parse and process messages with the same label used twice as a key in a single map.
+            Applications can enforce the parse and process requirement by using parsers that will fail the parse step or by using parsers that will pass all keys to the application and the application can perform the check for duplicate keys.
           </t>
         </list>
       </t>
