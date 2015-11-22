@@ -385,7 +385,7 @@ COSE_Untagged_Message = COSE_Sign /
 
 COSE_Tagged_Message = COSE_Sign_Tagged /
     COSE_Enveloped_Tagged /
-    COSE_EncryptedData_Tagged /
+    COSE_Encrypted_Tagged /
     COSE_Mac_Tagged
 ]]></artwork></figure>
 
@@ -566,7 +566,7 @@ Headers = (
 
             <t hangText='Partial Initialization Vector'>
               This parameter holds a part of the IV value.
-              When using the COSE_EncryptedData structure, frequently a portion of the IV is part of the context associated with the key value.
+              When using the COSE_Encrypted structure, frequently a portion of the IV is part of the context associated with the key value.
               This field is used to carry the portion of the IV that changes for each message.
               As the IV is authenticated by the encryption process, it can be placed in the unprotected header bucket.
               <vspace blankLines="1"/>
@@ -577,7 +577,7 @@ Headers = (
             <t hangText='counter signature'>
               This parameter holds a counter signature value.
               Counter signatures provide a method of having a second party sign some data.
-	      The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_signature, COSE_Enveloped, COSE_recipient, COSE_EnvelopededData, COSE_mac.
+	      The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_signature, COSE_Enveloped, COSE_recipient, COSE_Encrypted, COSE_mac.
               These structures all have the same basic structure so that a consistent calculation of the counter signature can be computed.
               Details on computing counter signatures are found in <xref target="counter_signature"/>.
             </t>
@@ -866,7 +866,7 @@ Sig_structure = [
           Counter signatures provide a method of having a different signature occur on some piece of content.
           This is normally used to provide a signature on a signature allowing for a proof that a signature existed at a given time (i.e. a Timestamp).
           In this document we allow for counter signatures to exist in a greater number of environments.
-          As an example, it is possible to place a counter signature in the unprotected attributes of a COSE_EnvelopededData object.
+          As an example, it is possible to place a counter signature in the unprotected attributes of a COSE_Enveloped object.
           This would allow for an intermediary to either verify that the encrypted byte stream has not been modified, without being able to decrypt it.
           Or for the intermediary to assert that an encrypted byte stream either existed at a given time or passed through it in terms of routing (i.e. a proxy signature).
         </t>
@@ -880,7 +880,7 @@ Sig_structure = [
           The creation and validation of counter signatures over the different items relies on the fact that the structure all of our objects have the same structure.
           The elements are a set of protected attributes, a set of unprotected attributes and a body in that order.
           This means that the Sig_structure can be used for in a uniform manner to get the byte stream for processing a signature.
-          If the counter signature is going to be computed over a COSE_EnvelopededData structure, the body_protected and payload items can be mapped into the Sig_structure in the same manner as from the COSE_Sign structure.
+          If the counter signature is going to be computed over a COSE_Enveloped structure, the body_protected and payload items can be mapped into the Sig_structure in the same manner as from the COSE_Sign structure.
         </t>
       </section>
     </section>
@@ -890,7 +890,7 @@ Sig_structure = [
         COSE supports two different encryption structures.
         COSE_Enveloped is used when the key needs to be explicitly identified.
         This structure supports the use of recipient structures to allow for random content encryption keys to be used.
-        COSE_Envelopeded is used when a recipient structure is not needed because the key to be used is known implicitly.
+        COSE_Enveloped is used when a recipient structure is not needed because the key to be used is known implicitly.
       </t>
 
       <section title="Enveloped COSE Structure" anchor="EnvelopedData">
@@ -915,7 +915,7 @@ Sig_structure = [
       </t>
 
       <t>
-o        The COSE_Enveloped structure is a CBOR array.
+        The COSE_Enveloped structure is a CBOR array.
         The fields of the array in order are:
 
         <list style="hanging">
@@ -1001,7 +1001,7 @@ COSE_recipient = [
 
       <section anchor="key-management-methods" title="Recipient Algorithm Classes">
         <t>
-          A typical encrypted message consists of an encrypted content and an encrypted content encryption key (CEK) for one or more recipients.
+          A typical encrypted message consists of an encrypted content and an encrypted CEK for one or more recipients.
           The CEK is encrypted for each recipient, using a key specific to that recipient.
           The details of this encryption depends on which class the recipient algorithm falls into.
           Specific details on each of the classes can be found in <xref target="key-management-algs"/>.
@@ -1039,7 +1039,7 @@ COSE_recipient = [
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_EncryptedData_Tagged = #6.997(COSE_Encrypted)     ; Replace 997 with TBD3
+COSE_Encrypted_Tagged = #6.997(COSE_Encrypted)     ; Replace 997 with TBD3
       
 COSE_Encrypted = [
     COSE_Enveloped_fields
@@ -1047,7 +1047,7 @@ COSE_Encrypted = [
 ]]></artwork></figure>
 
       <t>
-        The COSE_EnvelopededData structure is a CBOR array.
+        The COSE_Enveloped structure is a CBOR array.
         The fields of the array in order are:
 
         <list style="hanging">
@@ -1196,8 +1196,8 @@ Enc_structure = [
         Any class of recipient algorithm can be used for this purpose. 
         The second mode is to both check that the content has not been changed since the MAC was computed, and to use the recipient algorithm to verify who sent it.
         The classes of recipient algorithms that support this are those that use a pre-shared secret or do static-static key agreement (without the key wrap step).
-        In both of these cases, the entity MACing the message can be validated by a key binding. 
-        (The binding of identity assumes that there are only two parties involved and you did not send the message yourself.)
+        In both of these cases, the entity hat created and sent the message MAC can be validated.
+        (The knowledge of sender assumes that there are only two parties involved and you did not send the message yourself.)
       </t>
 
       <t>
@@ -1944,7 +1944,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
           <ttcol align='left'>name</ttcol>
           <ttcol align='left'>value</ttcol>
           <ttcol align='left'>description</ttcol>
-          <c>ChaCha20/Poly1305</c>        <c>11</c>        <c>ChaCha20/Poly1305 w/ 256-bit key, 128-bit tag</c>
+          <c>ChaCha20/Poly1305</c>        <c>24</c>        <c>ChaCha20/Poly1305 w/ 256-bit key, 128-bit tag</c>
         </texttable>
         
         <t>
@@ -4036,6 +4036,13 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
 
     <section title="Document Updates">
       <!-- RFC Editor - Please remove this appendix before publishing -->
+      <section title="Version -06 to -08">
+        <t>
+          <list style="symbols">
+            <t>Redefine sequence number into a the Partial IV.</t>
+          </list>
+        </t>
+      </section>
       <section title="Version -06 to -07">
         <t>
           <list style="symbols">
