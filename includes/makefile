@@ -1,11 +1,11 @@
 Example_DIR = c:\projects\cose\examples\spec-examples\new
+DUMPER_DIR = c:\projects\cose\cose-c\build\dist\dumper\debug
 
 .SUFFIXES:
 .SUFFIXES: .bin .xml
 
 .bin.xml:
-	cbor2diag $< > $@.txt
-	XmlPreparation.pl $@.txt > $@
+	$(DUMPER_DIR)\cose_dumper.exe -xml=yes -wrap=68 $< > $@
 
 all: Triple-01.xml \
 	Mac-01.xml Mac-02.xml Mac-03.xml Mac-04.xml \
@@ -43,6 +43,11 @@ Triple-01.bin: $(Example_DIR)\Triple-01.json.bin
 private-keyset.bin: $(Example_DIR)\private-keyset.bin
 	copy $** $@
 
+private-keyset.xml: private-keyset.bin
+	$(DUMPER_DIR)\cose_dumper.exe -xml=yes -type=keyset -wrap=68 $*.bin > $@
+
 public-keyset.bin: $(Example_DIR)\public-keyset.bin
 	copy $** $@
 
+public-keyset.xml: public-keyset.bin
+	$(DUMPER_DIR)\cose_dumper.exe -xml=yes -type=keyset -wrap=68 $*.bin > $@
