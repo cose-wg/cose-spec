@@ -192,16 +192,14 @@
         <t>
           There currently is no standard CBOR grammar available for use by specifications.
           We therefore describe the CBOR structures in prose.
-          There is a version of a CBOR grammar in the CBOR Data Definition Language (CDDL) <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>.
-          An informational version of the CBOR grammar that reflects what is in the prose can be found in <xref target="Grammar_Appendix"/>.
-          Since CDDL has not be published as an RFC, this grammar may not work with the final version of CDDL when it is published.
         </t>
 
         <t>
           The document was developed by first working on the grammar and then developing the prose to go with it.
           An artifact of this is that the prose was written using the primitive type strings defined by CDDL.
          In this specification, the following primitive types are used:
-          <list style="empty">
+         <list style="empty">
+           <t>any - non-specific value that permits all CBOR values to be placed here.</t>
             <t>bool - a boolean value (true: major type 7, value 21; false: major type 7, value 20).</t>
             <t>bstr - byte string (major type 2).</t>
             <t>int - an unsigned integer or a negative integer.</t>
@@ -212,24 +210,43 @@
           </list>
         </t>
 
-        <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+      <t>
+          There is a version of a CBOR grammar in the CBOR Data Definition Language (CDDL) <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>.
+          Since CDDL has not be published as an RFC, this grammar may not work with the final version of CDDL when it is published.
+          For those people who prefer using a formal language to describe the syntax of the CBOR, an informational version of the CBOR grammar is interweaved into the text as well.
+          The CDDL grammar is informational, the prose description is normative.
+      </t>
+      
+      <t>
+        The collected CDDL can be extracted from the XML version of this document via the following XPath expression below.
+        (Depending on the XPath evaluator one is using, it may be necessary to deal with &amp;gt; as an entity.)
+      </t>
+
+      <t>
+        <figure><artwork type='XPATH'>
+<![CDATA[
+//artwork[@type='CDDL']/text()
+]]></artwork></figure>         
+      </t>
+
+      <t>
+        CDDL expects the initial non-terminal symbol to be the first symbol in the file.
+        For this reason the first fragment of CDDL is presented here.
+      </t>
+
+      <figure><artwork type='CDDL'>
+        <![CDATA[
+start = COSE_Messages / COSE_Key / COSE_KeySet / Internal_Types
+
+; This is define to make the tool quieter
+Internal_Types = Sig_structure / Enc_structure / MAC_structure /
+        COSE_KDF_Context
+]]></artwork></figure>
 
         <t>
-          Text from here to start of next section to be removed
+          The non-terminal Internal_Types is defined for dealing with the automated validation tools used during the writing of this document.
+          It references those non-terminals that are used for security computations.
         </t>
-             
-        <t>
-          NOTE: For the purposes of review, we are currently interlacing the CDDL grammar into the text of document.
-          This is being done for simplicity of comparison of the grammar against the prose.
-          The grammar will be removed to an appendix during WGLC.
-        </t>
-        
-        <figure><artwork type='CDDL'>
-<![CDATA[
-start = COSE_Untagged_Message / COSE_Tagged_Message /
-        COSE_Key / COSE_KeySet / Internal_Types
-]]></artwork></figure>
-        
       </section>
 
       <section title="CBOR Related Terminology" anchor="label">
@@ -241,10 +258,8 @@ start = COSE_Untagged_Message / COSE_Tagged_Message /
           Since the work "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage as a map keys.
         </t>
 
-        <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
         <t>
-          Text from here to start of next section to be removed
+          A CDDL grammar fragment is defined that defines the non-terminals 'label' as in the previous paragraph and 'values' which permits any value to be used.
         </t>
 
         <figure><artwork type='CDDL'>
@@ -370,14 +385,14 @@ values = any
       </t>
       -->
 
-      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
       <t>
-        Text from here to start of next section to be removed
+        The following CDDL fragment identifies all of the top level messages defined in this document.
+        Separate non-terminals are defined for the tagged and the untagged versions of the messages for the convenience of applications.
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-
+COSE_Messages = COSE_Untagged_Message / COSE_Tagged_Message
+      
 COSE_Untagged_Message = COSE_Sign / 
     COSE_Enveloped /
     COSE_Encrypted /
@@ -481,23 +496,26 @@ tag=10
         Some common parameters are defined in the next section, but a number of parameters are defined throughout this document.
       </t>
 
-      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
       <t>
-        Text from here to start of next section to be removed
-        <cref source="JLS">
-          A completest version of this grammar would list the options available in the protected and unprotected headers.
-          Do we want to head that direction?
-        </cref>
+        The following CDDL fragment represents the two header buckets.
+        A group Headers is defined in CDDL which represents the two buckets in which attributes are placed.
+        This group is used to provide these two fields consistently in all locations.
+        A type is also defined which represents the map of header values.
+        It uses forward references to a group definition of headers for generic and algorithms.
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-header_map = {+ label => any }
-
 Headers = (
     protected : bstr,                  ; Contains a header_map
     unprotected : header_map
 )
+
+header_map = {
+    Generic_Headers,
+    ; Algorithm_Headers,
+    + label => values
+}
+
 ]]></artwork></figure>
 
       <section anchor="cose-headers" title="Common COSE Headers Parameters">
@@ -609,6 +627,24 @@ Headers = (
           <c>counter signature</c> <c>7</c> <c>COSE_signature</c>    <c></c>                              <c>CBOR encoded signature structure</c>
           <c>creation time</c><c>*</c>      <c>uint</c>              <c></c>                              <c>Time the content was created</c>
         </texttable>
+
+        <t>
+          The CDDL fragment that represents the set of headers defined in this section is given below.
+          Each of the headers is tagged as optional because they do not need to be in every map, headers required in specific maps are discussed above.
+        </t>
+          
+<figure><artwork type="CDDL"><![CDATA[
+Generic_Headers = (
+    ? 1 => int / tstr,  ; algorithm identifier
+    ? 2 => [+label],    ; criticality
+    ? 3 => tstr / int,  ; content type
+    ? 4 => bstr,        ; key identifier
+    ? 5 => bstr,        ; IV
+    ? 6 => uint,        ; Partial IV
+    ? 7 => COSE_signature ; Counter signature
+)
+]]></artwork></figure>
+
       </section>
     </section>
 
@@ -3678,34 +3714,6 @@ COSE_KDF_Context = [
 
         -->
 
-    <section anchor="Grammar_Appendix" title="CDDL Grammar">
-
-      <t>
-        For people who prefer using a formal language to describe the syntax of the CBOR, in this section a CDDL grammar is given that corresponds to <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>.
-        This grammar is informational.
-	In the event of differences between this grammar and the prose, the prose is considered to be authoritative.
-      </t>
-      
-      <t>
-        The collected CDDL can be extracted from the XML version of this document via the following XPath expression below.
-        (Depending on the XPath evaluator one is using, it may be necessary to deal with &amp;gt; as an entity.)
-      </t>
-
-      <t>
-        <figure><artwork type='XPATH'>
-<![CDATA[
-//artwork[@type='CDDL']/text()
-]]></artwork></figure>         
-      </t>
-
-      <figure><artwork type='CDDL'>
-        <![CDATA[
-; This is define to make the tool quieter
-Internal_Types = Sig_structure / Enc_structure / MAC_structure /
-        COSE_KDF_Context
-]]></artwork></figure>
-      
-    </section>
 
     <section anchor="three-layer" title="Three Levels of Recipient Information">
 
