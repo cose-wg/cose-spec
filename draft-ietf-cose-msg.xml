@@ -37,6 +37,7 @@
 <!ENTITY Triple-01 SYSTEM "includes/Triple-01.xml">
 <!ENTITY Enc-01 SYSTEM "includes/Enc-01.xml">
 <!ENTITY Enc-02 SYSTEM "includes/Enc-02.xml">
+<!ENTITY Enc-03 SYSTEM "includes/Enc-03.xml">
 <!ENTITY Mac-01 SYSTEM "includes/Mac-01.xml">
 <!ENTITY Mac-02 SYSTEM "includes/Mac-02.xml">
 <!ENTITY Mac-03 SYSTEM "includes/Mac-03.xml">
@@ -223,8 +224,7 @@
       </t>
 
       <t>
-        <figure><artwork type='XPATH'>
-<![CDATA[
+        <figure><artwork type='XPATH'><![CDATA[
 //artwork[@type='CDDL']/text()
 ]]></artwork></figure>         
       </t>
@@ -234,8 +234,7 @@
         For this reason the first fragment of CDDL is presented here.
       </t>
 
-      <figure><artwork type='CDDL'>
-        <![CDATA[
+      <figure><artwork type='CDDL'><![CDATA[
 start = COSE_Messages / COSE_Key / COSE_KeySet / Internal_Types
 
 ; This is define to make the tool quieter
@@ -262,8 +261,7 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
           A CDDL grammar fragment is defined that defines the non-terminals 'label' as in the previous paragraph and 'values' which permits any value to be used.
         </t>
 
-        <figure><artwork type='CDDL'>
-<![CDATA[
+        <figure><artwork type='CDDL'><![CDATA[
 label = int / tstr
 values = any
 ]]></artwork></figure>
@@ -677,6 +675,16 @@ Generic_Headers = (
       </t>
 
       <t>
+        The signature structure can be encoded either with or without a tag depending on the context it will be used in.
+        The signature structure is identified by the CBOR tag TBD1.
+        The CDDL fragment that represents this is.
+      </t>
+      
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Sign_Tagged = #6.999(COSE_Sign) ; Replace 999 with TBD1
+]]></artwork></figure>
+      
+      <t>
         A COSE Signing Message is divided into two parts.
         The CBOR object that carries the body and information about the body is called the COSE_Sign structure.
         The CBOR object that carries the signature and information about the signature is called the COSE_Signature structure.
@@ -719,6 +727,18 @@ Generic_Headers = (
       </t>
 
       <t>
+        The CDDL fragment which represents the above text for COSE_Sign follows.
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Sign = [
+    Headers,
+    payload : bstr / nil,
+    signatures : [+ COSE_signature]
+]
+]]></artwork></figure>
+
+      <t>
         The COSE_signature structure is a CBOR array.
         The fields of the array in order are:
 
@@ -739,28 +759,16 @@ Generic_Headers = (
         </list>
       </t>
 
-      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
       <t>
-        Text from here to start of next section to be removed
+        The CDDL fragment which represents the above text for COSE_signature follows.
       </t>
 
-
       <figure><artwork type="CDDL"><![CDATA[
-COSE_Sign_Tagged = #6.999(COSE_Sign) ; Replace 999 with TBD1
-      
-COSE_Sign = [
-    Headers,
-    payload : bstr / nil,
-    signatures : [+ COSE_signature]
-]
-
 COSE_signature =  [
     Headers,      
     signature : bstr
 ]
 ]]></artwork></figure>
-
 
       <section title="Externally Supplied Data" anchor="Extern_AAD">
         <t>
@@ -801,6 +809,11 @@ COSE_signature =  [
           The fields of the array in order are:
           <list style="numbers">
             <t>
+              A text string identifying the context that this signature is being used in.
+              This string will be "Signature" for signatures using the COSE_Signature structure and "CounterSignature" for signatures used as counter signature attributes.
+            </t>
+            
+            <t>
               The protected attributes from the body structure encoded in a bstr type.
             </t>
 
@@ -821,11 +834,26 @@ COSE_signature =  [
         </t>
 
         <t>
+          The CDDL fragment which describes the above text is.
+        </t>
+
+        <figure><artwork type="CDDL"><![CDATA[
+Sig_structure = [
+    context: "Signature" / "CounterSignature",
+    body_protected: bstr,
+    sign_protected: bstr,
+    external_aad: bstr,
+    payload: bstr
+]
+]]></artwork></figure>
+
+        
+        <t>
           How to compute a signature:
 
           <list style="numbers">
             <t>
-              Create a CBOR array and populate it with the appropriate fields. 
+              Create a Sig_structure and populate it with the appropriate fields. 
               For body_protected and sign_protected, if the map is empty, a bstr of length zero is used.
             </t>
 
@@ -875,25 +903,6 @@ COSE_signature =  [
         <t>
           In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the appropriate authorization is done.
         </t>
-
-        <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
-        <t>
-          Text from here to start of next section to be removed
-        </t>
-
-        <t>
-          The COSE structure used to create the byte stream to be signed uses the following CDDL grammar structure:
-        </t>
-
-        <figure><artwork type="CDDL"><![CDATA[
-Sig_structure = [
-    body_protected: bstr,
-    sign_protected: bstr,
-    external_aad: bstr,
-    payload: bstr
-]
-]]></artwork></figure>
 
       </section>
 
@@ -1504,8 +1513,7 @@ key_ops_values = (key_ops_sign:1, key_ops_verify:2, key_ops_encrypt:3,
         (In fact the SSA in RSASSA-PSS stands for Signature Scheme with Appendix.)
         The basic structure becomes:
       </t>
-      <figure><artwork>
-        <![CDATA[
+      <figure><artwork><![CDATA[
 signature = Sign(message content, key)
 
 valid = Verification(message content, key, signature)
@@ -1526,8 +1534,7 @@ valid = Verification(message content, key, signature)
         Thirdly, in the event that multiple signatures are applied to a message, all of the signature algorithms are going to be required to consume the same number of bytes of message content.
       </t>
 
-      <figure><artwork>
-        <![CDATA[
+      <figure><artwork><![CDATA[
 signature, message sent = Sign(message content, key)
 
 valid, message content = Verification(message sent, key, signature)
@@ -1645,8 +1652,7 @@ valid, message content = Verification(message sent, key, signature)
 	The authentication code is frequently called a tag.
         The basic structure becomes:
       </t>
-      <figure><artwork>
-        <![CDATA[
+      <figure><artwork><![CDATA[
 tag = MAC_Create(message content, key)
 
 valid = MAC_Verify(message content, key, tag)
@@ -1782,8 +1788,7 @@ valid = MAC_Verify(message content, key, tag)
         For simplicity sake, the authentication code will normally be defined as being appended to the cipher text stream.
         The basic structure becomes:
       </t>
-      <figure><artwork>
-        <![CDATA[
+      <figure><artwork><![CDATA[
 ciphertext = Encrypt(message content, key, additional data)
 
 valid, message content = Decrypt(cipher text, key, additional data)
@@ -2297,8 +2302,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
         Text from here to start of next section to be removed
       </t>
 
-        <figure><artwork type='CDDL'>
-<![CDATA[
+        <figure><artwork type='CDDL'><![CDATA[
 COSE_KDF_Context = [
     AlgorithmID : int / tstr,
     PartyUInfo : [
@@ -3779,16 +3783,14 @@ COSE_KDF_Context = [
         This tool can be installed with the command line:
       </t>
       <figure>
-        <artwork>
-        <![CDATA[gem install cbor-diag]]>
+        <artwork><![CDATA[gem install cbor-diag]]>
         </artwork>
       </figure>
 
       <t>
         The diagnostic notation can be converted into binary files using the following command line:
       </t>
-      <figure><artwork>
-<![CDATA[          
+      <figure><artwork><![CDATA[          
          diag2cbor < inputfile > outputfile
          ]]>
       </artwork></figure>
@@ -3909,8 +3911,8 @@ COSE_KDF_Context = [
               <t>Recipient class: ECDH Ephemeral-Static, Curve P-256</t>
             </list>
           </t>
-          
-          <!-- &Enc-01; -->
+
+          &Enc-03;
 
         </section>
 
@@ -4044,7 +4046,14 @@ COSE_KDF_Context = [
 
     <section title="Document Updates">
       <!-- RFC Editor - Please remove this appendix before publishing -->
-      <section title="Version -06 to -08">
+      <section title="Version -08 to -09">
+        <t>
+          <list style="symbols">
+            <t>Integrate CDDL syntax into the text</t>
+          </list>
+        </t>
+      </section>
+      <section title="Version -07 to -08">
         <t>
           <list style="symbols">
             <t>Redefine sequence number into a the Partial IV.</t>
