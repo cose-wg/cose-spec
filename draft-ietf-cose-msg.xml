@@ -960,6 +960,16 @@ Sig_structure = [
       </t>
 
       <t>
+        The COSE Enveloped structure can be encoded either with or without a tag depending on the context it will be used in.
+        The COSE Enveloped structure is identified by the CBOR tag TBD2.
+        The CDDL fragment that represents this is.
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Enveloped_Tagged = #6.998(COSE_Enveloped) ; Replace 998 with TBD2
+]]></artwork></figure>
+
+      <t>
         The COSE_Enveloped structure is a CBOR array.
         The fields of the array in order are:
 
@@ -992,6 +1002,18 @@ Sig_structure = [
       </t>
 
       <t>
+        The CDDL fragment that corresponds to the above text is:
+      </t>
+        
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Enveloped = [
+    Headers,
+    ciphertext: bstr / nil,
+    recipients: [+COSE_recipient]
+]
+]]></artwork></figure>
+
+      <t>
         The COSE_recipient structure is a CBOR array.
         The fields of the array in order are:
 
@@ -1018,28 +1040,14 @@ Sig_structure = [
         </list>
       </t>
 
-      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
       <t>
-        Text from here to start of next section to be removed
+        The CDDL fragment that corresponds to the above text for COSE_recipient is:
       </t>
-
-      <figure><artwork type="CDDL"><![CDATA[
-
-COSE_Enveloped_Tagged = #6.998(COSE_Enveloped)    ; Replace 998 with TBD32
       
-COSE_Enveloped = [
-    COSE_Enveloped_fields
-    recipients: [+COSE_recipient]
-]
-
-COSE_Enveloped_fields = (
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_recipient = [    
     Headers,
     ciphertext: bstr / nil,
-)
-
-COSE_recipient = [    
-    COSE_Enveloped_fields
     ? recipients: [+COSE_recipient]
 ]
 ]]></artwork></figure>
@@ -1080,16 +1088,15 @@ COSE_recipient = [
       </t>
 
       <t>
-        The CDDL grammar structure for the COSE_Encrypted type is:
+        The COSE_Encrypted structure can be encoded either with or without a tag depending on the context it will be used in.
+        The COSE_Encrypted structure is identified by the CBOR tag TBD3.
+        The CDDL fragment that represents this is.
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_Encrypted_Tagged = #6.997(COSE_Encrypted)     ; Replace 997 with TBD3
-      
-COSE_Encrypted = [
-    COSE_Enveloped_fields
-]
+COSE_Encrypted_Tagged = #6.997(COSE_Encrypted) ; Replace 997 with TBD3
 ]]></artwork></figure>
+
 
       <t>
         The COSE_Enveloped structure is a CBOR array.
@@ -1110,6 +1117,18 @@ COSE_Encrypted = [
           </t>
         </list>
       </t>
+
+      <t>
+        The CDDL fragment for COSE_Encrypted that corresponds to the above text is:
+      </t>
+      
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Encrypted = [
+    Headers,
+    ciphertext: bstr / nil,
+]
+]]></artwork></figure>
+      
     </section>
 
       
@@ -1117,19 +1136,31 @@ COSE_Encrypted = [
 
         <t>
           The encryption algorithm for AEAD algorithms is fairly simple.
-          
-          In order to get a consistent encoding of the data to be authenticated, the Enc_structure is used to have canonical form of the AAD.
-          The Enc_structure is a CBOR array.
         </t>
 
         <t>
           <list style="numbers">
             <t>
-              Copy the protected header field from the message to be sent to the first location in the Enc_structure.
+              Create a CBOR array (Enc_structure) to encode the authenticated data.
             </t>
 
             <t>
-              If the application has supplied external additional authenticated data to be included in the computation, then it is placed in the second location ('external_aad' field) of the Enc_structure.
+              Place a context string in the form of a tstr in the first location to identify the data and location being encoded.
+              The strings defined are:
+              <list style="hanging">
+                <t hangText='"Encrypted"'> for the the content encryption of an encrypted data structure.</t>
+                <t hangText='"Enveloped"'> for the first level of an enveloped data structure (i.e. for content encryption).</t>
+                <t hangText='"Env_Recipient"'> for a recipient encoding to be placed in an enveloped data structure.</t>
+                <t hangText='"Mac_Recipient"'> for a recipient encoding to be placed in a MAC message structure.</t>
+              </list>
+            </t>
+            
+            <t>
+              Copy the protected header field from the message to be sent to the second location in the Enc_structure.
+            </t>
+
+            <t>
+              If the application has supplied external additional authenticated data to be included in the computation, then it is placed in the third location ('external_aad' field) of the Enc_structure.
               If no data was supplied, then a zero length binary value is used.
               (See <xref target="Extern_AAD"/> for application guidance on constructing this field.)
             </t>
@@ -1169,21 +1200,23 @@ COSE_Encrypted = [
           </list>
         </t>
 
-        <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
         <t>
-          Text from here to start of next section to be removed
+          The CDDL fragment which defines the Enc_structure used for the authenticated data structure is:
         </t>
-
+        
         <figure><artwork type="CDDL"><![CDATA[
 Enc_structure = [
+    context : "Enveloped" / "Encrypted" / "Env_Recipient" /
+        "Mac_Recipient",
     protected: bstr,
     external_aad: bstr
 ]
 
 ]]></artwork></figure>
 
+
       </section>
+
       <section anchor="encryption-algorithm-for-ae-algorithms" title="Encryption algorithm for AE algorithms">
 
         <t>
@@ -3625,20 +3658,6 @@ COSE_KDF_Context = [
           <date year="2009" month="May"/>
         </front>
         <format target="http://www.secg.org/sec1-v2.pdf" type="PDF"/>
-      </reference>
-
-      <reference anchor="MultiPrimeRSA">
-        <front>
-          <title>On the Security of Multi-prime RSA</title>
-          <author initials="M. J." surname="Hinek">
-            <organization>University of Waterloo</organization>
-          </author>
-          <author initials="D. R." surname="Cheriton">
-            <organization>University of Waterloo</organization>
-          </author>
-          <date year="2006" month="June"/>
-        </front>
-        <format target="http://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf" type="PDF"/>
       </reference>
 
       <reference anchor="PVSig">
