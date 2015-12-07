@@ -38,6 +38,7 @@
 <!ENTITY Enc-01 SYSTEM "includes/Enc-01.xml">
 <!ENTITY Enc-02 SYSTEM "includes/Enc-02.xml">
 <!ENTITY Enc-03 SYSTEM "includes/Enc-03.xml">
+<!ENTITY Enc-04 SYSTEM "includes/Enc-04.xml">
 <!ENTITY Mac-01 SYSTEM "includes/Mac-01.xml">
 <!ENTITY Mac-02 SYSTEM "includes/Mac-02.xml">
 <!ENTITY Mac-03 SYSTEM "includes/Mac-03.xml">
@@ -1284,6 +1285,16 @@ Enc_structure = [
       </t>
 
       <t>
+        The MAC structure can be encoded either withor without a tag depending on the context it will be used in.
+        The MAC truture is identified by the CBOR tag TBD4.
+        The CDDL fragment that represents this is:
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Mac_Tagged = #6.996(COSE_Mac)         ; Replace 996 with TBD4
+]]></artwork></figure>
+
+      <t>
         The COSE_Mac structure is a CBOR array.
         The fields of the array in order are:
 
@@ -1321,42 +1332,64 @@ Enc_structure = [
         </list>
       </t>
 
-      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
       <t>
-        Text from here to start of next section to be removed
+        The CDDL fragment which represents the above text for COSE_Mac follows.
       </t>
-
-      <figure><artwork type="CDDL"><![CDATA[
-COSE_Mac_Tagged = #6.996(COSE_Mac)              ; Replace 996 with TBD4
       
+      <figure><artwork type="CDDL"><![CDATA[
 COSE_Mac = [
    Headers,
    payload: bstr / nil,
    tag: bstr,
    recipients: [+COSE_recipient]
 ]
-
 ]]></artwork></figure>
 
         <section title="How to compute a MAC">
           <t>
             In order to get a consistent encoding of the data to be authenticated, the MAC_structure is used to have a canonical form.
             The MAC_structure is a CBOR array.
+            The fields of the MAC_structure in order are:
+            <list style="numbers">
+              <t>
+                A text string that identifies the structure that is being encoded.
+                This string is "MAC" for the COSE_Mac struture.
+              </t>
+              <t>
+                The protected attributes from the COSE_MAC structure.
+                If there are no protected attributes, a zero length binary string is to be encoded.
+              </t>
+              <t>
+                If the application has supplied external authenticated data, encode it as a binary value and place in the MAC_structure.
+                If there is no external authenticated data, then use a zero length 'bstr'.
+                (See <xref target="Extern_AAD"/> for application guidance on constructing this field.)
+              </t>
+              <t>
+                The payload to be MAC-ed encoded in a bstr type.
+                The payload is placed here independent of how it is transported.
+              </t>
+            </list>
           </t>
+
+          <t>
+            The CDDL fragment that corresponds to the above text is:
+          </t>
+          
+          <figure><artwork type="CDDL"><![CDATA[
+MAC_structure = [
+     context: "MAC",
+     protected: bstr,
+     external_aad: bstr,
+     payload: bstr
+]
+]]></artwork></figure>
 
           <t>
             The steps to compute a MAC are:
 
             <list style="numbers">
               <t>
-                Create a MAC_structure and copy the protected and payload fields from the COSE_Mac structure.
-              </t>
-              
-              <t>
-                If the application has supplied external authenticated data, encode it as a binary value and place in the MAC_structure.
-                If there is no external authenticated data, then use a zero length 'bstr'.
-                (See <xref target="Extern_AAD"/> for application guidance on constructing this field.)
+                Create a MAC_structure and fill  in the fields.
               </t>
               
               <t>
@@ -1373,19 +1406,6 @@ COSE_Mac = [
             </list>
           </t>
 
-          <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
-          <t>
-            Text from here to start of next section to be removed
-          </t>
-
-          <figure><artwork type="CDDL"><![CDATA[
-MAC_structure = [
-     protected: bstr,
-     external_aad: bstr,
-     payload: bstr
-]
-]]></artwork></figure>
 
         </section>
       </section>
@@ -1413,19 +1433,8 @@ MAC_structure = [
         The element "kty" is a required element in a COSE_Key map.
       </t>
 
-      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
-      <t>
-        Text from here to start of next section to be removed
-      </t>
-
       <t>
         The CDDL grammar describing a COSE_Key and COSE_KeySet is:
-        <cref source="JLS">
-          We can really simplify the grammar for COSE_Key to be just the kty (the one required field) and the generic item.
-          The reason to do this is that it makes things simpler.
-          The reason not to do this says that we really need to add a lot more items so that a grammar check can be done that is more tightly enforced.
-        </cref>
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
@@ -1508,7 +1517,7 @@ COSE_KeySet = [+COSE_Key]
         <c>key agree</c>        <c>7</c>        <c>The key is used for key agreement.</c>
       </texttable>
       
-      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. 
 
       <t>
         Text from here to start of next section to be removed
@@ -1531,7 +1540,8 @@ key_ops_values = (key_ops_sign:1, key_ops_verify:2, key_ops_encrypt:3,
         key_ops_agree:7)
         
 ]]></artwork></figure>
-
+      -->
+      
     </section>
       
     </section>
@@ -2329,10 +2339,9 @@ valid, message content = Decrypt(cipher text, key, additional data)
           <c>PartyV other</c>      <c>-26</c>      <c>bstr</c>          <c>Party V other provided information</c>
         </texttable>
 
-        <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
 
       <t>
-        Text from here to start of next section to be removed
+        The following CDDL fragment corresponds to the text above.
       </t>
 
         <figure><artwork type='CDDL'><![CDATA[
@@ -3940,12 +3949,11 @@ COSE_KDF_Context = [
             This example uses the following:
 
             <list style="symbols">
-              <t>CEK: AES-GCM w/ 128-bit key</t>
-              <t>Recipient class: ECDH Ephemeral-Static, Curve P-256</t>
+              <t>CEK: AES-CCM w/ 128-bit key and a 64-bit tag</t>
             </list>
           </t>
           
-          <!-- &Enc-04; -->
+          &Enc-04;
 
         </section>
         
