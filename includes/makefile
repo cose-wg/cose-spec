@@ -9,9 +9,18 @@ DUMPER_DIR = c:\projects\cose\cose-c\build\dist\dumper\debug
 
 all: Triple-01.xml \
 	Mac-01.xml Mac-02.xml Mac-03.xml Mac-04.xml \
-	Enc-01.xml Enc-02.xml Enc-03.xml Enc-04.xml \
+	Enc-01.xml Enc-02.xml Enc-03.xml Enc-04.xml Enc-05.xml \
 	Sig-01.xml Sig-02.xml \
 	public-keyset.xml private-keyset.xml
+
+private-keyset.xml: private-keyset.bin
+	$(DUMPER_DIR)\cose_dumper.exe -xml=yes -type=keyset -wrap=68 $*.bin > $@
+
+public-keyset.bin: $(Example_DIR)\public-keyset.bin
+	copy $** $@
+
+public-keyset.xml: public-keyset.bin
+	$(DUMPER_DIR)\cose_dumper.exe -xml=yes -type=keyset -wrap=68 $*.bin > $@
 
 Enc-01.bin: $(Example_DIR)\Enc-01.json.bin
 	copy $** $@
@@ -23,6 +32,9 @@ Enc-03.bin: $(Example_DIR)\Enc-03.json.bin
 	copy $** $@
 
 Enc-04.bin: $(Example_DIR)\Enc-04.json.bin
+	copy $** $@
+
+Enc-05.bin: $(Example_DIR)\Enc-05.json.bin
 	copy $** $@
 
 Mac-01.bin: $(Example_DIR)\Mac-01.json.bin
@@ -48,12 +60,3 @@ Triple-01.bin: $(Example_DIR)\Triple-01.json.bin
 
 private-keyset.bin: $(Example_DIR)\private-keyset.bin
 	copy $** $@
-
-private-keyset.xml: private-keyset.bin
-	$(DUMPER_DIR)\cose_dumper.exe -xml=yes -type=keyset -wrap=68 $*.bin > $@
-
-public-keyset.bin: $(Example_DIR)\public-keyset.bin
-	copy $** $@
-
-public-keyset.xml: public-keyset.bin
-	$(DUMPER_DIR)\cose_dumper.exe -xml=yes -type=keyset -wrap=68 $*.bin > $@
