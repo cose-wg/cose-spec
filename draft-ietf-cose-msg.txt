@@ -173,25 +173,27 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
        B.2.2.  Direct plus Key Derivation  . . . . . . . . . . . . .  80
        B.2.3.  Counter Signature on Encrypted Content  . . . . . . .  81
        B.2.4.  Encrypted Content w/ Implicit Recipient . . . . . . .  82
+       B.2.5.  Encrypted Content w/ Implicit Recipient and Partial
+               IV  . . . . . . . . . . . . . . . . . . . . . . . . .  83
      B.3.  Examples of Signed Message  . . . . . . . . . . . . . . .  83
        B.3.1.  Single Signature  . . . . . . . . . . . . . . . . . .  83
        B.3.2.  Multiple Signers  . . . . . . . . . . . . . . . . . .  84
-       B.3.3.  Counter Signature . . . . . . . . . . . . . . . . . .  84
+       B.3.3.  Counter Signature . . . . . . . . . . . . . . . . . .  85
      B.4.  COSE Keys . . . . . . . . . . . . . . . . . . . . . . . .  85
        B.4.1.  Public Keys . . . . . . . . . . . . . . . . . . . . .  85
-       B.4.2.  Private Keys  . . . . . . . . . . . . . . . . . . . .  86
-   Appendix C.  Document Updates . . . . . . . . . . . . . . . . . .  88
-     C.1.  Version -08 to -09  . . . . . . . . . . . . . . . . . . .  88
-     C.2.  Version -07 to -08  . . . . . . . . . . . . . . . . . . .  88
-     C.3.  Version -06 to -07  . . . . . . . . . . . . . . . . . . .  89
-     C.4.  Version -05 to -06  . . . . . . . . . . . . . . . . . . .  89
-     C.5.  Version -04 to -05  . . . . . . . . . . . . . . . . . . .  89
-     C.6.  Version -03 to -04  . . . . . . . . . . . . . . . . . . .  89
-     C.7.  Version -02 to -03  . . . . . . . . . . . . . . . . . . .  89
-     C.8.  Version -02 to -03  . . . . . . . . . . . . . . . . . . .  90
-     C.9.  Version -01 to -2 . . . . . . . . . . . . . . . . . . . .  90
-     C.10. Version -00 to -01  . . . . . . . . . . . . . . . . . . .  90
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  91
+       B.4.2.  Private Keys  . . . . . . . . . . . . . . . . . . . .  87
+   Appendix C.  Document Updates . . . . . . . . . . . . . . . . . .  89
+     C.1.  Version -08 to -09  . . . . . . . . . . . . . . . . . . .  89
+     C.2.  Version -07 to -08  . . . . . . . . . . . . . . . . . . .  89
+     C.3.  Version -06 to -07  . . . . . . . . . . . . . . . . . . .  90
+     C.4.  Version -05 to -06  . . . . . . . . . . . . . . . . . . .  90
+     C.5.  Version -04 to -05  . . . . . . . . . . . . . . . . . . .  90
+     C.6.  Version -03 to -04  . . . . . . . . . . . . . . . . . . .  90
+     C.7.  Version -02 to -03  . . . . . . . . . . . . . . . . . . .  90
+     C.8.  Version -02 to -03  . . . . . . . . . . . . . . . . . . .  91
+     C.9.  Version -01 to -2 . . . . . . . . . . . . . . . . . . . .  91
+     C.10. Version -00 to -01  . . . . . . . . . . . . . . . . . . .  91
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  92
 
 1.  Introduction
 
@@ -216,8 +218,6 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
    document format.  While there is a strong attempt to keep the flavor
    of the original JOSE documents, two considerations are taken into
    account:
-
-
 
 
 
@@ -4609,6 +4609,29 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
      ]
    )
 
+B.2.5.  Encrypted Content w/ Implicit Recipient and Partial IV
+
+   This example uses the following:
+
+   o  CEK: AES-CCM w/ 128-bit key and a 64-bit tag
+
+   o  Prefix for IV is 89F52F65A1C580933B52
+
+   Size of binary file is 43 bytes
+
+   997(
+     [
+       / protected / h'a1010a' / {
+           \ alg \ 1:10 \ AES-CCM-16-64-128 \
+         } / ,
+       / unprotected / {
+         / partial iv / 6:24999
+       },
+       / ciphertext / h'16c4b98fe85c8e2eed1f990ef40ce02cd54aa3195d43ed6
+   18a9df43e'
+     ]
+   )
+
 B.3.  Examples of Signed Message
 
 B.3.1.  Single Signature
@@ -4618,6 +4641,14 @@ B.3.1.  Single Signature
    o  Signature Algorithm: ECDSA w/ SHA-256, Curve P-256-1
 
    Size of binary file is 106 bytes
+
+
+
+
+Schaad                    Expires June 9, 2016                 [Page 83]
+
+Internet-Draft         CBOR Encoded Message Syntax         December 2015
+
 
    999(
      [
@@ -4640,16 +4671,6 @@ B.3.1.  Single Signature
      ]
    )
 
-
-
-
-
-
-Schaad                    Expires June 9, 2016                 [Page 83]
-
-Internet-Draft         CBOR Encoded Message Syntax         December 2015
-
-
 B.3.2.  Multiple Signers
 
    This example uses the following:
@@ -4659,6 +4680,31 @@ B.3.2.  Multiple Signers
    o  Signature Algorithm: ECDSA w/ SHA-512, Curve P-521
 
    Size of binary file is 276 bytes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Schaad                    Expires June 9, 2016                 [Page 84]
+
+Internet-Draft         CBOR Encoded Message Syntax         December 2015
+
 
    999(
      [
@@ -4699,13 +4745,6 @@ B.3.3.  Counter Signature
 
    o  Signature Algorithm: ECDSA w/ SHA-256, Curve P-256-1
 
-
-
-Schaad                    Expires June 9, 2016                 [Page 84]
-
-Internet-Draft         CBOR Encoded Message Syntax         December 2015
-
-
 B.4.  COSE Keys
 
 B.4.1.  Public Keys
@@ -4714,6 +4753,14 @@ B.4.1.  Public Keys
    public keys for all of the previous examples.
 
    In order the keys are:
+
+
+
+
+Schaad                    Expires June 9, 2016                 [Page 85]
+
+Internet-Draft         CBOR Encoded Message Syntax         December 2015
+
 
    o  An EC key with a kid of "meriadoc.brandybuck@buckland.example"
 
@@ -4757,7 +4804,16 @@ B.4.1.  Public Keys
 
 
 
-Schaad                    Expires June 9, 2016                 [Page 85]
+
+
+
+
+
+
+
+
+
+Schaad                    Expires June 9, 2016                 [Page 86]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4813,7 +4869,7 @@ B.4.2.  Private Keys
 
 
 
-Schaad                    Expires June 9, 2016                 [Page 86]
+Schaad                    Expires June 9, 2016                 [Page 87]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4869,7 +4925,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 9, 2016                 [Page 87]
+Schaad                    Expires June 9, 2016                 [Page 88]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4925,7 +4981,7 @@ C.2.  Version -07 to -08
 
 
 
-Schaad                    Expires June 9, 2016                 [Page 88]
+Schaad                    Expires June 9, 2016                 [Page 89]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4981,7 +5037,7 @@ C.7.  Version -02 to -03
 
 
 
-Schaad                    Expires June 9, 2016                 [Page 89]
+Schaad                    Expires June 9, 2016                 [Page 90]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -5037,7 +5093,7 @@ Editorial Comments
 
 
 
-Schaad                    Expires June 9, 2016                 [Page 90]
+Schaad                    Expires June 9, 2016                 [Page 91]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -5093,4 +5149,4 @@ Author's Address
 
 
 
-Schaad                    Expires June 9, 2016                 [Page 91]
+Schaad                    Expires June 9, 2016                 [Page 92]
