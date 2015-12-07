@@ -2910,7 +2910,7 @@ COSE_KDF_Context = [
               <t hangText="x">
                 contains the x coordinate for the EC point.
                 The integer is converted to an octet string as defined in <xref target="SEC1"/>.
-                Zero octets MUST NOT be removed from the front of the octet string.
+                Leading zero octets MUST be preserved.
 
                 <!--
                 <cref source="JLS">
@@ -2924,7 +2924,10 @@ COSE_KDF_Context = [
                 contains either the sign bit or the value of y coordinate for the EC point.
                 When encoding the value y, the integer is converted to an octet string (as defined in <xref target="SEC1"/>) and encoded as a CBOR bstr.
                 Leading zero octets MUST be preserved.
-                When encoding the sign of y, the expression 'y > 0' is evaluated and encoded a CBOR boolean.
+                The compressed point encoding is also supported.
+                Compute the sign bit as laid out in the Elliptic-Curve-Point-to-Octet-String Conversion function of <xref target="SEC1"/>.
+                If the sign bit is zero, then encode y as a CBOR false value, otherwise encode y as a CBOR true value.
+                The encoding of the infinity point is not supported.
               </t>
               
               <t hangText="d">
