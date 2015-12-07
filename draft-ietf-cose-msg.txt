@@ -628,15 +628,15 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
       computed.  Details on computing counter signatures are found in
       Section 4.3.
 
-   creation time  This parameter provides the time the content was
-      created.  For signatures and recipient structures, this would be
-      the time that the signature or recipient key object was created.
-      For content structures, this would be the time that the content
-      was created.  The unsigned integer value is the number of seconds,
-      excluding leap seconds; after midnight UTC, January 1, 1970.
-
-
-
+   operation time  This parameter provides the time the content
+      cryptographic operation is performed.  For signatures and
+      recipient structures, this would be the time that the signature or
+      recipient key object was created.  For content structures, this
+      would be the time that the content structure was created.  The
+      unsigned integer value is the number of seconds, excluding leap
+      seconds; after midnight UTC, January 1, 1970.  The field is
+      primarily intended to be to be used for countersignatures, however
+      it can additionally be used for replay detection as well.
 
 
 
@@ -711,8 +711,8 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
    | signatur |       | e             |                | signature     |
    | e        |       |               |                | structure     |
    |          |       |               |                |               |
-   | creation | *     | uint          |                | Time the      |
-   | time     |       |               |                | content was   |
+   | operatio | 8     | uint          |                | Time the COSE |
+   | n time   |       |               |                | structure was |
    |          |       |               |                | created       |
    +----------+-------+---------------+----------------+---------------+
 
@@ -737,7 +737,8 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
        ? 4 => bstr,        ; key identifier
        ? 5 => bstr,        ; IV
        ? 6 => uint,        ; Partial IV
-       ? 7 => COSE_signature ; Counter signature
+       ? 7 => COSE_signature, ; Counter signature
+       ? 8 => uint         ; Operation time
    )
 
 4.  Signing Structure
@@ -777,7 +778,6 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
    is identified by the CBOR tag TBD1.  The CDDL fragment that
    represents this is.
 
-   COSE_Sign_Tagged = #6.999(COSE_Sign) ; Replace 999 with TBD1
 
 
 
@@ -785,6 +785,8 @@ Schaad                    Expires June 9, 2016                 [Page 14]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
+
+   COSE_Sign_Tagged = #6.999(COSE_Sign) ; Replace 999 with TBD1
 
    A COSE Signing Message is divided into two parts.  The CBOR object
    that carries the body and information about the body is called the
@@ -832,8 +834,6 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
    The CDDL fragment which represents the above text for COSE_signature
    follows.
-
-
 
 
 
