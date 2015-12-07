@@ -3179,13 +3179,13 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
       private curves can be used as well.
 
    x  contains the x coordinate for the EC point.  The integer is
-      converted to an octet string as defined in [SEC1].  Zero octets
-      MUST NOT be removed from the front of the octet string.
+      converted to an octet string as defined in [SEC1].  Leading zero
+      octets MUST be preserved.
 
    y  contains either the sign bit or the value of y coordinate for the
       EC point.  When encoding the value y, the integer is converted to
       an octet string (as defined in [SEC1]) and encoded as a CBOR bstr.
-
+      Leading zero octets MUST be preserved.  The compressed point
 
 
 
@@ -3194,8 +3194,11 @@ Schaad                    Expires June 9, 2016                 [Page 57]
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
-      Leading zero octets MUST be preserved.  When encoding the sign of
-      y, the expression 'y > 0' is evaluated and encoded a CBOR boolean.
+      encoding is also supported.  Compute the sign bit as laid out in
+      the Elliptic-Curve-Point-to-Octet-String Conversion function of
+      [SEC1].  If the sign bit is zero, then encode y as a CBOR false
+      value, otherwise encode y as a CBOR true value.  The encoding of
+      the infinity point is not supported.
 
    d  contains the private key.
 
@@ -3236,9 +3239,6 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
    be taken that it is never transmitted accidentally.  For public keys,
    there are no required fields.  For private keys, it is REQUIRED that
    'k' be present in the structure.
-
-
-
 
 
 
