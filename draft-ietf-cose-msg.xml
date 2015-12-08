@@ -586,10 +586,13 @@ header_map = {
               This parameter holds a part of the IV value.
               When using the COSE_Encrypted structure, frequently a portion of the IV is part of the context associated with the key value.
               This field is used to carry the portion of the IV that changes for each message.
-              As the IV is authenticated by the encryption process, it can be placed in the unprotected header bucket.
+              The IV used for the cryptographic computation is constructed by concatenating the fixed portion of the IV and the changing portion of the IV in order.
+              (The partial IV being treated as a binary string for this purpose.)
+              As the IV is authenticated by the encryption process, this value can be placed in the unprotected header bucket.
               <vspace blankLines="1"/>
               Some applications may also use this value for doing replay protection.
               When this is done, the value will normally be defined by the application to be increasing in value for every message.
+              Encoding it as an integer value makes it easier to do this comparison.
             </t>
 
             <t hangText='counter signature'>
@@ -3023,28 +3026,39 @@ COSE_KDF_Context = [
 
     <section title="Application Profiling Considerations">
       <t>
-        One of the issues that needs to be addressed is a requirement that a standard specify a set of algorithms that are required to be implemented.
-        <cref source="JLS">
-          It would be possible to extend this section to talk about those decisions that an application needs to think about rather than just talking about MTI algorithms.
-        </cref>
-        This is done to promote interoperability as it provides a minimal set of algorithms that all devices can be sure will exist at both ends.
-        However, we have elected not to specify a set of mandatory algorithms in this document.
+        This document is designed to provide a set of security services, but not to provide implementation requirements for specific usage.
+        The interoperability requirements are provided for how each of the individual services are used and how the algorithms are to be used for interoperability.
+        The requirements about which algorithms and which services are needed is deferred to each application.
       </t>
 
       <t>
-        It is expected that COSE is going to be used in a wide variety of applications and on a wide variety of devices.
-        Many of the constrained devices are going to be setup to use a small fixed set of algorithms, and this set of algorithms may not match those available on a device.
-        We therefore have deferred to the application protocols the decision of what to specify for mandatory algorithms.
-      </t>
+        Applications are therefore intended to profile the usage of this document.
+        This section provides a set of guidelines and topics that applications need to consider when using this document.
 
-      <t>
-        Since the set of algorithms in an environment of constrained devices may depend on what the set of devices are and how long they have been in operation, we want to highlight that application protocols will need to specify some type of discovery method of algorithm capabilities.
-        The discovery method may be as simple as requiring preconfiguration of the set of algorithms to providing a discovery method built into the protocol.
-        S/MIME provided a number of different ways to approach the problem:
         <list style="symbols">
-          <t>Advertising in the message (S/MIME capabilities) <xref target="RFC5751"/>.</t>
-          <t>Advertising in the certificate (capabilities extension) <xref target="RFC4262"/></t>
-          <t>Minimum requirements for the S/MIME, which have been updated over time <xref target="RFC2633"/><xref target="RFC5751"/></t>
+          <t>
+            Applications need to determine the set of messages defined in this document that it will be using.
+            The set of messages corresponds fairly directly to the set of security services that are needed and to the security levels needed.
+          </t>
+
+          <t>
+            Applications need to determine the set of security algorithms that are to be used.
+            When selecting the algorithms to be used as the mandatory to implement set, consideration should be given to choosing different types of algorithms when two are chosen for a specific purpose.
+            An example of this would be choosing HMAC-SHA512 and AES-CMAC as different MAC algorithms, the construction is vastly different between these two algorithms.
+            This means that a weakening of one algorithm would be unlikely to lead to a weakening of the other algorithms.
+            Of course, these algorithms do not provide the same level of security and thus may not be comparable for the desired security functionality.
+          </t>
+
+          <t>
+            Applications may need to provide some type of negotiation or discovery method if multiple algorithms or message structures are permitted.
+            The method can be as simple as requiring preconfiguration of the set of algorithms to providing a discovery method built into the protocol.
+            S/MIME provided a number of different ways to approach the problem that applications could follow:
+            <list style="symbols">
+              <t>Advertising in the message (S/MIME capabilities) <xref target="RFC5751"/>.</t>
+              <t>Advertising in the certificate (capabilities extension) <xref target="RFC4262"/>.</t>
+              <t>Minimum requirements for the S/MIME, which have been updated over time <xref target="RFC2633"/><xref target="RFC5751"/>.</t>
+            </list>
+          </t>
         </list>
       </t>
     </section>
