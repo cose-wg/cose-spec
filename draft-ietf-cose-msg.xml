@@ -396,12 +396,12 @@ COSE_Messages = COSE_Untagged_Message / COSE_Tagged_Message
 COSE_Untagged_Message = COSE_Sign / 
     COSE_Enveloped /
     COSE_Encrypted /
-    COSE_Mac
+    COSE_Mac / COSE_Mac0
 
 COSE_Tagged_Message = COSE_Sign_Tagged /
     COSE_Enveloped_Tagged /
     COSE_Encrypted_Tagged /
-    COSE_Mac_Tagged
+    COSE_Mac_Tagged / COSE_Mac0_Tagged
 ]]></artwork></figure>
 
 
@@ -1371,6 +1371,16 @@ COSE_Mac = [
       </t>
 
       <t>
+        The MAC structure can be encoded either withor without a tag depending on the context it will be used in.
+        The MAC structure is identified by the CBOR tag TBD6.
+        The CDDL fragment that represents this is:
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Mac0_Tagged = #6.995(COSE_Mac0)    ; Replace 995 with TBD6
+]]></artwork></figure>
+      
+      <t>
         The COSE_Mac0 structure is a CBOR array.
         The fields of the array in order are:
 
@@ -1418,7 +1428,8 @@ COSE_Mac0 = [
             <list style="numbers">
               <t>
                 A text string that identifies the structure that is being encoded.
-                This string is "MAC" for the COSE_Mac struture.
+                This string is "MAC" for the COSE_Mac structure.
+                This string is "MAC0" for the COSE_Mac0 structure.
               </t>
               <t>
                 The protected attributes from the COSE_MAC structure.
@@ -1442,7 +1453,7 @@ COSE_Mac0 = [
           
           <figure><artwork type="CDDL"><![CDATA[
 MAC_structure = [
-     context: "MAC",
+     context: "MAC" / "MAC0",
      protected: bstr,
      external_aad: bstr,
      payload: bstr
@@ -3141,6 +3152,7 @@ COSE_KDF_Context = [
             <c>TBD2</c>                 <c>COSE_Enveloped</c>           <c>COSE Enveloped Data Object</c>
             <c>TBD3</c>                 <c>COSE_Encrypted</c>           <c>COSE Encrypted Data Object</c>
             <c>TBD4</c>                 <c>COSE_Mac</c>                 <c>COSE Mac-ed Data Object</c>
+            <c>TBD6</c>                 <c>COSE_Mac0</c>                <c>COSE Mac w/o Recipients Object</c>
             <c>TBD5</c>                 <c>COSE_Key, COSE_KeySet</c>    <c>COSE Key or COSE Key Set Object</c>
           </texttable>
 
