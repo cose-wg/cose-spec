@@ -37,6 +37,9 @@
 <!ENTITY Triple-01 SYSTEM "includes/Triple-01.xml">
 <!ENTITY Enc-01 SYSTEM "includes/Enc-01.xml">
 <!ENTITY Enc-02 SYSTEM "includes/Enc-02.xml">
+<!ENTITY Enc-03 SYSTEM "includes/Enc-03.xml">
+<!ENTITY Enc-04 SYSTEM "includes/Enc-04.xml">
+<!ENTITY Enc-05 SYSTEM "includes/Enc-05.xml">
 <!ENTITY Mac-01 SYSTEM "includes/Mac-01.xml">
 <!ENTITY Mac-02 SYSTEM "includes/Mac-02.xml">
 <!ENTITY Mac-03 SYSTEM "includes/Mac-03.xml">
@@ -192,16 +195,14 @@
         <t>
           There currently is no standard CBOR grammar available for use by specifications.
           We therefore describe the CBOR structures in prose.
-          There is a version of a CBOR grammar in the CBOR Data Definition Language (CDDL) <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>.
-          An informational version of the CBOR grammar that reflects what is in the prose can be found in <xref target="Grammar_Appendix"/>.
-          Since CDDL has not be published as an RFC, this grammar may not work with the final version of CDDL when it is published.
         </t>
 
         <t>
           The document was developed by first working on the grammar and then developing the prose to go with it.
           An artifact of this is that the prose was written using the primitive type strings defined by CDDL.
          In this specification, the following primitive types are used:
-          <list style="empty">
+         <list style="empty">
+           <t>any - non-specific value that permits all CBOR values to be placed here.</t>
             <t>bool - a boolean value (true: major type 7, value 21; false: major type 7, value 20).</t>
             <t>bstr - byte string (major type 2).</t>
             <t>int - an unsigned integer or a negative integer.</t>
@@ -212,24 +213,41 @@
           </list>
         </t>
 
-        <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+      <t>
+          There is a version of a CBOR grammar in the CBOR Data Definition Language (CDDL) <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>.
+          Since CDDL has not be published as an RFC, this grammar may not work with the final version of CDDL when it is published.
+          For those people who prefer using a formal language to describe the syntax of the CBOR, an informational version of the CBOR grammar is interweaved into the text as well.
+          The CDDL grammar is informational, the prose description is normative.
+      </t>
+      
+      <t>
+        The collected CDDL can be extracted from the XML version of this document via the following XPath expression below.
+        (Depending on the XPath evaluator one is using, it may be necessary to deal with &amp;gt; as an entity.)
+      </t>
+
+      <t>
+        <figure><artwork type='XPATH'><![CDATA[
+//artwork[@type='CDDL']/text()
+]]></artwork></figure>         
+      </t>
+
+      <t>
+        CDDL expects the initial non-terminal symbol to be the first symbol in the file.
+        For this reason the first fragment of CDDL is presented here.
+      </t>
+
+      <figure><artwork type='CDDL'><![CDATA[
+start = COSE_Messages / COSE_Key / COSE_KeySet / Internal_Types
+
+; This is define to make the tool quieter
+Internal_Types = Sig_structure / Enc_structure / MAC_structure /
+        COSE_KDF_Context
+]]></artwork></figure>
 
         <t>
-          Text from here to start of next section to be removed
+          The non-terminal Internal_Types is defined for dealing with the automated validation tools used during the writing of this document.
+          It references those non-terminals that are used for security computations.
         </t>
-             
-        <t>
-          NOTE: For the purposes of review, we are currently interlacing the CDDL grammar into the text of document.
-          This is being done for simplicity of comparison of the grammar against the prose.
-          The grammar will be removed to an appendix during WGLC.
-        </t>
-        
-        <figure><artwork type='CDDL'>
-<![CDATA[
-start = COSE_Untagged_Message / COSE_Tagged_Message /
-        COSE_Key / COSE_KeySet / Internal_Types
-]]></artwork></figure>
-        
       </section>
 
       <section title="CBOR Related Terminology" anchor="label">
@@ -241,14 +259,11 @@ start = COSE_Untagged_Message / COSE_Tagged_Message /
           Since the work "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage as a map keys.
         </t>
 
-        <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
         <t>
-          Text from here to start of next section to be removed
+          A CDDL grammar fragment is defined that defines the non-terminals 'label' as in the previous paragraph and 'values' which permits any value to be used.
         </t>
 
-        <figure><artwork type='CDDL'>
-<![CDATA[
+        <figure><artwork type='CDDL'><![CDATA[
 label = int / tstr
 values = any
 ]]></artwork></figure>
@@ -370,14 +385,14 @@ values = any
       </t>
       -->
 
-      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
       <t>
-        Text from here to start of next section to be removed
+        The following CDDL fragment identifies all of the top level messages defined in this document.
+        Separate non-terminals are defined for the tagged and the untagged versions of the messages for the convenience of applications.
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-
+COSE_Messages = COSE_Untagged_Message / COSE_Tagged_Message
+      
 COSE_Untagged_Message = COSE_Sign / 
     COSE_Enveloped /
     COSE_Encrypted /
@@ -481,23 +496,26 @@ tag=10
         Some common parameters are defined in the next section, but a number of parameters are defined throughout this document.
       </t>
 
-      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
       <t>
-        Text from here to start of next section to be removed
-        <cref source="JLS">
-          A completest version of this grammar would list the options available in the protected and unprotected headers.
-          Do we want to head that direction?
-        </cref>
+        The following CDDL fragment represents the two header buckets.
+        A group Headers is defined in CDDL which represents the two buckets in which attributes are placed.
+        This group is used to provide these two fields consistently in all locations.
+        A type is also defined which represents the map of header values.
+        It uses forward references to a group definition of headers for generic and algorithms.
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-header_map = {+ label => any }
-
 Headers = (
     protected : bstr,                  ; Contains a header_map
     unprotected : header_map
 )
+
+header_map = {
+    Generic_Headers,
+    ; Algorithm_Headers,
+    + label => values
+}
+
 ]]></artwork></figure>
 
       <section anchor="cose-headers" title="Common COSE Headers Parameters">
@@ -568,10 +586,13 @@ Headers = (
               This parameter holds a part of the IV value.
               When using the COSE_Encrypted structure, frequently a portion of the IV is part of the context associated with the key value.
               This field is used to carry the portion of the IV that changes for each message.
-              As the IV is authenticated by the encryption process, it can be placed in the unprotected header bucket.
+              The IV used for the cryptographic computation is constructed by concatenating the fixed portion of the IV and the changing portion of the IV in order.
+              (The partial IV being treated as a binary string for this purpose.)
+              As the IV is authenticated by the encryption process, this value can be placed in the unprotected header bucket.
               <vspace blankLines="1"/>
               Some applications may also use this value for doing replay protection.
               When this is done, the value will normally be defined by the application to be increasing in value for every message.
+              Encoding it as an integer value makes it easier to do this comparison.
             </t>
 
             <t hangText='counter signature'>
@@ -582,11 +603,12 @@ Headers = (
               Details on computing counter signatures are found in <xref target="counter_signature"/>.
             </t>
 
-            <t hangText='creation time'>
-              This parameter provides the time the content was created.
+            <t hangText='operation time'>
+              This parameter provides the time the content cryptographic operation is performed.
               For signatures and recipient structures, this would be the time that the signature or recipient key object was created.
-              For content structures, this would be the time that the content was created.
+              For content structures, this would be the time that the content structure was created.
               The unsigned integer value is the number of seconds, excluding leap seconds; after midnight UTC, January 1, 1970.
+              The field is primarily intended to be to be used for countersignatures, however it can additionally be used for replay detection as well.
             </t>
 
           </list>
@@ -607,8 +629,27 @@ Headers = (
           <c>IV</c>         <c>5</c>        <c>bstr</c>              <c></c>                              <c>Full Initialization Vector</c>
           <c>Partial IV</c> <c>6</c>        <c>uint</c>              <c></c>                              <c>Partial Initialization Vector</c>
           <c>counter signature</c> <c>7</c> <c>COSE_signature</c>    <c></c>                              <c>CBOR encoded signature structure</c>
-          <c>creation time</c><c>*</c>      <c>uint</c>              <c></c>                              <c>Time the content was created</c>
+          <c>operation time</c><c>8</c>      <c>uint</c>              <c></c>                             <c>Time the COSE structure was created</c>
         </texttable>
+
+        <t>
+          The CDDL fragment that represents the set of headers defined in this section is given below.
+          Each of the headers is tagged as optional because they do not need to be in every map, headers required in specific maps are discussed above.
+        </t>
+          
+<figure><artwork type="CDDL"><![CDATA[
+Generic_Headers = (
+    ? 1 => int / tstr,  ; algorithm identifier
+    ? 2 => [+label],    ; criticality
+    ? 3 => tstr / int,  ; content type
+    ? 4 => bstr,        ; key identifier
+    ? 5 => bstr,        ; IV
+    ? 6 => uint,        ; Partial IV
+    ? 7 => COSE_signature, ; Counter signature
+    ? 8 => uint         ; Operation time
+)
+]]></artwork></figure>
+
       </section>
     </section>
 
@@ -640,6 +681,16 @@ Headers = (
         More detailed information on multiple signature evaluation can be found in <xref target="RFC5752"/>.
       </t>
 
+      <t>
+        The signature structure can be encoded either with or without a tag depending on the context it will be used in.
+        The signature structure is identified by the CBOR tag TBD1.
+        The CDDL fragment that represents this is.
+      </t>
+      
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Sign_Tagged = #6.999(COSE_Sign) ; Replace 999 with TBD1
+]]></artwork></figure>
+      
       <t>
         A COSE Signing Message is divided into two parts.
         The CBOR object that carries the body and information about the body is called the COSE_Sign structure.
@@ -683,6 +734,18 @@ Headers = (
       </t>
 
       <t>
+        The CDDL fragment which represents the above text for COSE_Sign follows.
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Sign = [
+    Headers,
+    payload : bstr / nil,
+    signatures : [+ COSE_signature]
+]
+]]></artwork></figure>
+
+      <t>
         The COSE_signature structure is a CBOR array.
         The fields of the array in order are:
 
@@ -703,28 +766,16 @@ Headers = (
         </list>
       </t>
 
-      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
       <t>
-        Text from here to start of next section to be removed
+        The CDDL fragment which represents the above text for COSE_signature follows.
       </t>
 
-
       <figure><artwork type="CDDL"><![CDATA[
-COSE_Sign_Tagged = #6.999(COSE_Sign) ; Replace 999 with TBD1
-      
-COSE_Sign = [
-    Headers,
-    payload : bstr / nil,
-    signatures : [+ COSE_signature]
-]
-
 COSE_signature =  [
     Headers,      
     signature : bstr
 ]
 ]]></artwork></figure>
-
 
       <section title="Externally Supplied Data" anchor="Extern_AAD">
         <t>
@@ -765,6 +816,11 @@ COSE_signature =  [
           The fields of the array in order are:
           <list style="numbers">
             <t>
+              A text string identifying the context that this signature is being used in.
+              This string will be "Signature" for signatures using the COSE_Signature structure and "CounterSignature" for signatures used as counter signature attributes.
+            </t>
+            
+            <t>
               The protected attributes from the body structure encoded in a bstr type.
             </t>
 
@@ -785,11 +841,26 @@ COSE_signature =  [
         </t>
 
         <t>
+          The CDDL fragment which describes the above text is.
+        </t>
+
+        <figure><artwork type="CDDL"><![CDATA[
+Sig_structure = [
+    context: "Signature" / "CounterSignature",
+    body_protected: bstr,
+    sign_protected: bstr,
+    external_aad: bstr,
+    payload: bstr
+]
+]]></artwork></figure>
+
+        
+        <t>
           How to compute a signature:
 
           <list style="numbers">
             <t>
-              Create a CBOR array and populate it with the appropriate fields. 
+              Create a Sig_structure and populate it with the appropriate fields. 
               For body_protected and sign_protected, if the map is empty, a bstr of length zero is used.
             </t>
 
@@ -839,25 +910,6 @@ COSE_signature =  [
         <t>
           In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the appropriate authorization is done.
         </t>
-
-        <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
-        <t>
-          Text from here to start of next section to be removed
-        </t>
-
-        <t>
-          The COSE structure used to create the byte stream to be signed uses the following CDDL grammar structure:
-        </t>
-
-        <figure><artwork type="CDDL"><![CDATA[
-Sig_structure = [
-    body_protected: bstr,
-    sign_protected: bstr,
-    external_aad: bstr,
-    payload: bstr
-]
-]]></artwork></figure>
 
       </section>
 
@@ -915,6 +967,16 @@ Sig_structure = [
       </t>
 
       <t>
+        The COSE Enveloped structure can be encoded either with or without a tag depending on the context it will be used in.
+        The COSE Enveloped structure is identified by the CBOR tag TBD2.
+        The CDDL fragment that represents this is.
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Enveloped_Tagged = #6.998(COSE_Enveloped) ; Replace 998 with TBD2
+]]></artwork></figure>
+
+      <t>
         The COSE_Enveloped structure is a CBOR array.
         The fields of the array in order are:
 
@@ -947,6 +1009,18 @@ Sig_structure = [
       </t>
 
       <t>
+        The CDDL fragment that corresponds to the above text is:
+      </t>
+        
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Enveloped = [
+    Headers,
+    ciphertext: bstr / nil,
+    recipients: [+COSE_recipient]
+]
+]]></artwork></figure>
+
+      <t>
         The COSE_recipient structure is a CBOR array.
         The fields of the array in order are:
 
@@ -973,28 +1047,14 @@ Sig_structure = [
         </list>
       </t>
 
-      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
       <t>
-        Text from here to start of next section to be removed
+        The CDDL fragment that corresponds to the above text for COSE_recipient is:
       </t>
-
-      <figure><artwork type="CDDL"><![CDATA[
-
-COSE_Enveloped_Tagged = #6.998(COSE_Enveloped)    ; Replace 998 with TBD32
       
-COSE_Enveloped = [
-    COSE_Enveloped_fields
-    recipients: [+COSE_recipient]
-]
-
-COSE_Enveloped_fields = (
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_recipient = [    
     Headers,
     ciphertext: bstr / nil,
-)
-
-COSE_recipient = [    
-    COSE_Enveloped_fields
     ? recipients: [+COSE_recipient]
 ]
 ]]></artwork></figure>
@@ -1035,16 +1095,15 @@ COSE_recipient = [
       </t>
 
       <t>
-        The CDDL grammar structure for the COSE_Encrypted type is:
+        The COSE_Encrypted structure can be encoded either with or without a tag depending on the context it will be used in.
+        The COSE_Encrypted structure is identified by the CBOR tag TBD3.
+        The CDDL fragment that represents this is.
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_Encrypted_Tagged = #6.997(COSE_Encrypted)     ; Replace 997 with TBD3
-      
-COSE_Encrypted = [
-    COSE_Enveloped_fields
-]
+COSE_Encrypted_Tagged = #6.997(COSE_Encrypted) ; Replace 997 with TBD3
 ]]></artwork></figure>
+
 
       <t>
         The COSE_Enveloped structure is a CBOR array.
@@ -1065,6 +1124,18 @@ COSE_Encrypted = [
           </t>
         </list>
       </t>
+
+      <t>
+        The CDDL fragment for COSE_Encrypted that corresponds to the above text is:
+      </t>
+      
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Encrypted = [
+    Headers,
+    ciphertext: bstr / nil,
+]
+]]></artwork></figure>
+      
     </section>
 
       
@@ -1072,19 +1143,31 @@ COSE_Encrypted = [
 
         <t>
           The encryption algorithm for AEAD algorithms is fairly simple.
-          
-          In order to get a consistent encoding of the data to be authenticated, the Enc_structure is used to have canonical form of the AAD.
-          The Enc_structure is a CBOR array.
         </t>
 
         <t>
           <list style="numbers">
             <t>
-              Copy the protected header field from the message to be sent to the first location in the Enc_structure.
+              Create a CBOR array (Enc_structure) to encode the authenticated data.
             </t>
 
             <t>
-              If the application has supplied external additional authenticated data to be included in the computation, then it is placed in the second location ('external_aad' field) of the Enc_structure.
+              Place a context string in the form of a tstr in the first location to identify the data and location being encoded.
+              The strings defined are:
+              <list style="hanging">
+                <t hangText='"Encrypted"'> for the the content encryption of an encrypted data structure.</t>
+                <t hangText='"Enveloped"'> for the first level of an enveloped data structure (i.e. for content encryption).</t>
+                <t hangText='"Env_Recipient"'> for a recipient encoding to be placed in an enveloped data structure.</t>
+                <t hangText='"Mac_Recipient"'> for a recipient encoding to be placed in a MAC message structure.</t>
+              </list>
+            </t>
+            
+            <t>
+              Copy the protected header field from the message to be sent to the second location in the Enc_structure.
+            </t>
+
+            <t>
+              If the application has supplied external additional authenticated data to be included in the computation, then it is placed in the third location ('external_aad' field) of the Enc_structure.
               If no data was supplied, then a zero length binary value is used.
               (See <xref target="Extern_AAD"/> for application guidance on constructing this field.)
             </t>
@@ -1124,21 +1207,23 @@ COSE_Encrypted = [
           </list>
         </t>
 
-        <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
         <t>
-          Text from here to start of next section to be removed
+          The CDDL fragment which defines the Enc_structure used for the authenticated data structure is:
         </t>
-
+        
         <figure><artwork type="CDDL"><![CDATA[
 Enc_structure = [
+    context : "Enveloped" / "Encrypted" / "Env_Recipient" /
+        "Mac_Recipient",
     protected: bstr,
     external_aad: bstr
 ]
 
 ]]></artwork></figure>
 
+
       </section>
+
       <section anchor="encryption-algorithm-for-ae-algorithms" title="Encryption algorithm for AE algorithms">
 
         <t>
@@ -1214,6 +1299,16 @@ Enc_structure = [
       </t>
 
       <t>
+        The MAC structure can be encoded either withor without a tag depending on the context it will be used in.
+        The MAC truture is identified by the CBOR tag TBD4.
+        The CDDL fragment that represents this is:
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Mac_Tagged = #6.996(COSE_Mac)         ; Replace 996 with TBD4
+]]></artwork></figure>
+
+      <t>
         The COSE_Mac structure is a CBOR array.
         The fields of the array in order are:
 
@@ -1251,22 +1346,17 @@ Enc_structure = [
         </list>
       </t>
 
-      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
       <t>
-        Text from here to start of next section to be removed
+        The CDDL fragment which represents the above text for COSE_Mac follows.
       </t>
-
-      <figure><artwork type="CDDL"><![CDATA[
-COSE_Mac_Tagged = #6.996(COSE_Mac)              ; Replace 996 with TBD4
       
+      <figure><artwork type="CDDL"><![CDATA[
 COSE_Mac = [
    Headers,
    payload: bstr / nil,
    tag: bstr,
    recipients: [+COSE_recipient]
 ]
-
 ]]></artwork></figure>
 
       </section>
@@ -1324,20 +1414,47 @@ COSE_Mac0 = [
           <t>
             In order to get a consistent encoding of the data to be authenticated, the MAC_structure is used to have a canonical form.
             The MAC_structure is a CBOR array.
+            The fields of the MAC_structure in order are:
+            <list style="numbers">
+              <t>
+                A text string that identifies the structure that is being encoded.
+                This string is "MAC" for the COSE_Mac struture.
+              </t>
+              <t>
+                The protected attributes from the COSE_MAC structure.
+                If there are no protected attributes, a zero length binary string is to be encoded.
+              </t>
+              <t>
+                If the application has supplied external authenticated data, encode it as a binary value and place in the MAC_structure.
+                If there is no external authenticated data, then use a zero length 'bstr'.
+                (See <xref target="Extern_AAD"/> for application guidance on constructing this field.)
+              </t>
+              <t>
+                The payload to be MAC-ed encoded in a bstr type.
+                The payload is placed here independent of how it is transported.
+              </t>
+            </list>
           </t>
+
+          <t>
+            The CDDL fragment that corresponds to the above text is:
+          </t>
+          
+          <figure><artwork type="CDDL"><![CDATA[
+MAC_structure = [
+     context: "MAC",
+     protected: bstr,
+     external_aad: bstr,
+     payload: bstr
+]
+]]></artwork></figure>
 
           <t>
             The steps to compute a MAC are:
 
             <list style="numbers">
               <t>
-                Create a MAC_structure and copy the protected and payload fields from the COSE_Mac structure.
-              </t>
-              
-              <t>
-                If the application has supplied external authenticated data, encode it as a binary value and place in the MAC_structure.
-                If there is no external authenticated data, then use a zero length 'bstr'.
-                (See <xref target="Extern_AAD"/> for application guidance on constructing this field.)
+                Create a MAC_structure and fill  in the fields.
               </t>
               
               <t>
@@ -1354,19 +1471,6 @@ COSE_Mac0 = [
             </list>
           </t>
 
-          <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
-          <t>
-            Text from here to start of next section to be removed
-          </t>
-
-          <figure><artwork type="CDDL"><![CDATA[
-MAC_structure = [
-     protected: bstr,
-     external_aad: bstr,
-     payload: bstr
-]
-]]></artwork></figure>
 
         </section>
       </section>
@@ -1394,19 +1498,8 @@ MAC_structure = [
         The element "kty" is a required element in a COSE_Key map.
       </t>
 
-      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
-
-      <t>
-        Text from here to start of next section to be removed
-      </t>
-
       <t>
         The CDDL grammar describing a COSE_Key and COSE_KeySet is:
-        <cref source="JLS">
-          We can really simplify the grammar for COSE_Key to be just the kty (the one required field) and the generic item.
-          The reason to do this is that it makes things simpler.
-          The reason not to do this says that we really need to add a lot more items so that a grammar check can be done that is more tightly enforced.
-        </cref>
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
@@ -1489,7 +1582,7 @@ COSE_KeySet = [+COSE_Key]
         <c>key agree</c>        <c>7</c>        <c>The key is used for key agreement.</c>
       </texttable>
       
-      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
+      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. 
 
       <t>
         Text from here to start of next section to be removed
@@ -1512,7 +1605,8 @@ key_ops_values = (key_ops_sign:1, key_ops_verify:2, key_ops_encrypt:3,
         key_ops_agree:7)
         
 ]]></artwork></figure>
-
+      -->
+      
     </section>
       
     </section>
@@ -1527,8 +1621,7 @@ key_ops_values = (key_ops_sign:1, key_ops_verify:2, key_ops_encrypt:3,
         (In fact the SSA in RSASSA-PSS stands for Signature Scheme with Appendix.)
         The basic structure becomes:
       </t>
-      <figure><artwork>
-        <![CDATA[
+      <figure><artwork><![CDATA[
 signature = Sign(message content, key)
 
 valid = Verification(message content, key, signature)
@@ -1549,8 +1642,7 @@ valid = Verification(message content, key, signature)
         Thirdly, in the event that multiple signatures are applied to a message, all of the signature algorithms are going to be required to consume the same number of bytes of message content.
       </t>
 
-      <figure><artwork>
-        <![CDATA[
+      <figure><artwork><![CDATA[
 signature, message sent = Sign(message content, key)
 
 valid, message content = Verification(message sent, key, signature)
@@ -1668,8 +1760,7 @@ valid, message content = Verification(message sent, key, signature)
 	The authentication code is frequently called a tag.
         The basic structure becomes:
       </t>
-      <figure><artwork>
-        <![CDATA[
+      <figure><artwork><![CDATA[
 tag = MAC_Create(message content, key)
 
 valid = MAC_Verify(message content, key, tag)
@@ -1805,8 +1896,7 @@ valid = MAC_Verify(message content, key, tag)
         For simplicity sake, the authentication code will normally be defined as being appended to the cipher text stream.
         The basic structure becomes:
       </t>
-      <figure><artwork>
-        <![CDATA[
+      <figure><artwork><![CDATA[
 ciphertext = Encrypt(message content, key, additional data)
 
 valid, message content = Decrypt(cipher text, key, additional data)
@@ -2314,14 +2404,12 @@ valid, message content = Decrypt(cipher text, key, additional data)
           <c>PartyV other</c>      <c>-26</c>      <c>bstr</c>          <c>Party V other provided information</c>
         </texttable>
 
-        <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. -->
 
       <t>
-        Text from here to start of next section to be removed
+        The following CDDL fragment corresponds to the text above.
       </t>
 
-        <figure><artwork type='CDDL'>
-<![CDATA[
+        <figure><artwork type='CDDL'><![CDATA[
 COSE_KDF_Context = [
     AlgorithmID : int / tstr,
     PartyUInfo : [
@@ -2886,7 +2974,7 @@ COSE_KDF_Context = [
               <t hangText="x">
                 contains the x coordinate for the EC point.
                 The integer is converted to an octet string as defined in <xref target="SEC1"/>.
-                Zero octets MUST NOT be removed from the front of the octet string.
+                Leading zero octets MUST be preserved.
 
                 <!--
                 <cref source="JLS">
@@ -2900,7 +2988,10 @@ COSE_KDF_Context = [
                 contains either the sign bit or the value of y coordinate for the EC point.
                 When encoding the value y, the integer is converted to an octet string (as defined in <xref target="SEC1"/>) and encoded as a CBOR bstr.
                 Leading zero octets MUST be preserved.
-                When encoding the sign of y, the expression 'y > 0' is evaluated and encoded a CBOR boolean.
+                The compressed point encoding is also supported.
+                Compute the sign bit as laid out in the Elliptic-Curve-Point-to-Octet-String Conversion function of <xref target="SEC1"/>.
+                If the sign bit is zero, then encode y as a CBOR false value, otherwise encode y as a CBOR true value.
+                The encoding of the infinity point is not supported.
               </t>
               
               <t hangText="d">
@@ -2994,28 +3085,39 @@ COSE_KDF_Context = [
 
     <section title="Application Profiling Considerations">
       <t>
-        One of the issues that needs to be addressed is a requirement that a standard specify a set of algorithms that are required to be implemented.
-        <cref source="JLS">
-          It would be possible to extend this section to talk about those decisions that an application needs to think about rather than just talking about MTI algorithms.
-        </cref>
-        This is done to promote interoperability as it provides a minimal set of algorithms that all devices can be sure will exist at both ends.
-        However, we have elected not to specify a set of mandatory algorithms in this document.
+        This document is designed to provide a set of security services, but not to provide implementation requirements for specific usage.
+        The interoperability requirements are provided for how each of the individual services are used and how the algorithms are to be used for interoperability.
+        The requirements about which algorithms and which services are needed is deferred to each application.
       </t>
 
       <t>
-        It is expected that COSE is going to be used in a wide variety of applications and on a wide variety of devices.
-        Many of the constrained devices are going to be setup to use a small fixed set of algorithms, and this set of algorithms may not match those available on a device.
-        We therefore have deferred to the application protocols the decision of what to specify for mandatory algorithms.
-      </t>
+        Applications are therefore intended to profile the usage of this document.
+        This section provides a set of guidelines and topics that applications need to consider when using this document.
 
-      <t>
-        Since the set of algorithms in an environment of constrained devices may depend on what the set of devices are and how long they have been in operation, we want to highlight that application protocols will need to specify some type of discovery method of algorithm capabilities.
-        The discovery method may be as simple as requiring preconfiguration of the set of algorithms to providing a discovery method built into the protocol.
-        S/MIME provided a number of different ways to approach the problem:
         <list style="symbols">
-          <t>Advertising in the message (S/MIME capabilities) <xref target="RFC5751"/>.</t>
-          <t>Advertising in the certificate (capabilities extension) <xref target="RFC4262"/></t>
-          <t>Minimum requirements for the S/MIME, which have been updated over time <xref target="RFC2633"/><xref target="RFC5751"/></t>
+          <t>
+            Applications need to determine the set of messages defined in this document that it will be using.
+            The set of messages corresponds fairly directly to the set of security services that are needed and to the security levels needed.
+          </t>
+
+          <t>
+            Applications need to determine the set of security algorithms that are to be used.
+            When selecting the algorithms to be used as the mandatory to implement set, consideration should be given to choosing different types of algorithms when two are chosen for a specific purpose.
+            An example of this would be choosing HMAC-SHA512 and AES-CMAC as different MAC algorithms, the construction is vastly different between these two algorithms.
+            This means that a weakening of one algorithm would be unlikely to lead to a weakening of the other algorithms.
+            Of course, these algorithms do not provide the same level of security and thus may not be comparable for the desired security functionality.
+          </t>
+
+          <t>
+            Applications may need to provide some type of negotiation or discovery method if multiple algorithms or message structures are permitted.
+            The method can be as simple as requiring preconfiguration of the set of algorithms to providing a discovery method built into the protocol.
+            S/MIME provided a number of different ways to approach the problem that applications could follow:
+            <list style="symbols">
+              <t>Advertising in the message (S/MIME capabilities) <xref target="RFC5751"/>.</t>
+              <t>Advertising in the certificate (capabilities extension) <xref target="RFC4262"/>.</t>
+              <t>Minimum requirements for the S/MIME, which have been updated over time <xref target="RFC2633"/><xref target="RFC5751"/>.</t>
+            </list>
+          </t>
         </list>
       </t>
     </section>
@@ -3064,6 +3166,7 @@ COSE_KDF_Context = [
         <t>
           It is requested that IANA create a new registry entitled "COSE Header Parameters".
           The registery is to be created as Expert Review Required.
+          Expert review guidelines are provided in <xref target="review"/>
         </t>
 
         <t>
@@ -3132,6 +3235,7 @@ COSE_KDF_Context = [
         <t>
           It is requested that IANA create a new registry entitled "COSE Header Algorithm Labels".
           The registery is to be created as Expert Review Required.
+          Expert review guidelines are provided in <xref target="review"/>
         </t>
 
         <t>
@@ -3182,6 +3286,7 @@ COSE_KDF_Context = [
         <t>
           It is requested that IANA create a new registry entitled "COSE Algorithm Registry".
           The registery is to be created as Expert Review Required.
+          Expert review guidelines are provided in <xref target="review"/>
         </t>
 
         <t>
@@ -3193,10 +3298,9 @@ COSE_KDF_Context = [
               The value to be used to identify this algorithm.
               Algorithm values MUST be unique.
               The value can be a positive integer, a negative integer or a string.
-              Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.
-              Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.
+              Integer values between -256 and 255 and strings of length 1 are designated as Standards Track Document required.
+              Integer values from -65536 to 65535 and strings of length 2 are designated as Specification Required.
               Integer values of greater than 65535 and strings of length greater than 2 are designated as first come, first served.
-              Integer values in the range -1 to -65536 are delegated to the "COSE Header Algorithm Label" registry.
               Integer values beyond -65536 are marked as private use.
             </t>
             <t hangText='description'>
@@ -3220,6 +3324,7 @@ COSE_KDF_Context = [
         <t>
           It is requested that IANA create a new registry entitled "COSE Key Common Parameter" Registry.
           The registery is to be created as Expert Review Required.
+          Expert review guidelines are provided in <xref target="review"/>
         </t>
 
         <t>
@@ -3238,7 +3343,7 @@ COSE_KDF_Context = [
               Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.
               Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.
               Integer values of greater than 65535 and strings of length greater than 2 are designated as first come, first served.
-              Integer values in the range -1 to -65536 are used for key parameters specific to a single algorithm delegated to the "COSE Key Parameter Label" registry.
+              Integer values in the range -1 to -65536 are used for key parameters specific to a single algorithm delegated to the "COSE Key Type Parameter Label" registry.
               Integer values beyond -65536 are marked as private use.
             </t>
             <t hangText='CBOR Type'>
@@ -3269,6 +3374,7 @@ COSE_KDF_Context = [
         <t>
           It is requested that IANA create a new registry "COSE Key Type Parameters".
           The registery is to be created as Expert Review Required.
+          Expert review guidelines are provided in <xref target="review"/>
         </t>
 
         <t>
@@ -3313,6 +3419,7 @@ COSE_KDF_Context = [
         <t>
           It is requested that IANA create a new registry "COSE Elliptic Curve Parameters".
           The registery is to be created as Expert Review Required.
+          Expert review guidelines are provided in <xref target="review"/>
         </t>
 
         <t>
@@ -3505,6 +3612,46 @@ COSE_KDF_Context = [
         </texttable>
 
       </section>
+
+      <section title="Expert Review Instructions" anchor="review">
+        <t>
+          All of the IANA registries established in this document are defined as expert review.
+          This section gives some general guidelines for what the experts should be looking for, but they are being designated as experts for a reason so they should be given substantial latitude.
+        </t>
+
+        <t>
+          Expert reviewers should take into consideration the following points:
+
+          <list style="symbols">
+            <t>
+              Point squatting should be discouraged.
+              Reviewers are encouraged to get sufficient information for registration requests to ensure that the usage is not going to duplicate one that is already registered and that the point is likely to be used in deployments.
+              The zones tagged as private use are intended for testing purposes and closed environments, code points should not be assigned for testing.
+            </t>
+
+            <t>
+              Specifications are required for the standards track range of point assignment.
+              Specifications should exist for specification required ranges, but early assignment before a specification is available is considered to be permissible.
+              Specifications are needed for the first-come, first-serve range if they are expected to be used outside of closed environments in an inoperable way.
+              When specifications are not provided, the description provided needs to have sufficient information to identify what point is being used for.
+            </t>
+
+            <t>
+              Experts should take into account the expected usage of fields when approving point assignment.
+              The fact that there is a range for standards track documents does not mean that a standards track document cannot have points assigned outside of that range.
+              Some of the ranges are restricted in range, items which are not expected to be common or are not expected to be used in restricted environments should be assigned to values which will encode to longer byte strings.
+            </t>
+
+            <t>
+              When algorithms are registered, vanity registrations should be discouraged.
+              One way to do this is to require applications to provide additional documentation on security analysis of algorithms.
+              Another thing that should be considered is to request for an opinion on the algorithm from the Cryptographic Forum Research Group.
+              Algorithm which do not meet the security requirements of the community and the messages structures should not be registered.
+            </t>
+          </list>
+        </t>
+          
+      </section>
                
     </section>
     <section anchor="security-considerations" title="Security Considerations">
@@ -3646,20 +3793,6 @@ COSE_KDF_Context = [
         <format target="http://www.secg.org/sec1-v2.pdf" type="PDF"/>
       </reference>
 
-      <reference anchor="MultiPrimeRSA">
-        <front>
-          <title>On the Security of Multi-prime RSA</title>
-          <author initials="M. J." surname="Hinek">
-            <organization>University of Waterloo</organization>
-          </author>
-          <author initials="D. R." surname="Cheriton">
-            <organization>University of Waterloo</organization>
-          </author>
-          <date year="2006" month="June"/>
-        </front>
-        <format target="http://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf" type="PDF"/>
-      </reference>
-
       <reference anchor="PVSig">
         <front>
           <title>Formal Security Proofs for a Signature Scheme with Partial Message Recover</title>
@@ -3737,34 +3870,6 @@ COSE_KDF_Context = [
 
         -->
 
-    <section anchor="Grammar_Appendix" title="CDDL Grammar">
-
-      <t>
-        For people who prefer using a formal language to describe the syntax of the CBOR, in this section a CDDL grammar is given that corresponds to <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>.
-        This grammar is informational.
-	In the event of differences between this grammar and the prose, the prose is considered to be authoritative.
-      </t>
-      
-      <t>
-        The collected CDDL can be extracted from the XML version of this document via the following XPath expression below.
-        (Depending on the XPath evaluator one is using, it may be necessary to deal with &amp;gt; as an entity.)
-      </t>
-
-      <t>
-        <figure><artwork type='XPATH'>
-<![CDATA[
-//artwork[@type='CDDL']/text()
-]]></artwork></figure>         
-      </t>
-
-      <figure><artwork type='CDDL'>
-        <![CDATA[
-; This is define to make the tool quieter
-Internal_Types = Sig_structure / Enc_structure / MAC_structure /
-        COSE_KDF_Context
-]]></artwork></figure>
-      
-    </section>
 
     <section anchor="three-layer" title="Three Levels of Recipient Information">
 
@@ -3830,16 +3935,14 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
         This tool can be installed with the command line:
       </t>
       <figure>
-        <artwork>
-        <![CDATA[gem install cbor-diag]]>
+        <artwork><![CDATA[gem install cbor-diag]]>
         </artwork>
       </figure>
 
       <t>
         The diagnostic notation can be converted into binary files using the following command line:
       </t>
-      <figure><artwork>
-<![CDATA[          
+      <figure><artwork><![CDATA[          
          diag2cbor < inputfile > outputfile
          ]]>
       </artwork></figure>
@@ -3960,8 +4063,8 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
               <t>Recipient class: ECDH Ephemeral-Static, Curve P-256</t>
             </list>
           </t>
-          
-          <!-- &Enc-01; -->
+
+          &Enc-03;
 
         </section>
 
@@ -3970,15 +4073,28 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
             This example uses the following:
 
             <list style="symbols">
-              <t>CEK: AES-GCM w/ 128-bit key</t>
-              <t>Recipient class: ECDH Ephemeral-Static, Curve P-256</t>
+              <t>CEK: AES-CCM w/ 128-bit key and a 64-bit tag</t>
             </list>
           </t>
           
-          <!-- &Enc-04; -->
+          &Enc-04;
 
         </section>
-        
+
+        <section anchor="Enc-05" title="Encrypted Content w/ Implicit Recipient and Partial IV">
+          <t>
+            This example uses the following:
+
+            <list style="symbols">
+              <t>CEK: AES-CCM w/ 128-bit key and a 64-bit tag</t>
+              <t>Prefix for IV is 89F52F65A1C580933B52</t>
+            </list>
+          </t>
+          
+          &Enc-05;
+
+        </section>
+
       </section>
 
       <section title="Examples of Signed Message" anchor="SignedExamples">
@@ -4095,7 +4211,14 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
 
     <section title="Document Updates">
       <!-- RFC Editor - Please remove this appendix before publishing -->
-      <section title="Version -06 to -08">
+      <section title="Version -08 to -09">
+        <t>
+          <list style="symbols">
+            <t>Integrate CDDL syntax into the text</t>
+          </list>
+        </t>
+      </section>
+      <section title="Version -07 to -08">
         <t>
           <list style="symbols">
             <t>Redefine sequence number into a the Partial IV.</t>
