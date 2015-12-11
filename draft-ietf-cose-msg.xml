@@ -1648,6 +1648,16 @@ valid, message content = Verification(message sent, key, signature)
           where n = ceiling(key_length / 8)
         </t>
 
+        <t>
+          When using a COSE key for this algorithm, the following checks are made:
+          <list style="symbols">
+            <t>The 'kty' field MUST be present and it MUST be 'EC2'.</t>
+            <t>If the 'alg' field present, it MUST match the ECDSA signature algorithm being used.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'sign' when creating an ECDSA signature.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'verify' when verifying an ECDSA signature.</t>
+          </list>
+        </t>
+
         <section title="Security Considerations">
           <t>
           The security strength of the signature is no greater than the minimum of the security strength associated with the bit length of the key and the security strength of the hash function.
@@ -1754,7 +1764,16 @@ valid = MAC_Verify(message content, key, tag)
         </t>
 
         <t>
-          If the key is obtained from a key structure, the key type MUST be 'Symmetric'.
+          When using a COSE key for this algorithm, the following checks are made:
+          <list style="symbols">
+            <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
+            <t>If the 'alg' field present, it MUST match the HMAC algorithm being used.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'sign' when creating an HMAC authentication tag.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'verify' when verifying an HMAC authentication tag.</t>
+          </list>
+        </t>
+        
+        <t>
           Implementations creating and validating MAC values MUST validate that the key type, key length, and algorithm are correct and appropriate for the entities involved.
         </t>
 
@@ -1795,10 +1814,19 @@ valid = MAC_Verify(message content, key, tag)
 
         <t>
           Keys may be obtained either from a key structure or from a recipient structure.
-          If the key obtained from a key structure, the key type MUST be 'Symmetric'.
           Implementations creating and validating MAC values MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
         </t>
 
+        <t>
+          When using a COSE key for this algorithm, the following checks are made:
+          <list style="symbols">
+            <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
+            <t>If the 'alg' field present, it MUST match the AES-MAC algorithm being used.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'sign' when creating an AES-MAC authentication tag.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'verify' when verifying an AES-MAC authentication tag.</t>
+          </list>
+        </t>
+        
         <section title="Security Considerations">
           <t>
             A number of attacks exist against CBC-MAC that need to be considered.
@@ -1879,9 +1907,19 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
         <t>
           Keys may be obtained either from a key structure or from a recipient structure.
-          If the key obtained from a key structure, the key type MUST be 'Symmetric'.
           Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
         </t>
+
+        <t>
+          When using a COSE key for this algorithm, the following checks are made:
+          <list style="symbols">
+            <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
+            <t>If the 'alg' field present, it MUST match the AES-GCM algorithm being used.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'encrypt' or 'key wrap' when encrypting.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'decrypt' or 'key unwrap'  when decrypting.</t>
+          </list>
+        </t>
+        
 
         <section title="Security Considerations">
           <t>
@@ -1986,8 +2024,17 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
         <t>
           Keys may be obtained either from a key structure or from a recipient structure.
-          If the key obtained from a key structure, the key type MUST be 'Symmetric'.
           Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+        </t>
+
+        <t>
+          When using a COSE key for this algorithm, the following checks are made:
+          <list style="symbols">
+            <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
+            <t>If the 'alg' field present, it MUST match the AES-CCM algorithm being used.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'encrypt' or 'key wrap' when encrypting.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'decrypt' or 'key unwrap'  when decrypting.</t>
+          </list>
         </t>
 
         <section title="Security Considerations">
@@ -2040,8 +2087,17 @@ valid, message content = Decrypt(cipher text, key, additional data)
         
         <t>
           Keys may be obtained either from a key structure or from a recipient structure.
-          If the key obtained from a key structure, the key type MUST be 'Symmetric'.
           Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+        </t>
+
+        <t>
+          When using a COSE key for this algorithm, the following checks are made:
+          <list style="symbols">
+            <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
+            <t>If the 'alg' field present, it MUST match the ChaCha algorithm being used.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'encrypt' or 'key wrap' when encrypting.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'decrypt' or 'key unwrap'  when decrypting.</t>
+          </list>
         </t>
 
         <section title="Security Considerations">
@@ -2444,7 +2500,6 @@ COSE_KDF_Context = [
               <c>direct</c>          <c>-6</c>       <c>Direct use of CEK</c>
             </texttable>
 
-
             <section title="Security Considerations">
               <t>
                 This recipient algorithm has several potential problems that need to be considered:
@@ -2509,6 +2564,15 @@ COSE_KDF_Context = [
               <c>direct+HKDF-AES-256</c>      <c>*</c>        <c>HKDF AES-MAC-256</c> <c>Shared secret w/ AES-MAC 256-bit key</c>
             </texttable>
 
+            <t>
+              When using a COSE key for this algorithm, the following checks are made:
+              <list style="symbols">
+                <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
+                <t>If the 'alg' field present, it MUST match the KDF algorithm being used.</t>
+                <t>If the 'key_ops' field is present, it MUST include 'deriveKey or 'deriveBits'.</t>
+              </list>
+            </t>
+            
             <section title="Security Considerations">
               <t>
                 The shared secret needs to have some method to be regularly updated over time.
@@ -2576,6 +2640,15 @@ COSE_KDF_Context = [
             Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
           </t>
           
+        <t>
+          When using a COSE key for this algorithm, the following checks are made:
+          <list style="symbols">
+            <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
+            <t>If the 'alg' field present, it MUST match the AES Key Wrap algorithm being used.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'encrypt' or 'key wrap' when encrypting.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'decrypt' or 'key unwrap'  when decrypting.</t>
+          </list>
+        </t>
           
           <texttable title="AES Key Wrap Algorithm Values" anchor="table_aes_keywrap">
             <ttcol align='left'>name</ttcol>
@@ -2778,6 +2851,16 @@ COSE_KDF_Context = [
             Implementations MUST verify that the curve and algorithm are appropriate for the entities involved.
           </t>
 
+          <t>
+            When using a COSE key for this algorithm, the following checks are made:
+            <list style="symbols">
+              <t>The 'kty' field MUST be present and it MUST be 'EC2'.</t>
+              <t>If the 'alg' field present, it MUST match the Key Agreement algorithm being used.</t>
+              <t>If the 'key_ops' field is present, it MUST include 'derive key or 'derive bits' for the private key.</t>
+              <t>If the 'key_ops' field is present, it MUST be empty for the public key.</t>
+            </list>
+          </t>
+
         </section>
       </section>
 
@@ -2814,8 +2897,17 @@ COSE_KDF_Context = [
           <t>
             These algorithms are defined in <xref target="table-ecdh-es-table"/>.
           </t>
-        </section>
         
+          <t>
+            When using a COSE key for this algorithm, the following checks are made:
+            <list style="symbols">
+              <t>The 'kty' field MUST be present and it MUST be 'EC2'.</t>
+              <t>If the 'alg' field present, it MUST match the Key Agreement algorithm being used.</t>
+              <t>If the 'key_ops' field is present, it MUST include 'derive key or 'derive bits' for the private key.</t>
+              <t>If the 'key_ops' field is present, it MUST be empty for the public key.</t>
+            </list>
+          </t>
+        </section>
       </section>
 
       <!--  Comment out password based algorithms.   Issue #6 - https://github.com/cose-wg/cose-issues/issues/6
