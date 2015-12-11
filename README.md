@@ -1,4 +1,4 @@
-[![Build Status](https://circleci.com/gh/cose-wg/cose-spec.svg?style=shield&circle-token=:circle-token)]
+[![Build Status](https://circleci.com/gh/cose-wg/cose-spec.svg?style=shield&circle-token=:circle-token)](https://circleci.com/cose-wg/cose-spec)
 
 # CBOR Encoded Message Syntax
 
