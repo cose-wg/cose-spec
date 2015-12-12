@@ -393,12 +393,12 @@ values = any
       <figure><artwork type="CDDL"><![CDATA[
 COSE_Messages = COSE_Untagged_Message / COSE_Tagged_Message
       
-COSE_Untagged_Message = COSE_Sign / 
+COSE_Untagged_Message = COSE_Sign / COSE_Sign1 /
     COSE_Enveloped /
     COSE_Encrypted /
     COSE_Mac / COSE_Mac0
 
-COSE_Tagged_Message = COSE_Sign_Tagged /
+COSE_Tagged_Message = COSE_Sign_Tagged / COSE_Sign1_Tagged /
     COSE_Enveloped_Tagged /
     COSE_Encrypted_Tagged /
     COSE_Mac_Tagged / COSE_Mac0_Tagged
@@ -654,8 +654,14 @@ Generic_Headers = (
     </section>
 
     
-    <section anchor="signing-structure" title="Signing Structure">
+    <section anchor="signing-structure" title="Signing Objects">
+      <t>
+        COSE supports two different signature structures.
+        COSE_signature allows for one or more signers to be applied to a single content.
+        COSE_Sign1 is restricted to a single signer.
+      </t>
 
+      <section title="Signing with Multiple Signers">
       <t>
         The signature structure allows for one or more signatures to be applied to a message payload.
         There are provisions for parameters about the content and parameters about the signature to be carried along with the signature itself.
@@ -776,6 +782,67 @@ COSE_signature =  [
     signature : bstr
 ]
 ]]></artwork></figure>
+    </section>
+
+      <section title="Signing with One Signer">
+        <t>
+          The signature structure can be encoded either with or without a tag depending on the context it will be used in.
+          The signature structure is identified by the CBOR tag TBD7.
+          The CDDL fragment that represents this is:
+        </t>
+
+        <figure><artwork type="CDDL"><![CDATA[
+COSE_Sign1_Tagged = #6.994(COSE_Sign1) ; Replace 994 with TBD7
+]]></artwork></figure>
+
+        <t>
+          The COSE_Sign1 structure is a CBOR array.
+          The fields of the array in order are:
+
+          <list style="hanging">
+            <!--
+                <t hangText='msg_type'>
+                identifies this as providing the signed security service.
+                The value MUST be msg_type_signed (1).
+                </t>
+            -->
+            
+            <t hangText='protected'>
+              is described in <xref target="header-parameters"/>.
+            </t>
+            
+            <t hangText='unprotected'>
+              is described in <xref target="header-parameters"/>.
+            </t>
+            
+            <t hangText='payload'>
+              contains the serialized content to be signed.
+              If the payload is not present in the message, the application is required to supply the payload separately.
+              The payload is wrapped in a bstr to ensure that it is transported without changes.
+              If the payload is transported separately, then a nil CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
+            </t>
+
+            <t hangText='signature'>
+              contains the computed signature value.
+              The type of the field is a bstr.
+            </t>
+          </list>
+        </t>
+
+        <t>
+          The CDDL fragment which represents the above text for COSE_Sign1 follows.
+        </t>
+
+        <figure><artwork type="CDDL"><![CDATA[
+COSE_Sign1 = [
+    Headers,
+    payload : bstr / nil,
+    signature : bstr
+]
+]]></artwork></figure>
+        
+        
+      </section>
 
       <section title="Externally Supplied Data" anchor="Extern_AAD">
         <t>
@@ -817,7 +884,12 @@ COSE_signature =  [
           <list style="numbers">
             <t>
               A text string identifying the context that this signature is being used in.
-              This string will be "Signature" for signatures using the COSE_Signature structure and "CounterSignature" for signatures used as counter signature attributes.
+              The context string is:
+              <list style="hanging">
+                <t hangText='"Signature"'> for signatures using the COSE_Signature structure.</t>
+                <t hangText='"Signature1"'> for signatures using the COSE_Sign1 structure.</t>
+                <t hangText='"CounterSignature"'> for signatures used as counter signature attributes.</t>
+              </list>
             </t>
             
             <t>
@@ -826,6 +898,7 @@ COSE_signature =  [
 
             <t>
               The protected attributes from the signer structure encoded in a bstr type.
+              This field is omitted for the COSE_Sign1 signature structure.
             </t>
 
             <t>
@@ -846,9 +919,9 @@ COSE_signature =  [
 
         <figure><artwork type="CDDL"><![CDATA[
 Sig_structure = [
-    context: "Signature" / "CounterSignature",
+    context: "Signature" / "Signature1" / "CounterSignature",
     body_protected: bstr,
-    sign_protected: bstr,
+    ? sign_protected: bstr,
     external_aad: bstr,
     payload: bstr
 ]
@@ -942,7 +1015,7 @@ Sig_structure = [
         COSE supports two different encryption structures.
         COSE_Enveloped is used when the key needs to be explicitly identified.
         This structure supports the use of recipient structures to allow for random content encryption keys to be used.
-        COSE_Enveloped is used when a recipient structure is not needed because the key to be used is known implicitly.
+        COSE_Encrypted is used when a recipient structure is not needed because the key to be used is known implicitly.
       </t>
 
       <section title="Enveloped COSE Structure" anchor="EnvelopedData">
