@@ -396,12 +396,12 @@ COSE_Messages = COSE_Untagged_Message / COSE_Tagged_Message
 COSE_Untagged_Message = COSE_Sign / 
     COSE_Enveloped /
     COSE_Encrypted /
-    COSE_Mac
+    COSE_Mac / COSE_Mac0
 
 COSE_Tagged_Message = COSE_Sign_Tagged /
     COSE_Enveloped_Tagged /
     COSE_Encrypted_Tagged /
-    COSE_Mac_Tagged
+    COSE_Mac_Tagged / COSE_Mac0_Tagged
 ]]></artwork></figure>
 
 
@@ -586,8 +586,8 @@ header_map = {
               This parameter holds a part of the IV value.
               When using the COSE_Encrypted structure, frequently a portion of the IV is part of the context associated with the key value.
               This field is used to carry the portion of the IV that changes for each message.
-              The IV used for the cryptographic computation is constructed by concatenating the fixed portion of the IV and the changing portion of the IV in order.
-              (The partial IV being treated as a binary string for this purpose.)
+              The IV used for the cryptographic computation is constructed by concatenating the fixed portion of the IV and the changing portion of the IV.
+              (The partial IV being treated as a network order integer converted to a four byte string for this purpose.)
               As the IV is authenticated by the encryption process, this value can be placed in the unprotected header bucket.
               <vspace blankLines="1"/>
               Some applications may also use this value for doing replay protection.
@@ -1271,10 +1271,18 @@ Enc_structure = [
     <section anchor="mac-objects" title="MAC Objects">
 
       <t>
+        COSE supports two different MAC structures.
+        COSE_MAC is used when the key needs to be explicitly identified.
+        The structure supports the use of recipient structures to allow for random content encryption keys to be used.
+        COSE_MAC0 is used when the a recipient structure is not needed because the key to be used is implicitly known.
+      </t>
+
+      <section title="MAC Message with Recipients">
+      
+      <t>
         In this section we describe the structure and methods to be used when doing MAC authentication in COSE. 
         This document allows for the use of all of the same classes of recipient algorithms as are allowed for encryption.
       </t>
-
       <t>
         When using MAC operations, there are two modes in which it can be used. 
         The first is just a check that the content has not been changed since the MAC was computed. 
@@ -1351,6 +1359,67 @@ COSE_Mac = [
 ]
 ]]></artwork></figure>
 
+      </section>
+
+      <section title="MAC Messages with Implicit Key">
+      <t>
+        In this section we describe the structure and methods to be used when doing MAC authentication for those cases where the recipient is implicitly known.
+      </t>
+      
+      <t>
+        The MAC message uses the COSE_Mac0 structure defined in this section for carrying the body.
+      </t>
+
+      <t>
+        The MAC structure can be encoded either withor without a tag depending on the context it will be used in.
+        The MAC structure is identified by the CBOR tag TBD6.
+        The CDDL fragment that represents this is:
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Mac0_Tagged = #6.995(COSE_Mac0)    ; Replace 995 with TBD6
+]]></artwork></figure>
+      
+      <t>
+        The COSE_Mac0 structure is a CBOR array.
+        The fields of the array in order are:
+
+        <list style="hanging">
+          <t hangText='protected'>
+            is described in <xref target="header-parameters"/>.
+          </t>
+
+          <t hangText='unprotected'>
+            is described in <xref target="header-parameters"/>.
+          </t>
+
+          <t hangText='payload'>
+            contains the serialized content to be MACed.
+            If the payload is not present in the message, the application is required to supply the payload separately.
+            The payload is wrapped in a bstr to ensure that it is transported without changes.
+            If the payload is transported separately, then a null CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
+          </t>
+
+          <t hangText='tag'>
+            contains the MAC value.
+          </t>
+        </list>
+      </t>
+
+      <t>
+        The CDDL fragment which corresponds to the above text is:
+      </t>
+
+      <figure><artwork type="CDDL"><![CDATA[
+COSE_Mac0 = [
+   Headers,
+   payload: bstr / nil,
+   tag: bstr,
+]
+]]></artwork></figure>
+
+      </section>
+
         <section title="How to compute a MAC">
           <t>
             In order to get a consistent encoding of the data to be authenticated, the MAC_structure is used to have a canonical form.
@@ -1359,7 +1428,8 @@ COSE_Mac = [
             <list style="numbers">
               <t>
                 A text string that identifies the structure that is being encoded.
-                This string is "MAC" for the COSE_Mac struture.
+                This string is "MAC" for the COSE_Mac structure.
+                This string is "MAC0" for the COSE_Mac0 structure.
               </t>
               <t>
                 The protected attributes from the COSE_MAC structure.
@@ -1383,7 +1453,7 @@ COSE_Mac = [
           
           <figure><artwork type="CDDL"><![CDATA[
 MAC_structure = [
-     context: "MAC",
+     context: "MAC" / "MAC0",
      protected: bstr,
      external_aad: bstr,
      payload: bstr
@@ -1523,14 +1593,8 @@ COSE_KeySet = [+COSE_Key]
         <c>key agree</c>        <c>7</c>        <c>The key is used for key agreement.</c>
       </texttable>
       
-      <!-- RFC EDITOR - Please make sure the following paragraphs have been removed. 
-
       <t>
-        Text from here to start of next section to be removed
-      </t>
-
-      <t>
-        The following provides a CDDL fragment which duplicates the assignment labels from <xref target="table-key-labels"/> and <xref target="table-key-ops"/>.
+        The following provides a CDDL fragment which duplicates the assignment labels from <xref target="table-key-labels"/>.
       </t>
       
       <figure><artwork type="CDDL"><![CDATA[
@@ -1539,14 +1603,14 @@ key_kty=1
 key_kid=2
 key_alg=3
 key_ops=4
+]]></artwork></figure>
 
+      <!--
 ;key_ops values
 key_ops_values = (key_ops_sign:1, key_ops_verify:2, key_ops_encrypt:3,
         key_ops_decrypt:4, key_ops_wrap:5, key_ops_unwrap:6,
         key_ops_agree:7)
-        
-]]></artwork></figure>
-      -->
+-->          
       
     </section>
       
@@ -3042,6 +3106,19 @@ COSE_KDF_Context = [
           </t>
 
           <t>
+            Applications may define new header parameters for a specific purpose.
+            Applications will often times select specific header parameters to use or not to use.
+            For example, an application would normally state a preference for using either the IV or the partial IV parameter.
+            If the partial IV parameter is specified, then the application would also need to define how the fixed portion of the IV would be determined.
+          </t>
+
+          <t>
+            When applications use externally defined authenticated data, they need to define how that data is to be defined.
+            This document assumes that the data will be provided as a byte stream.
+            More information can be found in <xref target="Extern_AAD"/>.
+          </t>
+            
+          <t>
             Applications need to determine the set of security algorithms that are to be used.
             When selecting the algorithms to be used as the mandatory to implement set, consideration should be given to choosing different types of algorithms when two are chosen for a specific purpose.
             An example of this would be choosing HMAC-SHA512 and AES-CMAC as different MAC algorithms, the construction is vastly different between these two algorithms.
@@ -3082,6 +3159,7 @@ COSE_KDF_Context = [
             <c>TBD2</c>                 <c>COSE_Enveloped</c>           <c>COSE Enveloped Data Object</c>
             <c>TBD3</c>                 <c>COSE_Encrypted</c>           <c>COSE Encrypted Data Object</c>
             <c>TBD4</c>                 <c>COSE_Mac</c>                 <c>COSE Mac-ed Data Object</c>
+            <c>TBD6</c>                 <c>COSE_Mac0</c>                <c>COSE Mac w/o Recipients Object</c>
             <c>TBD5</c>                 <c>COSE_Key, COSE_KeySet</c>    <c>COSE Key or COSE Key Set Object</c>
           </texttable>
 
@@ -3567,7 +3645,7 @@ COSE_KDF_Context = [
             <t>
               Point squatting should be discouraged.
               Reviewers are encouraged to get sufficient information for registration requests to ensure that the usage is not going to duplicate one that is already registered and that the point is likely to be used in deployments.
-              The zones tagged as private use are intended for testing purposes and closed environments, code points should not be assigned for testing.
+              The zones tagged as private use are intended for testing purposes and closed environments, code points in other ranges should not be assigned for testing.
             </t>
 
             <t>
@@ -3587,7 +3665,7 @@ COSE_KDF_Context = [
               When algorithms are registered, vanity registrations should be discouraged.
               One way to do this is to require applications to provide additional documentation on security analysis of algorithms.
               Another thing that should be considered is to request for an opinion on the algorithm from the Cryptographic Forum Research Group.
-              Algorithm which do not meet the security requirements of the community and the messages structures should not be registered.
+              Algorithms which do not meet the security requirements of the community and the messages structures should not be registered.
             </t>
           </list>
         </t>
@@ -4152,10 +4230,16 @@ COSE_KDF_Context = [
 
     <section title="Document Updates">
       <!-- RFC Editor - Please remove this appendix before publishing -->
+
       <section title="Version -08 to -09">
         <t>
           <list style="symbols">
             <t>Integrate CDDL syntax into the text</t>
+            <t>Define Expert review guidelines</t>
+            <t>Expand application profiling guidelines</t>
+            <t>Expand text around Partial IV</t>
+            <t>Creation time becomes Operation time</t>
+            <t>Add tagging for all structures so that they can be moved</t>
           </list>
         </t>
       </section>
