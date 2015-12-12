@@ -472,7 +472,9 @@ ul.toc a:first-child {
 <link href="#rfc.section.5.3" rel="Chapter" title="5.3 Encryption Algorithm for AEAD algorithms"/>
 <link href="#rfc.section.5.4" rel="Chapter" title="5.4 Encryption algorithm for AE algorithms"/>
 <link href="#rfc.section.6" rel="Chapter" title="6 MAC Objects"/>
-<link href="#rfc.section.6.1" rel="Chapter" title="6.1 How to compute a MAC"/>
+<link href="#rfc.section.6.1" rel="Chapter" title="6.1 MAC Message with Recipients"/>
+<link href="#rfc.section.6.2" rel="Chapter" title="6.2 MAC Messages with Implicit Key"/>
+<link href="#rfc.section.6.3" rel="Chapter" title="6.3 How to compute a MAC"/>
 <link href="#rfc.section.7" rel="Chapter" title="7 Key Structure"/>
 <link href="#rfc.section.7.1" rel="Chapter" title="7.1 COSE Key Common Parameters"/>
 <link href="#rfc.section.8" rel="Chapter" title="8 Signature Algorithms"/>
@@ -648,7 +650,9 @@ ul.toc a:first-child {
 <li>5.3.   <a href="#rfc.section.5.3">Encryption Algorithm for AEAD algorithms</a></li>
 <li>5.4.   <a href="#rfc.section.5.4">Encryption algorithm for AE algorithms</a></li>
 </ul><li>6.   <a href="#rfc.section.6">MAC Objects</a></li>
-<ul><li>6.1.   <a href="#rfc.section.6.1">How to compute a MAC</a></li>
+<ul><li>6.1.   <a href="#rfc.section.6.1">MAC Message with Recipients</a></li>
+<li>6.2.   <a href="#rfc.section.6.2">MAC Messages with Implicit Key</a></li>
+<li>6.3.   <a href="#rfc.section.6.3">How to compute a MAC</a></li>
 </ul><li>7.   <a href="#rfc.section.7">Key Structure</a></li>
 <ul><li>7.1.   <a href="#rfc.section.7.1">COSE Key Common Parameters</a></li>
 </ul><li>8.   <a href="#rfc.section.8">Signature Algorithms</a></li>
@@ -835,12 +839,12 @@ COSE_Messages = COSE_Untagged_Message / COSE_Tagged_Message
 COSE_Untagged_Message = COSE_Sign / 
     COSE_Enveloped /
     COSE_Encrypted /
-    COSE_Mac
+    COSE_Mac / COSE_Mac0
 
 COSE_Tagged_Message = COSE_Sign_Tagged /
     COSE_Enveloped_Tagged /
     COSE_Encrypted_Tagged /
-    COSE_Mac_Tagged
+    COSE_Mac_Tagged / COSE_Mac0_Tagged
 </pre>
 <h1 id="rfc.section.3"><a href="#rfc.section.3">3.</a> <a href="#header-parameters" id="header-parameters">Header Parameters</a></h1>
 <p id="rfc.section.3.p.1">The structure of COSE has been designed to have two buckets of information that are not considered to be part of the payload itself, but are used for holding information about content, algorithms, keys, or evaluation hints for the  processing of the layer.  These two buckets are available for use in all of the structures in this document except for keys.  While these buckets can be present, they may not all be usable in all instances.  For example, while the protected bucket is defined as part of recipient structures, most of the algorithms that are used for recipients do not provide the necessary functionality to provide the needed protection and thus the bucket should not be used.  </p>
@@ -1222,14 +1226,16 @@ Enc_structure = [
 
 <p> </p>
 <h1 id="rfc.section.6"><a href="#rfc.section.6">6.</a> <a href="#mac-objects" id="mac-objects">MAC Objects</a></h1>
-<p id="rfc.section.6.p.1">In this section we describe the structure and methods to be used when doing MAC authentication in COSE.  This document allows for the use of all of the same classes of recipient algorithms as are allowed for encryption.  </p>
-<p id="rfc.section.6.p.2">When using MAC operations, there are two modes in which it can be used.  The first is just a check that the content has not been changed since the MAC was computed.  Any class of recipient algorithm can be used for this purpose.  The second mode is to both check that the content has not been changed since the MAC was computed, and to use the recipient algorithm to verify who sent it.  The classes of recipient algorithms that support this are those that use a pre-shared secret or do static-static key agreement (without the key wrap step).  In both of these cases, the entity hat created and sent the message MAC can be validated.  (The knowledge of sender assumes that there are only two parties involved and you did not send the message yourself.) </p>
-<p id="rfc.section.6.p.3">The MAC message uses two structures, the COSE_Mac structure defined in this section for carrying the body and the COSE_recipient structure (<a href="#EnvelopedData">Section 5.1</a>) to hold the key used for the MAC computation.  Examples of MAC messages can be found in <a href="#MacExamples">Appendix B.1</a>.  </p>
-<p id="rfc.section.6.p.4">The MAC structure can be encoded either withor without a tag depending on the context it will be used in.  The MAC truture is identified by the CBOR tag TBD4.  The CDDL fragment that represents this is: </p>
+<p id="rfc.section.6.p.1">COSE supports two different MAC structures.  COSE_MAC is used when the key needs to be explicitly identified.  The structure supports the use of recipient structures to allow for random content encryption keys to be used.  COSE_MAC0 is used when the a recipient structure is not needed because the key to be used is implicitly known.  </p>
+<h1 id="rfc.section.6.1"><a href="#rfc.section.6.1">6.1.</a> MAC Message with Recipients</h1>
+<p id="rfc.section.6.1.p.1">In this section we describe the structure and methods to be used when doing MAC authentication in COSE.  This document allows for the use of all of the same classes of recipient algorithms as are allowed for encryption.  </p>
+<p id="rfc.section.6.1.p.2">When using MAC operations, there are two modes in which it can be used.  The first is just a check that the content has not been changed since the MAC was computed.  Any class of recipient algorithm can be used for this purpose.  The second mode is to both check that the content has not been changed since the MAC was computed, and to use the recipient algorithm to verify who sent it.  The classes of recipient algorithms that support this are those that use a pre-shared secret or do static-static key agreement (without the key wrap step).  In both of these cases, the entity hat created and sent the message MAC can be validated.  (The knowledge of sender assumes that there are only two parties involved and you did not send the message yourself.) </p>
+<p id="rfc.section.6.1.p.3">The MAC message uses two structures, the COSE_Mac structure defined in this section for carrying the body and the COSE_recipient structure (<a href="#EnvelopedData">Section 5.1</a>) to hold the key used for the MAC computation.  Examples of MAC messages can be found in <a href="#MacExamples">Appendix B.1</a>.  </p>
+<p id="rfc.section.6.1.p.4">The MAC structure can be encoded either withor without a tag depending on the context it will be used in.  The MAC truture is identified by the CBOR tag TBD4.  The CDDL fragment that represents this is: </p>
 <pre>
 COSE_Mac_Tagged = #6.996(COSE_Mac)         ; Replace 996 with TBD4
 </pre>
-<p id="rfc.section.6.p.5">The COSE_Mac structure is a CBOR array.  The fields of the array in order are: </p>
+<p id="rfc.section.6.1.p.5">The COSE_Mac structure is a CBOR array.  The fields of the array in order are: </p>
 
 <dl>
   <dt>protected</dt>
@@ -1245,7 +1251,7 @@ COSE_Mac_Tagged = #6.996(COSE_Mac)         ; Replace 996 with TBD4
 </dl>
 
 <p> </p>
-<p id="rfc.section.6.p.6">The CDDL fragment which represents the above text for COSE_Mac follows.  </p>
+<p id="rfc.section.6.1.p.6">The CDDL fragment which represents the above text for COSE_Mac follows.  </p>
 <pre>
 COSE_Mac = [
    Headers,
@@ -1254,27 +1260,56 @@ COSE_Mac = [
    recipients: [+COSE_recipient]
 ]
 </pre>
-<h1 id="rfc.section.6.1"><a href="#rfc.section.6.1">6.1.</a> How to compute a MAC</h1>
-<p id="rfc.section.6.1.p.1">In order to get a consistent encoding of the data to be authenticated, the MAC_structure is used to have a canonical form.  The MAC_structure is a CBOR array.  The fields of the MAC_structure in order are: </p>
+<h1 id="rfc.section.6.2"><a href="#rfc.section.6.2">6.2.</a> MAC Messages with Implicit Key</h1>
+<p id="rfc.section.6.2.p.1">In this section we describe the structure and methods to be used when doing MAC authentication for those cases where the recipient is implicitly known.  </p>
+<p id="rfc.section.6.2.p.2">The MAC message uses the COSE_Mac0 structure defined in this section for carrying the body.  </p>
+<p id="rfc.section.6.2.p.3">The MAC structure can be encoded either withor without a tag depending on the context it will be used in.  The MAC structure is identified by the CBOR tag TBD6.  The CDDL fragment that represents this is: </p>
+<pre>
+COSE_Mac0_Tagged = #6.995(COSE_Mac0)    ; Replace 995 with TBD6
+</pre>
+<p id="rfc.section.6.2.p.4">The COSE_Mac0 structure is a CBOR array.  The fields of the array in order are: </p>
+
+<dl>
+  <dt>protected</dt>
+  <dd style="margin-left: 8">is described in <a href="#header-parameters">Section 3</a>.  </dd>
+  <dt>unprotected</dt>
+  <dd style="margin-left: 8">is described in <a href="#header-parameters">Section 3</a>.  </dd>
+  <dt>payload</dt>
+  <dd style="margin-left: 8">contains the serialized content to be MACed.  If the payload is not present in the message, the application is required to supply the payload separately.  The payload is wrapped in a bstr to ensure that it is transported without changes.  If the payload is transported separately, then a null CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.  </dd>
+  <dt>tag</dt>
+  <dd style="margin-left: 8">contains the MAC value.  </dd>
+</dl>
+
+<p> </p>
+<p id="rfc.section.6.2.p.5">The CDDL fragment which corresponds to the above text is: </p>
+<pre>
+COSE_Mac0 = [
+   Headers,
+   payload: bstr / nil,
+   tag: bstr,
+]
+</pre>
+<h1 id="rfc.section.6.3"><a href="#rfc.section.6.3">6.3.</a> How to compute a MAC</h1>
+<p id="rfc.section.6.3.p.1">In order to get a consistent encoding of the data to be authenticated, the MAC_structure is used to have a canonical form.  The MAC_structure is a CBOR array.  The fields of the MAC_structure in order are: </p>
 
 <ol>
-  <li>A text string that identifies the structure that is being encoded.  This string is "MAC" for the COSE_Mac struture.  </li>
+  <li>A text string that identifies the structure that is being encoded.  This string is "MAC" for the COSE_Mac structure.  This string is "MAC0" for the COSE_Mac0 structure.  </li>
   <li>The protected attributes from the COSE_MAC structure.  If there are no protected attributes, a zero length binary string is to be encoded.  </li>
   <li>If the application has supplied external authenticated data, encode it as a binary value and place in the MAC_structure.  If there is no external authenticated data, then use a zero length 'bstr'.  (See <a href="#Extern_AAD">Section 4.1</a> for application guidance on constructing this field.) </li>
   <li>The payload to be MAC-ed encoded in a bstr type.  The payload is placed here independent of how it is transported.  </li>
 </ol>
 
 <p> </p>
-<p id="rfc.section.6.1.p.2">The CDDL fragment that corresponds to the above text is: </p>
+<p id="rfc.section.6.3.p.2">The CDDL fragment that corresponds to the above text is: </p>
 <pre>
 MAC_structure = [
-     context: "MAC",
+     context: "MAC" / "MAC0",
      protected: bstr,
      external_aad: bstr,
      payload: bstr
 ]
 </pre>
-<p id="rfc.section.6.1.p.3">The steps to compute a MAC are: </p>
+<p id="rfc.section.6.3.p.3">The steps to compute a MAC are: </p>
 
 <ol>
   <li>Create a MAC_structure and fill  in the fields.  </li>
@@ -2560,6 +2595,11 @@ COSE_KDF_Context = [
       <td class="left">TBD4</td>
       <td class="left">COSE_Mac</td>
       <td class="left">COSE Mac-ed Data Object</td>
+    </tr>
+    <tr>
+      <td class="left">TBD6</td>
+      <td class="left">COSE_Mac0</td>
+      <td class="left">COSE Mac w/o Recipients Object</td>
     </tr>
     <tr>
       <td class="left">TBD5</td>
