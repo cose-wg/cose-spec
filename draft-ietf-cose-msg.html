@@ -568,7 +568,7 @@ ul.toc a:first-child {
 
   <meta name="dct.creator" content="Schaad, J." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-ietf-cose-msg-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2015-12-12" />
+  <meta name="dct.issued" scheme="ISO8601" content="2015-12-13" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies procesing for signatures, message authentication codes, and encryption using CBOR.  This document also specifies a represention for cryptographic keys using CBOR.  " />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies procesing for signatures, message authentication codes, and encryption using CBOR.  This document also specifies a represention for cryptographic keys using CBOR.  " />
 
@@ -590,10 +590,10 @@ ul.toc a:first-child {
 </tr>
 <tr>
   <td class="left">Intended status: Informational</td>
-  <td class="right">December 12, 2015</td>
+  <td class="right">December 13, 2015</td>
 </tr>
 <tr>
-  <td class="left">Expires: June 14, 2016</td>
+  <td class="left">Expires: June 15, 2016</td>
   <td class="right"></td>
 </tr>
 
@@ -618,7 +618,7 @@ ul.toc a:first-child {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on June 14, 2016.</p>
+<p>This Internet-Draft will expire on June 15, 2016.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -1445,9 +1445,14 @@ COSE_KeySet = [+COSE_Key]
       <td class="left">The key is used for key unwrapping.  Requires private key fields.</td>
     </tr>
     <tr>
-      <td class="left">key agree</td>
+      <td class="left">derive key</td>
       <td class="left">7</td>
-      <td class="left">The key is used for key agreement.</td>
+      <td class="left">The key is used for deriving keys.</td>
+    </tr>
+    <tr>
+      <td class="left">derive bits</td>
+      <td class="left">8</td>
+      <td class="left">The key is used for deriving bits.</td>
     </tr>
   </tbody>
 </table>
@@ -1516,6 +1521,16 @@ valid, message content = Verification(message sent, key, signature)
 <p id="rfc.section.8.1.p.5">In order to promote interoperability, it is suggested that SHA-256 be used only with curve P-256, SHA-384 be used only with curve P-384 and SHA-512 be used with curve P-521.  This is aligned with the recommendation in Section 4 of <a href="#RFC5480">[RFC5480]</a>.  </p>
 <p id="rfc.section.8.1.p.6">The signature algorithm results in a pair of integers (R, S).  These integers will be of the same order as length of the key used for the signature process.  The signature is encoded by converting the integers into byte strings of the same length as the key size.  The length is rounded up to the nearest byte and is left padded with zero bits to get to the correct length.  The two integers are then concatenated together to form a byte string that is the resulting signature.  </p>
 <p id="rfc.section.8.1.p.7">Using the function defined in <a href="#RFC3447">[RFC3447]</a> the signature is: <br/> Signature = I2OSP(R, n) | I2OSP(S, n) <br/> where n = ceiling(key_length / 8) </p>
+<p id="rfc.section.8.1.p.8">When using a COSE key for this algorithm, the following checks are made: </p>
+
+<ul>
+  <li>The 'kty' field MUST be present and it MUST be 'EC2'.</li>
+  <li>If the 'alg' field present, it MUST match the ECDSA signature algorithm being used.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'sign' when creating an ECDSA signature.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'verify' when verifying an ECDSA signature.</li>
+</ul>
+
+<p> </p>
 <h1 id="rfc.section.8.1.1"><a href="#rfc.section.8.1.1">8.1.1.</a> Security Considerations</h1>
 <p id="rfc.section.8.1.1.p.1">The security strength of the signature is no greater than the minimum of the security strength associated with the bit length of the key and the security strength of the hash function.  </p>
 <p id="rfc.section.8.1.1.p.2">System which have poor random number generation can leak their keys by signing two different messages with the same value 'k' (the per-message random value).  <a href="#RFC6979">[RFC6979]</a> provides a method to deal with this problem by making 'k' be deterministic based on the message content rather than randomly generated.  Applications that specify ECDSA should evaluate the ability to get good random number generation and require this when it is not possible.  </p>
@@ -1587,7 +1602,17 @@ valid = MAC_Verify(message content, key, tag)
   </tbody>
 </table>
 <p id="rfc.section.9.1.p.4">Some recipient algorithms carry the key while others derive a key from secret data.  For those algorithms that carry the key (i.e. RSA-OAEP and AES-KeyWrap), the size of the HMAC key SHOULD be the same size as the underlying hash function.  For those algorithms that derive the key, the derived key MUST be the same size as the underlying hash function.  </p>
-<p id="rfc.section.9.1.p.5">If the key is obtained from a key structure, the key type MUST be 'Symmetric'.  Implementations creating and validating MAC values MUST validate that the key type, key length, and algorithm are correct and appropriate for the entities involved.  </p>
+<p id="rfc.section.9.1.p.5">When using a COSE key for this algorithm, the following checks are made: </p>
+
+<ul>
+  <li>The 'kty' field MUST be present and it MUST be 'Symmetric'.</li>
+  <li>If the 'alg' field present, it MUST match the HMAC algorithm being used.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'sign' when creating an HMAC authentication tag.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'verify' when verifying an HMAC authentication tag.</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.9.1.p.6">Implementations creating and validating MAC values MUST validate that the key type, key length, and algorithm are correct and appropriate for the entities involved.  </p>
 <h1 id="rfc.section.9.1.1"><a href="#rfc.section.9.1.1">9.1.1.</a> Security Considerations</h1>
 <p id="rfc.section.9.1.1.p.1">HMAC has proved to be resistant to attack even when used with weakening hash algorithms.  The current best method appears to be a brute force attack on the key.  This means that key size is going to be directly related to the security of an HMAC operation.  </p>
 <h1 id="rfc.section.9.2"><a href="#rfc.section.9.2">9.2.</a> AES Message Authentication Code (AES-CBC-MAC)</h1>
@@ -1637,7 +1662,17 @@ valid = MAC_Verify(message content, key, tag)
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.9.2.p.3">Keys may be obtained either from a key structure or from a recipient structure.  If the key obtained from a key structure, the key type MUST be 'Symmetric'.  Implementations creating and validating MAC values MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.  </p>
+<p id="rfc.section.9.2.p.3">Keys may be obtained either from a key structure or from a recipient structure.  Implementations creating and validating MAC values MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.  </p>
+<p id="rfc.section.9.2.p.4">When using a COSE key for this algorithm, the following checks are made: </p>
+
+<ul>
+  <li>The 'kty' field MUST be present and it MUST be 'Symmetric'.</li>
+  <li>If the 'alg' field present, it MUST match the AES-MAC algorithm being used.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'sign' when creating an AES-MAC authentication tag.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'verify' when verifying an AES-MAC authentication tag.</li>
+</ul>
+
+<p> </p>
 <h1 id="rfc.section.9.2.1"><a href="#rfc.section.9.2.1">9.2.1.</a> Security Considerations</h1>
 <p id="rfc.section.9.2.1.p.1">A number of attacks exist against CBC-MAC that need to be considered.  </p>
 
@@ -1691,7 +1726,17 @@ valid, message content = Decrypt(cipher text, key, additional data)
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.10.1.p.4">Keys may be obtained either from a key structure or from a recipient structure.  If the key obtained from a key structure, the key type MUST be 'Symmetric'.  Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.  </p>
+<p id="rfc.section.10.1.p.4">Keys may be obtained either from a key structure or from a recipient structure.  Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.  </p>
+<p id="rfc.section.10.1.p.5">When using a COSE key for this algorithm, the following checks are made: </p>
+
+<ul>
+  <li>The 'kty' field MUST be present and it MUST be 'Symmetric'.</li>
+  <li>If the 'alg' field present, it MUST match the AES-GCM algorithm being used.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'encrypt' or 'key wrap' when encrypting.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'decrypt' or 'key unwrap'  when decrypting.</li>
+</ul>
+
+<p> </p>
 <h1 id="rfc.section.10.1.1"><a href="#rfc.section.10.1.1">10.1.1.</a> Security Considerations</h1>
 <p id="rfc.section.10.1.1.p.1">When using AES-CCM, the following restrictions MUST be enforced: </p>
 
@@ -1808,7 +1853,17 @@ valid, message content = Decrypt(cipher text, key, additional data)
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.10.2.p.7">Keys may be obtained either from a key structure or from a recipient structure.  If the key obtained from a key structure, the key type MUST be 'Symmetric'.  Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.  </p>
+<p id="rfc.section.10.2.p.7">Keys may be obtained either from a key structure or from a recipient structure.  Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.  </p>
+<p id="rfc.section.10.2.p.8">When using a COSE key for this algorithm, the following checks are made: </p>
+
+<ul>
+  <li>The 'kty' field MUST be present and it MUST be 'Symmetric'.</li>
+  <li>If the 'alg' field present, it MUST match the AES-CCM algorithm being used.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'encrypt' or 'key wrap' when encrypting.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'decrypt' or 'key unwrap'  when decrypting.</li>
+</ul>
+
+<p> </p>
 <h1 id="rfc.section.10.2.1"><a href="#rfc.section.10.2.1">10.2.1.</a> Security Considerations</h1>
 <p id="rfc.section.10.2.1.p.1">When using AES-CCM, the following restrictions MUST be enforced: </p>
 
@@ -1841,7 +1896,17 @@ valid, message content = Decrypt(cipher text, key, additional data)
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.10.3.p.3">Keys may be obtained either from a key structure or from a recipient structure.  If the key obtained from a key structure, the key type MUST be 'Symmetric'.  Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.  </p>
+<p id="rfc.section.10.3.p.3">Keys may be obtained either from a key structure or from a recipient structure.  Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.  </p>
+<p id="rfc.section.10.3.p.4">When using a COSE key for this algorithm, the following checks are made: </p>
+
+<ul>
+  <li>The 'kty' field MUST be present and it MUST be 'Symmetric'.</li>
+  <li>If the 'alg' field present, it MUST match the ChaCha algorithm being used.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'encrypt' or 'key wrap' when encrypting.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'decrypt' or 'key unwrap'  when decrypting.</li>
+</ul>
+
+<p> </p>
 <h1 id="rfc.section.10.3.1"><a href="#rfc.section.10.3.1">10.3.1.</a> Security Considerations</h1>
 <p id="rfc.section.10.3.1.p.1">The pair of key, nonce MUST be unique for every invocation of the algorithm.  Nonce counters are considered to be an acceptable way of ensuring that they are unique.  </p>
 <h1 id="rfc.section.11"><a href="#rfc.section.11">11.</a> Key Derivation Functions (KDF)</h1>
@@ -2127,6 +2192,15 @@ COSE_KDF_Context = [
     </tr>
   </tbody>
 </table>
+<p id="rfc.section.12.1.2.p.6">When using a COSE key for this algorithm, the following checks are made: </p>
+
+<ul>
+  <li>The 'kty' field MUST be present and it MUST be 'Symmetric'.</li>
+  <li>If the 'alg' field present, it MUST match the KDF algorithm being used.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'deriveKey or 'deriveBits'.</li>
+</ul>
+
+<p> </p>
 <h1 id="rfc.section.12.1.2.1"><a href="#rfc.section.12.1.2.1">12.1.2.1.</a> Security Considerations</h1>
 <p id="rfc.section.12.1.2.1.p.1">The shared secret needs to have some method to be regularly updated over time.  The shared secret forms the basis of trust.  Although not used directly, it should still be subject to scheduled rotation.  </p>
 <h1 id="rfc.section.12.2"><a href="#rfc.section.12.2">12.2.</a> Key Wrapping</h1>
@@ -2145,6 +2219,16 @@ COSE_KDF_Context = [
 <h1 id="rfc.section.12.2.1"><a href="#rfc.section.12.2.1">12.2.1.</a> <a href="#key_wrap_algs" id="key_wrap_algs">AES Key Wrapping</a></h1>
 <p id="rfc.section.12.2.1.p.1">The AES Key Wrapping algorithm is defined in <a href="#RFC3394">[RFC3394]</a>.  This algorithm uses an AES key to wrap a value that is a multiple of 64 bits.  As such, it can be used to wrap a key for any of the content encryption algorithms defined in this document.  The algorithm requires a single fixed parameter, the initial value.  This is fixed to the value specified in Section 2.2.3.1 of  <a href="#RFC3394">[RFC3394]</a>.  There are no public parameters that vary on a per invocation basis.  </p>
 <p id="rfc.section.12.2.1.p.2">Keys may be obtained either from a key structure or from a recipient structure.  If the key obtained from a key structure, the key type MUST be 'Symmetric'.  Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.  </p>
+<p id="rfc.section.12.2.1.p.3">When using a COSE key for this algorithm, the following checks are made: </p>
+
+<ul>
+  <li>The 'kty' field MUST be present and it MUST be 'Symmetric'.</li>
+  <li>If the 'alg' field present, it MUST match the AES Key Wrap algorithm being used.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'encrypt' or 'key wrap' when encrypting.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'decrypt' or 'key unwrap'  when decrypting.</li>
+</ul>
+
+<p> </p>
 <div id="rfc.table.15"/>
 <div id="table_aes_keywrap"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -2197,7 +2281,7 @@ COSE_KDF_Context = [
 <p id="rfc.section.12.4.p.3">Two variants of DH that are easily supported are: </p>
 
 <ul class="empty">
-  <li>-              Ephemeral-Static DH: where the sender of the message creates a one time DH key and uses a static key for the recipient.  The use of the ephemeral sender key means that no additional random input is needed as this is randomly generated for each message.  </li>
+  <li>Ephemeral-Static DH: where the sender of the message creates a one time DH key and uses a static key for the recipient.  The use of the ephemeral sender key means that no additional random input is needed as this is randomly generated for each message.  </li>
   <li>Static-Static DH: where a static key is used for both the sender and the recipient.  The use of static keys allows for recipient to get a weak version of data origination for the message.  When static-static key agreement is used, then some piece of unique data is required to ensure that a different key is created for each message.  </li>
 </ul>
 
@@ -2274,7 +2358,7 @@ COSE_KDF_Context = [
       <td class="left">ECDH ES w/ HKDF - generate key directly</td>
     </tr>
     <tr>
-      <td class="left">ECDH-ES+A128KW</td>
+      <td class="left">ECDH-ES + A128KW</td>
       <td class="left">54</td>
       <td class="left">HKDF - SHA-256</td>
       <td class="left">yes</td>
@@ -2290,7 +2374,7 @@ COSE_KDF_Context = [
       <td class="left">ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key</td>
     </tr>
     <tr>
-      <td class="left">ECDH-ES+A256KW</td>
+      <td class="left">ECDH-ES + A256KW</td>
       <td class="left">56</td>
       <td class="left">HKDF - SHA-256</td>
       <td class="left">yes</td>
@@ -2298,7 +2382,7 @@ COSE_KDF_Context = [
       <td class="left">ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</td>
     </tr>
     <tr>
-      <td class="left">ECDH-SS+A128KW</td>
+      <td class="left">ECDH-SS + A128KW</td>
       <td class="left">57</td>
       <td class="left">HKDF - SHA-256</td>
       <td class="left">no</td>
@@ -2306,7 +2390,7 @@ COSE_KDF_Context = [
       <td class="left">ECDH SS w/ Concat KDF and AES Key wrap w/ 128 bit key</td>
     </tr>
     <tr>
-      <td class="left">ECDH-SS+A192KW</td>
+      <td class="left">ECDH-SS + A192KW</td>
       <td class="left">58</td>
       <td class="left">HKDF - SHA-256</td>
       <td class="left">no</td>
@@ -2314,7 +2398,7 @@ COSE_KDF_Context = [
       <td class="left">ECDH SS w/ Concat KDF and AES Key wrap w/ 192 bit key</td>
     </tr>
     <tr>
-      <td class="left">ECDH-SS+A256KW</td>
+      <td class="left">ECDH-SS + A256KW</td>
       <td class="left">59</td>
       <td class="left">HKDF - SHA-256</td>
       <td class="left">no</td>
@@ -2361,6 +2445,16 @@ COSE_KDF_Context = [
   </tbody>
 </table>
 <p id="rfc.section.12.4.1.p.4">This document defines these algorithms to be used with the curves P-256, P-384, P-521.  Implementations MUST verify that the key type and curve are correct.  Different curves are restricted to different key types.  Implementations MUST verify that the curve and algorithm are appropriate for the entities involved.  </p>
+<p id="rfc.section.12.4.1.p.5">When using a COSE key for this algorithm, the following checks are made: </p>
+
+<ul>
+  <li>The 'kty' field MUST be present and it MUST be 'EC2'.</li>
+  <li>If the 'alg' field present, it MUST match the Key Agreement algorithm being used.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'derive key' or 'derive bits' for the private key.</li>
+  <li>If the 'key_ops' field is present, it MUST be empty for the public key.</li>
+</ul>
+
+<p> </p>
 <h1 id="rfc.section.12.5"><a href="#rfc.section.12.5">12.5.</a> <a href="#ECDH-Direct" id="ECDH-Direct">Key Agreement with KDF</a></h1>
 <p id="rfc.section.12.5.p.1">Key Agreement with Key Wrapping uses a randomly generated CEK.  The CEK is then encrypted using a Key Wrapping algorithm and a key derived from the shared secret computed by the key agreement algorithm.  </p>
 <p id="rfc.section.12.5.p.2">The COSE_Enveloped structure for the recipient is organized as follows: </p>
@@ -2376,6 +2470,16 @@ COSE_KDF_Context = [
 <p> </p>
 <h1 id="rfc.section.12.5.1"><a href="#rfc.section.12.5.1">12.5.1.</a> ECDH</h1>
 <p id="rfc.section.12.5.1.p.1">These algorithms are defined in <a href="#table-ecdh-es-table">Table 16</a>.  </p>
+<p id="rfc.section.12.5.1.p.2">When using a COSE key for this algorithm, the following checks are made: </p>
+
+<ul>
+  <li>The 'kty' field MUST be present and it MUST be 'EC2'.</li>
+  <li>If the 'alg' field present, it MUST match the Key Agreement algorithm being used.</li>
+  <li>If the 'key_ops' field is present, it MUST include 'derive key' or 'derive bits' for the private key.</li>
+  <li>If the 'key_ops' field is present, it MUST be empty for the public key.</li>
+</ul>
+
+<p> </p>
 <h1 id="rfc.section.13"><a href="#rfc.section.13">13.</a> <a href="#Key-specific-labels" id="Key-specific-labels">Keys</a></h1>
 <p id="rfc.section.13.p.1">The COSE_Key object defines a way to hold a single key object.  It is still required that the members of individual key types be defined.  This section of the document is where we define an initial set of members for specific key types.  </p>
 <p id="rfc.section.13.p.2">For each of the key types, we define both public and private members.  The public members are what is transmitted to others for their usage.  We define private members mainly for the purpose of archival of keys by individuals.  However, there are some circumstances in which private keys may be distributed by various entities in a protocol.  Examples include:  entities that have poor random number generation, centralized key creation for multi-cast type operations, and protocols in which a shared secret is used as a bearer token for authorization purposes.  </p>
