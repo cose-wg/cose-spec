@@ -461,10 +461,12 @@ ul.toc a:first-child {
 <link href="#rfc.section.2" rel="Chapter" title="2 Basic COSE Structure"/>
 <link href="#rfc.section.3" rel="Chapter" title="3 Header Parameters"/>
 <link href="#rfc.section.3.1" rel="Chapter" title="3.1 Common COSE Headers Parameters"/>
-<link href="#rfc.section.4" rel="Chapter" title="4 Signing Structure"/>
-<link href="#rfc.section.4.1" rel="Chapter" title="4.1 Externally Supplied Data"/>
-<link href="#rfc.section.4.2" rel="Chapter" title="4.2 Signing and Verification Process"/>
-<link href="#rfc.section.4.3" rel="Chapter" title="4.3 Computing Counter Signatures"/>
+<link href="#rfc.section.4" rel="Chapter" title="4 Signing Objects"/>
+<link href="#rfc.section.4.1" rel="Chapter" title="4.1 Signing with One or More Signers"/>
+<link href="#rfc.section.4.2" rel="Chapter" title="4.2 Signing with One Signer"/>
+<link href="#rfc.section.4.3" rel="Chapter" title="4.3 Externally Supplied Data"/>
+<link href="#rfc.section.4.4" rel="Chapter" title="4.4 Signing and Verification Process"/>
+<link href="#rfc.section.4.5" rel="Chapter" title="4.5 Computing Counter Signatures"/>
 <link href="#rfc.section.5" rel="Chapter" title="5 Encryption Objects"/>
 <link href="#rfc.section.5.1" rel="Chapter" title="5.1 Enveloped COSE Structure"/>
 <link href="#rfc.section.5.1.1" rel="Chapter" title="5.1.1 Recipient Algorithm Classes"/>
@@ -568,7 +570,7 @@ ul.toc a:first-child {
 
   <meta name="dct.creator" content="Schaad, J." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-ietf-cose-msg-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2015-12-13" />
+  <meta name="dct.issued" scheme="ISO8601" content="2015-12-15" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies procesing for signatures, message authentication codes, and encryption using CBOR.  This document also specifies a represention for cryptographic keys using CBOR.  " />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies procesing for signatures, message authentication codes, and encryption using CBOR.  This document also specifies a represention for cryptographic keys using CBOR.  " />
 
@@ -590,10 +592,10 @@ ul.toc a:first-child {
 </tr>
 <tr>
   <td class="left">Intended status: Informational</td>
-  <td class="right">December 13, 2015</td>
+  <td class="right">December 15, 2015</td>
 </tr>
 <tr>
-  <td class="left">Expires: June 15, 2016</td>
+  <td class="left">Expires: June 17, 2016</td>
   <td class="right"></td>
 </tr>
 
@@ -618,7 +620,7 @@ ul.toc a:first-child {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on June 15, 2016.</p>
+<p>This Internet-Draft will expire on June 17, 2016.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -639,10 +641,12 @@ ul.toc a:first-child {
 </ul><li>2.   <a href="#rfc.section.2">Basic COSE Structure</a></li>
 <li>3.   <a href="#rfc.section.3">Header Parameters</a></li>
 <ul><li>3.1.   <a href="#rfc.section.3.1">Common COSE Headers Parameters</a></li>
-</ul><li>4.   <a href="#rfc.section.4">Signing Structure</a></li>
-<ul><li>4.1.   <a href="#rfc.section.4.1">Externally Supplied Data</a></li>
-<li>4.2.   <a href="#rfc.section.4.2">Signing and Verification Process</a></li>
-<li>4.3.   <a href="#rfc.section.4.3">Computing Counter Signatures</a></li>
+</ul><li>4.   <a href="#rfc.section.4">Signing Objects</a></li>
+<ul><li>4.1.   <a href="#rfc.section.4.1">Signing with One or More Signers</a></li>
+<li>4.2.   <a href="#rfc.section.4.2">Signing with One Signer</a></li>
+<li>4.3.   <a href="#rfc.section.4.3">Externally Supplied Data</a></li>
+<li>4.4.   <a href="#rfc.section.4.4">Signing and Verification Process</a></li>
+<li>4.5.   <a href="#rfc.section.4.5">Computing Counter Signatures</a></li>
 </ul><li>5.   <a href="#rfc.section.5">Encryption Objects</a></li>
 <ul><li>5.1.   <a href="#rfc.section.5.1">Enveloped COSE Structure</a></li>
 <ul><li>5.1.1.   <a href="#rfc.section.5.1.1">Recipient Algorithm Classes</a></li>
@@ -836,12 +840,12 @@ values = any
 <pre>
 COSE_Messages = COSE_Untagged_Message / COSE_Tagged_Message
       
-COSE_Untagged_Message = COSE_Sign / 
+COSE_Untagged_Message = COSE_Sign / COSE_Sign1 /
     COSE_Enveloped /
     COSE_Encrypted /
     COSE_Mac / COSE_Mac0
 
-COSE_Tagged_Message = COSE_Sign_Tagged /
+COSE_Tagged_Message = COSE_Sign_Tagged / COSE_Sign1_Tagged /
     COSE_Enveloped_Tagged /
     COSE_Encrypted_Tagged /
     COSE_Mac_Tagged / COSE_Mac0_Tagged
@@ -893,7 +897,7 @@ header_map = {
   <dt>Partial Initialization Vector</dt>
   <dd style="margin-left: 8">This parameter holds a part of the IV value.  When using the COSE_Encrypted structure, frequently a portion of the IV is part of the context associated with the key value.  This field is used to carry the portion of the IV that changes for each message.  The IV used for the cryptographic computation is constructed by concatenating the fixed portion of the IV and the changing portion of the IV.  (The partial IV being treated as a network order integer converted to a four byte string for this purpose.) As the IV is authenticated by the encryption process, this value can be placed in the unprotected header bucket.  <br/><br/> Some applications may also use this value for doing replay protection.  When this is done, the value will normally be defined by the application to be increasing in value for every message.  Encoding it as an integer value makes it easier to do this comparison.  </dd>
   <dt>counter signature</dt>
-  <dd style="margin-left: 8">This parameter holds a counter signature value.  Counter signatures provide a method of having a second party sign some data.  The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_signature, COSE_Enveloped, COSE_recipient, COSE_Encrypted, COSE_mac.  These structures all have the same basic structure so that a consistent calculation of the counter signature can be computed.  Details on computing counter signatures are found in <a href="#counter_signature">Section 4.3</a>.  </dd>
+  <dd style="margin-left: 8">This parameter holds a counter signature value.  Counter signatures provide a method of having a second party sign some data.  The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_signature, COSE_Enveloped, COSE_recipient, COSE_Encrypted, COSE_mac.  These structures all have the same basic structure so that a consistent calculation of the counter signature can be computed.  Details on computing counter signatures are found in <a href="#counter_signature">Section 4.5</a>.  </dd>
   <dt>operation time</dt>
   <dd style="margin-left: 8">This parameter provides the time the content cryptographic operation is performed.  For signatures and recipient structures, this would be the time that the signature or recipient key object was created.  For content structures, this would be the time that the content structure was created.  The unsigned integer value is the number of seconds, excluding leap seconds; after midnight UTC, January 1, 1970.  The field is primarily intended to be to be used for countersignatures, however it can additionally be used for replay detection as well.  </dd>
 </dl>
@@ -984,15 +988,17 @@ Generic_Headers = (
     ? 8 =&gt; uint         ; Operation time
 )
 </pre>
-<h1 id="rfc.section.4"><a href="#rfc.section.4">4.</a> <a href="#signing-structure" id="signing-structure">Signing Structure</a></h1>
-<p id="rfc.section.4.p.1">The signature structure allows for one or more signatures to be applied to a message payload.  There are provisions for parameters about the content and parameters about the signature to be carried along with the signature itself.  These parameters may be authenticated by the signature, or just present.  Examples of parameters about the content would be the type of content, when the content was created, and who created the content.  <a id="CREF4" class="info">[CREF4]<span class="info">Hannes: Ensure that the list of examples only includes items that are implemented in this specification.  Check the other places where such lists occur and ensure that they also follow this rule.  </span></a> Examples of parameters about the signature would be the algorithm and key used to create the signature, when the signature was created, and counter-signatures.  </p>
-<p id="rfc.section.4.p.2">When more than one signature is present, the successful validation of one signature associated with a given signer is usually treated as a successful signature by that signer.  However, there are some application environments where other rules are needed.  An application that employs a rule other than one valid signature for each signer must specify those rules.  Also, where simple matching of the signer identifier is not sufficient to determine whether the signatures were generated by the same signer, the application specification must describe how to determine which signatures were generated by the same signer.  Support of different communities of recipients is the primary reason that signers choose to include more than one signature.  For example, the COSE_Sign structure might include signatures generated with the RSA signature algorithm and with the Elliptic Curve Digital Signature Algorithm (ECDSA) signature algorithm.  This allows recipients to verify the signature associated with one algorithm or the other.  (The original source of this text is <a href="#RFC5652">[RFC5652]</a>.) More detailed information on multiple signature evaluation can be found in <a href="#RFC5752">[RFC5752]</a>.  </p>
-<p id="rfc.section.4.p.3">The signature structure can be encoded either with or without a tag depending on the context it will be used in.  The signature structure is identified by the CBOR tag TBD1.  The CDDL fragment that represents this is.  </p>
+<h1 id="rfc.section.4"><a href="#rfc.section.4">4.</a> <a href="#signing-structure" id="signing-structure">Signing Objects</a></h1>
+<p id="rfc.section.4.p.1">COSE supports two different signature structures.  COSE_Sign allows for one or more signers to be applied to a single content.  COSE_Sign1 is restricted to a single signer.  </p>
+<h1 id="rfc.section.4.1"><a href="#rfc.section.4.1">4.1.</a> <a href="#full-signature" id="full-signature">Signing with One or More Signers</a></h1>
+<p id="rfc.section.4.1.p.1">The signature structure allows for one or more signatures to be applied to a message payload.  There are provisions for parameters about the content and parameters about the signature to be carried along with the signature itself.  These parameters may be authenticated by the signature, or just present.  Examples of parameters about the content would be the type of content, when the content was created, and who created the content.  <a id="CREF4" class="info">[CREF4]<span class="info">Hannes: Ensure that the list of examples only includes items that are implemented in this specification.  Check the other places where such lists occur and ensure that they also follow this rule.  </span></a> Examples of parameters about the signature would be the algorithm and key used to create the signature, when the signature was created, and counter-signatures.  </p>
+<p id="rfc.section.4.1.p.2">When more than one signature is present, the successful validation of one signature associated with a given signer is usually treated as a successful signature by that signer.  However, there are some application environments where other rules are needed.  An application that employs a rule other than one valid signature for each signer must specify those rules.  Also, where simple matching of the signer identifier is not sufficient to determine whether the signatures were generated by the same signer, the application specification must describe how to determine which signatures were generated by the same signer.  Support of different communities of recipients is the primary reason that signers choose to include more than one signature.  For example, the COSE_Sign structure might include signatures generated with the RSA signature algorithm and with the Elliptic Curve Digital Signature Algorithm (ECDSA) signature algorithm.  This allows recipients to verify the signature associated with one algorithm or the other.  (The original source of this text is <a href="#RFC5652">[RFC5652]</a>.) More detailed information on multiple signature evaluation can be found in <a href="#RFC5752">[RFC5752]</a>.  </p>
+<p id="rfc.section.4.1.p.3">The signature structure can be encoded either with or without a tag depending on the context it will be used in.  The signature structure is identified by the CBOR tag TBD1.  The CDDL fragment that represents this is.  </p>
 <pre>
 COSE_Sign_Tagged = #6.999(COSE_Sign) ; Replace 999 with TBD1
 </pre>
-<p id="rfc.section.4.p.4">A COSE Signing Message is divided into two parts.  The CBOR object that carries the body and information about the body is called the COSE_Sign structure.  The CBOR object that carries the signature and information about the signature is called the COSE_Signature structure.  Examples of COSE Signing Messages can be found in <a href="#SignedExamples">Appendix B.3</a>.  </p>
-<p id="rfc.section.4.p.5">The COSE_Sign structure is a CBOR array.  The fields of the array in order are: </p>
+<p id="rfc.section.4.1.p.4">A COSE Signing Message is divided into two parts.  The CBOR object that carries the body and information about the body is called the COSE_Sign structure.  The CBOR object that carries the signature and information about the signature is called the COSE_Signature structure.  Examples of COSE Signing Messages can be found in <a href="#SignedExamples">Appendix B.3</a>.  </p>
+<p id="rfc.section.4.1.p.5">The COSE_Sign structure is a CBOR array.  The fields of the array in order are: </p>
 
 <dl>
   <dt>protected</dt>
@@ -1000,13 +1006,13 @@ COSE_Sign_Tagged = #6.999(COSE_Sign) ; Replace 999 with TBD1
   <dt>unprotected</dt>
   <dd style="margin-left: 8">is described in <a href="#header-parameters">Section 3</a>.  </dd>
   <dt>payload</dt>
-  <dd style="margin-left: 8">contains the serialized content to be signed.  If the payload is not present in the message, the application is required to supply the payload separately.  The payload is wrapped in a bstr to ensure that it is transported without changes.  If the payload is transported separately, then a nil CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.  </dd>
+  <dd style="margin-left: 8">contains the serialized content to be signed.  If the payload is not present in the message, the application is required to supply the payload separately.  The payload is wrapped in a bstr to ensure that it is transported without changes.  If the payload is transported separately, then a nil CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.  <br/><br/> Note: When a signature with message recovery algorithm is used (<a href="#SigAlgs">Section 8</a>), the maximum number of bytes that can be recovered is the length of the payload.  The size of the payload is reduced by the number of bytes that will be recovered.  If all of the bytes of the payload are consumed, then the payload is encoded as a zero length binary string rather than as being absent.  </dd>
   <dt>signatures</dt>
   <dd style="margin-left: 8">is an array of signatures.  Each signature is represented as a COSE_signature structure.  </dd>
 </dl>
 
 <p> </p>
-<p id="rfc.section.4.p.6">The CDDL fragment which represents the above text for COSE_Sign follows.  </p>
+<p id="rfc.section.4.1.p.6">The CDDL fragment which represents the above text for COSE_Sign follows.  </p>
 <pre>
 COSE_Sign = [
     Headers,
@@ -1014,7 +1020,7 @@ COSE_Sign = [
     signatures : [+ COSE_signature]
 ]
 </pre>
-<p id="rfc.section.4.p.7">The COSE_signature structure is a CBOR array.  The fields of the array in order are: </p>
+<p id="rfc.section.4.1.p.7">The COSE_signature structure is a CBOR array.  The fields of the array in order are: </p>
 
 <dl>
   <dt>protected</dt>
@@ -1026,16 +1032,43 @@ COSE_Sign = [
 </dl>
 
 <p> </p>
-<p id="rfc.section.4.p.8">The CDDL fragment which represents the above text for COSE_signature follows.  </p>
+<p id="rfc.section.4.1.p.8">The CDDL fragment which represents the above text for COSE_signature follows.  </p>
 <pre>
 COSE_signature =  [
     Headers,      
     signature : bstr
 ]
 </pre>
-<h1 id="rfc.section.4.1"><a href="#rfc.section.4.1">4.1.</a> <a href="#Extern_AAD" id="Extern_AAD">Externally Supplied Data</a></h1>
-<p id="rfc.section.4.1.p.1">One of the features that we supply in the COSE document is the ability for applications to provide additional data to be authenticated as part of the security, but that is not carried as part of the COSE object.  The primary reason for supporting this can be seen by looking at the CoAP message structure <a href="#RFC7252">[RFC7252]</a> where the facility exists for options to be carried before the payload.  <a id="CREF5" class="info">[CREF5]<span class="info">JLS: Don't talk about items which we do not define in this specification? Only talk about...</span></a> An example of data that can be placed in this location would be transaction ids and nonces to check for replay protection.  If the data is in the options section, then it is available for routers to help in performing the replay detection and prevention.  However, it may also be desired to protect these values so that they cannot be modified in transit.  This is the purpose of the externally supplied data field.  </p>
-<p id="rfc.section.4.1.p.2">This document describes the process for using a byte array of externally supplied authenticated data, however the method of constructing the byte array is a function of the application.  Applications that use this feature need to define how the externally supplied authenticated data is to be constructed.  Such a construction needs to take into account the following issues: </p>
+<h1 id="rfc.section.4.2"><a href="#rfc.section.4.2">4.2.</a> Signing with One Signer</h1>
+<p id="rfc.section.4.2.p.1">The signature structure can be encoded either with or without a tag depending on the context it will be used in.  The signature structure is identified by the CBOR tag TBD7.  The CDDL fragment that represents this is: </p>
+<pre>
+COSE_Sign1_Tagged = #6.994(COSE_Sign1) ; Replace 994 with TBD7
+</pre>
+<p id="rfc.section.4.2.p.2">The COSE_Sign1 structure is a CBOR array.  The fields of the array in order are: </p>
+
+<dl>
+  <dt>protected</dt>
+  <dd style="margin-left: 8">is described in <a href="#header-parameters">Section 3</a>.  </dd>
+  <dt>unprotected</dt>
+  <dd style="margin-left: 8">is described in <a href="#header-parameters">Section 3</a>.  </dd>
+  <dt>payload</dt>
+  <dd style="margin-left: 8">is described in <a href="#full-signature">Section 4.1</a>.  </dd>
+  <dt>signature</dt>
+  <dd style="margin-left: 8">contains the computed signature value.  The type of the field is a bstr.  </dd>
+</dl>
+
+<p> </p>
+<p id="rfc.section.4.2.p.3">The CDDL fragment which represents the above text for COSE_Sign1 follows.  </p>
+<pre>
+COSE_Sign1 = [
+    Headers,
+    payload : bstr / nil,
+    signature : bstr
+]
+</pre>
+<h1 id="rfc.section.4.3"><a href="#rfc.section.4.3">4.3.</a> <a href="#Extern_AAD" id="Extern_AAD">Externally Supplied Data</a></h1>
+<p id="rfc.section.4.3.p.1">One of the features that we supply in the COSE document is the ability for applications to provide additional data to be authenticated as part of the security, but that is not carried as part of the COSE object.  The primary reason for supporting this can be seen by looking at the CoAP message structure <a href="#RFC7252">[RFC7252]</a> where the facility exists for options to be carried before the payload.  <a id="CREF5" class="info">[CREF5]<span class="info">JLS: Don't talk about items which we do not define in this specification? Only talk about...</span></a> An example of data that can be placed in this location would be transaction ids and nonces to check for replay protection.  If the data is in the options section, then it is available for routers to help in performing the replay detection and prevention.  However, it may also be desired to protect these values so that they cannot be modified in transit.  This is the purpose of the externally supplied data field.  </p>
+<p id="rfc.section.4.3.p.2">This document describes the process for using a byte array of externally supplied authenticated data, however the method of constructing the byte array is a function of the application.  Applications that use this feature need to define how the externally supplied authenticated data is to be constructed.  Such a construction needs to take into account the following issues: </p>
 
 <ul>
   <li>If multiple items are included, care needs to be taken that data cannot bleed between the items.  This is usually addressed by making fields fixed width and/or encoding the length of the field.  Using options from CoAP <a href="#RFC7252">[RFC7252]</a> as an example, these fields use a TLV structure so they can be concatenated without any problems.  </li>
@@ -1043,29 +1076,29 @@ COSE_signature =  [
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.4.2"><a href="#rfc.section.4.2">4.2.</a> Signing and Verification Process</h1>
-<p id="rfc.section.4.2.p.1">In order to create a signature, a consistent byte stream is needed in order to process.  This algorithm takes in the body information (COSE_Sign), the signer information (COSE_Signer), and the application data (External).  A CBOR array is used to construct the byte stream to be processed.  The fields of the array in order are: </p>
+<h1 id="rfc.section.4.4"><a href="#rfc.section.4.4">4.4.</a> Signing and Verification Process</h1>
+<p id="rfc.section.4.4.p.1">In order to create a signature, a consistent byte stream is needed in order to process.  This algorithm takes in the body information (COSE_Sign), the signer information (COSE_Signer), and the application data (External).  A CBOR array is used to construct the byte stream to be processed.  The fields of the array in order are: </p>
 
 <ol>
-  <li>A text string identifying the context that this signature is being used in.  This string will be "Signature" for signatures using the COSE_Signature structure and "CounterSignature" for signatures used as counter signature attributes.  </li>
+  <li>A text string identifying the context that this signature is being used in.  The context string is: <dl><dt>"Signature"</dt><dd style="margin-left: 8">for signatures using the COSE_Signature structure.</dd><dt>"Signature1"</dt><dd style="margin-left: 8">for signatures using the COSE_Sign1 structure.</dd><dt>"CounterSignature"</dt><dd style="margin-left: 8">for signatures used as counter signature attributes.</dd></dl><p> </p></li>
   <li>The protected attributes from the body structure encoded in a bstr type.  </li>
-  <li>The protected attributes from the signer structure encoded in a bstr type.  </li>
+  <li>The protected attributes from the signer structure encoded in a bstr type.  This field is omitted for the COSE_Sign1 signature structure.  </li>
   <li>The protected attributes from the application encoded in a bstr type.  If this field is not supplied, it defaults to a zero length binary string.  </li>
   <li>The payload to be signed encoded in a bstr type.  The payload is placed here independent of how it is transported.  </li>
 </ol>
 
 <p> </p>
-<p id="rfc.section.4.2.p.2">The CDDL fragment which describes the above text is.  </p>
+<p id="rfc.section.4.4.p.2">The CDDL fragment which describes the above text is.  </p>
 <pre>
 Sig_structure = [
-    context: "Signature" / "CounterSignature",
+    context: "Signature" / "Signature1" / "CounterSignature",
     body_protected: bstr,
-    sign_protected: bstr,
+    ? sign_protected: bstr,
     external_aad: bstr,
     payload: bstr
 ]
 </pre>
-<p id="rfc.section.4.2.p.3">How to compute a signature: </p>
+<p id="rfc.section.4.4.p.3">How to compute a signature: </p>
 
 <ol>
   <li>Create a Sig_structure and populate it with the appropriate fields.  For body_protected and sign_protected, if the map is empty, a bstr of length zero is used.  </li>
@@ -1076,7 +1109,7 @@ Sig_structure = [
 </ol>
 
 <p> </p>
-<p id="rfc.section.4.2.p.4">How to verify a signature: </p>
+<p id="rfc.section.4.4.p.4">How to verify a signature: </p>
 
 <ol>
   <li>Create a Sig_structure object and populate it with the appropriate fields.  For body_protected and sign_protected, if the map is empty, a bstr of length zero is used.  </li>
@@ -1086,13 +1119,14 @@ Sig_structure = [
 </ol>
 
 <p> </p>
-<p id="rfc.section.4.2.p.5">In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the appropriate authorization is done.  </p>
-<h1 id="rfc.section.4.3"><a href="#rfc.section.4.3">4.3.</a> <a href="#counter_signature" id="counter_signature">Computing Counter Signatures</a></h1>
-<p id="rfc.section.4.3.p.1">Counter signatures provide a method of having a different signature occur on some piece of content.  This is normally used to provide a signature on a signature allowing for a proof that a signature existed at a given time (i.e. a Timestamp).  In this document we allow for counter signatures to exist in a greater number of environments.  As an example, it is possible to place a counter signature in the unprotected attributes of a COSE_Enveloped object.  This would allow for an intermediary to either verify that the encrypted byte stream has not been modified, without being able to decrypt it.  Or for the intermediary to assert that an encrypted byte stream either existed at a given time or passed through it in terms of routing (i.e. a proxy signature).  </p>
-<p id="rfc.section.4.3.p.2">An example of a proxy signature on a signature can be found in <a href="#Sig-03">Appendix B.3.3</a>.  An example of a proxy signature on an encryption object can be found in <a href="#Enc-03">Appendix B.2.3</a>.  </p>
-<p id="rfc.section.4.3.p.3">The creation and validation of counter signatures over the different items relies on the fact that the structure all of our objects have the same structure.  The elements are a set of protected attributes, a set of unprotected attributes and a body in that order.  This means that the Sig_structure can be used for in a uniform manner to get the byte stream for processing a signature.  If the counter signature is going to be computed over a COSE_Enveloped structure, the body_protected and payload items can be mapped into the Sig_structure in the same manner as from the COSE_Sign structure.  </p>
+<p id="rfc.section.4.4.p.5">In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the appropriate authorization is done.  </p>
+<h1 id="rfc.section.4.5"><a href="#rfc.section.4.5">4.5.</a> <a href="#counter_signature" id="counter_signature">Computing Counter Signatures</a></h1>
+<p id="rfc.section.4.5.p.1">Counter signatures provide a method of having a different signature occur on some piece of content.  This is normally used to provide a signature on a signature allowing for a proof that a signature existed at a given time (i.e. a Timestamp).  In this document we allow for counter signatures to exist in a greater number of environments.  As an example, it is possible to place a counter signature in the unprotected attributes of a COSE_Enveloped object.  This would allow for an intermediary to either verify that the encrypted byte stream has not been modified, without being able to decrypt it.  Or for the intermediary to assert that an encrypted byte stream either existed at a given time or passed through it in terms of routing (i.e. a proxy signature).  </p>
+<p id="rfc.section.4.5.p.2">An example of a proxy signature on a signature can be found in <a href="#Sig-03">Appendix B.3.3</a>.  An example of a proxy signature on an encryption object can be found in <a href="#Enc-03">Appendix B.2.3</a>.  </p>
+<p id="rfc.section.4.5.p.3">The creation and validation of counter signatures over the different items relies on the fact that the structure all of our objects have the same structure.  The elements are a set of protected attributes, a set of unprotected attributes and a body in that order.  This means that the Sig_structure can be used for in a uniform manner to get the byte stream for processing a signature.  If the counter signature is going to be computed over a COSE_Enveloped structure, the body_protected and payload items can be mapped into the Sig_structure in the same manner as from the COSE_Sign structure.  </p>
+<p id="rfc.section.4.5.p.4">It should be noted that only signature algorithm with appendix (see <a href="#SigAlgs">Section 8</a>) should be used for counter signatures.  This is because the body should be able to be processed without having to evaluate the countersignature, and this is not possible for signature schemes with message recovery.  </p>
 <h1 id="rfc.section.5"><a href="#rfc.section.5">5.</a> <a href="#encryption-object" id="encryption-object">Encryption Objects</a></h1>
-<p id="rfc.section.5.p.1">COSE supports two different encryption structures.  COSE_Enveloped is used when the key needs to be explicitly identified.  This structure supports the use of recipient structures to allow for random content encryption keys to be used.  COSE_Enveloped is used when a recipient structure is not needed because the key to be used is known implicitly.  </p>
+<p id="rfc.section.5.p.1">COSE supports two different encryption structures.  COSE_Enveloped is used when the key needs to be explicitly identified.  This structure supports the use of recipient structures to allow for random content encryption keys to be used.  COSE_Encrypted is used when a recipient structure is not needed because the key to be used is known implicitly.  </p>
 <h1 id="rfc.section.5.1"><a href="#rfc.section.5.1">5.1.</a> <a href="#EnvelopedData" id="EnvelopedData">Enveloped COSE Structure</a></h1>
 <p id="rfc.section.5.1.p.1">The enveloped structure allows for one or more recipients of a message.  There are provisions for parameters about the content and parameters about the recipient information to be carried in the message.  The parameters associated with the content can be authenticated by the content encryption algorithm.  The parameters associated with the recipient can be authenticated by the recipient algorithm (when the algorithm supports it).  Examples of parameters about the content are the type of the content, when the content was created, and the content encryption algorithm.  Examples of parameters about the recipient are the recipient's key identifier, the recipient encryption algorithm.  <a id="CREF6" class="info">[CREF6]<span class="info">JLS: Restrict to the set of supported parameters.</span></a> </p>
 <p id="rfc.section.5.1.p.2">In COSE, the same techniques and structures are used for encrypting both the plain text and the keys used to protect the text.  This is different from the approach used by both <a href="#RFC5652">[RFC5652]</a> and <a href="#RFC7516">[RFC7516]</a> where different structures are used for the content layer and for the recipient layer.  Two structures are defined COSE_Enveloped to hold the encrypted content and COSE_recipient to hold the encrypted keys for recipients.  Examples of encrypted messages can be found in <a href="#EncryptedExamples">Appendix B.2</a>.  </p>
@@ -1195,7 +1229,7 @@ COSE_Encrypted = [
   <li>Create a CBOR array (Enc_structure) to encode the authenticated data.  </li>
   <li>Place a context string in the form of a tstr in the first location to identify the data and location being encoded.  The strings defined are: <dl><dt>"Encrypted"</dt><dd style="margin-left: 8">for the the content encryption of an encrypted data structure.</dd><dt>"Enveloped"</dt><dd style="margin-left: 8">for the first level of an enveloped data structure (i.e. for content encryption).</dd><dt>"Env_Recipient"</dt><dd style="margin-left: 8">for a recipient encoding to be placed in an enveloped data structure.</dd><dt>"Mac_Recipient"</dt><dd style="margin-left: 8">for a recipient encoding to be placed in a MAC message structure.</dd></dl><p> </p></li>
   <li>Copy the protected header field from the message to be sent to the second location in the Enc_structure.  </li>
-  <li>If the application has supplied external additional authenticated data to be included in the computation, then it is placed in the third location ('external_aad' field) of the Enc_structure.  If no data was supplied, then a zero length binary value is used.  (See <a href="#Extern_AAD">Section 4.1</a> for application guidance on constructing this field.) </li>
+  <li>If the application has supplied external additional authenticated data to be included in the computation, then it is placed in the third location ('external_aad' field) of the Enc_structure.  If no data was supplied, then a zero length binary value is used.  (See <a href="#Extern_AAD">Section 4.3</a> for application guidance on constructing this field.) </li>
   <li>Encode the Enc_structure using a CBOR Canonical encoding <a href="#CBOR-Canonical">Section 14</a> to get the AAD value.  </li>
   <li>Determine the encryption key.  This step is dependent on the class of recipient algorithm being used.  For: <dl><dt>No Recipients:</dt><dd style="margin-left: 8">The key to be used is determined by the algorithm and key at the current level.  </dd><dt>Direct and Direct Key Agreement:</dt><dd style="margin-left: 8">The key is determined by the key and algorithm in the recipient structure.  The encryption algorithm and size of the key to be used are inputs into the KDF used for the recipient.  (For direct, the KDF can be thought of as the identity operation.) </dd><dt>Other:</dt><dd style="margin-left: 8">The key is randomly generated.  </dd></dl><p> </p></li>
   <li>Call the encryption algorithm with K (the encryption key to use), P (the plain text) and AAD (the additional authenticated data).  Place the returned cipher text into the 'ciphertext' field of the structure.  </li>
@@ -1295,7 +1329,7 @@ COSE_Mac0 = [
 <ol>
   <li>A text string that identifies the structure that is being encoded.  This string is "MAC" for the COSE_Mac structure.  This string is "MAC0" for the COSE_Mac0 structure.  </li>
   <li>The protected attributes from the COSE_MAC structure.  If there are no protected attributes, a zero length binary string is to be encoded.  </li>
-  <li>If the application has supplied external authenticated data, encode it as a binary value and place in the MAC_structure.  If there is no external authenticated data, then use a zero length 'bstr'.  (See <a href="#Extern_AAD">Section 4.1</a> for application guidance on constructing this field.) </li>
+  <li>If the application has supplied external authenticated data, encode it as a binary value and place in the MAC_structure.  If there is no external authenticated data, then use a zero length 'bstr'.  (See <a href="#Extern_AAD">Section 4.3</a> for application guidance on constructing this field.) </li>
   <li>The payload to be MAC-ed encoded in a bstr type.  The payload is placed here independent of how it is transported.  </li>
 </ol>
 
@@ -1464,7 +1498,7 @@ key_kid=2
 key_alg=3
 key_ops=4
 </pre>
-<h1 id="rfc.section.8"><a href="#rfc.section.8">8.</a> Signature Algorithms</h1>
+<h1 id="rfc.section.8"><a href="#rfc.section.8">8.</a> <a href="#SigAlgs" id="SigAlgs">Signature Algorithms</a></h1>
 <p id="rfc.section.8.p.1">There are two basic signature algorithm structures that can be used.  The first is the common signature with appendix.  In this structure, the message content is processed and a signature is produced, the signature is called the appendix.  This is the message structure used by our common algorithms such as ECDSA and RSASSA-PSS.  (In fact the SSA in RSASSA-PSS stands for Signature Scheme with Appendix.) The basic structure becomes: </p>
 <pre>
 signature = Sign(message content, key)
@@ -2661,7 +2695,7 @@ COSE_KDF_Context = [
 <ul>
   <li>Applications need to determine the set of messages defined in this document that it will be using.  The set of messages corresponds fairly directly to the set of security services that are needed and to the security levels needed.  </li>
   <li>Applications may define new header parameters for a specific purpose.  Applications will often times select specific header parameters to use or not to use.  For example, an application would normally state a preference for using either the IV or the partial IV parameter.  If the partial IV parameter is specified, then the application would also need to define how the fixed portion of the IV would be determined.  </li>
-  <li>When applications use externally defined authenticated data, they need to define how that data is to be defined.  This document assumes that the data will be provided as a byte stream.  More information can be found in <a href="#Extern_AAD">Section 4.1</a>.  </li>
+  <li>When applications use externally defined authenticated data, they need to define how that data is to be defined.  This document assumes that the data will be provided as a byte stream.  More information can be found in <a href="#Extern_AAD">Section 4.3</a>.  </li>
   <li>Applications need to determine the set of security algorithms that are to be used.  When selecting the algorithms to be used as the mandatory to implement set, consideration should be given to choosing different types of algorithms when two are chosen for a specific purpose.  An example of this would be choosing HMAC-SHA512 and AES-CMAC as different MAC algorithms, the construction is vastly different between these two algorithms.  This means that a weakening of one algorithm would be unlikely to lead to a weakening of the other algorithms.  Of course, these algorithms do not provide the same level of security and thus may not be comparable for the desired security functionality.  </li>
   <li>Applications may need to provide some type of negotiation or discovery method if multiple algorithms or message structures are permitted.  The method can be as simple as requiring preconfiguration of the set of algorithms to providing a discovery method built into the protocol.  S/MIME provided a number of different ways to approach the problem that applications could follow: <ul><li>Advertising in the message (S/MIME capabilities) <a href="#RFC5751">[RFC5751]</a>.</li><li>Advertising in the certificate (capabilities extension) <a href="#RFC4262">[RFC4262]</a>.</li><li>Minimum requirements for the S/MIME, which have been updated over time <a href="#RFC2633">[RFC2633]</a><a href="#RFC5751">[RFC5751]</a>.</li></ul><p> </p></li>
 </ul>

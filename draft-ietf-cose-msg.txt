@@ -4,8 +4,8 @@
 
 COSE Working Group                                             J. Schaad
 Internet-Draft                                            August Cellars
-Intended status: Informational                         December 13, 2015
-Expires: June 15, 2016
+Intended status: Informational                         December 15, 2015
+Expires: June 17, 2016
 
 
                       CBOR Encoded Message Syntax
@@ -43,7 +43,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on June 15, 2016.
+   This Internet-Draft will expire on June 17, 2016.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Schaad                    Expires June 15, 2016                 [Page 1]
+Schaad                    Expires June 17, 2016                 [Page 1]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -72,131 +72,133 @@ Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   4
      1.1.  Design changes from JOSE  . . . . . . . . . . . . . . . .   5
-     1.2.  Requirements Terminology  . . . . . . . . . . . . . . . .   5
+     1.2.  Requirements Terminology  . . . . . . . . . . . . . . . .   6
      1.3.  CBOR Grammar  . . . . . . . . . . . . . . . . . . . . . .   6
      1.4.  CBOR Related Terminology  . . . . . . . . . . . . . . . .   7
      1.5.  Document Terminology  . . . . . . . . . . . . . . . . . .   7
    2.  Basic COSE Structure  . . . . . . . . . . . . . . . . . . . .   8
    3.  Header Parameters . . . . . . . . . . . . . . . . . . . . . .   9
      3.1.  Common COSE Headers Parameters  . . . . . . . . . . . . .  10
-   4.  Signing Structure . . . . . . . . . . . . . . . . . . . . . .  14
-     4.1.  Externally Supplied Data  . . . . . . . . . . . . . . . .  16
-     4.2.  Signing and Verification Process  . . . . . . . . . . . .  16
-     4.3.  Computing Counter Signatures  . . . . . . . . . . . . . .  18
-   5.  Encryption Objects  . . . . . . . . . . . . . . . . . . . . .  19
-     5.1.  Enveloped COSE Structure  . . . . . . . . . . . . . . . .  19
-       5.1.1.  Recipient Algorithm Classes . . . . . . . . . . . . .  21
-     5.2.  Encrypted COSE structure  . . . . . . . . . . . . . . . .  21
-     5.3.  Encryption Algorithm for AEAD algorithms  . . . . . . . .  22
-     5.4.  Encryption algorithm for AE algorithms  . . . . . . . . .  23
-   6.  MAC Objects . . . . . . . . . . . . . . . . . . . . . . . . .  24
-     6.1.  MAC Message with Recipients . . . . . . . . . . . . . . .  24
-     6.2.  MAC Messages with Implicit Key  . . . . . . . . . . . . .  26
-     6.3.  How to compute a MAC  . . . . . . . . . . . . . . . . . .  26
-   7.  Key Structure . . . . . . . . . . . . . . . . . . . . . . . .  27
-     7.1.  COSE Key Common Parameters  . . . . . . . . . . . . . . .  28
-   8.  Signature Algorithms  . . . . . . . . . . . . . . . . . . . .  31
-     8.1.  ECDSA . . . . . . . . . . . . . . . . . . . . . . . . . .  32
-       8.1.1.  Security Considerations . . . . . . . . . . . . . . .  33
-   9.  Message Authentication (MAC) Algorithms . . . . . . . . . . .  34
-     9.1.  Hash-based Message Authentication Codes (HMAC)  . . . . .  34
-       9.1.1.  Security Considerations . . . . . . . . . . . . . . .  36
-     9.2.  AES Message Authentication Code (AES-CBC-MAC) . . . . . .  36
-       9.2.1.  Security Considerations . . . . . . . . . . . . . . .  37
-   10. Content Encryption Algorithms . . . . . . . . . . . . . . . .  37
-     10.1.  AES GCM  . . . . . . . . . . . . . . . . . . . . . . . .  38
-       10.1.1.  Security Considerations  . . . . . . . . . . . . . .  39
+   4.  Signing Objects . . . . . . . . . . . . . . . . . . . . . . .  14
+     4.1.  Signing with One or More Signers  . . . . . . . . . . . .  14
+     4.2.  Signing with One Signer . . . . . . . . . . . . . . . . .  16
+     4.3.  Externally Supplied Data  . . . . . . . . . . . . . . . .  17
+     4.4.  Signing and Verification Process  . . . . . . . . . . . .  17
+     4.5.  Computing Counter Signatures  . . . . . . . . . . . . . .  19
+   5.  Encryption Objects  . . . . . . . . . . . . . . . . . . . . .  20
+     5.1.  Enveloped COSE Structure  . . . . . . . . . . . . . . . .  20
+       5.1.1.  Recipient Algorithm Classes . . . . . . . . . . . . .  22
+     5.2.  Encrypted COSE structure  . . . . . . . . . . . . . . . .  22
+     5.3.  Encryption Algorithm for AEAD algorithms  . . . . . . . .  23
+     5.4.  Encryption algorithm for AE algorithms  . . . . . . . . .  24
+   6.  MAC Objects . . . . . . . . . . . . . . . . . . . . . . . . .  25
+     6.1.  MAC Message with Recipients . . . . . . . . . . . . . . .  25
+     6.2.  MAC Messages with Implicit Key  . . . . . . . . . . . . .  27
+     6.3.  How to compute a MAC  . . . . . . . . . . . . . . . . . .  27
+   7.  Key Structure . . . . . . . . . . . . . . . . . . . . . . . .  28
+     7.1.  COSE Key Common Parameters  . . . . . . . . . . . . . . .  29
+   8.  Signature Algorithms  . . . . . . . . . . . . . . . . . . . .  32
+     8.1.  ECDSA . . . . . . . . . . . . . . . . . . . . . . . . . .  33
+       8.1.1.  Security Considerations . . . . . . . . . . . . . . .  34
+   9.  Message Authentication (MAC) Algorithms . . . . . . . . . . .  35
+     9.1.  Hash-based Message Authentication Codes (HMAC)  . . . . .  35
+       9.1.1.  Security Considerations . . . . . . . . . . . . . . .  37
+     9.2.  AES Message Authentication Code (AES-CBC-MAC) . . . . . .  37
+       9.2.1.  Security Considerations . . . . . . . . . . . . . . .  38
+   10. Content Encryption Algorithms . . . . . . . . . . . . . . . .  38
 
 
 
-Schaad                    Expires June 15, 2016                 [Page 2]
+Schaad                    Expires June 17, 2016                 [Page 2]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
-     10.2.  AES CCM  . . . . . . . . . . . . . . . . . . . . . . . .  39
-       10.2.1.  Security Considerations  . . . . . . . . . . . . . .  42
-     10.3.  ChaCha20 and Poly1305  . . . . . . . . . . . . . . . . .  42
-       10.3.1.  Security Considerations  . . . . . . . . . . . . . .  43
-   11. Key Derivation Functions (KDF)  . . . . . . . . . . . . . . .  43
+     10.1.  AES GCM  . . . . . . . . . . . . . . . . . . . . . . . .  39
+       10.1.1.  Security Considerations  . . . . . . . . . . . . . .  40
+     10.2.  AES CCM  . . . . . . . . . . . . . . . . . . . . . . . .  40
+       10.2.1.  Security Considerations  . . . . . . . . . . . . . .  43
+     10.3.  ChaCha20 and Poly1305  . . . . . . . . . . . . . . . . .  43
+       10.3.1.  Security Considerations  . . . . . . . . . . . . . .  44
+   11. Key Derivation Functions (KDF)  . . . . . . . . . . . . . . .  44
      11.1.  HMAC-based Extract-and-Expand Key Derivation Function
-            (HKDF) . . . . . . . . . . . . . . . . . . . . . . . . .  44
-     11.2.  Context Information Structure  . . . . . . . . . . . . .  46
-   12. Recipient Algorithm Classes . . . . . . . . . . . . . . . . .  50
-     12.1.  Direct Encryption  . . . . . . . . . . . . . . . . . . .  50
-       12.1.1.  Direct Key . . . . . . . . . . . . . . . . . . . . .  51
-       12.1.2.  Direct Key with KDF  . . . . . . . . . . . . . . . .  51
-     12.2.  Key Wrapping . . . . . . . . . . . . . . . . . . . . . .  53
-       12.2.1.  AES Key Wrapping . . . . . . . . . . . . . . . . . .  54
-     12.3.  Key Encryption . . . . . . . . . . . . . . . . . . . . .  55
-     12.4.  Direct Key Agreement . . . . . . . . . . . . . . . . . .  55
-       12.4.1.  ECDH . . . . . . . . . . . . . . . . . . . . . . . .  56
-     12.5.  Key Agreement with KDF . . . . . . . . . . . . . . . . .  59
-       12.5.1.  ECDH . . . . . . . . . . . . . . . . . . . . . . . .  60
-   13. Keys  . . . . . . . . . . . . . . . . . . . . . . . . . . . .  60
-     13.1.  Elliptic Curve Keys  . . . . . . . . . . . . . . . . . .  61
-       13.1.1.  Double Coordinate Curves . . . . . . . . . . . . . .  61
-     13.2.  Symmetric Keys . . . . . . . . . . . . . . . . . . . . .  63
-   14. CBOR Encoder Restrictions . . . . . . . . . . . . . . . . . .  63
-   15. Application Profiling Considerations  . . . . . . . . . . . .  64
-   16. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  65
-     16.1.  CBOR Tag assignment  . . . . . . . . . . . . . . . . . .  65
-     16.2.  COSE Header Parameter Registry . . . . . . . . . . . . .  65
-     16.3.  COSE Header Algorithm Label Table  . . . . . . . . . . .  66
-     16.4.  COSE Algorithm Registry  . . . . . . . . . . . . . . . .  67
-     16.5.  COSE Key Common Parameter Registry . . . . . . . . . . .  68
-     16.6.  COSE Key Type Parameter Registry . . . . . . . . . . . .  68
-     16.7.  COSE Elliptic Curve Registry . . . . . . . . . . . . . .  69
-     16.8.  Media Type Registrations . . . . . . . . . . . . . . . .  70
-       16.8.1.  COSE Security Message  . . . . . . . . . . . . . . .  70
-       16.8.2.  COSE Key media type  . . . . . . . . . . . . . . . .  72
-     16.9.  CoAP Content Format Registrations  . . . . . . . . . . .  73
-     16.10. Expert Review Instructions . . . . . . . . . . . . . . .  74
-   17. Security Considerations . . . . . . . . . . . . . . . . . . .  75
-   18. References  . . . . . . . . . . . . . . . . . . . . . . . . .  75
-     18.1.  Normative References . . . . . . . . . . . . . . . . . .  75
-     18.2.  Informative References . . . . . . . . . . . . . . . . .  75
-   Appendix A.  Three Levels of Recipient Information  . . . . . . .  78
-   Appendix B.  Examples . . . . . . . . . . . . . . . . . . . . . .  80
-     B.1.  Examples of MAC messages  . . . . . . . . . . . . . . . .  81
-       B.1.1.  Shared Secret Direct MAC  . . . . . . . . . . . . . .  81
-       B.1.2.  ECDH Direct MAC . . . . . . . . . . . . . . . . . . .  82
-       B.1.3.  Wrapped MAC . . . . . . . . . . . . . . . . . . . . .  83
+            (HKDF) . . . . . . . . . . . . . . . . . . . . . . . . .  45
+     11.2.  Context Information Structure  . . . . . . . . . . . . .  47
+   12. Recipient Algorithm Classes . . . . . . . . . . . . . . . . .  51
+     12.1.  Direct Encryption  . . . . . . . . . . . . . . . . . . .  51
+       12.1.1.  Direct Key . . . . . . . . . . . . . . . . . . . . .  52
+       12.1.2.  Direct Key with KDF  . . . . . . . . . . . . . . . .  52
+     12.2.  Key Wrapping . . . . . . . . . . . . . . . . . . . . . .  54
+       12.2.1.  AES Key Wrapping . . . . . . . . . . . . . . . . . .  55
+     12.3.  Key Encryption . . . . . . . . . . . . . . . . . . . . .  56
+     12.4.  Direct Key Agreement . . . . . . . . . . . . . . . . . .  56
+       12.4.1.  ECDH . . . . . . . . . . . . . . . . . . . . . . . .  57
+     12.5.  Key Agreement with KDF . . . . . . . . . . . . . . . . .  60
+       12.5.1.  ECDH . . . . . . . . . . . . . . . . . . . . . . . .  61
+   13. Keys  . . . . . . . . . . . . . . . . . . . . . . . . . . . .  61
+     13.1.  Elliptic Curve Keys  . . . . . . . . . . . . . . . . . .  62
+       13.1.1.  Double Coordinate Curves . . . . . . . . . . . . . .  62
+     13.2.  Symmetric Keys . . . . . . . . . . . . . . . . . . . . .  64
+   14. CBOR Encoder Restrictions . . . . . . . . . . . . . . . . . .  64
+   15. Application Profiling Considerations  . . . . . . . . . . . .  65
+   16. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  66
+     16.1.  CBOR Tag assignment  . . . . . . . . . . . . . . . . . .  66
+     16.2.  COSE Header Parameter Registry . . . . . . . . . . . . .  66
+     16.3.  COSE Header Algorithm Label Table  . . . . . . . . . . .  67
+     16.4.  COSE Algorithm Registry  . . . . . . . . . . . . . . . .  68
+     16.5.  COSE Key Common Parameter Registry . . . . . . . . . . .  69
+     16.6.  COSE Key Type Parameter Registry . . . . . . . . . . . .  69
+     16.7.  COSE Elliptic Curve Registry . . . . . . . . . . . . . .  70
+     16.8.  Media Type Registrations . . . . . . . . . . . . . . . .  71
+       16.8.1.  COSE Security Message  . . . . . . . . . . . . . . .  71
+       16.8.2.  COSE Key media type  . . . . . . . . . . . . . . . .  73
+     16.9.  CoAP Content Format Registrations  . . . . . . . . . . .  74
+     16.10. Expert Review Instructions . . . . . . . . . . . . . . .  75
+   17. Security Considerations . . . . . . . . . . . . . . . . . . .  76
+   18. References  . . . . . . . . . . . . . . . . . . . . . . . . .  76
+     18.1.  Normative References . . . . . . . . . . . . . . . . . .  76
+     18.2.  Informative References . . . . . . . . . . . . . . . . .  76
+   Appendix A.  Three Levels of Recipient Information  . . . . . . .  79
+   Appendix B.  Examples . . . . . . . . . . . . . . . . . . . . . .  81
+     B.1.  Examples of MAC messages  . . . . . . . . . . . . . . . .  82
+       B.1.1.  Shared Secret Direct MAC  . . . . . . . . . . . . . .  82
 
 
 
-Schaad                    Expires June 15, 2016                 [Page 3]
+Schaad                    Expires June 17, 2016                 [Page 3]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
-       B.1.4.  Multi-recipient MAC message . . . . . . . . . . . . .  84
-     B.2.  Examples of Encrypted Messages  . . . . . . . . . . . . .  85
-       B.2.1.  Direct ECDH . . . . . . . . . . . . . . . . . . . . .  86
-       B.2.2.  Direct plus Key Derivation  . . . . . . . . . . . . .  86
-       B.2.3.  Counter Signature on Encrypted Content  . . . . . . .  87
-       B.2.4.  Encrypted Content w/ Implicit Recipient . . . . . . .  88
+       B.1.2.  ECDH Direct MAC . . . . . . . . . . . . . . . . . . .  83
+       B.1.3.  Wrapped MAC . . . . . . . . . . . . . . . . . . . . .  84
+       B.1.4.  Multi-recipient MAC message . . . . . . . . . . . . .  85
+     B.2.  Examples of Encrypted Messages  . . . . . . . . . . . . .  86
+       B.2.1.  Direct ECDH . . . . . . . . . . . . . . . . . . . . .  87
+       B.2.2.  Direct plus Key Derivation  . . . . . . . . . . . . .  87
+       B.2.3.  Counter Signature on Encrypted Content  . . . . . . .  88
+       B.2.4.  Encrypted Content w/ Implicit Recipient . . . . . . .  89
        B.2.5.  Encrypted Content w/ Implicit Recipient and Partial
-               IV  . . . . . . . . . . . . . . . . . . . . . . . . .  89
-     B.3.  Examples of Signed Message  . . . . . . . . . . . . . . .  89
-       B.3.1.  Single Signature  . . . . . . . . . . . . . . . . . .  89
-       B.3.2.  Multiple Signers  . . . . . . . . . . . . . . . . . .  90
-       B.3.3.  Counter Signature . . . . . . . . . . . . . . . . . .  91
-     B.4.  COSE Keys . . . . . . . . . . . . . . . . . . . . . . . .  91
-       B.4.1.  Public Keys . . . . . . . . . . . . . . . . . . . . .  91
-       B.4.2.  Private Keys  . . . . . . . . . . . . . . . . . . . .  93
-   Appendix C.  Document Updates . . . . . . . . . . . . . . . . . .  95
-     C.1.  Version -08 to -09  . . . . . . . . . . . . . . . . . . .  95
-     C.2.  Version -07 to -08  . . . . . . . . . . . . . . . . . . .  96
-     C.3.  Version -06 to -07  . . . . . . . . . . . . . . . . . . .  96
-     C.4.  Version -05 to -06  . . . . . . . . . . . . . . . . . . .  96
-     C.5.  Version -04 to -05  . . . . . . . . . . . . . . . . . . .  96
-     C.6.  Version -03 to -04  . . . . . . . . . . . . . . . . . . .  96
-     C.7.  Version -02 to -03  . . . . . . . . . . . . . . . . . . .  97
-     C.8.  Version -02 to -03  . . . . . . . . . . . . . . . . . . .  97
-     C.9.  Version -01 to -2 . . . . . . . . . . . . . . . . . . . .  97
-     C.10. Version -00 to -01  . . . . . . . . . . . . . . . . . . .  97
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  98
+               IV  . . . . . . . . . . . . . . . . . . . . . . . . .  90
+     B.3.  Examples of Signed Message  . . . . . . . . . . . . . . .  90
+       B.3.1.  Single Signature  . . . . . . . . . . . . . . . . . .  90
+       B.3.2.  Multiple Signers  . . . . . . . . . . . . . . . . . .  91
+       B.3.3.  Counter Signature . . . . . . . . . . . . . . . . . .  92
+     B.4.  COSE Keys . . . . . . . . . . . . . . . . . . . . . . . .  92
+       B.4.1.  Public Keys . . . . . . . . . . . . . . . . . . . . .  92
+       B.4.2.  Private Keys  . . . . . . . . . . . . . . . . . . . .  94
+   Appendix C.  Document Updates . . . . . . . . . . . . . . . . . .  96
+     C.1.  Version -08 to -09  . . . . . . . . . . . . . . . . . . .  96
+     C.2.  Version -07 to -08  . . . . . . . . . . . . . . . . . . .  97
+     C.3.  Version -06 to -07  . . . . . . . . . . . . . . . . . . .  97
+     C.4.  Version -05 to -06  . . . . . . . . . . . . . . . . . . .  97
+     C.5.  Version -04 to -05  . . . . . . . . . . . . . . . . . . .  97
+     C.6.  Version -03 to -04  . . . . . . . . . . . . . . . . . . .  97
+     C.7.  Version -02 to -03  . . . . . . . . . . . . . . . . . . .  98
+     C.8.  Version -02 to -03  . . . . . . . . . . . . . . . . . . .  98
+     C.9.  Version -01 to -2 . . . . . . . . . . . . . . . . . . . .  98
+     C.10. Version -00 to -01  . . . . . . . . . . . . . . . . . . .  98
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  99
 
 1.  Introduction
 
@@ -216,16 +218,16 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
    The JOSE working group produced a set of documents
    [RFC7515][RFC7516][RFC7517][RFC7518] using JSON [RFC7159] that
    specified how to process encryption, signatures and message
-   authentication (MAC) operations, and how to encode keys using JSON.
-   This document does the same work for use with the CBOR [RFC7049]
 
 
 
-Schaad                    Expires June 15, 2016                 [Page 4]
+Schaad                    Expires June 17, 2016                 [Page 4]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
+   authentication (MAC) operations, and how to encode keys using JSON.
+   This document does the same work for use with the CBOR [RFC7049]
    document format.  While there is a strong attempt to keep the flavor
    of the original JOSE documents, two considerations are taken into
    account:
@@ -269,19 +271,21 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
       bytes larger, but one gets a corresponding decrease in the
       implementation size that should compensate for this.  [CREF1]
 
-1.2.  Requirements Terminology
-
-   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
-   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
 
 
 
 
-Schaad                    Expires June 15, 2016                 [Page 5]
+
+
+Schaad                    Expires June 17, 2016                 [Page 5]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
+1.2.  Requirements Terminology
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
    "OPTIONAL" in this document are to be interpreted as described in
    [RFC2119].
 
@@ -325,18 +329,19 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
    text as well.  The CDDL grammar is informational, the prose
    description is normative.
 
+
+
+
+
+Schaad                    Expires June 17, 2016                 [Page 6]
+
+Internet-Draft         CBOR Encoded Message Syntax         December 2015
+
+
    The collected CDDL can be extracted from the XML version of this
    document via the following XPath expression below.  (Depending on the
    XPath evaluator one is using, it may be necessary to deal with &gt;
    as an entity.)
-
-
-
-
-Schaad                    Expires June 15, 2016                 [Page 6]
-
-Internet-Draft         CBOR Encoded Message Syntax         December 2015
-
 
    //artwork[@type='CDDL']/text()
 
@@ -381,18 +386,16 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
    Key management is used as a term to describe how a key at level n is
    obtained from level n+1 in encrypted and MACed messages.  The term is
-   also used to discuss key life cycle management, this document does
-   not discuss key life cycle operations.
 
 
 
-
-
-
-Schaad                    Expires June 15, 2016                 [Page 7]
+Schaad                    Expires June 17, 2016                 [Page 7]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
+
+   also used to discuss key life cycle management, this document does
+   not discuss key life cycle operations.
 
 2.  Basic COSE Structure
 
@@ -430,22 +433,19 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
    COSE_Messages = COSE_Untagged_Message / COSE_Tagged_Message
 
-   COSE_Untagged_Message = COSE_Sign /
+   COSE_Untagged_Message = COSE_Sign / COSE_Sign1 /
        COSE_Enveloped /
        COSE_Encrypted /
        COSE_Mac / COSE_Mac0
 
-   COSE_Tagged_Message = COSE_Sign_Tagged /
+   COSE_Tagged_Message = COSE_Sign_Tagged / COSE_Sign1_Tagged /
        COSE_Enveloped_Tagged /
        COSE_Encrypted_Tagged /
        COSE_Mac_Tagged / COSE_Mac0_Tagged
 
 
 
-
-
-
-Schaad                    Expires June 15, 2016                 [Page 8]
+Schaad                    Expires June 17, 2016                 [Page 8]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -501,7 +501,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                 [Page 9]
+Schaad                    Expires June 17, 2016                 [Page 9]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -557,7 +557,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 10]
+Schaad                    Expires June 17, 2016                [Page 10]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -613,7 +613,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 11]
+Schaad                    Expires June 17, 2016                [Page 11]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -644,7 +644,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
       COSE_mac.  These structures all have the same basic structure so
       that a consistent calculation of the counter signature can be
       computed.  Details on computing counter signatures are found in
-      Section 4.3.
+      Section 4.5.
 
    operation time  This parameter provides the time the content
       cryptographic operation is performed.  For signatures and
@@ -669,7 +669,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 12]
+Schaad                    Expires June 17, 2016                [Page 12]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -725,7 +725,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 13]
+Schaad                    Expires June 17, 2016                [Page 13]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -741,7 +741,13 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
        ? 8 => uint         ; Operation time
    )
 
-4.  Signing Structure
+4.  Signing Objects
+
+   COSE supports two different signature structures.  COSE_Sign allows
+   for one or more signers to be applied to a single content.
+   COSE_Sign1 is restricted to a single signer.
+
+4.1.  Signing with One or More Signers
 
    The signature structure allows for one or more signatures to be
    applied to a message payload.  There are provisions for parameters
@@ -773,18 +779,17 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
    is [RFC5652].)  More detailed information on multiple signature
    evaluation can be found in [RFC5752].
 
+
+
+Schaad                    Expires June 17, 2016                [Page 14]
+
+Internet-Draft         CBOR Encoded Message Syntax         December 2015
+
+
    The signature structure can be encoded either with or without a tag
    depending on the context it will be used in.  The signature structure
    is identified by the CBOR tag TBD1.  The CDDL fragment that
    represents this is.
-
-
-
-
-Schaad                    Expires June 15, 2016                [Page 14]
-
-Internet-Draft         CBOR Encoded Message Syntax         December 2015
-
 
    COSE_Sign_Tagged = #6.999(COSE_Sign) ; Replace 999 with TBD1
 
@@ -810,6 +815,13 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
       placed in this location and it is the responsibility of the
       application to ensure that it will be transported without changes.
 
+      Note: When a signature with message recovery algorithm is used
+      (Section 8), the maximum number of bytes that can be recovered is
+      the length of the payload.  The size of the payload is reduced by
+      the number of bytes that will be recovered.  If all of the bytes
+      of the payload are consumed, then the payload is encoded as a zero
+      length binary string rather than as being absent.
+
    signatures  is an array of signatures.  Each signature is represented
       as a COSE_signature structure.
 
@@ -821,6 +833,14 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
        payload : bstr / nil,
        signatures : [+ COSE_signature]
    ]
+
+
+
+
+Schaad                    Expires June 17, 2016                [Page 15]
+
+Internet-Draft         CBOR Encoded Message Syntax         December 2015
+
 
    The COSE_signature structure is a CBOR array.  The fields of the
    array in order are:
@@ -835,19 +855,50 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
    The CDDL fragment which represents the above text for COSE_signature
    follows.
 
-
-
-Schaad                    Expires June 15, 2016                [Page 15]
-
-Internet-Draft         CBOR Encoded Message Syntax         December 2015
-
-
    COSE_signature =  [
        Headers,
        signature : bstr
    ]
 
-4.1.  Externally Supplied Data
+4.2.  Signing with One Signer
+
+   The signature structure can be encoded either with or without a tag
+   depending on the context it will be used in.  The signature structure
+   is identified by the CBOR tag TBD7.  The CDDL fragment that
+   represents this is:
+
+   COSE_Sign1_Tagged = #6.994(COSE_Sign1) ; Replace 994 with TBD7
+
+   The COSE_Sign1 structure is a CBOR array.  The fields of the array in
+   order are:
+
+   protected  is described in Section 3.
+
+   unprotected  is described in Section 3.
+
+   payload  is described in Section 4.1.
+
+   signature  contains the computed signature value.  The type of the
+      field is a bstr.
+
+   The CDDL fragment which represents the above text for COSE_Sign1
+   follows.
+
+   COSE_Sign1 = [
+       Headers,
+       payload : bstr / nil,
+       signature : bstr
+   ]
+
+
+
+
+Schaad                    Expires June 17, 2016                [Page 16]
+
+Internet-Draft         CBOR Encoded Message Syntax         December 2015
+
+
+4.3.  Externally Supplied Data
 
    One of the features that we supply in the COSE document is the
    ability for applications to provide additional data to be
@@ -881,7 +932,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
       application could state that the fields are to be ordered by the
       option number.
 
-4.2.  Signing and Verification Process
+4.4.  Signing and Verification Process
 
    In order to create a signature, a consistent byte stream is needed in
    order to process.  This algorithm takes in the body information
@@ -889,25 +940,29 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
    application data (External).  A CBOR array is used to construct the
    byte stream to be processed.  The fields of the array in order are:
 
+   1.  A text string identifying the context that this signature is
+       being used in.  The context string is:
+
+       "Signature"  for signatures using the COSE_Signature structure.
+
+       "Signature1"  for signatures using the COSE_Sign1 structure.
 
 
 
-
-Schaad                    Expires June 15, 2016                [Page 16]
+Schaad                    Expires June 17, 2016                [Page 17]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
-   1.  A text string identifying the context that this signature is
-       being used in.  This string will be "Signature" for signatures
-       using the COSE_Signature structure and "CounterSignature" for
-       signatures used as counter signature attributes.
+       "CounterSignature"  for signatures used as counter signature
+          attributes.
 
    2.  The protected attributes from the body structure encoded in a
        bstr type.
 
    3.  The protected attributes from the signer structure encoded in a
-       bstr type.
+       bstr type.  This field is omitted for the COSE_Sign1 signature
+       structure.
 
    4.  The protected attributes from the application encoded in a bstr
        type.  If this field is not supplied, it defaults to a zero
@@ -919,9 +974,9 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
    The CDDL fragment which describes the above text is.
 
    Sig_structure = [
-       context: "Signature" / "CounterSignature",
+       context: "Signature" / "Signature1" / "CounterSignature",
        body_protected: bstr,
-       sign_protected: bstr,
+       ? sign_protected: bstr,
        external_aad: bstr,
        payload: bstr
    ]
@@ -949,7 +1004,8 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 17]
+
+Schaad                    Expires June 17, 2016                [Page 18]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -977,7 +1033,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
    paired with the signing identity and that the appropriate
    authorization is done.
 
-4.3.  Computing Counter Signatures
+4.5.  Computing Counter Signatures
 
    Counter signatures provide a method of having a different signature
    occur on some piece of content.  This is normally used to provide a
@@ -1005,7 +1061,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 18]
+Schaad                    Expires June 17, 2016                [Page 19]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -1014,12 +1070,18 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
    body_protected and payload items can be mapped into the Sig_structure
    in the same manner as from the COSE_Sign structure.
 
+   It should be noted that only signature algorithm with appendix (see
+   Section 8) should be used for counter signatures.  This is because
+   the body should be able to be processed without having to evaluate
+   the countersignature, and this is not possible for signature schemes
+   with message recovery.
+
 5.  Encryption Objects
 
    COSE supports two different encryption structures.  COSE_Enveloped is
    used when the key needs to be explicitly identified.  This structure
    supports the use of recipient structures to allow for random content
-   encryption keys to be used.  COSE_Enveloped is used when a recipient
+   encryption keys to be used.  COSE_Encrypted is used when a recipient
    structure is not needed because the key to be used is known
    implicitly.
 
@@ -1053,18 +1115,17 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
   COSE_Enveloped_Tagged = #6.998(COSE_Enveloped) ; Replace 998 with TBD2
 
+
+
+Schaad                    Expires June 17, 2016                [Page 20]
+
+Internet-Draft         CBOR Encoded Message Syntax         December 2015
+
+
    The COSE_Enveloped structure is a CBOR array.  The fields of the
    array in order are:
 
    protected  is described in Section 3.
-
-
-
-
-Schaad                    Expires June 15, 2016                [Page 19]
-
-Internet-Draft         CBOR Encoded Message Syntax         December 2015
-
 
    unprotected  is described in Section 3.
 
@@ -1112,12 +1173,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-
-
-
-
-
-Schaad                    Expires June 15, 2016                [Page 20]
+Schaad                    Expires June 17, 2016                [Page 21]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -1173,7 +1229,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 21]
+Schaad                    Expires June 17, 2016                [Page 22]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -1229,12 +1285,12 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 22]
+Schaad                    Expires June 17, 2016                [Page 23]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
-       (See Section 4.1 for application guidance on constructing this
+       (See Section 4.3 for application guidance on constructing this
        field.)
 
    5.  Encode the Enc_structure using a CBOR Canonical encoding
@@ -1285,7 +1341,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 23]
+Schaad                    Expires June 17, 2016                [Page 24]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -1341,7 +1397,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 24]
+Schaad                    Expires June 17, 2016                [Page 25]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -1397,7 +1453,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 25]
+Schaad                    Expires June 17, 2016                [Page 26]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -1453,7 +1509,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 26]
+Schaad                    Expires June 17, 2016                [Page 27]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -1469,7 +1525,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
    3.  If the application has supplied external authenticated data,
        encode it as a binary value and place in the MAC_structure.  If
        there is no external authenticated data, then use a zero length
-       'bstr'.  (See Section 4.1 for application guidance on
+       'bstr'.  (See Section 4.3 for application guidance on
        constructing this field.)
 
    4.  The payload to be MAC-ed encoded in a bstr type.  The payload is
@@ -1509,7 +1565,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 27]
+Schaad                    Expires June 17, 2016                [Page 28]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -1565,7 +1621,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 28]
+Schaad                    Expires June 17, 2016                [Page 29]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -1621,7 +1677,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 29]
+Schaad                    Expires June 17, 2016                [Page 30]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -1677,7 +1733,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 30]
+Schaad                    Expires June 17, 2016                [Page 31]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -1733,7 +1789,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 31]
+Schaad                    Expires June 17, 2016                [Page 32]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -1789,7 +1845,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 32]
+Schaad                    Expires June 17, 2016                [Page 33]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -1845,7 +1901,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 33]
+Schaad                    Expires June 17, 2016                [Page 34]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -1901,7 +1957,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 34]
+Schaad                    Expires June 17, 2016                [Page 35]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -1957,7 +2013,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 35]
+Schaad                    Expires June 17, 2016                [Page 36]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2013,7 +2069,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 36]
+Schaad                    Expires June 17, 2016                [Page 37]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2069,7 +2125,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 37]
+Schaad                    Expires June 17, 2016                [Page 38]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2125,7 +2181,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 38]
+Schaad                    Expires June 17, 2016                [Page 39]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2181,7 +2237,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 39]
+Schaad                    Expires June 17, 2016                [Page 40]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2237,7 +2293,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 40]
+Schaad                    Expires June 17, 2016                [Page 41]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2293,7 +2349,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 41]
+Schaad                    Expires June 17, 2016                [Page 42]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2349,7 +2405,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 42]
+Schaad                    Expires June 17, 2016                [Page 43]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2405,7 +2461,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 43]
+Schaad                    Expires June 17, 2016                [Page 44]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2461,7 +2517,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 44]
+Schaad                    Expires June 17, 2016                [Page 45]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2517,7 +2573,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 45]
+Schaad                    Expires June 17, 2016                [Page 46]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2573,7 +2629,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 46]
+Schaad                    Expires June 17, 2016                [Page 47]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2629,7 +2685,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 47]
+Schaad                    Expires June 17, 2016                [Page 48]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2685,7 +2741,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 48]
+Schaad                    Expires June 17, 2016                [Page 49]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2741,7 +2797,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 49]
+Schaad                    Expires June 17, 2016                [Page 50]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2797,7 +2853,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 50]
+Schaad                    Expires June 17, 2016                [Page 51]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2853,7 +2909,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 51]
+Schaad                    Expires June 17, 2016                [Page 52]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2909,7 +2965,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 52]
+Schaad                    Expires June 17, 2016                [Page 53]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -2965,7 +3021,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 53]
+Schaad                    Expires June 17, 2016                [Page 54]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3021,7 +3077,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 54]
+Schaad                    Expires June 17, 2016                [Page 55]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3077,7 +3133,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 55]
+Schaad                    Expires June 17, 2016                [Page 56]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3133,7 +3189,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 56]
+Schaad                    Expires June 17, 2016                [Page 57]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3189,7 +3245,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 57]
+Schaad                    Expires June 17, 2016                [Page 58]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3245,7 +3301,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 58]
+Schaad                    Expires June 17, 2016                [Page 59]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3301,7 +3357,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 59]
+Schaad                    Expires June 17, 2016                [Page 60]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3357,7 +3413,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 60]
+Schaad                    Expires June 17, 2016                [Page 61]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3413,7 +3469,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 61]
+Schaad                    Expires June 17, 2016                [Page 62]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3469,7 +3525,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 62]
+Schaad                    Expires June 17, 2016                [Page 63]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3525,7 +3581,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 63]
+Schaad                    Expires June 17, 2016                [Page 64]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3559,7 +3615,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
    o  When applications use externally defined authenticated data, they
       need to define how that data is to be defined.  This document
       assumes that the data will be provided as a byte stream.  More
-      information can be found in Section 4.1.
+      information can be found in Section 4.3.
 
    o  Applications need to determine the set of security algorithms that
       are to be used.  When selecting the algorithms to be used as the
@@ -3581,7 +3637,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 64]
+Schaad                    Expires June 17, 2016                [Page 65]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3637,7 +3693,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 65]
+Schaad                    Expires June 17, 2016                [Page 66]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3693,7 +3749,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 66]
+Schaad                    Expires June 17, 2016                [Page 67]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3749,7 +3805,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 67]
+Schaad                    Expires June 17, 2016                [Page 68]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3805,7 +3861,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 68]
+Schaad                    Expires June 17, 2016                [Page 69]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3861,7 +3917,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 69]
+Schaad                    Expires June 17, 2016                [Page 70]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3917,7 +3973,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 70]
+Schaad                    Expires June 17, 2016                [Page 71]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -3973,7 +4029,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 71]
+Schaad                    Expires June 17, 2016                [Page 72]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4029,7 +4085,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 72]
+Schaad                    Expires June 17, 2016                [Page 73]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4085,7 +4141,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 73]
+Schaad                    Expires June 17, 2016                [Page 74]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4141,7 +4197,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 74]
+Schaad                    Expires June 17, 2016                [Page 75]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4197,7 +4253,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 75]
+Schaad                    Expires June 17, 2016                [Page 76]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4253,7 +4309,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 76]
+Schaad                    Expires June 17, 2016                [Page 77]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4309,7 +4365,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 77]
+Schaad                    Expires June 17, 2016                [Page 78]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4365,7 +4421,7 @@ Appendix A.  Three Levels of Recipient Information
 
 
 
-Schaad                    Expires June 15, 2016                [Page 78]
+Schaad                    Expires June 17, 2016                [Page 79]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4421,7 +4477,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 79]
+Schaad                    Expires June 17, 2016                [Page 80]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4477,7 +4533,7 @@ Appendix B.  Examples
 
 
 
-Schaad                    Expires June 15, 2016                [Page 80]
+Schaad                    Expires June 17, 2016                [Page 81]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4533,7 +4589,7 @@ B.1.1.  Shared Secret Direct MAC
 
 
 
-Schaad                    Expires June 15, 2016                [Page 81]
+Schaad                    Expires June 17, 2016                [Page 82]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4589,7 +4645,7 @@ B.1.2.  ECDH Direct MAC
 
 
 
-Schaad                    Expires June 15, 2016                [Page 82]
+Schaad                    Expires June 17, 2016                [Page 83]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4645,7 +4701,7 @@ B.1.3.  Wrapped MAC
 
 
 
-Schaad                    Expires June 15, 2016                [Page 83]
+Schaad                    Expires June 17, 2016                [Page 84]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4701,7 +4757,7 @@ B.1.4.  Multi-recipient MAC message
 
 
 
-Schaad                    Expires June 15, 2016                [Page 84]
+Schaad                    Expires June 17, 2016                [Page 85]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4757,7 +4813,7 @@ B.2.  Examples of Encrypted Messages
 
 
 
-Schaad                    Expires June 15, 2016                [Page 85]
+Schaad                    Expires June 17, 2016                [Page 86]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4813,7 +4869,7 @@ B.2.2.  Direct plus Key Derivation
 
 
 
-Schaad                    Expires June 15, 2016                [Page 86]
+Schaad                    Expires June 17, 2016                [Page 87]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4869,7 +4925,7 @@ B.2.3.  Counter Signature on Encrypted Content
 
 
 
-Schaad                    Expires June 15, 2016                [Page 87]
+Schaad                    Expires June 17, 2016                [Page 88]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4925,7 +4981,7 @@ B.2.4.  Encrypted Content w/ Implicit Recipient
 
 
 
-Schaad                    Expires June 15, 2016                [Page 88]
+Schaad                    Expires June 17, 2016                [Page 89]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -4981,7 +5037,7 @@ B.3.1.  Single Signature
 
 
 
-Schaad                    Expires June 15, 2016                [Page 89]
+Schaad                    Expires June 17, 2016                [Page 90]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -5037,7 +5093,7 @@ B.3.2.  Multiple Signers
 
 
 
-Schaad                    Expires June 15, 2016                [Page 90]
+Schaad                    Expires June 17, 2016                [Page 91]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -5093,7 +5149,7 @@ B.4.1.  Public Keys
 
 
 
-Schaad                    Expires June 15, 2016                [Page 91]
+Schaad                    Expires June 17, 2016                [Page 92]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -5149,7 +5205,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 92]
+Schaad                    Expires June 17, 2016                [Page 93]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -5205,7 +5261,7 @@ B.4.2.  Private Keys
 
 
 
-Schaad                    Expires June 15, 2016                [Page 93]
+Schaad                    Expires June 17, 2016                [Page 94]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -5261,7 +5317,7 @@ Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
 
 
-Schaad                    Expires June 15, 2016                [Page 94]
+Schaad                    Expires June 17, 2016                [Page 95]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -5317,7 +5373,7 @@ C.1.  Version -08 to -09
 
 
 
-Schaad                    Expires June 15, 2016                [Page 95]
+Schaad                    Expires June 17, 2016                [Page 96]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -5373,7 +5429,7 @@ C.6.  Version -03 to -04
 
 
 
-Schaad                    Expires June 15, 2016                [Page 96]
+Schaad                    Expires June 17, 2016                [Page 97]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -5429,7 +5485,7 @@ C.10.  Version -00 to -01
 
 
 
-Schaad                    Expires June 15, 2016                [Page 97]
+Schaad                    Expires June 17, 2016                [Page 98]
 
 Internet-Draft         CBOR Encoded Message Syntax         December 2015
 
@@ -5485,4 +5541,4 @@ Author's Address
 
 
 
-Schaad                    Expires June 15, 2016                [Page 98]
+Schaad                    Expires June 17, 2016                [Page 99]
