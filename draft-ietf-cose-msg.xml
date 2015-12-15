@@ -657,11 +657,11 @@ Generic_Headers = (
     <section anchor="signing-structure" title="Signing Objects">
       <t>
         COSE supports two different signature structures.
-        COSE_signature allows for one or more signers to be applied to a single content.
+        COSE_Sign allows for one or more signers to be applied to a single content.
         COSE_Sign1 is restricted to a single signer.
       </t>
 
-      <section title="Signing with Multiple Signers">
+      <section title="Signing with One or More Signers" anchor="full-signature">
       <t>
         The signature structure allows for one or more signatures to be applied to a message payload.
         There are provisions for parameters about the content and parameters about the signature to be carried along with the signature itself.
@@ -729,6 +729,10 @@ COSE_Sign_Tagged = #6.999(COSE_Sign) ; Replace 999 with TBD1
             If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes.
             If the payload is transported separately, then a nil CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
+            <vspace blankLines="1"/>
+            Note: When a signature with message recovery algorithm is used (<xref target="SigAlgs"/>), the maximum number of bytes that can be recovered is the length of the payload.
+            The size of the payload is reduced by the number of bytes that will be recovered.
+            If all of the bytes of the payload are consumed, then the payload is encoded as a zero length binary string rather than as being absent.
           </t>
           
           <t hangText='signatures'>
@@ -816,10 +820,7 @@ COSE_Sign1_Tagged = #6.994(COSE_Sign1) ; Replace 994 with TBD7
             </t>
             
             <t hangText='payload'>
-              contains the serialized content to be signed.
-              If the payload is not present in the message, the application is required to supply the payload separately.
-              The payload is wrapped in a bstr to ensure that it is transported without changes.
-              If the payload is transported separately, then a nil CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
+              is described in <xref target="full-signature"/>.
             </t>
 
             <t hangText='signature'>
@@ -1006,6 +1007,11 @@ Sig_structure = [
           The elements are a set of protected attributes, a set of unprotected attributes and a body in that order.
           This means that the Sig_structure can be used for in a uniform manner to get the byte stream for processing a signature.
           If the counter signature is going to be computed over a COSE_Enveloped structure, the body_protected and payload items can be mapped into the Sig_structure in the same manner as from the COSE_Sign structure.
+        </t>
+
+        <t>
+          It should be noted that only signature algorithm with appendix (see <xref target="SigAlgs"/>) should be used for counter signatures.
+          This is because the body should be able to be processed without having to evaluate the countersignature, and this is not possible for signature schemes with message recovery.
         </t>
       </section>
     </section>
@@ -1690,7 +1696,7 @@ key_ops_values = (key_ops_sign:1, key_ops_verify:2, key_ops_encrypt:3,
     </section>
 
 
-    <section title="Signature Algorithms">
+    <section title="Signature Algorithms" anchor='SigAlgs'>
       <t>
         There are two basic signature algorithm structures that can be used.
         The first is the common signature with appendix.
@@ -4044,6 +4050,7 @@ COSE_KDF_Context = [
       </t>
 
       <section title="Examples of MAC messages" anchor="MacExamples">
+        <!-- RFC Editor - All of the examples will need to be modified after IANA has finaized decisions -->        
         
         <section anchor="Mac-04" title="Shared Secret Direct MAC">
           <t>
