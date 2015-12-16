@@ -398,12 +398,12 @@ values = any
       <figure><artwork type="CDDL"><![CDATA[
 COSE_Messages = COSE_Untagged_Message / COSE_Tagged_Message
       
-COSE_Untagged_Message = COSE_Sign / 
+COSE_Untagged_Message = COSE_Sign / COSE_Sign1 /
     COSE_Enveloped /
     COSE_Encrypted /
     COSE_Mac / COSE_Mac0
 
-COSE_Tagged_Message = COSE_Sign_Tagged /
+COSE_Tagged_Message = COSE_Sign_Tagged / COSE_Sign1_Tagged /
     COSE_Enveloped_Tagged /
     COSE_Encrypted_Tagged /
     COSE_Mac_Tagged / COSE_Mac0_Tagged
@@ -658,8 +658,14 @@ Generic_Headers = (
     </section>
 
     
-    <section anchor="signing-structure" title="Signing Structure">
+    <section anchor="signing-structure" title="Signing Objects">
+      <t>
+        COSE supports two different signature structures.
+        COSE_Sign allows for one or more signers to be applied to a single content.
+        COSE_Sign1 is restricted to a single signer.
+      </t>
 
+      <section title="Signing with One or More Signers" anchor="full-signature">
       <t>
         The signature structure allows for one or more signatures to be applied to a message payload.
         There are provisions for parameters about the content and parameters about the signature to be carried along with the signature itself.
@@ -727,6 +733,10 @@ COSE_Sign_Tagged = #6.991(COSE_Sign) ; Replace 991 with TBD1
             If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes.
             If the payload is transported separately, then a nil CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
+            <vspace blankLines="1"/>
+            Note: When a signature with message recovery algorithm is used (<xref target="SigAlgs"/>), the maximum number of bytes that can be recovered is the length of the payload.
+            The size of the payload is reduced by the number of bytes that will be recovered.
+            If all of the bytes of the payload are consumed, then the payload is encoded as a zero length binary string rather than as being absent.
           </t>
           
           <t hangText='signatures'>
@@ -780,6 +790,64 @@ COSE_signature =  [
     signature : bstr
 ]
 ]]></artwork></figure>
+    </section>
+
+      <section title="Signing with One Signer">
+        <t>
+          The signature structure can be encoded either with or without a tag depending on the context it will be used in.
+          The signature structure is identified by the CBOR tag TBD7.
+          The CDDL fragment that represents this is:
+        </t>
+
+        <figure><artwork type="CDDL"><![CDATA[
+COSE_Sign1_Tagged = #6.994(COSE_Sign1) ; Replace 994 with TBD7
+]]></artwork></figure>
+
+        <t>
+          The COSE_Sign1 structure is a CBOR array.
+          The fields of the array in order are:
+
+          <list style="hanging">
+            <!--
+                <t hangText='msg_type'>
+                identifies this as providing the signed security service.
+                The value MUST be msg_type_signed (1).
+                </t>
+            -->
+            
+            <t hangText='protected'>
+              is described in <xref target="header-parameters"/>.
+            </t>
+            
+            <t hangText='unprotected'>
+              is described in <xref target="header-parameters"/>.
+            </t>
+            
+            <t hangText='payload'>
+              is described in <xref target="full-signature"/>.
+            </t>
+
+            <t hangText='signature'>
+              contains the computed signature value.
+              The type of the field is a bstr.
+            </t>
+          </list>
+        </t>
+
+        <t>
+          The CDDL fragment which represents the above text for COSE_Sign1 follows.
+        </t>
+
+        <figure><artwork type="CDDL"><![CDATA[
+COSE_Sign1 = [
+    Headers,
+    payload : bstr / nil,
+    signature : bstr
+]
+]]></artwork></figure>
+        
+        
+      </section>
 
       <section title="Externally Supplied Data" anchor="Extern_AAD">
         <t>
@@ -821,7 +889,12 @@ COSE_signature =  [
           <list style="numbers">
             <t>
               A text string identifying the context that this signature is being used in.
-              This string will be "Signature" for signatures using the COSE_Signature structure and "CounterSignature" for signatures used as counter signature attributes.
+              The context string is:
+              <list style="hanging">
+                <t hangText='"Signature"'> for signatures using the COSE_Signature structure.</t>
+                <t hangText='"Signature1"'> for signatures using the COSE_Sign1 structure.</t>
+                <t hangText='"CounterSignature"'> for signatures used as counter signature attributes.</t>
+              </list>
             </t>
             
             <t>
@@ -830,6 +903,7 @@ COSE_signature =  [
 
             <t>
               The protected attributes from the signer structure encoded in a bstr type.
+              This field is omitted for the COSE_Sign1 signature structure.
             </t>
 
             <t>
@@ -850,9 +924,9 @@ COSE_signature =  [
 
         <figure><artwork type="CDDL"><![CDATA[
 Sig_structure = [
-    context: "Signature" / "CounterSignature",
+    context: "Signature" / "Signature1" / "CounterSignature",
     body_protected: bstr,
-    sign_protected: bstr,
+    ? sign_protected: bstr,
     external_aad: bstr,
     payload: bstr
 ]
@@ -938,6 +1012,11 @@ Sig_structure = [
           This means that the Sig_structure can be used for in a uniform manner to get the byte stream for processing a signature.
           If the counter signature is going to be computed over a COSE_Enveloped structure, the body_protected and payload items can be mapped into the Sig_structure in the same manner as from the COSE_Sign structure.
         </t>
+
+        <t>
+          It should be noted that only signature algorithm with appendix (see <xref target="SigAlgs"/>) should be used for counter signatures.
+          This is because the body should be able to be processed without having to evaluate the countersignature, and this is not possible for signature schemes with message recovery.
+        </t>
       </section>
     </section>
 
@@ -946,7 +1025,7 @@ Sig_structure = [
         COSE supports two different encryption structures.
         COSE_Enveloped is used when the key needs to be explicitly identified.
         This structure supports the use of recipient structures to allow for random content encryption keys to be used.
-        COSE_Enveloped is used when a recipient structure is not needed because the key to be used is known implicitly.
+        COSE_Encrypted is used when a recipient structure is not needed because the key to be used is known implicitly.
       </t>
 
       <section title="Enveloped COSE Structure" anchor="EnvelopedData">
@@ -1594,7 +1673,8 @@ COSE_KeySet = [+COSE_Key]
         <c>decrypt</c>          <c>4</c>        <c>The key is used for key transport decryption.  Requires private key fields.</c>
         <c>wrap key</c>         <c>5</c>        <c>The key is used for key wrapping.</c>
         <c>unwrap key</c>       <c>6</c>        <c>The key is used for key unwrapping.  Requires private key fields.</c>
-        <c>key agree</c>        <c>7</c>        <c>The key is used for key agreement.</c>
+        <c>derive key</c>        <c>7</c>        <c>The key is used for deriving keys.</c>
+        <c>derive bits</c>      <c>8</c>        <c>The key is used for deriving bits.</c>
       </texttable>
       
       <t>
@@ -1621,7 +1701,7 @@ key_ops_values = (key_ops_sign:1, key_ops_verify:2, key_ops_encrypt:3,
     </section>
 
 
-    <section title="Signature Algorithms">
+    <section title="Signature Algorithms" anchor='SigAlgs'>
       <t>
         There are two basic signature algorithm structures that can be used.
         The first is the common signature with appendix.
@@ -1713,6 +1793,16 @@ valid, message content = Verification(message sent, key, signature)
           Signature = I2OSP(R, n) | I2OSP(S, n)
           <vspace/>
           where n = ceiling(key_length / 8)
+        </t>
+
+        <t>
+          When using a COSE key for this algorithm, the following checks are made:
+          <list style="symbols">
+            <t>The 'kty' field MUST be present and it MUST be 'EC2'.</t>
+            <t>If the 'alg' field present, it MUST match the ECDSA signature algorithm being used.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'sign' when creating an ECDSA signature.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'verify' when verifying an ECDSA signature.</t>
+          </list>
         </t>
 
         <section title="Security Considerations">
@@ -1821,7 +1911,16 @@ valid = MAC_Verify(message content, key, tag)
         </t>
 
         <t>
-          If the key is obtained from a key structure, the key type MUST be 'Symmetric'.
+          When using a COSE key for this algorithm, the following checks are made:
+          <list style="symbols">
+            <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
+            <t>If the 'alg' field present, it MUST match the HMAC algorithm being used.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'sign' when creating an HMAC authentication tag.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'verify' when verifying an HMAC authentication tag.</t>
+          </list>
+        </t>
+        
+        <t>
           Implementations creating and validating MAC values MUST validate that the key type, key length, and algorithm are correct and appropriate for the entities involved.
         </t>
 
@@ -1862,10 +1961,19 @@ valid = MAC_Verify(message content, key, tag)
 
         <t>
           Keys may be obtained either from a key structure or from a recipient structure.
-          If the key obtained from a key structure, the key type MUST be 'Symmetric'.
           Implementations creating and validating MAC values MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
         </t>
 
+        <t>
+          When using a COSE key for this algorithm, the following checks are made:
+          <list style="symbols">
+            <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
+            <t>If the 'alg' field present, it MUST match the AES-MAC algorithm being used.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'sign' when creating an AES-MAC authentication tag.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'verify' when verifying an AES-MAC authentication tag.</t>
+          </list>
+        </t>
+        
         <section title="Security Considerations">
           <t>
             A number of attacks exist against CBC-MAC that need to be considered.
@@ -1946,9 +2054,19 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
         <t>
           Keys may be obtained either from a key structure or from a recipient structure.
-          If the key obtained from a key structure, the key type MUST be 'Symmetric'.
           Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
         </t>
+
+        <t>
+          When using a COSE key for this algorithm, the following checks are made:
+          <list style="symbols">
+            <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
+            <t>If the 'alg' field present, it MUST match the AES-GCM algorithm being used.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'encrypt' or 'key wrap' when encrypting.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'decrypt' or 'key unwrap'  when decrypting.</t>
+          </list>
+        </t>
+        
 
         <section title="Security Considerations">
           <t>
@@ -2053,8 +2171,17 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
         <t>
           Keys may be obtained either from a key structure or from a recipient structure.
-          If the key obtained from a key structure, the key type MUST be 'Symmetric'.
           Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+        </t>
+
+        <t>
+          When using a COSE key for this algorithm, the following checks are made:
+          <list style="symbols">
+            <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
+            <t>If the 'alg' field present, it MUST match the AES-CCM algorithm being used.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'encrypt' or 'key wrap' when encrypting.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'decrypt' or 'key unwrap'  when decrypting.</t>
+          </list>
         </t>
 
         <section title="Security Considerations">
@@ -2107,8 +2234,17 @@ valid, message content = Decrypt(cipher text, key, additional data)
         
         <t>
           Keys may be obtained either from a key structure or from a recipient structure.
-          If the key obtained from a key structure, the key type MUST be 'Symmetric'.
           Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
+        </t>
+
+        <t>
+          When using a COSE key for this algorithm, the following checks are made:
+          <list style="symbols">
+            <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
+            <t>If the 'alg' field present, it MUST match the ChaCha algorithm being used.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'encrypt' or 'key wrap' when encrypting.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'decrypt' or 'key unwrap'  when decrypting.</t>
+          </list>
         </t>
 
         <section title="Security Considerations">
@@ -2511,7 +2647,6 @@ COSE_KDF_Context = [
               <c>direct</c>          <c>-6</c>       <c>Direct use of CEK</c>
             </texttable>
 
-
             <section title="Security Considerations">
               <t>
                 This recipient algorithm has several potential problems that need to be considered:
@@ -2576,6 +2711,15 @@ COSE_KDF_Context = [
               <c>direct+HKDF-AES-256</c>      <c>*</c>        <c>HKDF AES-MAC-256</c> <c>Shared secret w/ AES-MAC 256-bit key</c>
             </texttable>
 
+            <t>
+              When using a COSE key for this algorithm, the following checks are made:
+              <list style="symbols">
+                <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
+                <t>If the 'alg' field present, it MUST match the KDF algorithm being used.</t>
+                <t>If the 'key_ops' field is present, it MUST include 'deriveKey or 'deriveBits'.</t>
+              </list>
+            </t>
+            
             <section title="Security Considerations">
               <t>
                 The shared secret needs to have some method to be regularly updated over time.
@@ -2643,6 +2787,15 @@ COSE_KDF_Context = [
             Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
           </t>
           
+        <t>
+          When using a COSE key for this algorithm, the following checks are made:
+          <list style="symbols">
+            <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
+            <t>If the 'alg' field present, it MUST match the AES Key Wrap algorithm being used.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'encrypt' or 'key wrap' when encrypting.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'decrypt' or 'key unwrap'  when decrypting.</t>
+          </list>
+        </t>
           
           <texttable title="AES Key Wrap Algorithm Values" anchor="table_aes_keywrap">
             <ttcol align='left'>name</ttcol>
@@ -2710,7 +2863,7 @@ COSE_KDF_Context = [
           Two variants of DH that are easily supported are:
           <list>
             <t>
--              Ephemeral-Static DH: where the sender of the message creates a one time DH key and uses a static key for the recipient.
+              Ephemeral-Static DH: where the sender of the message creates a one time DH key and uses a static key for the recipient.
               The use of the ephemeral sender key means that no additional random input is needed as this is randomly generated for each message.
             </t>
 
@@ -2806,23 +2959,23 @@ COSE_KDF_Context = [
           </t>
 
           <texttable title="ECDH Algorithm Values" anchor="table-ecdh-es-table">
-            <ttcol align='left'>name</ttcol>
+            <ttcol align='left' width='9em'>name</ttcol>
             <ttcol align='left'>value</ttcol>
             <ttcol align='left'>KDF</ttcol>
             <ttcol align='left'>Ephemeral-Static</ttcol>
             <ttcol align='left'>Key Wrap</ttcol>
-            <ttcol align='left'>description</ttcol>
+            <ttcol align='left' width='*'>description</ttcol>
             
             <c>ECDH-ES + HKDF-256</c>      <c>50</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
             <c>ECDH-ES + HKDF-512</c>      <c>51</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
             <c>ECDH-SS + HKDF-256</c>      <c>52</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
             <c>ECDH-SS + HKDF-512</c>      <c>53</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
-            <c>ECDH-ES+A128KW</c>          <c>54</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A128KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
+            <c>ECDH-ES + A128KW</c>          <c>54</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A128KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
             <c>ECDH-ES+A192KW</c>          <c>55</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A192KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
-            <c>ECDH-ES+A256KW</c>          <c>56</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A256KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
-            <c>ECDH-SS+A128KW</c>          <c>57</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>A128KW</c>     <c>ECDH SS w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
-            <c>ECDH-SS+A192KW</c>          <c>58</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>A192KW</c>     <c>ECDH SS w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
-            <c>ECDH-SS+A256KW</c>          <c>59</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>A256KW</c>     <c>ECDH SS w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
+            <c>ECDH-ES + A256KW</c>          <c>56</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A256KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
+            <c>ECDH-SS + A128KW</c>          <c>57</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>A128KW</c>     <c>ECDH SS w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
+            <c>ECDH-SS + A192KW</c>          <c>58</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>A192KW</c>     <c>ECDH SS w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
+            <c>ECDH-SS + A256KW</c>          <c>59</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>A256KW</c>     <c>ECDH SS w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
 
           </texttable>
 
@@ -2843,6 +2996,16 @@ COSE_KDF_Context = [
             Implementations MUST verify that the key type and curve are correct.
 	    Different curves are restricted to different key types.
             Implementations MUST verify that the curve and algorithm are appropriate for the entities involved.
+          </t>
+
+          <t>
+            When using a COSE key for this algorithm, the following checks are made:
+            <list style="symbols">
+              <t>The 'kty' field MUST be present and it MUST be 'EC2'.</t>
+              <t>If the 'alg' field present, it MUST match the Key Agreement algorithm being used.</t>
+              <t>If the 'key_ops' field is present, it MUST include 'derive key' or 'derive bits' for the private key.</t>
+              <t>If the 'key_ops' field is present, it MUST be empty for the public key.</t>
+            </list>
           </t>
 
         </section>
@@ -2881,8 +3044,17 @@ COSE_KDF_Context = [
           <t>
             These algorithms are defined in <xref target="table-ecdh-es-table"/>.
           </t>
-        </section>
         
+          <t>
+            When using a COSE key for this algorithm, the following checks are made:
+            <list style="symbols">
+              <t>The 'kty' field MUST be present and it MUST be 'EC2'.</t>
+              <t>If the 'alg' field present, it MUST match the Key Agreement algorithm being used.</t>
+              <t>If the 'key_ops' field is present, it MUST include 'derive key' or 'derive bits' for the private key.</t>
+              <t>If the 'key_ops' field is present, it MUST be empty for the public key.</t>
+            </list>
+          </t>
+        </section>
       </section>
 
       <!--  Comment out password based algorithms.   Issue #6 - https://github.com/cose-wg/cose-issues/issues/6
@@ -3976,6 +4148,7 @@ COSE_KDF_Context = [
       </t>
 
       <section title="Examples of MAC messages" anchor="MacExamples">
+        <!-- RFC Editor - All of the examples will need to be modified after IANA has finaized decisions -->        
         
         <section anchor="Mac-04" title="Shared Secret Direct MAC">
           <t>
