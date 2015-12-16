@@ -281,6 +281,11 @@ values = any
         
         <t>Byte is a synonym for octet.</t>
         <t>
+          Constrained Application Protocol (CoAP) is a specialized web transfer protocol for use in constrained systems.
+          It is defined in <xref target="RFC7252"/>.
+        </t>
+        
+        <t>
           Key management is used as a term to describe how a key at level n is obtained from level n+1 in encrypted and MACed messages.
           The term is also used to discuss key life cycle management,  this document does not discuss key life cycle operations.
           <!-- Ilari OPEN
@@ -311,7 +316,7 @@ values = any
       </t>
 
       <t>
-        Identification of which message is present is done by one of two methods:
+        Identification of which message is present is done by one of three methods:
         <list style="symbols">
           <t>
             The specific message type is known from the context in which it is placed.
@@ -321,8 +326,25 @@ values = any
             The message type is identified by a CBOR tag.
             This document defines a CBOR tag for each of the message structures.
           </t>
+          <t>
+            When a COSE object is carried in a media type of application/cose, the optional parameter 'cose-type' can be used to identify the embedded object.
+            The parameter is OPTIONAL if the tagged version of the structure is used.
+            The parameter is REQUIRED if the untagged version of the structure is used.
+            The value to use with the parameter for each of the structures can be found in <xref target="CBOR-Tags"/>.
+          </t>
         </list>
       </t>
+
+          <texttable anchor="CBOR-Tags" title="COSE Object Identification">
+            <ttcol>Tag Value</ttcol>    <ttcol>cose-type</ttcol>        <ttcol>Data Item</ttcol>        <ttcol>Semantics</ttcol>
+            <c>TBD1</c>                 <c>cose-sign</c>                <c>COSE_Sign</c>                <c>COSE Signed Data Object</c>
+            <c>TBD7</c>                 <c>cose-sign1</c>               <c>COSE_Sign1</c>               <c>COSE Single Signer Data Object</c>
+            <c>TBD2</c>                 <c>cose-enveloped</c>           <c>COSE_Enveloped</c>           <c>COSE Enveloped Data Object</c>
+            <c>TBD3</c>                 <c>cose-encrypted</c>           <c>COSE_Encrypted</c>           <c>COSE Encrypted Data Object</c>
+            <c>TBD4</c>                 <c>cose-mac</c>                 <c>COSE_Mac</c>                 <c>COSE Mac-ed Data Object</c>
+            <c>TBD6</c>                 <c>cose-mac0</c>                <c>COSE_Mac0</c>                <c>COSE Mac w/o Recipients Object</c>
+            <c>TBD5</c>                 <c>N/A</c>                      <c>COSE_Key, COSE_KeySet</c>    <c>COSE Key or COSE Key Set Object</c>
+          </texttable>
       
       <!--
       <t>
@@ -534,7 +556,7 @@ header_map = {
             <t hangText='alg'>
               This parameter is used to indicate the algorithm used for the security processing.
               This parameter MUST be present at each level of a signed, encrypted or authenticated message.
-              This parameter MUST be in the protected header bucket.
+              When the algorithm supports authenticating extenral data, this parameter MUST be in the protected header bucket.
               The value is taken from the 'COSE Algorithm Registry' (see <xref target="cose-algorithm-registry"/>).
             </t>
             
@@ -560,7 +582,6 @@ header_map = {
             <t hangText='content type'>
               This parameter is used to indicate the content type of the data in the payload or ciphertext fields.
               Integers are from the 'CoAP Content-Formats' IANA registry table.
-              <cref source="JLS">Expand CoAP?</cref>
               Strings are from the IANA 'Media Types' registry.
               Applications SHOULD provide this parameter if the content structure is potentially ambiguous.
             </t>
@@ -586,19 +607,16 @@ header_map = {
               This parameter holds a part of the IV value.
               When using the COSE_Encrypted structure, frequently a portion of the IV is part of the context associated with the key value.
               This field is used to carry the portion of the IV that changes for each message.
-              The IV used for the cryptographic computation is constructed by concatenating the fixed portion of the IV and the changing portion of the IV.
-              (The partial IV being treated as a network order integer converted to a four byte string for this purpose.)
               As the IV is authenticated by the encryption process, this value can be placed in the unprotected header bucket.
-              <vspace blankLines="1"/>
-              Some applications may also use this value for doing replay protection.
-              When this is done, the value will normally be defined by the application to be increasing in value for every message.
-              Encoding it as an integer value makes it easier to do this comparison.
+              <vspace/>
+              The final IV is generated by concatenating the fixed portion of the IV, a zero string and the changing portion of the IV.
+              The length of the zero string is computed by taking the required IV length and subtracting the lengths of the fixed and changing IV portions.
             </t>
 
             <t hangText='counter signature'>
               This parameter holds a counter signature value.
               Counter signatures provide a method of having a second party sign some data.
-	      The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_signature, COSE_Enveloped, COSE_recipient, COSE_Encrypted, COSE_mac.
+	      The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_Sign1, COSE_Signature, COSE_Enveloped, COSE_recipient, COSE_Encrypted, COSE_Mac and COSE_Mac0.
               These structures all have the same basic structure so that a consistent calculation of the counter signature can be computed.
               Details on computing counter signatures are found in <xref target="counter_signature"/>.
             </t>
@@ -607,7 +625,7 @@ header_map = {
               This parameter provides the time the content cryptographic operation is performed.
               For signatures and recipient structures, this would be the time that the signature or recipient key object was created.
               For content structures, this would be the time that the content structure was created.
-              The unsigned integer value is the number of seconds, excluding leap seconds; after midnight UTC, January 1, 1970.
+              The unsigned integer value is the number of seconds, excluding leap seconds, after midnight UTC, January 1, 1970.
               The field is primarily intended to be to be used for countersignatures, however it can additionally be used for replay detection as well.
             </t>
 
@@ -627,8 +645,8 @@ header_map = {
           <c>content type</c> <c>3</c>      <c>tstr / int</c>        <c>CoAP Content-Formats or Media Types registry</c>          <c>Value is either a Media Type or an integer from the CoAP Content Format registry</c>
           <c>kid</c>        <c>4</c>        <c>bstr</c>              <c></c>                              <c>key identifier</c>
           <c>IV</c>         <c>5</c>        <c>bstr</c>              <c></c>                              <c>Full Initialization Vector</c>
-          <c>Partial IV</c> <c>6</c>        <c>uint</c>              <c></c>                              <c>Partial Initialization Vector</c>
-          <c>counter signature</c> <c>7</c> <c>COSE_signature</c>    <c></c>                              <c>CBOR encoded signature structure</c>
+          <c>Partial IV</c> <c>6</c>        <c>bstr</c>              <c></c>                              <c>Partial Initialization Vector</c>
+          <c>counter signature</c> <c>7</c> <c>COSE_Signature</c>    <c></c>                              <c>CBOR encoded signature structure</c>
           <c>operation time</c><c>8</c>      <c>uint</c>              <c></c>                             <c>Time the COSE structure was created</c>
         </texttable>
 
@@ -644,8 +662,8 @@ Generic_Headers = (
     ? 3 => tstr / int,  ; content type
     ? 4 => bstr,        ; key identifier
     ? 5 => bstr,        ; IV
-    ? 6 => uint,        ; Partial IV
-    ? 7 => COSE_signature, ; Counter signature
+    ? 6 => bstr,        ; Partial IV
+    ? 7 => COSE_Signature, ; Counter signature
     ? 8 => uint         ; Operation time
 )
 ]]></artwork></figure>
@@ -694,7 +712,7 @@ Generic_Headers = (
       </t>
       
       <figure><artwork type="CDDL"><![CDATA[
-COSE_Sign_Tagged = #6.999(COSE_Sign) ; Replace 999 with TBD1
+COSE_Sign_Tagged = #6.991(COSE_Sign) ; Replace 991 with TBD1
 ]]></artwork></figure>
       
       <t>
@@ -737,7 +755,7 @@ COSE_Sign_Tagged = #6.999(COSE_Sign) ; Replace 999 with TBD1
           
           <t hangText='signatures'>
             is an array of signatures.
-            Each signature is represented as a COSE_signature structure.
+            Each signature is represented as a COSE_Signature structure.
           </t>
           
         </list>
@@ -751,12 +769,12 @@ COSE_Sign_Tagged = #6.999(COSE_Sign) ; Replace 999 with TBD1
 COSE_Sign = [
     Headers,
     payload : bstr / nil,
-    signatures : [+ COSE_signature]
+    signatures : [+ COSE_Signature]
 ]
 ]]></artwork></figure>
 
       <t>
-        The COSE_signature structure is a CBOR array.
+        The COSE_Signature structure is a CBOR array.
         The fields of the array in order are:
 
         <list style="hanging">
@@ -777,11 +795,11 @@ COSE_Sign = [
       </t>
 
       <t>
-        The CDDL fragment which represents the above text for COSE_signature follows.
+        The CDDL fragment which represents the above text for COSE_Signature follows.
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_signature =  [
+COSE_Signature =  [
     Headers,      
     signature : bstr
 ]
@@ -796,7 +814,7 @@ COSE_signature =  [
         </t>
 
         <figure><artwork type="CDDL"><![CDATA[
-COSE_Sign1_Tagged = #6.994(COSE_Sign1) ; Replace 994 with TBD7
+COSE_Sign1_Tagged = #6.997(COSE_Sign1) ; Replace 997 with TBD7
 ]]></artwork></figure>
 
         <t>
@@ -849,8 +867,7 @@ COSE_Sign1 = [
         <t>
           One of the features that we supply in the COSE document is the ability for applications to provide additional data to be authenticated as part of the security, but that is not carried as part of the COSE object.
           The primary reason for supporting this can be seen by looking at the CoAP message structure <xref target="RFC7252"/> where the facility exists for options to be carried before the payload.
-          <cref source="JLS">Don't talk about items which we do not define in this specification? Only talk about...</cref>
-          An example of data that can be placed in this location would be transaction ids and nonces to check for replay protection.
+          An example of data that can be placed in this location would be CoAP options for transaction ids and nonces to check for replay protection.
           If the data is in the options section, then it is available for routers to help in performing the replay detection and prevention.
           However, it may also be desired to protect these values so that they cannot be modified in transit.
           This is the purpose of the externally supplied data field.
@@ -1052,7 +1069,7 @@ Sig_structure = [
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_Enveloped_Tagged = #6.998(COSE_Enveloped) ; Replace 998 with TBD2
+COSE_Enveloped_Tagged = #6.992(COSE_Enveloped) ; Replace 992 with TBD2
 ]]></artwork></figure>
 
       <t>
@@ -1180,7 +1197,7 @@ COSE_recipient = [
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_Encrypted_Tagged = #6.997(COSE_Encrypted) ; Replace 997 with TBD3
+COSE_Encrypted_Tagged = #6.993(COSE_Encrypted) ; Replace 993 with TBD3
 ]]></artwork></figure>
 
 
@@ -1297,7 +1314,6 @@ Enc_structure = [
     protected: bstr,
     external_aad: bstr
 ]
-
 ]]></artwork></figure>
 
 
@@ -1384,7 +1400,7 @@ Enc_structure = [
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_Mac_Tagged = #6.996(COSE_Mac)         ; Replace 996 with TBD4
+COSE_Mac_Tagged = #6.994(COSE_Mac)         ; Replace 994 with TBD4
 ]]></artwork></figure>
 
       <t>
@@ -1456,7 +1472,7 @@ COSE_Mac = [
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_Mac0_Tagged = #6.995(COSE_Mac0)    ; Replace 995 with TBD6
+COSE_Mac0_Tagged = #6.996(COSE_Mac0)    ; Replace 996 with TBD6
 ]]></artwork></figure>
       
       <t>
@@ -1710,8 +1726,7 @@ key_ops_values = (key_ops_sign:1, key_ops_verify:2, key_ops_encrypt:3,
 signature = Sign(message content, key)
 
 valid = Verification(message content, key, signature)
-]]>
-      </artwork></figure>
+]]></artwork></figure>
       
       <t>
         The second is a signature with message recovery.
@@ -1731,8 +1746,7 @@ valid = Verification(message content, key, signature)
 signature, message sent = Sign(message content, key)
 
 valid, message content = Verification(message sent, key, signature)
-]]>
-      </artwork></figure>
+]]></artwork></figure>
 
       <t>
         At this time, only signatures with appendixes are defined for use with COSE, however considerable interest has been expressed in using a signature with message recovery algorithm due to the effective size reduction that is possible.
@@ -1859,8 +1873,7 @@ valid, message content = Verification(message sent, key, signature)
 tag = MAC_Create(message content, key)
 
 valid = MAC_Verify(message content, key, tag)
-]]>
-      </artwork></figure>
+]]></artwork></figure>
       
 
       <t>
@@ -2013,8 +2026,7 @@ valid = MAC_Verify(message content, key, tag)
 ciphertext = Encrypt(message content, key, additional data)
 
 valid, message content = Decrypt(cipher text, key, additional data)
-]]>
-      </artwork></figure>
+]]></artwork></figure>
 
       <t>
         Most AEAD algorithms are logically defined as returning the message content only if the decryption is valid.
@@ -2941,7 +2953,7 @@ COSE_KDF_Context = [
 
               <t>
                 Key Wrap algorithm:
-                The key wrap algorithm can be 'none' if the result of the KDF is going to be used as the key directly.
+                A key wrap algorithm of 'none' means that the result of the KDF is going to be used as the key directly.
                 This option, along with static-static, should be used if knowledge about the sender is desired.
                 If 'none' is used, then the content layer encryption algorithm size is value fed to the context structure.
                 Support is also provided for any of the key wrap algorithms defined in <xref target="key_wrap_algs"/>.
@@ -3322,18 +3334,8 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          The tags to be assigned are:
+          The tags to be assigned are in table <xref target="CBOR-Tags"/>.
         </t>
-
-          <texttable>
-            <ttcol>Tag Value</ttcol>    <ttcol>Data Item</ttcol>  <ttcol>Semantics</ttcol>
-            <c>TBD1</c>                 <c>COSE_Sign</c>                <c>COSE Signed Data Object</c>
-            <c>TBD2</c>                 <c>COSE_Enveloped</c>           <c>COSE Enveloped Data Object</c>
-            <c>TBD3</c>                 <c>COSE_Encrypted</c>           <c>COSE Encrypted Data Object</c>
-            <c>TBD4</c>                 <c>COSE_Mac</c>                 <c>COSE Mac-ed Data Object</c>
-            <c>TBD6</c>                 <c>COSE_Mac0</c>                <c>COSE Mac w/o Recipients Object</c>
-            <c>TBD5</c>                 <c>COSE_Key, COSE_KeySet</c>    <c>COSE Key or COSE Key Set Object</c>
-          </texttable>
 
       </section>
 
@@ -3656,10 +3658,8 @@ COSE_KDF_Context = [
         <section title="COSE Security Message">
 
           <t>
-            This section registers the "application/cose" and "application/cose+cbor" media types in the "Media Types" registry.
-            <cref source="JLS">Should we register both or just the cose+cbor one?</cref>
+            This section registers the "application/cose" <!-- and "application/cose+cbor" media types --> media type in the "Media Types" registry.
             These media types are used to indicate that the content is a COSE_MSG.
-            <cref source="JLS">Should we create the equivalent of the smime-type parameter to identify the inner content type?</cref>
           </t>
 
           <t>
@@ -3667,7 +3667,7 @@ COSE_KDF_Context = [
             <t>Type name: application</t>
             <t>Subtype name: cose</t>
             <t>Required parameters: N/A</t>
-            <t>Optional parameters: N/A</t>
+            <t>Optional parameters: cose-type</t>
             <t>Encoding considerations: binary</t>
             <t>Security considerations: See the Security Considerations section of RFC TBD.</t>
             <t>Interoperability considerations: N/A</t>
@@ -3689,7 +3689,7 @@ COSE_KDF_Context = [
             <t>Provisional registration?  No</t>
           </list>
           </t>
-
+<!--
           <t>
           <list style="empty">
             <t>Type name: application</t>
@@ -3717,6 +3717,7 @@ COSE_KDF_Context = [
             <t>Provisional registration?  No</t>
           </list>
           </t>
+          -->
 
         </section>
         
@@ -3782,9 +3783,9 @@ COSE_KDF_Context = [
             <t>Provisional registration?  No</t>
           </list>
           </t>
+
         </section>
       </section>
-
       <section title="CoAP Content Format Registrations">
         <t>
           This section registers a set of content formats for CoAP.
@@ -3797,9 +3798,14 @@ COSE_KDF_Context = [
           <ttcol align='left'>ID</ttcol>
           <ttcol align='left'>Reference</ttcol>
 
-          <c>application/cose</c>  <c/> <c>TBD10</c>   <c>[This Document]</c>
-          <c>application/cose-key</c> <c/> <c>TBD11</c> <c>[This Document]</c>
-          <c>application/cose-key-set</c> <c/> <c>TBD12</c> <c>[This Document</c>
+          <c>application/cose; cose-type="cose-sign"</c>        <c/> <c>TBD10</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-sign1"</c>       <c/> <c>TBD11</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-enveloped"</c>   <c/> <c>TBD12</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-encrypted"</c>   <c/> <c>TBD13</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-mac"</c>         <c/> <c>TBD14</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-mac0"</c>        <c/> <c>TBD15</c>   <c>[This Document]</c>
+          <c>application/cose-key</c> <c/> <c>TBD16</c> <c>[This Document]</c>
+          <c>application/cose-key-set</c> <c/> <c>TBD17</c> <c>[This Document</c>
         </texttable>
 
       </section>
@@ -4126,17 +4132,15 @@ COSE_KDF_Context = [
         This tool can be installed with the command line:
       </t>
       <figure>
-        <artwork><![CDATA[gem install cbor-diag]]>
-        </artwork>
+        <artwork><![CDATA[gem install cbor-diag]]></artwork>
       </figure>
 
       <t>
         The diagnostic notation can be converted into binary files using the following command line:
       </t>
       <figure><artwork><![CDATA[          
-         diag2cbor < inputfile > outputfile
-         ]]>
-      </artwork></figure>
+diag2cbor < inputfile > outputfile
+]]></artwork></figure>
 
       <t>
         The examples can be extracted from the XML version of this document via an XPath expression as all of the artwork is tagged with the attribute  type='CBORdiag'.
