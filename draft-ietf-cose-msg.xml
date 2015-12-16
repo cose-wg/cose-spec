@@ -316,7 +316,7 @@ values = any
       </t>
 
       <t>
-        Identification of which message is present is done by one of two methods:
+        Identification of which message is present is done by one of three methods:
         <list style="symbols">
           <t>
             The specific message type is known from the context in which it is placed.
@@ -326,8 +326,25 @@ values = any
             The message type is identified by a CBOR tag.
             This document defines a CBOR tag for each of the message structures.
           </t>
+          <t>
+            When a COSE object is carried in a media type of application/cose, the optional parameter 'cose-type' can be used to identify the embedded object.
+            The parameter is OPTIONAL if the tagged version of the structure is used.
+            The parameter is REQUIRED if the untagged version of the structure is used.
+            The value to use with the parameter for each of the structures can be found in <xref target="CBOR-Tags"/>.
+          </t>
         </list>
       </t>
+
+          <texttable anchor="CBOR-Tags" title="COSE Object Identification">
+            <ttcol>Tag Value</ttcol>    <ttcol>cose-type</ttcol>        <ttcol>Data Item</ttcol>        <ttcol>Semantics</ttcol>
+            <c>TBD1</c>                 <c>cose-sign</c>                <c>COSE_Sign</c>                <c>COSE Signed Data Object</c>
+            <c>TBD7</c>                 <c>cose-sign1</c>               <c>COSE_Sign1</c>               <c>COSE Single Signer Data Object</c>
+            <c>TBD2</c>                 <c>cose-enveloped</c>           <c>COSE_Enveloped</c>           <c>COSE Enveloped Data Object</c>
+            <c>TBD3</c>                 <c>cose-encrypted</c>           <c>COSE_Encrypted</c>           <c>COSE Encrypted Data Object</c>
+            <c>TBD4</c>                 <c>cose-mac</c>                 <c>COSE_Mac</c>                 <c>COSE Mac-ed Data Object</c>
+            <c>TBD6</c>                 <c>cose-mac0</c>                <c>COSE_Mac0</c>                <c>COSE Mac w/o Recipients Object</c>
+            <c>TBD5</c>                 <c>N/A</c>                      <c>COSE_Key, COSE_KeySet</c>    <c>COSE Key or COSE Key Set Object</c>
+          </texttable>
       
       <!--
       <t>
@@ -800,7 +817,7 @@ COSE_signature =  [
         </t>
 
         <figure><artwork type="CDDL"><![CDATA[
-COSE_Sign1_Tagged = #6.994(COSE_Sign1) ; Replace 994 with TBD7
+COSE_Sign1_Tagged = #6.997(COSE_Sign1) ; Replace 997 with TBD7
 ]]></artwork></figure>
 
         <t>
@@ -853,8 +870,7 @@ COSE_Sign1 = [
         <t>
           One of the features that we supply in the COSE document is the ability for applications to provide additional data to be authenticated as part of the security, but that is not carried as part of the COSE object.
           The primary reason for supporting this can be seen by looking at the CoAP message structure <xref target="RFC7252"/> where the facility exists for options to be carried before the payload.
-          <cref source="JLS">Don't talk about items which we do not define in this specification? Only talk about...</cref>
-          An example of data that can be placed in this location would be transaction ids and nonces to check for replay protection.
+          An example of data that can be placed in this location would be CoAP options for transaction ids and nonces to check for replay protection.
           If the data is in the options section, then it is available for routers to help in performing the replay detection and prevention.
           However, it may also be desired to protect these values so that they cannot be modified in transit.
           This is the purpose of the externally supplied data field.
@@ -1301,7 +1317,6 @@ Enc_structure = [
     protected: bstr,
     external_aad: bstr
 ]
-
 ]]></artwork></figure>
 
 
@@ -1714,8 +1729,7 @@ key_ops_values = (key_ops_sign:1, key_ops_verify:2, key_ops_encrypt:3,
 signature = Sign(message content, key)
 
 valid = Verification(message content, key, signature)
-]]>
-      </artwork></figure>
+]]></artwork></figure>
       
       <t>
         The second is a signature with message recovery.
@@ -1735,8 +1749,7 @@ valid = Verification(message content, key, signature)
 signature, message sent = Sign(message content, key)
 
 valid, message content = Verification(message sent, key, signature)
-]]>
-      </artwork></figure>
+]]></artwork></figure>
 
       <t>
         At this time, only signatures with appendixes are defined for use with COSE, however considerable interest has been expressed in using a signature with message recovery algorithm due to the effective size reduction that is possible.
@@ -1863,8 +1876,7 @@ valid, message content = Verification(message sent, key, signature)
 tag = MAC_Create(message content, key)
 
 valid = MAC_Verify(message content, key, tag)
-]]>
-      </artwork></figure>
+]]></artwork></figure>
       
 
       <t>
@@ -2017,8 +2029,7 @@ valid = MAC_Verify(message content, key, tag)
 ciphertext = Encrypt(message content, key, additional data)
 
 valid, message content = Decrypt(cipher text, key, additional data)
-]]>
-      </artwork></figure>
+]]></artwork></figure>
 
       <t>
         Most AEAD algorithms are logically defined as returning the message content only if the decryption is valid.
@@ -3326,19 +3337,8 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          The tags to be assigned are:
+          The tags to be assigned are in table <xref target="CBOR-Tags"/>.
         </t>
-
-          <texttable>
-            <ttcol>Tag Value</ttcol>    <ttcol>Data Item</ttcol>  <ttcol>Semantics</ttcol>
-            <c>TBD1</c>                 <c>COSE_Sign</c>                <c>COSE Signed Data Object</c>
-            <c>TBD7</c>                 <c>COSE_Sign1</c>               <c>COSE Single Signer Data Object</c>
-            <c>TBD2</c>                 <c>COSE_Enveloped</c>           <c>COSE Enveloped Data Object</c>
-            <c>TBD3</c>                 <c>COSE_Encrypted</c>           <c>COSE Encrypted Data Object</c>
-            <c>TBD4</c>                 <c>COSE_Mac</c>                 <c>COSE Mac-ed Data Object</c>
-            <c>TBD6</c>                 <c>COSE_Mac0</c>                <c>COSE Mac w/o Recipients Object</c>
-            <c>TBD5</c>                 <c>COSE_Key, COSE_KeySet</c>    <c>COSE Key or COSE Key Set Object</c>
-          </texttable>
 
       </section>
 
@@ -3661,10 +3661,8 @@ COSE_KDF_Context = [
         <section title="COSE Security Message">
 
           <t>
-            This section registers the "application/cose" and "application/cose+cbor" media types in the "Media Types" registry.
-            <cref source="JLS">Should we register both or just the cose+cbor one?</cref>
+            This section registers the "application/cose" <!-- and "application/cose+cbor" media types --> media type in the "Media Types" registry.
             These media types are used to indicate that the content is a COSE_MSG.
-            <cref source="JLS">Should we create the equivalent of the smime-type parameter to identify the inner content type?</cref>
           </t>
 
           <t>
@@ -3672,7 +3670,7 @@ COSE_KDF_Context = [
             <t>Type name: application</t>
             <t>Subtype name: cose</t>
             <t>Required parameters: N/A</t>
-            <t>Optional parameters: N/A</t>
+            <t>Optional parameters: cose-type</t>
             <t>Encoding considerations: binary</t>
             <t>Security considerations: See the Security Considerations section of RFC TBD.</t>
             <t>Interoperability considerations: N/A</t>
@@ -3694,7 +3692,7 @@ COSE_KDF_Context = [
             <t>Provisional registration?  No</t>
           </list>
           </t>
-
+<!--
           <t>
           <list style="empty">
             <t>Type name: application</t>
@@ -3722,6 +3720,7 @@ COSE_KDF_Context = [
             <t>Provisional registration?  No</t>
           </list>
           </t>
+          -->
 
         </section>
         
@@ -3787,9 +3786,9 @@ COSE_KDF_Context = [
             <t>Provisional registration?  No</t>
           </list>
           </t>
+
         </section>
       </section>
-
       <section title="CoAP Content Format Registrations">
         <t>
           This section registers a set of content formats for CoAP.
@@ -3802,9 +3801,14 @@ COSE_KDF_Context = [
           <ttcol align='left'>ID</ttcol>
           <ttcol align='left'>Reference</ttcol>
 
-          <c>application/cose</c>  <c/> <c>TBD10</c>   <c>[This Document]</c>
-          <c>application/cose-key</c> <c/> <c>TBD11</c> <c>[This Document]</c>
-          <c>application/cose-key-set</c> <c/> <c>TBD12</c> <c>[This Document</c>
+          <c>application/cose; cose-type="cose-sign"</c>        <c/> <c>TBD10</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-sign1"</c>       <c/> <c>TBD11</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-enveloped"</c>   <c/> <c>TBD12</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-encrypted"</c>   <c/> <c>TBD13</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-mac"</c>         <c/> <c>TBD14</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-mac0"</c>        <c/> <c>TBD15</c>   <c>[This Document]</c>
+          <c>application/cose-key</c> <c/> <c>TBD16</c> <c>[This Document]</c>
+          <c>application/cose-key-set</c> <c/> <c>TBD17</c> <c>[This Document</c>
         </texttable>
 
       </section>
@@ -4131,17 +4135,15 @@ COSE_KDF_Context = [
         This tool can be installed with the command line:
       </t>
       <figure>
-        <artwork><![CDATA[gem install cbor-diag]]>
-        </artwork>
+        <artwork><![CDATA[gem install cbor-diag]]></artwork>
       </figure>
 
       <t>
         The diagnostic notation can be converted into binary files using the following command line:
       </t>
       <figure><artwork><![CDATA[          
-         diag2cbor < inputfile > outputfile
-         ]]>
-      </artwork></figure>
+diag2cbor < inputfile > outputfile
+]]></artwork></figure>
 
       <t>
         The examples can be extracted from the XML version of this document via an XPath expression as all of the artwork is tagged with the attribute  type='CBORdiag'.
