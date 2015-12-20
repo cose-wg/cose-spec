@@ -12,6 +12,7 @@ all: Triple-01.xml \
 	Mac0-01.xml \
 	Enc-01.xml Enc-02.xml Enc-03.xml Enc-04.xml Enc-05.xml \
 	Sig-01.xml Sig-02.xml \
+	Sig0-01.xml \
 	public-keyset.xml private-keyset.xml
 
 private-keyset.xml: private-keyset.bin
@@ -57,6 +58,9 @@ Sig-01.bin: $(Example_DIR)\Sig-01.json.bin
 	copy $** $@
 
 Sig-02.bin: $(Example_DIR)\Sig-02.json.bin
+	copy $** $@
+
+Sig0-01.bin: $(Example_DIR)\Sig0-01.json.bin
 	copy $** $@
 
 Triple-01.bin: $(Example_DIR)\Triple-01.json.bin
