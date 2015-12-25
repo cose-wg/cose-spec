@@ -10,7 +10,7 @@ DUMPER_DIR = c:\projects\cose\cose-c\build\dist\dumper\debug
 all: Triple-01.xml \
 	Mac-01.xml Mac-02.xml Mac-03.xml Mac-04.xml \
 	Mac0-01.xml \
-	Enc-01.xml Enc-02.xml Enc-03.xml Enc-04.xml Enc-05.xml \
+	Enc-01.xml Enc-02.xml Enc-03.xml Enc-04.xml Enc-05.xml Enc-06.xml \
 	Sig-01.xml Sig-02.xml Sig-03.xml \
 	Sig0-01.xml \
 	public-keyset.xml private-keyset.xml
@@ -37,6 +37,9 @@ Enc-04.bin: $(Example_DIR)\Enc-04.json.bin
 	copy $** $@
 
 Enc-05.bin: $(Example_DIR)\Enc-05.json.bin
+	copy $** $@
+
+Enc-06.bin: $(Example_DIR)\Enc-06.json.bin
 	copy $** $@
 
 Mac-01.bin: $(Example_DIR)\Mac-01.json.bin
