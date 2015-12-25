@@ -544,6 +544,7 @@ ul.toc a:first-child {
 <link href="#rfc.appendix.B.3.1" rel="Chapter" title="B.3.1 Direct ECDH"/>
 <link href="#rfc.appendix.B.3.2" rel="Chapter" title="B.3.2 Direct plus Key Derivation"/>
 <link href="#rfc.appendix.B.3.3" rel="Chapter" title="B.3.3 Counter Signature on Encrypted Content"/>
+<link href="#rfc.appendix.B.3.4" rel="Chapter" title="B.3.4 Encrypted Content with External Data"/>
 <link href="#rfc.appendix.B.4" rel="Chapter" title="B.4 Examples of Encrypted Messages"/>
 <link href="#rfc.appendix.B.4.1" rel="Chapter" title="B.4.1 Encrypted Content w/ Implicit Recipient"/>
 <link href="#rfc.appendix.B.4.2" rel="Chapter" title="B.4.2 Encrypted Content w/ Implicit Recipient and Partial IV"/>
@@ -576,7 +577,7 @@ ul.toc a:first-child {
 
   <meta name="dct.creator" content="Schaad, J." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-ietf-cose-msg-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2015-12-24" />
+  <meta name="dct.issued" scheme="ISO8601" content="2015-12-25" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies procesing for signatures, message authentication codes, and encryption using CBOR.  This document also specifies a represention for cryptographic keys using CBOR.  " />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies procesing for signatures, message authentication codes, and encryption using CBOR.  This document also specifies a represention for cryptographic keys using CBOR.  " />
 
@@ -598,10 +599,10 @@ ul.toc a:first-child {
 </tr>
 <tr>
   <td class="left">Intended status: Informational</td>
-  <td class="right">December 24, 2015</td>
+  <td class="right">December 25, 2015</td>
 </tr>
 <tr>
-  <td class="left">Expires: June 26, 2016</td>
+  <td class="left">Expires: June 27, 2016</td>
   <td class="right"></td>
 </tr>
 
@@ -626,7 +627,7 @@ ul.toc a:first-child {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on June 26, 2016.</p>
+<p>This Internet-Draft will expire on June 27, 2016.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -730,6 +731,7 @@ ul.toc a:first-child {
 <ul><li>B.3.1.   <a href="#rfc.appendix.B.3.1">Direct ECDH</a></li>
 <li>B.3.2.   <a href="#rfc.appendix.B.3.2">Direct plus Key Derivation</a></li>
 <li>B.3.3.   <a href="#rfc.appendix.B.3.3">Counter Signature on Encrypted Content</a></li>
+<li>B.3.4.   <a href="#rfc.appendix.B.3.4">Encrypted Content with External Data</a></li>
 </ul><li>B.4.   <a href="#rfc.appendix.B.4">Examples of Encrypted Messages</a></li>
 <ul><li>B.4.1.   <a href="#rfc.appendix.B.4.1">Encrypted Content w/ Implicit Recipient</a></li>
 <li>B.4.2.   <a href="#rfc.appendix.B.4.2">Encrypted Content w/ Implicit Recipient and Partial IV</a></li>
@@ -3392,7 +3394,7 @@ diag2cbor &lt; inputfile &gt; outputfile
 </ul>
 
 <p> </p>
-<p id="rfc.section.B.1.2.p.2">Size of binary file is 285 bytes</p>
+<p id="rfc.section.B.1.2.p.2">Size of binary file is 215 bytes</p>
 <pre>
 994(
   [
@@ -3413,10 +3415,7 @@ diag2cbor &lt; inputfile &gt; outputfile
           / kid / 4:'meriadoc.brandybuck@buckland.example', 
           / U nonce / -22:h'4d8553e7e74f3c6a3a9dd3ef286a8195cbf8a23d
 19558ccfec7d34b824f42d92bd06bd2c7f0271f0214e141fb779ae2856abf585a583
-68b017e7f2a9e5ce4db5', 
-          "apu":h'b0ae4015bce7691bb3b722daec5029d0beb22b2074e2d82f29
-5a6f58362ab73c72eb2c48ad2a5c5c6e32a53e69e1ac147e64fe2ca26360976a918d
-11cb2c3506'
+68b017e7f2a9e5ce4db5'
         }, 
         / ciphertext / h''
       ]
@@ -3674,6 +3673,46 @@ bf054e1c7b4d91d6280',
   ]
 )
 </pre>
+<h1 id="rfc.appendix.B.3.4"><a href="#rfc.appendix.B.3.4">B.3.4.</a> <a href="#Enc-06" id="Enc-06">Encrypted Content with External Data</a></h1>
+<p id="rfc.section.B.3.4.p.1">This example uses the following: </p>
+
+<ul>
+  <li>CEK: AES-GCM w/ 128-bit key</li>
+  <li>Recipient class: ECDH static-Static, Curve P-256 with AES Key Wrap</li>
+  <li>Externally Supplied AAD: h'0011bbcc22dd44ee55ff660077'</li>
+  <li>File name: Enc-06</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.B.3.4.p.2">Size of binary file is 174 bytes</p>
+<pre>
+992(
+  [
+    / protected / h'a10101' / {
+        \ alg \ 1:1 \ AES-GCM 128 \
+      } / , 
+    / unprotected / {
+      / iv / 5:h'02d1f7e6f26c43d4868d87ce'
+    }, 
+    / ciphertext / h'64f84d913ba60a76070a9a48f26e97e863e2852951f6f24
+9e6c3616233a911748a80be95', 
+    / recipients / [
+      [
+        / protected / h'a1011839' / {
+            \ alg \ 1:57 \ ECHD-SS+A128KW \
+          } / , 
+        / unprotected / {
+          / static kid / -3:'peregrin.took@tuckborough.example', 
+          / kid / 4:'meriadoc.brandybuck@buckland.example', 
+          / U nonce / -22:h'0101'
+        }, 
+        / ciphertext / h'b9594d4d171b561458786abc12a03ae52046e69a183
+96b3b'
+      ]
+    ]
+  ]
+)
+</pre>
 <h1 id="rfc.appendix.B.4"><a href="#rfc.appendix.B.4">B.4.</a> <a href="#EncryptExamples" id="EncryptExamples">Examples of Encrypted Messages</a></h1>
 <h1 id="rfc.appendix.B.4.1"><a href="#rfc.appendix.B.4.1">B.4.1.</a> <a href="#Enc-04" id="Enc-04">Encrypted Content w/ Implicit Recipient</a></h1>
 <p id="rfc.section.B.4.1.p.1">This example uses the following: </p>
@@ -3705,6 +3744,7 @@ bf054e1c7b4d91d6280',
 <ul>
   <li>CEK: AES-CCM w/ 128-bit key and a 64-bit tag</li>
   <li>Prefix for IV is 89F52F65A1C580933B52</li>
+  <li>File name: Enc-05</li>
 </ul>
 
 <p> </p>
