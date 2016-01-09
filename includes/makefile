@@ -1,4 +1,4 @@
-Example_DIR = c:\projects\cose\examples\spec-examples\new
+Example_DIR = c:\projects\cose\examples\new\spec-examples
 DUMPER_DIR = c:\projects\cose\cose-c\build\dist\dumper\debug
 
 .SUFFIXES:
