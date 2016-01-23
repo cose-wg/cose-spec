@@ -2315,10 +2315,11 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
             <t>
               salt - an optional public value that is used to change the generation process.
-              If specified, the salt is carried using the 'salt' algorithm parameter.
+              The salt value can be either public or private.
+              If the salt is public and carried in the message, then the 'salt' algorithm header parameter defined in <xref target="HKDF_Alg_Params"/> is used.
               While <xref target="RFC5869"/> suggests that the length of the salt be the same as the length of the underlying hash value, any amount of salt will improve the security as different key values will be generated.
-              A parameter to carry the salt is defined in <xref target="HKDF_Alg_Params"/>.
               This parameter is protected by being included in the key computation and does not need to be separately authenticated.
+              The salt value does not need to be unique for every message sent.
             </t>
 
             <t>
@@ -2341,10 +2342,13 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
         <t>
           HKDF is defined to use HMAC as the underlying PRF.
-          However, it is possible to use other functions in the same construct to provide a different KDF function that may be more appropriate in the constrained world.
+          However, it is possible to use other functions in the same construct to provide a different KDF function that can be more appropriate in the constrained world.
           Specifically, one can use AES-CBC-MAC as the PRF for the expand step, but not for the extract step.
           When using a good random shared secret of the correct length, the extract step can be skipped.
+          For the AES algorithm versions, the extract step is always skipped.
           The extract cannot be skipped if the secret is not uniformly random, for example if it is the result of an ECDH key agreement step.
+          (This implies that the AES HKDF function cannot be used with ECDH.)
+          If the extract step is skipped, the 'salt' value is not used as part of the KDF functionality.
         </t>
 
         <t>
@@ -2354,12 +2358,11 @@ valid, message content = Decrypt(cipher text, key, additional data)
         <texttable title="HKDF algorithms" anchor="table-hkdf">
           <ttcol>name</ttcol>
           <ttcol>PRF</ttcol>
-          <ttcol>Skip extract</ttcol>
           <ttcol>context</ttcol>
-          <c>HKDF SHA-256</c>       <c>HMAC with SHA-256</c>      <c>no</c>       <c>HKDF using HMAC SHA-256 as the PRF</c>
-          <c>HKDF SHA-512</c>       <c>HMAC with SHA-512</c>      <c>no</c>       <c>HKDF using HMAC SHA-512 as the PRF</c>
-          <c>HKDF AES-MAC-128</c>   <c>AES-CBC-128</c>  <c>yes</c>      <c>HKDF using AES-MAC as the PRF w/ 128-bit key</c>
-          <c>HKDF AES-MAC-256</c>   <c>AES-CBC-256</c>  <c>yes</c>      <c>HKDF using AES-MAC as the PRF w/ 256-bit key</c>
+          <c>HKDF SHA-256</c>       <c>HMAC with SHA-256</c>             <c>HKDF using HMAC SHA-256 as the PRF</c>
+          <c>HKDF SHA-512</c>       <c>HMAC with SHA-512</c>             <c>HKDF using HMAC SHA-512 as the PRF</c>
+          <c>HKDF AES-MAC-128</c>   <c>AES-CBC-MAC-128</c>        <c>HKDF using AES-MAC as the PRF w/ 128-bit key</c>
+          <c>HKDF AES-MAC-256</c>   <c>AES-CBC-MAC-256</c>        <c>HKDF using AES-MAC as the PRF w/ 256-bit key</c>
         </texttable>
 
         <texttable title="HKDF Algorithm Parameters" anchor="HKDF_Alg_Params">
@@ -2408,7 +2411,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
           <list style="symbols">
             <t>
               Fields can be define by the application.
-              This is commonly used to assign names to parties.
+              This is commonly used to assign fixed names to parties.
             </t>
             <t>
               Fields can be defined by usage of the output.
@@ -2833,7 +2836,7 @@ COSE_KDF_Context = [
         <t>
           Key Encryption mode is also called key transport mode in some standards.
           Key Encryption mode differs from Key Wrap mode in that it uses an asymmetric encryption algorithm rather than a symmetric encryption algorithm to protect the key.
-          This document defines one Key Encryption mode algorithm.
+          This document does not define any Key Encryption mode algorithms.
         </t>
 
         <t>
@@ -2979,9 +2982,9 @@ COSE_KDF_Context = [
             <ttcol align='left' width='*'>description</ttcol>
             
             <c>ECDH-ES + HKDF-256</c>      <c>-25</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
-            <c>ECDH-ES + HKDF-512</c>      <c>-26</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
+            <c>ECDH-ES + HKDF-512</c>      <c>-26</c>        <c>HKDF - SHA-512</c>     <c>yes</c>      <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
             <c>ECDH-SS + HKDF-256</c>      <c>-27</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
-            <c>ECDH-SS + HKDF-512</c>      <c>-28</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
+            <c>ECDH-SS + HKDF-512</c>      <c>-28</c>        <c>HKDF - SHA-512</c>     <c>no</c>       <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
             <c>ECDH-ES + A128KW</c>          <c>-29</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A128KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
             <c>ECDH-ES + A192KW</c>          <c>-30</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A192KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
             <c>ECDH-ES + A256KW</c>          <c>-31</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A256KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
@@ -3267,8 +3270,8 @@ COSE_KDF_Context = [
             and the minimum length encoding is used.
           </t>
           <t>
-            Applications MUST not generate messages with the same label used twice as a key in a single map.
-            Applications MUST not parse and process messages with the same label used twice as a key in a single map.
+            Applications MUST NOT generate messages with the same label used twice as a key in a single map.
+            Applications MUST NOT parse and process messages with the same label used twice as a key in a single map.
             Applications can enforce the parse and process requirement by using parsers that will fail the parse step or by using parsers that will pass all keys to the application and the application can perform the check for duplicate keys.
           </t>
         </list>
