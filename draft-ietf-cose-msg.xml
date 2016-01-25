@@ -753,7 +753,7 @@ COSE_Sign_Tagged = #6.991(COSE_Sign) ; Replace 991 with TBD1
             contains the serialized content to be signed.
             If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes.
-            If the payload is transported separately, then a nil CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
+            If the payload is transported separately (i.e. detached content), then a nil CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
             <vspace blankLines="1"/>
             Note: When a signature with message recovery algorithm is used (<xref target="SigAlgs"/>), the maximum number of bytes that can be recovered is the length of the payload.
             The size of the payload is reduced by the number of bytes that will be recovered.
@@ -903,7 +903,7 @@ COSE_Sign1 = [
 
         <t>
           In order to create a signature, a consistent byte stream is needed in order to process.
-          This algorithm takes in the body information (COSE_Sign), the signer information (COSE_Signer), and the application data (External).
+          This algorithm takes in the body information (COSE_Sign), the signer information (COSE_Signature), and the application data (External).
           A CBOR array is used to construct the byte stream to be processed.
           The fields of the array in order are:
           <list style="numbers">
@@ -1258,7 +1258,7 @@ COSE_Encrypted = [
               Place a context string in the form of a tstr in the first location to identify the data and location being encoded.
               The strings defined are:
               <list style="hanging">
-                <t hangText='"Encrypted"'> for the the content encryption of an encrypted data structure.</t>
+                <t hangText='"Encrypted"'> for the content encryption of an encrypted data structure.</t>
                 <t hangText='"Enveloped"'> for the first level of an enveloped data structure (i.e. for content encryption).</t>
                 <t hangText='"Env_Recipient"'> for a recipient encoding to be placed in an enveloped data structure.</t>
                 <t hangText='"Mac_Recipient"'> for a recipient encoding to be placed in a MAC message structure.</t>
@@ -1376,7 +1376,7 @@ Enc_structure = [
         COSE supports two different MAC structures.
         COSE_MAC is used when the key needs to be explicitly identified.
         The structure supports the use of recipient structures to allow for random content encryption keys to be used.
-        COSE_MAC0 is used when the a recipient structure is not needed because the key to be used is implicitly known.
+        COSE_MAC0 is used when a recipient structure is not needed because the key to be used is implicitly known.
       </t>
 
       <section title="MAC Message with Recipients">
@@ -1391,7 +1391,7 @@ Enc_structure = [
         Any class of recipient algorithm can be used for this purpose. 
         The second mode is to both check that the content has not been changed since the MAC was computed, and to use the recipient algorithm to verify who sent it.
         The classes of recipient algorithms that support this are those that use a pre-shared secret or do static-static key agreement (without the key wrap step).
-        In both of these cases, the entity hat created and sent the message MAC can be validated.
+        In both of these cases, the entity that created and sent the message MAC can be validated.
         (The knowledge of sender assumes that there are only two parties involved and you did not send the message yourself.)
       </t>
 
@@ -1401,8 +1401,8 @@ Enc_structure = [
       </t>
 
       <t>
-        The MAC structure can be encoded either withor without a tag depending on the context it will be used in.
-        The MAC truture is identified by the CBOR tag TBD4.
+        The MAC structure can be encoded either with or without a tag depending on the context it will be used in.
+        The MAC structure is identified by the CBOR tag TBD4.
         The CDDL fragment that represents this is:
       </t>
 
@@ -1434,7 +1434,7 @@ COSE_Mac_Tagged = #6.994(COSE_Mac)         ; Replace 994 with TBD4
             contains the serialized content to be MACed.
             If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes.
-            If the payload is transported separately, then a null CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
+            If the payload is transported separately (i.e. detached content), then a null CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
           </t>
 
           <t hangText='tag'>
@@ -1443,7 +1443,7 @@ COSE_Mac_Tagged = #6.994(COSE_Mac)         ; Replace 994 with TBD4
 
           <t hangText='recipients'>
             contains the recipient information.  
-            See the description under COSE_Encryption for more info.
+            See the description under COSE_Enveloped for more info.
           </t>
         </list>
       </t>
@@ -1473,7 +1473,7 @@ COSE_Mac = [
       </t>
 
       <t>
-        The MAC structure can be encoded either withor without a tag depending on the context it will be used in.
+        The MAC structure can be encoded either with or without a tag depending on the context it will be used in.
         The MAC structure is identified by the CBOR tag TBD6.
         The CDDL fragment that represents this is:
       </t>
@@ -1499,7 +1499,7 @@ COSE_Mac0_Tagged = #6.996(COSE_Mac0)    ; Replace 996 with TBD6
             contains the serialized content to be MACed.
             If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes.
-            If the payload is transported separately, then a null CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
+            If the payload is transported separately (i.e. detached content), then a null CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
           </t>
 
           <t hangText='tag'>
@@ -2396,7 +2396,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
         <t>
           Application protocols are free to define the roles differently.
           For example, they could assign the PartyU role to the entity that initiates the connection and allow directly sending multiple messages over the connection in both directions without changing the role information.
-          It is still reommended that different keys be derived in each direction to avoid reflection problems.
+          It is still recommended that different keys be derived in each direction to avoid reflection problems.
         </t>
 
         <!--
@@ -2766,7 +2766,7 @@ COSE_KDF_Context = [
             </t>
             <t>
               The 'recipients' field is normally absent, but can be used.
-              Applications MUST deal with a recipients field present, not being able to decrypt that recipient is an acceptable way of dealing with it.
+              Applications MUST deal with a recipient field present, not being able to decrypt that recipient is an acceptable way of dealing with it.
               Failing to process the message is not an acceptable way of dealing with it.
             </t>
             <t>
@@ -3366,7 +3366,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry entitled "COSE Header Parameters".
-          The registery is to be created as Expert Review Required.
+          The registry is to be created as Expert Review Required.
           Expert review guidelines are provided in <xref target="review"/>
         </t>
 
@@ -3435,7 +3435,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry entitled "COSE Header Algorithm Labels".
-          The registery is to be created as Expert Review Required.
+          The registry is to be created as Expert Review Required.
           Expert review guidelines are provided in <xref target="review"/>
         </t>
 
@@ -3487,7 +3487,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry entitled "COSE Algorithm Registry".
-          The registery is to be created as Expert Review Required.
+          The registry is to be created as Expert Review Required.
           Expert review guidelines are provided in <xref target="review"/>
         </t>
 
@@ -3522,7 +3522,7 @@ COSE_KDF_Context = [
 
         <t>
           NOTE: The assignment of algorithm identifiers in this document was done so that positive numbers were used for the first level objects (COSE_Sign, COSE_Sign1, COSE_Enveloped, COSE_Encrypted, COSE_Mac and COSE_Mac0).
-          Negative numbers were used for second level objects (COSE_Signature and COSE_Recipient).
+          Negative numbers were used for second level objects (COSE_Signature and COSE_recipient).
           Expert reviewers should consider this practice, but are not expected to be restricted by this precedent.
         </t>
 
@@ -3531,7 +3531,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry entitled "COSE Key Common Parameter" Registry.
-          The registery is to be created as Expert Review Required.
+          The registry is to be created as Expert Review Required.
           Expert review guidelines are provided in <xref target="review"/>
         </t>
 
@@ -3581,7 +3581,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry "COSE Key Type Parameters".
-          The registery is to be created as Expert Review Required.
+          The registry is to be created as Expert Review Required.
           Expert review guidelines are provided in <xref target="review"/>
         </t>
 
@@ -3626,7 +3626,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry "COSE Elliptic Curve Parameters".
-          The registery is to be created as Expert Review Required.
+          The registry is to be created as Expert Review Required.
           Expert review guidelines are provided in <xref target="review"/>
         </t>
 
@@ -4089,9 +4089,9 @@ COSE_KDF_Context = [
     <section anchor="three-layer" title="Three Levels of Recipient Information">
 
       <t>
-        All of the currently defined recipient algorithms classes only use two levels of the COSE_Encrypt structure.
+        All of the currently defined recipient algorithms classes only use two levels of the COSE_Enveloped structure.
         The first level is the message content and the second level is the content key encryption.
-        However, if one uses a recipient algorithm such as RSA-KEM (see Appendix A of RSA-KEM <xref target="RFC5990"/>, then it make sense to have three levels of the COSE_Encrypt structure.
+        However, if one uses a recipient algorithm such as RSA-KEM (see Appendix A of RSA-KEM <xref target="RFC5990"/>, then it make sense to have three levels of the COSE_Enveloped structure.
       </t>
 
       <t>
