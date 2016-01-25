@@ -80,8 +80,8 @@
       <t>
         Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.
         There is a need for the ability to have the basic security services defined for this data format.
-        This document specifies procesing for signatures, message authentication codes, and encryption using CBOR.
-        This document also specifies a represention for cryptographic keys using CBOR.
+        This document specifies processing for signatures, message authentication codes, and encryption using CBOR.
+        This document also specifies a representation for cryptographic keys using CBOR.
       </t>
     </abstract>
 
@@ -149,14 +149,10 @@
               Signed messages separate the concept of protected and unprotected parameters that are for the content and the signature.
             </t>
             <t>
-              Recipient processing has been made more uniform.
-              A recipient structure is required for all recipients rather than only for some.
-            </t>
-            <t>
               MAC messages are separated from signed messages.
             </t>
             <t>
-              MAC messages have the ability to use all recipient algorithms on the MAC authentication key.
+              MAC messages have the ability to use the same set of recipient algorithms as enveloped messages do to obtain the MAC authentication key.
             </t>
             <t>
               Use binary encodings for binary data rather than base64url encodings.
@@ -165,9 +161,7 @@
               Combine the authentication tag for encryption algorithms with the ciphertext.
             </t>
             <t>
-              Remove the flattened mode of encoding. 
-              Forcing the use of an array of recipients at all times forces the message size to be two bytes larger, but one gets a corresponding decrease in the implementation size that should compensate for this.
-              <cref source="JLS">Need to check this list for correctness before publishing.</cref>
+              The set of cryptographic algorithms has been expanded in some directions, and trimmed in others.
             </t>
           </list>
         </t>
@@ -251,17 +245,21 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
 
         <t>
           The non-terminal Internal_Types is defined for dealing with the automated validation tools used during the writing of this document.
-          It references those non-terminals that are used for security computations.
+          It references those non-terminals that are used for security computations, but are not emitted for transport.
         </t>
       </section>
 
       <section title="CBOR Related Terminology" anchor="label">
         <t>
           In JSON, maps are called objects and only have one kind of map key: a string.
-          In COSE, we use both strings and integers (both negative and unsigned integers) as map keys.
+          In COSE, we use strings, negative integers and unsigned integers as map keys.
           The integers are used for compactness of encoding and easy comparison.
-          (Generally, in this document the value zero is going to be reserved and not used.)
-          Since the work "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage as a map keys.
+          Since the work "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage as a map key.
+        </t>
+
+        <t>
+          The presence of a label in a map which is not a string or an integer is an error.
+          Applications can either fail processing or process messages with incorrect labels, however they MUST NOT create messages with incorrect labels.
         </t>
 
         <t>
@@ -306,36 +304,42 @@ values = any
     <section anchor="the-cosemsg-structure" title="Basic COSE Structure">
       <t>
         The COSE Message structure is designed so that there can be a large amount of common code when parsing and processing the different security messages.
-        All of the message structures are built on a CBOR array type.
-        The first three elements of the array contains the same basic information.
+        All of the message structures are built on the CBOR array type.
+        The first three elements of the array contain the same information.
         <list style="numbers">
           <t>The set of protected header parameters wrapped in a bstr.</t>
           <t>The set of unprotected header parameters as a map.</t>
           <t>
             The content of the message.  
-            The content is either the plain text or the encrypted text as appropriate.
-            (The content may be absent, but the location is still used.)
+            The content is either the plain text or the cipher text as appropriate.
+            (The content may be detached (or absent), but the location is still used.)
           </t>
         </list>
         Elements after this point are dependent on the specific message type.
       </t>
 
       <t>
-        Identification of which message is present is done by one of three methods:
-        <list style="symbols">
+        Identification of which message presented is done by the following method:
+        <list style="numbers">
           <t>
-            The specific message type is known from the context in which it is placed.
+            The specific message type is known from the context.
             This may be defined by a marker in the containing structure or by restrictions specified by the application protocol.
           </t>
           <t>
             The message type is identified by a CBOR tag.
             This document defines a CBOR tag for each of the message structures.
+            These tags can be found in <xref target="CBOR-Tags"/>.
           </t>
           <t>
             When a COSE object is carried in a media type of application/cose, the optional parameter 'cose-type' can be used to identify the embedded object.
             The parameter is OPTIONAL if the tagged version of the structure is used.
             The parameter is REQUIRED if the untagged version of the structure is used.
             The value to use with the parameter for each of the structures can be found in <xref target="CBOR-Tags"/>.
+          </t>
+          <t>
+            When a COSE object is carried in a CoAP message, the CoAP content type parameter can be used to identify the message content.
+            The CoAP content types can be found in <xref target="CoAP_content_type"/>.
+            The CBOR Tag for the message structure is not required as each security message is uniquely identified.
           </t>
         </list>
       </t>
@@ -421,13 +425,11 @@ values = any
 COSE_Messages = COSE_Untagged_Message / COSE_Tagged_Message
       
 COSE_Untagged_Message = COSE_Sign / COSE_Sign1 /
-    COSE_Enveloped /
-    COSE_Encrypted /
+    COSE_Enveloped / COSE_Encrypted /
     COSE_Mac / COSE_Mac0
 
 COSE_Tagged_Message = COSE_Sign_Tagged / COSE_Sign1_Tagged /
-    COSE_Enveloped_Tagged /
-    COSE_Encrypted_Tagged /
+    COSE_Enveloped_Tagged / COSE_Encrypted_Tagged /
     COSE_Mac_Tagged / COSE_Mac0_Tagged
 ]]></artwork></figure>
 
@@ -475,7 +477,7 @@ tag=10
         The structure of COSE has been designed to have two buckets of information that are not considered to be part of the payload itself, but are used for holding information about content, algorithms, keys, or evaluation hints for the  processing of the layer.
         These two buckets are available for use in all of the structures in this document except for keys.
         While these buckets can be present, they may not all be usable in all instances.
-        For example, while the protected bucket is defined as part of recipient structures, most of the algorithms that are used for recipients do not provide the necessary functionality to provide the needed protection and thus the bucket should not be used.
+        For example, while the protected bucket is defined as part of recipient structures, most of the algorithms that are used for recipients do not provide for authenticated data and thus the bucket should not be used.
       </t>
 
       <t>
@@ -496,7 +498,7 @@ tag=10
             This bucket MUST be empty if it is not going to be included in a cryptographic computation.
             This bucket is encoded in the message as a binary object.
             This value is obtained by CBOR encoding the protected map and wrapping it in a bstr object.
-            Senders SHOULD encode an empty protected map as a zero length binary object (it is shorter).
+            Senders SHOULD encode an empty protected map as a zero length binary object (it is both shorter and the version used in the authentication structures).
             Recipients MUST accept both a zero length binary value and a zero length map encoded in the binary value.
             The wrapping allows for the encoding of the protected map to be transported with a greater chance that it will not be altered in transit.
             (Badly behaved intermediates could decode and re-encode, but this will result in a failure to verify unless the re-encoded byte string is identical to the decoded byte string.)
@@ -512,7 +514,7 @@ tag=10
         As an example of this, the parameter 'content type' describes the content of the message being carried in the message.
         As such, this parameter is placed only in the content layer and is not placed in the recipient or signature layers.
         In principle, one should be able to process any given layer without reference to any other layer.
-        (The only data that should need to cross layers is the cryptographic key.)
+        (With the exception of the COSE_Sign structure, the only data that needs to cross layers is the cryptographic key.)
       </t>
 
       <t>
@@ -540,7 +542,7 @@ Headers = (
 header_map = {
     Generic_Headers,
     ; Algorithm_Headers,
-    + label => values
+    * label => values
 }
 
 ]]></artwork></figure>
@@ -548,8 +550,8 @@ header_map = {
       <section anchor="cose-headers" title="Common COSE Headers Parameters">
         <t>
           This section defines a set of common header parameters.
-          A summary of those parameters can be found in <xref target="Header-Table"/>.
-          This table should be consulted to determine the value of label used as well as the type of the value.
+          A summary of these parameters can be found in <xref target="Header-Table"/>.
+          This table should be consulted to determine the value of label as well as the type of the value.
         </t>
 
         <t>
@@ -561,7 +563,7 @@ header_map = {
             <t hangText='alg'>
               This parameter is used to indicate the algorithm used for the security processing.
               This parameter MUST be present at each level of a signed, encrypted or authenticated message.
-              When the algorithm supports authenticating extenral data, this parameter MUST be in the protected header bucket.
+              When the algorithm supports authenticating associated data, this parameter MUST be in the protected header bucket.
               The value is taken from the 'COSE Algorithm Registry' (see <xref target="cose-algorithm-registry"/>).
             </t>
             
@@ -570,14 +572,16 @@ header_map = {
               The parameter is used to indicate which protected header labels an application that is processing a message is required to understand.
 
               When present, this parameter MUST be placed in the protected header bucket.
+              The array MUST have at least one value in it.
               <vspace/>
+              Not all labels need to be included in the 'crit' parameter.
               <list style="symbols">
-                <t>Integer labels in the range of 0 to 10 SHOULD be omitted.</t>
+                <t>Integer labels in the range of 0 to 8 SHOULD be omitted.</t>
                 
                 <t>
                   Integer labels in the range -1 to -255 can be omitted as they are algorithm dependent.
-                  If an application can correctly process an algorithm, it can be assumed that it will correctly process all of the parameters associated with that algorithm.
-                  (The algorithm range is -1 to -65536, it is assumed that the higher end will deal with more optional algorithm specific items.)
+                  If an application can correctly process an algorithm, it can be assumed that it will correctly process all of the common parameters associated with that algorithm.
+                  (The algorithm range is -1 to -65536, the higher end is for more optional algorithm specific items.)
                 </t>
               </list>
               The header parameter values indicated by 'crit' can be processed by either the security library code or by an application using a security library, the only requirement is that the parameter is processed.
@@ -596,7 +600,7 @@ header_map = {
               The value of this parameter is matched against the 'kid' member in a COSE_Key structure.
               Applications MUST NOT assume that 'kid' values are unique.
               There may be more than one key with the same 'kid' value, it may be required that all of the keys need to be checked to find the correct one.
-              The internal structure of 'kid' values is not defined and generally cannot be relied on by applications.
+              The internal structure of 'kid' values is not defined and cannot be relied on by applications.
               Key identifier values are hints about which key to use.
 	      They are not directly a security critical field.
 	      For this reason, they can be placed in the unprotected headers bucket.
@@ -613,6 +617,7 @@ header_map = {
               When using the COSE_Encrypted structure, frequently a portion of the IV is part of the context associated with the key value.
               This field is used to carry the portion of the IV that changes for each message.
               As the IV is authenticated by the encryption process, this value can be placed in the unprotected header bucket.
+              The 'Initialization Vector' and 'Partial Initialization Vector' parameters MUST NOT be present in the same security layer.
               <vspace/>
               The final IV is generated by concatenating the fixed portion of the IV, a zero string and the changing portion of the IV.
               The length of the zero string is computed by taking the required IV length and subtracting the lengths of the fixed and changing IV portions.
@@ -639,15 +644,15 @@ header_map = {
 
 
         <texttable anchor="Header-Table" title="Common Header Parameters">
-          <ttcol align='left'>name</ttcol>
-          <ttcol align='left'>label</ttcol>
-          <ttcol align='left'>value type</ttcol>
-          <ttcol align='left'>value registry</ttcol>
+          <ttcol align='left' width='9em'>name</ttcol>
+          <ttcol align='left' width='5em'>label</ttcol>
+          <ttcol align='left' width='14em'>value type</ttcol>
+          <ttcol align='left' width='11em'>value registry</ttcol>
           <ttcol align='left'>description</ttcol>
           
-          <c>alg</c>        <c>1</c>        <c>int / tstr</c>        <c>COSE Algorithm Registry</c>       <c>Integers are taken from table --POINT TO REGISTRY--</c>
-          <c>crit</c>       <c>2</c>        <c>[+ label]</c>         <c>COSE Header Label Registry</c>    <c>integer values are from  -- POINT TO REGISTRY --</c>
-          <c>content type</c> <c>3</c>      <c>tstr / int</c>        <c>CoAP Content-Formats or Media Types registry</c>          <c>Value is either a Media Type or an integer from the CoAP Content Format registry</c>
+          <c>alg</c>        <c>1</c>        <c>int / tstr</c>        <c>COSE Algorithm Registry</c>       <c>Cryptographic algorithm to use</c>
+          <c>crit</c>       <c>2</c>        <c>[+ label]</c>         <c>COSE Header Label Registry</c>    <c>Critical headers to be understood</c>
+          <c>content type</c> <c>3</c>      <c>tstr / int</c>        <c>CoAP Content- Formats or Media Types registry</c>          <c>Content type of the payload</c>
           <c>kid</c>        <c>4</c>        <c>bstr</c>              <c></c>                              <c>key identifier</c>
           <c>IV</c>         <c>5</c>        <c>bstr</c>              <c></c>                              <c>Full Initialization Vector</c>
           <c>Partial IV</c> <c>6</c>        <c>bstr</c>              <c></c>                              <c>Partial Initialization Vector</c>
@@ -682,6 +687,7 @@ Generic_Headers = (
         COSE supports two different signature structures.
         COSE_Sign allows for one or more signers to be applied to a single content.
         COSE_Sign1 is restricted to a single signer.
+        The structures cannot be converted between each other, the signature computation includes a parameter identifying which structure is being used.
       </t>
 
       <section title="Signing with One or More Signers" anchor="full-signature">
@@ -689,12 +695,8 @@ Generic_Headers = (
         The signature structure allows for one or more signatures to be applied to a message payload.
         There are provisions for parameters about the content and parameters about the signature to be carried along with the signature itself.
         These parameters may be authenticated by the signature, or just present.
-        Examples of parameters about the content would be the type of content, when the content was created, and who created the content.
-        <cref source="Hannes">
-          Ensure that the list of examples only includes items that are implemented in this specification.
-          Check the other places where such lists occur and ensure that they also follow this rule.
-        </cref>
-        Examples of parameters about the signature would be the algorithm and key used to create the signature, when the signature was created, and counter-signatures.
+        An example of a parameter about the content is the content type.
+        Examples of parameters about the signature would be the algorithm and key used to create the signature, when the signature was created, and a counter-signature.
       </t>
 
       <t>
@@ -721,10 +723,10 @@ COSE_Sign_Tagged = #6.991(COSE_Sign) ; Replace 991 with TBD1
 ]]></artwork></figure>
       
       <t>
-        A COSE Signing Message is divided into two parts.
+        A COSE Signed Message is divided into two parts.
         The CBOR object that carries the body and information about the body is called the COSE_Sign structure.
         The CBOR object that carries the signature and information about the signature is called the COSE_Signature structure.
-        Examples of COSE Signing Messages can be found in <xref target="SignedExamples"/>.
+        Examples of COSE Signed Messages can be found in <xref target="SignedExamples"/>.
       </t>
       
       <t>
@@ -740,18 +742,18 @@ COSE_Sign_Tagged = #6.991(COSE_Sign) ; Replace 991 with TBD1
           -->
           
           <t hangText='protected'>
-            is described in <xref target="header-parameters"/>.
+            as described in <xref target="header-parameters"/>.
           </t>
           
           <t hangText='unprotected'>
-            is described in <xref target="header-parameters"/>.
+            as described in <xref target="header-parameters"/>.
           </t>
           
           <t hangText='payload'>
             contains the serialized content to be signed.
             If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes.
-            If the payload is transported separately, then a nil CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
+            If the payload is transported separately (i.e. detached content), then a nil CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
             <vspace blankLines="1"/>
             Note: When a signature with message recovery algorithm is used (<xref target="SigAlgs"/>), the maximum number of bytes that can be recovered is the length of the payload.
             The size of the payload is reduced by the number of bytes that will be recovered.
@@ -784,11 +786,11 @@ COSE_Sign = [
 
         <list style="hanging">
           <t hangText='protected'>
-            is described in <xref target="header-parameters"/>.
+            as described in <xref target="header-parameters"/>.
           </t>
           
           <t hangText='unprotected'>
-            is described in <xref target="header-parameters"/>.
+            as described in <xref target="header-parameters"/>.
           </t>
           
           <t hangText='signature'>
@@ -835,15 +837,15 @@ COSE_Sign1_Tagged = #6.997(COSE_Sign1) ; Replace 997 with TBD7
             -->
             
             <t hangText='protected'>
-              is described in <xref target="header-parameters"/>.
+              as described in <xref target="header-parameters"/>.
             </t>
             
             <t hangText='unprotected'>
-              is described in <xref target="header-parameters"/>.
+              as described in <xref target="header-parameters"/>.
             </t>
             
             <t hangText='payload'>
-              is described in <xref target="full-signature"/>.
+              as described in <xref target="full-signature"/>.
             </t>
 
             <t hangText='signature'>
@@ -901,7 +903,7 @@ COSE_Sign1 = [
 
         <t>
           In order to create a signature, a consistent byte stream is needed in order to process.
-          This algorithm takes in the body information (COSE_Sign), the signer information (COSE_Signer), and the application data (External).
+          This algorithm takes in the body information (COSE_Sign), the signer information (COSE_Signature), and the application data (External).
           A CBOR array is used to construct the byte stream to be processed.
           The fields of the array in order are:
           <list style="numbers">
@@ -1090,11 +1092,11 @@ COSE_Enveloped_Tagged = #6.992(COSE_Enveloped) ; Replace 992 with TBD2
           -->
           
           <t hangText='protected'>
-            is described in <xref target="header-parameters"/>.
+            as described in <xref target="header-parameters"/>.
           </t>
           
           <t hangText='unprotected'>
-            is described in <xref target="header-parameters"/>.
+            as described in <xref target="header-parameters"/>.
           </t>
           
           <t hangText='ciphertext'>
@@ -1128,11 +1130,11 @@ COSE_Enveloped = [
         <list style="hanging">
 
           <t hangText='protected'>
-            is described in <xref target="header-parameters"/>.
+            as described in <xref target="header-parameters"/>.
           </t>
           
           <t hangText='unprotected'>
-            is described in <xref target="header-parameters"/>.
+            as described in <xref target="header-parameters"/>.
           </t>
           
           <t hangText='ciphertext'>
@@ -1217,8 +1219,8 @@ COSE_Encrypted_Tagged = #6.993(COSE_Encrypted) ; Replace 993 with TBD3
             This value MUST be mg_type_encrypted (4).
             </t>
           -->
-          <t hangText='protected'> is described in <xref target="header-parameters"/>.</t>
-          <t hangText='unprotected'> is described in <xref target="header-parameters"/>.</t>
+          <t hangText='protected'> as described in <xref target="header-parameters"/>.</t>
+          <t hangText='unprotected'> as described in <xref target="header-parameters"/>.</t>
           <t hangText='ciphertext'>
             contains the encrypted plain text.
             If the ciphertext is to be transported independently of the control information about the encryption process (i.e. detached content) then the field is encoded as a null value.
@@ -1256,7 +1258,7 @@ COSE_Encrypted = [
               Place a context string in the form of a tstr in the first location to identify the data and location being encoded.
               The strings defined are:
               <list style="hanging">
-                <t hangText='"Encrypted"'> for the the content encryption of an encrypted data structure.</t>
+                <t hangText='"Encrypted"'> for the content encryption of an encrypted data structure.</t>
                 <t hangText='"Enveloped"'> for the first level of an enveloped data structure (i.e. for content encryption).</t>
                 <t hangText='"Env_Recipient"'> for a recipient encoding to be placed in an enveloped data structure.</t>
                 <t hangText='"Mac_Recipient"'> for a recipient encoding to be placed in a MAC message structure.</t>
@@ -1374,7 +1376,7 @@ Enc_structure = [
         COSE supports two different MAC structures.
         COSE_MAC is used when the key needs to be explicitly identified.
         The structure supports the use of recipient structures to allow for random content encryption keys to be used.
-        COSE_MAC0 is used when the a recipient structure is not needed because the key to be used is implicitly known.
+        COSE_MAC0 is used when a recipient structure is not needed because the key to be used is implicitly known.
       </t>
 
       <section title="MAC Message with Recipients">
@@ -1389,7 +1391,7 @@ Enc_structure = [
         Any class of recipient algorithm can be used for this purpose. 
         The second mode is to both check that the content has not been changed since the MAC was computed, and to use the recipient algorithm to verify who sent it.
         The classes of recipient algorithms that support this are those that use a pre-shared secret or do static-static key agreement (without the key wrap step).
-        In both of these cases, the entity hat created and sent the message MAC can be validated.
+        In both of these cases, the entity that created and sent the message MAC can be validated.
         (The knowledge of sender assumes that there are only two parties involved and you did not send the message yourself.)
       </t>
 
@@ -1399,8 +1401,8 @@ Enc_structure = [
       </t>
 
       <t>
-        The MAC structure can be encoded either withor without a tag depending on the context it will be used in.
-        The MAC truture is identified by the CBOR tag TBD4.
+        The MAC structure can be encoded either with or without a tag depending on the context it will be used in.
+        The MAC structure is identified by the CBOR tag TBD4.
         The CDDL fragment that represents this is:
       </t>
 
@@ -1421,18 +1423,18 @@ COSE_Mac_Tagged = #6.994(COSE_Mac)         ; Replace 994 with TBD4
           -->
 
           <t hangText='protected'>
-            is described in <xref target="header-parameters"/>.
+            as described in <xref target="header-parameters"/>.
           </t>
 
           <t hangText='unprotected'>
-            is described in <xref target="header-parameters"/>.
+            as described in <xref target="header-parameters"/>.
           </t>
 
           <t hangText='payload'>
             contains the serialized content to be MACed.
             If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes.
-            If the payload is transported separately, then a null CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
+            If the payload is transported separately (i.e. detached content), then a null CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
           </t>
 
           <t hangText='tag'>
@@ -1441,7 +1443,7 @@ COSE_Mac_Tagged = #6.994(COSE_Mac)         ; Replace 994 with TBD4
 
           <t hangText='recipients'>
             contains the recipient information.  
-            See the description under COSE_Encryption for more info.
+            See the description under COSE_Enveloped for more info.
           </t>
         </list>
       </t>
@@ -1471,7 +1473,7 @@ COSE_Mac = [
       </t>
 
       <t>
-        The MAC structure can be encoded either withor without a tag depending on the context it will be used in.
+        The MAC structure can be encoded either with or without a tag depending on the context it will be used in.
         The MAC structure is identified by the CBOR tag TBD6.
         The CDDL fragment that represents this is:
       </t>
@@ -1486,18 +1488,18 @@ COSE_Mac0_Tagged = #6.996(COSE_Mac0)    ; Replace 996 with TBD6
 
         <list style="hanging">
           <t hangText='protected'>
-            is described in <xref target="header-parameters"/>.
+            as described in <xref target="header-parameters"/>.
           </t>
 
           <t hangText='unprotected'>
-            is described in <xref target="header-parameters"/>.
+            as described in <xref target="header-parameters"/>.
           </t>
 
           <t hangText='payload'>
             contains the serialized content to be MACed.
             If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes.
-            If the payload is transported separately, then a null CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
+            If the payload is transported separately (i.e. detached content), then a null CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
           </t>
 
           <t hangText='tag'>
@@ -1643,10 +1645,9 @@ COSE_KeySet = [+COSE_Key]
         <ttcol align='left'>description</ttcol>
         
         <c>kty</c>        <c>1</c>        <c>tstr / int</c>  <c>COSE General Values</c>        <c>Identification of the key type</c>
-        <c>key_ops</c>    <c>4</c>        <c>[* (tstr/int)]</c> <c></c>     <c>Restrict set of permissible operations</c>
+        <c>key_ops</c>    <c>4</c>        <c>[+ (tstr/int)]</c> <c></c>     <c>Restrict set of permissible operations</c>
         <c>alg</c>        <c>3</c>        <c>tstr / int</c>  <c>COSE Algorithm Values</c>        <c>Key usage restriction to this algorithm</c>
         <c>kid</c>        <c>2</c>        <c>bstr</c>        <c></c>        <c>Key Identification value - match to kid in message</c>
-        <c>use</c>        <c>*</c>        <c>tstr</c>        <c></c>        <c>deprecated - don't use</c>
       </texttable>
 
       <t>
@@ -2395,7 +2396,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
         <t>
           Application protocols are free to define the roles differently.
           For example, they could assign the PartyU role to the entity that initiates the connection and allow directly sending multiple messages over the connection in both directions without changing the role information.
-          It is still reommended that different keys be derived in each direction to avoid reflection problems.
+          It is still recommended that different keys be derived in each direction to avoid reflection problems.
         </t>
 
         <!--
@@ -2765,7 +2766,7 @@ COSE_KDF_Context = [
             </t>
             <t>
               The 'recipients' field is normally absent, but can be used.
-              Applications MUST deal with a recipients field present, not being able to decrypt that recipient is an acceptable way of dealing with it.
+              Applications MUST deal with a recipient field present, not being able to decrypt that recipient is an acceptable way of dealing with it.
               Failing to process the message is not an acceptable way of dealing with it.
             </t>
             <t>
@@ -2975,11 +2976,11 @@ COSE_KDF_Context = [
 
           <texttable title="ECDH Algorithm Values" anchor="table-ecdh-es-table">
             <ttcol align='left' width='9em'>name</ttcol>
-            <ttcol align='left'>value</ttcol>
-            <ttcol align='left'>KDF</ttcol>
-            <ttcol align='left'>Ephemeral-Static</ttcol>
-            <ttcol align='left'>Key Wrap</ttcol>
-            <ttcol align='left' width='*'>description</ttcol>
+            <ttcol align='left' width='5em'>value</ttcol>
+            <ttcol align='left' width='7em'>KDF</ttcol>
+            <ttcol align='left' width='10em'>Ephemeral- Static</ttcol>
+            <ttcol align='left' width='6em'>Key Wrap</ttcol>
+            <ttcol align='left' width='11em'>description</ttcol>
             
             <c>ECDH-ES + HKDF-256</c>      <c>-25</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
             <c>ECDH-ES + HKDF-512</c>      <c>-26</c>        <c>HKDF - SHA-512</c>     <c>yes</c>      <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
@@ -3365,7 +3366,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry entitled "COSE Header Parameters".
-          The registery is to be created as Expert Review Required.
+          The registry is to be created as Expert Review Required.
           Expert review guidelines are provided in <xref target="review"/>
         </t>
 
@@ -3434,7 +3435,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry entitled "COSE Header Algorithm Labels".
-          The registery is to be created as Expert Review Required.
+          The registry is to be created as Expert Review Required.
           Expert review guidelines are provided in <xref target="review"/>
         </t>
 
@@ -3486,7 +3487,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry entitled "COSE Algorithm Registry".
-          The registery is to be created as Expert Review Required.
+          The registry is to be created as Expert Review Required.
           Expert review guidelines are provided in <xref target="review"/>
         </t>
 
@@ -3521,7 +3522,7 @@ COSE_KDF_Context = [
 
         <t>
           NOTE: The assignment of algorithm identifiers in this document was done so that positive numbers were used for the first level objects (COSE_Sign, COSE_Sign1, COSE_Enveloped, COSE_Encrypted, COSE_Mac and COSE_Mac0).
-          Negative numbers were used for second level objects (COSE_Signature and COSE_Recipient).
+          Negative numbers were used for second level objects (COSE_Signature and COSE_recipient).
           Expert reviewers should consider this practice, but are not expected to be restricted by this precedent.
         </t>
 
@@ -3530,7 +3531,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry entitled "COSE Key Common Parameter" Registry.
-          The registery is to be created as Expert Review Required.
+          The registry is to be created as Expert Review Required.
           Expert review guidelines are provided in <xref target="review"/>
         </t>
 
@@ -3580,7 +3581,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry "COSE Key Type Parameters".
-          The registery is to be created as Expert Review Required.
+          The registry is to be created as Expert Review Required.
           Expert review guidelines are provided in <xref target="review"/>
         </t>
 
@@ -3625,7 +3626,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry "COSE Elliptic Curve Parameters".
-          The registery is to be created as Expert Review Required.
+          The registry is to be created as Expert Review Required.
           Expert review guidelines are provided in <xref target="review"/>
         </t>
 
@@ -3806,7 +3807,7 @@ COSE_KDF_Context = [
           ID assignment in the 24-255 range is requested.
         </t>
 
-        <texttable>
+        <texttable anchor="CoAP_content_type">
           <ttcol align='left'>Media Type</ttcol>
           <ttcol align='left'>Encoding</ttcol>
           <ttcol align='left'>ID</ttcol>
@@ -4088,9 +4089,9 @@ COSE_KDF_Context = [
     <section anchor="three-layer" title="Three Levels of Recipient Information">
 
       <t>
-        All of the currently defined recipient algorithms classes only use two levels of the COSE_Encrypt structure.
+        All of the currently defined recipient algorithms classes only use two levels of the COSE_Enveloped structure.
         The first level is the message content and the second level is the content key encryption.
-        However, if one uses a recipient algorithm such as RSA-KEM (see Appendix A of RSA-KEM <xref target="RFC5990"/>, then it make sense to have three levels of the COSE_Encrypt structure.
+        However, if one uses a recipient algorithm such as RSA-KEM (see Appendix A of RSA-KEM <xref target="RFC5990"/>, then it make sense to have three levels of the COSE_Enveloped structure.
       </t>
 
       <t>
