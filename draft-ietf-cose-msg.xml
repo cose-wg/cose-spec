@@ -3710,7 +3710,7 @@ COSE_KDF_Context = [
             <t>Person &amp; email address to contact for further information: iesg@ietf.org</t>
             <t>Intended usage: COMMON</t>
             <t>Restrictions on usage: N/A</t>
-            <t>Author: Jim Schaad, ietf@augustcellars.com</t>
+-            <t>Author: Jim Schaad, ietf@augustcellars.com</t>
             <t>Change Controller: IESG</t>
             <t>Provisional registration?  No</t>
           </list>
@@ -3851,39 +3851,71 @@ COSE_KDF_Context = [
     </section>
     <section anchor="security-considerations" title="Security Considerations">
 
-      
-
-      
       <t>
-        There are security considerations:
+        There are a number of security considerations that need to be taken into account by implementers of this specification.
+        The security considerations that are specific to an individual algorithm are placed next to the description of the algorithm.
+        While some considerations have been highlighted here, additional considerations may be found in the documents referred to that have full details of the algorithm.
       </t>
 
       <t>
-        <list style="numbers">
+        Implementations need to protect the private key for any individuals.
+        There are some cases in this document that need to be highlighted on this issue.
+        <list style="symbols">
           <t>
-            Protect private keys.
+            Using a the same key for two different algorithms can leak information about the key.
+            It is therefore recommended that keys be restricted to a single algorithm.
           </t>
           <t>
-            MAC messages with more than one recipient means one cannot figure out which party sent the message.
+            Use of 'direct' as a recipient algorithm combined with a second recipient algorithm, either directly in a separate message, exposes the direct key to the second recipient.
           </t>
           <t>
-            Use of a direct key with other recipient structures hands the key to the other recipients.
+            Several of the algorithms in this document have limits on the number of times that a key can be used without leaking information about the key.
           </t>
+          <!--
           <t>
             Use of direct ECDH direct encryption is easy for people to leak information on if there are other recipients in the message.
-          </t>
-          <t>
-            Considerations about protected vs unprotected header fields.
-            WHy the algorithm parameter needs to be protected.
-          </t>
-          <t>
-            Need to verify that:
-            1) the kty field of the key matches the key and algorithm being used,
-            2) the kty field needs to be included in the trust decision as well as the other key fields,
-	    and
-            3) the algorithm is included in the trust decision.
-          </t>
+            </t>
+            -->
         </list>
+      </t>
+
+      <t>
+        The use of ECDH and direct plus KDF (with no key wrap) will not directly lead to the private key being leaked, the one way function of the KDF will prevent that.
+        There is however a different issue that needs to be addressed.
+        Having two recipients, requires that the CEK be shared between two recipients.
+        The second recipient therefore has a CEK that was derived from material that can be used for the weak proof of origin.
+        The second recipient could create a message using the same CEK and send it to the first recipient, the first recipient would, for either static-static ECDH or direct plus KDF, make an assumption that the CEK could be used for proof of origin even though it is from the wrong entity.
+        If the key wrap step is added, then no proof of origin is implied and thus is not an issue.
+      </t>
+
+      <t>
+        Although it has been mentioned before, the use of a single key for multiple algorithms has been demonstrated in some cases to leak information about a key, provide for attackers to forge integrity tags, or gain information about encrypted content.
+        Binding a key to a single algorithm prevents these problems.
+        Key creators and key consumers are strongly encourged not only to create new keys for each different algorithm, but to include that selection of algorithm in any distribution of key material and strictly enforce the matching of algorithms in the key structure to algorithms in the message structure.
+        In addition to checking that algorithms are correct, the key form needs to be checked as well.
+        Do not use an 'EC2' key where an 'oct' key is expected.
+      </t>
+
+      <t>
+        Before using a key for transmission, or before acting on information recieved, a trust decision on a key needs to be made.
+        Is the data or action something that the entity associated with the key has a right to see or a right to request.
+        A number of factors are assoicated with this trust decision.
+        Some of the ones that are highlighted here are:
+        <list style="symbols">
+          <t>What are the permissions assoicated with the key owner?</t>
+          <t>Is the cryptographic algorithm acceptable in the current context?</t>
+          <t>Have the restrictions associated with the key, such as algorithm or freshness, been checked are are correct?</t>
+          <t>Is the request something that is reasonable given the current state of the application?</t>
+          <t>Have any security considerations that are part of the message been enforced?  (As specified by the application or crit parameter.)</t>
+        </list>
+      </t>
+
+      <t>
+        One area that has been starting to get exposure is doing traffic analysis of encrypted messages based on the length of the message.
+        This specification does not provide for a uniform method of providing padding as part of the message structure.
+        An observer can distinguish between two different strings (for example 'YES' and 'NO') based on length for all of the content encryption algorithms that are defined in this document.
+        This means that it is up to applications to document how content padding is to be done in order to prevent or discourage such analysis.
+        (For example the strings could be defined as 'YES' and 'NO '.)
       </t>
 
     </section>
@@ -4080,6 +4112,13 @@ COSE_KDF_Context = [
 
         -->
 
+    <section title="Making Mandatory Items Optional">
+      <section title="Algorithm Identification">
+        
+      </section>
+      <section title="Countersignature Without Headers">
+      </section>
+    </section>
 
     <section anchor="three-layer" title="Three Levels of Recipient Information">
 
