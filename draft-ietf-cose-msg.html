@@ -582,7 +582,7 @@ ul.toc a:first-child {
 
   <meta name="dct.creator" content="Schaad, J." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-ietf-cose-msg-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-2-8" />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-2-13" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies processing for signatures, message authentication codes, and encryption using CBOR.  This document also specifies a representation for cryptographic keys using CBOR.  " />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies processing for signatures, message authentication codes, and encryption using CBOR.  This document also specifies a representation for cryptographic keys using CBOR.  " />
 
@@ -604,10 +604,10 @@ ul.toc a:first-child {
 </tr>
 <tr>
   <td class="left">Intended status: Informational</td>
-  <td class="right">February 8, 2016</td>
+  <td class="right">February 13, 2016</td>
 </tr>
 <tr>
-  <td class="left">Expires: August 11, 2016</td>
+  <td class="left">Expires: August 16, 2016</td>
   <td class="right"></td>
 </tr>
 
@@ -632,7 +632,7 @@ ul.toc a:first-child {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on August 11, 2016.</p>
+<p>This Internet-Draft will expire on August 16, 2016.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -2100,7 +2100,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
   </tbody>
 </table>
 <h1 id="rfc.section.11.2"><a href="#rfc.section.11.2">11.2.</a> <a href="#context" id="context">Context Information Structure</a></h1>
-<p id="rfc.section.11.2.p.1">The context information structure is used to ensure that the derived keying material is "bound" to the context of the transaction.  The context information structure used here is based on that defined in <a href="#SP800-56A">[SP800-56A]</a>.  By using CBOR for the encoding of the context information structure, we automatically get the same type and length separation of fields that is obtained by the use of ASN.1.  This means that there is no need to encode the lengths for the base elements as it is done by the encoding used in JOSE (Section 4.6.2 of <a href="#RFC7518">[RFC7518]</a>).  <a id="CREF2" class="info">[CREF2]<span class="info">Ilari: Look to see if we need to be clearer about how the fields defined in the table are transported and thus why they have labels.  </span></a> </p>
+<p id="rfc.section.11.2.p.1">The context information structure is used to ensure that the derived keying material is "bound" to the context of the transaction.  The context information structure used here is based on that defined in <a href="#SP800-56A">[SP800-56A]</a>.  By using CBOR for the encoding of the context information structure, we automatically get the same type and length separation of fields that is obtained by the use of ASN.1.  This means that there is no need to encode the lengths for the base elements as it is done by the encoding used in JOSE (Section 4.6.2 of <a href="#RFC7518">[RFC7518]</a>).  </p>
 <p id="rfc.section.11.2.p.2">The context information structure refers to PartyU and PartyV as the two parties which are doing the key derivation.  Unless the application protocol defines differently, we assign PartyU to the entity that is creating the message and PartyV to the entity that is receiving the message.  By doing this association, different keys will be derived for each direction as the context information is different in each direction.  </p>
 <p id="rfc.section.11.2.p.3">The context structure is built from information that is known to both entities.  This information can be obtained from a variety of sources: </p>
 
@@ -2109,22 +2109,6 @@ valid, message content = Decrypt(cipher text, key, additional data)
   <li>Fields can be defined by usage of the output.  Examples of this are the algorithm and key size that are being generated.  </li>
   <li>Fields can be defined by parameters from the message.  We define a set of parameters in <a href="#KDF_Context_Alg_Params">Table 13</a> which can be used to carry the values associated with the context structure.  Examples of this are identities and nonce values.  These parameters are designed to be placed in the unprotected bucket of the recipient structure.  (They do not need to be in the protected bucket since they already are included in the cryptographic computation by virtue of being included in the context structure.) </li>
 </ul>
-
-<p> </p>
-<p id="rfc.section.11.2.p.4">We define a CBOR object to hold the context information.  This object is referred to as CBOR_KDF_Context.  The object is based on a CBOR array type.  The fields in the array are: </p>
-
-<dl>
-  <dt>AlgorithmID</dt>
-  <dd style="margin-left: 8">This field indicates the algorithm for which the key material will be used.  This field is required to be present.  The field exists in the context information so that if the same environment is used for different algorithms, then completely different keys will be generated each of those algorithms.  (This practice means if algorithm A is broken and  thus can is easier to find, the key derived for algorithm B will not be the same as the key for algorithm B.) </dd>
-  <dt>PartyUInfo</dt>
-  <dd style="margin-left: 8">This field holds information about party U.  The PartyUInfo is encoded as a CBOR array.  The elements of PartyUInfo are encoded in the order presented, however if the element does not exist no element is placed in the array.  The elements of the PartyUInfo array are: <dl><dt>identity</dt><dd style="margin-left: 8">This contains the identity information for party U.  The identities can be assigned in one of two manners.  Firstly, a protocol can assign identities based on roles.  For example, the roles of "client" and "server" may be assigned to different entities in the protocol.  Each entity would then use the correct label for the data they send or receive.  The second way is for a protocol to assign identities is to use a name based on a naming system (i.e. DNS, X.509 names).  <br/> We define an algorithm parameter 'PartyU identity' that can be used to carry identity information in the message.  However, identity information is often known as part of the protocol and can thus be inferred rather than made explicit.  If identity information is carried in the message, applications SHOULD have a way of validating the supplied identity information.  The identity information does not need to be specified and can be left as absent.  </dd><dt>nonce</dt><dd style="margin-left: 8">This contains a nonce value.  The nonce can either be implicit from the protocol or carried as a value in the unprotected headers.  <br/> We define an algorithm parameter 'PartyU nonce' that can be used to carry this value in the message However, the nonce value could be determined by the application and the value determined from elsewhere.  <br/> This item is optional and can be absent.  </dd><dt>other</dt><dd style="margin-left: 8">This contains other information that is defined by the protocol.  <br/> This item is optional and can be absent.  </dd></dl><p> </p></dd>
-  <dt>PartyVInfo</dt>
-  <dd style="margin-left: 8">This field holds information about party V.  The PartyVInfo is encoded as a CBOR array.  For store and forward environments, the party V information may be minimal or even absent.  The elements of PartyVInfo are encoded in the order presented, however if the element does not exist no element is placed in the array.  The elements of the PartyVInfo array are: <dl><dt>identity</dt><dd style="margin-left: 8">See description of PartyUInfo identity.</dd><dt>nonce</dt><dd style="margin-left: 8">See description of PartyUInfo nonce.</dd><dt>other</dt><dd style="margin-left: 8">See description of PartyUInfo other.</dd></dl><p> </p></dd>
-  <dt>SuppPubInfo</dt>
-  <dd style="margin-left: 8">This field contains public information that is mutually known to both parties.  <dl><dt>keyDataLength</dt><dd style="margin-left: 8">This is set to the number of bits of the desired output value.  (This practice means if algorithm A can use two different key lengths, the key derived for longer key size will not contain the key for shorter key size as a prefix.) </dd><dt>protected</dt><dd style="margin-left: 8">This field contains the protected parameter field.  If there are no elements in the protected field, then use a zero length bstr.  </dd><dt>other</dt><dd style="margin-left: 8">The field other is for free form data defined by the application.  An example is that an application could defined two different strings to be placed here to generate different keys for a data stream vs a control stream.  This field is optional and will only be present if the application defines a structure for this information.  Applications that define this SHOULD use CBOR to encode the data so that types and lengths are correctly include.  </dd></dl><p> </p></dd>
-  <dt>SuppPrivInfo</dt>
-  <dd style="margin-left: 8">This field contains private information that is mutually known information.  An example of this information would be a pre-existing shared secret.  (This could for example, be used in combination with an ECDH key agreement to provide a secondary proof of identity.) The field is optional and will only be present if the application defines a structure for this information.  Applications that define this SHOULD use CBOR to encode the data so that types and lengths are correctly included.  </dd>
-</dl>
 
 <p> </p>
 <div id="rfc.table.13"/>
@@ -2178,6 +2162,22 @@ valid, message content = Decrypt(cipher text, key, additional data)
     </tr>
   </tbody>
 </table>
+<p id="rfc.section.11.2.p.4">We define a CBOR object to hold the context information.  This object is referred to as CBOR_KDF_Context.  The object is based on a CBOR array type.  The fields in the array are: </p>
+
+<dl>
+  <dt>AlgorithmID</dt>
+  <dd style="margin-left: 8">This field indicates the algorithm for which the key material will be used.  This field is required to be present.  The field exists in the context information so that if the same environment is used for different algorithms, then completely different keys will be generated each of those algorithms.  (This practice means if algorithm A is broken and  thus can is easier to find, the key derived for algorithm B will not be the same as the key for algorithm B.) </dd>
+  <dt>PartyUInfo</dt>
+  <dd style="margin-left: 8">This field holds information about party U.  The PartyUInfo is encoded as a CBOR array.  The elements of PartyUInfo are encoded in the order presented, however if the element does not exist no element is placed in the array.  The elements of the PartyUInfo array are: <dl><dt>identity</dt><dd style="margin-left: 8">This contains the identity information for party U.  The identities can be assigned in one of two manners.  Firstly, a protocol can assign identities based on roles.  For example, the roles of "client" and "server" may be assigned to different entities in the protocol.  Each entity would then use the correct label for the data they send or receive.  The second way is for a protocol to assign identities is to use a name based on a naming system (i.e. DNS, X.509 names).  <br/> We define an algorithm parameter 'PartyU identity' that can be used to carry identity information in the message.  However, identity information is often known as part of the protocol and can thus be inferred rather than made explicit.  If identity information is carried in the message, applications SHOULD have a way of validating the supplied identity information.  The identity information does not need to be specified and can be left as absent.  </dd><dt>nonce</dt><dd style="margin-left: 8">This contains a nonce value.  The nonce can either be implicit from the protocol or carried as a value in the unprotected headers.  <br/> We define an algorithm parameter 'PartyU nonce' that can be used to carry this value in the message However, the nonce value could be determined by the application and the value determined from elsewhere.  <br/> This item is optional and can be absent.  </dd><dt>other</dt><dd style="margin-left: 8">This contains other information that is defined by the protocol.  <br/> This item is optional and can be absent.  </dd></dl><p> </p></dd>
+  <dt>PartyVInfo</dt>
+  <dd style="margin-left: 8">This field holds information about party V.  The PartyVInfo is encoded as a CBOR array.  For store and forward environments, the party V information may be minimal or even absent.  The elements of PartyVInfo are encoded in the order presented, however if the element does not exist no element is placed in the array.  The elements of the PartyVInfo array are: <dl><dt>identity</dt><dd style="margin-left: 8">See description of PartyUInfo identity.</dd><dt>nonce</dt><dd style="margin-left: 8">See description of PartyUInfo nonce.</dd><dt>other</dt><dd style="margin-left: 8">See description of PartyUInfo other.</dd></dl><p> </p></dd>
+  <dt>SuppPubInfo</dt>
+  <dd style="margin-left: 8">This field contains public information that is mutually known to both parties.  <dl><dt>keyDataLength</dt><dd style="margin-left: 8">This is set to the number of bits of the desired output value.  (This practice means if algorithm A can use two different key lengths, the key derived for longer key size will not contain the key for shorter key size as a prefix.) </dd><dt>protected</dt><dd style="margin-left: 8">This field contains the protected parameter field.  If there are no elements in the protected field, then use a zero length bstr.  </dd><dt>other</dt><dd style="margin-left: 8">The field other is for free form data defined by the application.  An example is that an application could defined two different strings to be placed here to generate different keys for a data stream vs a control stream.  This field is optional and will only be present if the application defines a structure for this information.  Applications that define this SHOULD use CBOR to encode the data so that types and lengths are correctly include.  </dd></dl><p> </p></dd>
+  <dt>SuppPrivInfo</dt>
+  <dd style="margin-left: 8">This field contains private information that is mutually known information.  An example of this information would be a pre-existing shared secret.  (This could for example, be used in combination with an ECDH key agreement to provide a secondary proof of identity.) The field is optional and will only be present if the application defines a structure for this information.  Applications that define this SHOULD use CBOR to encode the data so that types and lengths are correctly included.  </dd>
+</dl>
+
+<p> </p>
 <p id="rfc.section.11.2.p.5">The following CDDL fragment corresponds to the text above.  </p>
 <pre>
 PartyInfo = (
@@ -3302,7 +3302,10 @@ COSE_KDF_Context = [
   </tbody>
 </table>
 <h1 id="rfc.appendix.A"><a href="#rfc.appendix.A">Appendix A.</a> Making Mandatory Items Optional</h1>
+<p id="rfc.section.A.p.1">There has been a minority of the working group who have expressed a strong desire to relax the rule that the algorithm identifier be required to appear in each level of a COSE mesage.  There are two basic reasons that have been advanced to support this position.  First, the resulting message will be smaller if the algorithm identifier is omitted from the most common messages in a CoAP environment.  Second, there is a potential bug that will arise if full checking is not done correctly between the different places that an algorithm identifier could be placed.  (The message itself, an application statement, the key structure that the sender possesses and the key structure the recipient possesses.) </p>
+<p id="rfc.section.A.p.2">This appendix lays out how such a change can be made and the details that an application needs to specify in order to use this option.  Two different sets of details are specified:  Those needed to omit an algorithm identifier and those needed to use a variant on the counter signature attribute which contains no attributes about itself.  </p>
 <h1 id="rfc.appendix.A.1"><a href="#rfc.appendix.A.1">A.1.</a> Algorithm Identification</h1>
+<p/>
 <h1 id="rfc.appendix.A.2"><a href="#rfc.appendix.A.2">A.2.</a> Countersignature Without Headers</h1>
 <h1 id="rfc.appendix.B"><a href="#rfc.appendix.B">Appendix B.</a> <a href="#three-layer" id="three-layer">Three Levels of Recipient Information</a></h1>
 <p id="rfc.section.B.p.1">All of the currently defined recipient algorithms classes only use two levels of the COSE_Enveloped structure.  The first level is the message content and the second level is the content key encryption.  However, if one uses a recipient algorithm such as RSA-KEM (see Appendix A of RSA-KEM <a href="#RFC5990">[RFC5990]</a>, then it make sense to have three levels of the COSE_Enveloped structure.  </p>
