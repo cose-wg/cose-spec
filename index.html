@@ -476,7 +476,7 @@ ul.toc a:first-child {
 <link href="#rfc.section.6" rel="Chapter" title="6 MAC Objects"/>
 <link href="#rfc.section.6.1" rel="Chapter" title="6.1 MAC Message with Recipients"/>
 <link href="#rfc.section.6.2" rel="Chapter" title="6.2 MAC Messages with Implicit Key"/>
-<link href="#rfc.section.6.3" rel="Chapter" title="6.3 How to compute a MAC"/>
+<link href="#rfc.section.6.3" rel="Chapter" title="6.3 How to compute and verify a MAC"/>
 <link href="#rfc.section.7" rel="Chapter" title="7 Key Structure"/>
 <link href="#rfc.section.7.1" rel="Chapter" title="7.1 COSE Key Common Parameters"/>
 <link href="#rfc.section.8" rel="Chapter" title="8 Signature Algorithms"/>
@@ -533,8 +533,6 @@ ul.toc a:first-child {
 <link href="#rfc.references.1" rel="Chapter" title="19.1 Normative References"/>
 <link href="#rfc.references.2" rel="Chapter" title="19.2 Informative References"/>
 <link href="#rfc.appendix.A" rel="Chapter" title="A Making Mandatory Items Optional"/>
-<link href="#rfc.appendix.A.1" rel="Chapter" title="A.1 Algorithm Identification"/>
-<link href="#rfc.appendix.A.2" rel="Chapter" title="A.2 Countersignature Without Headers"/>
 <link href="#rfc.appendix.B" rel="Chapter" title="B Three Levels of Recipient Information"/>
 <link href="#rfc.appendix.C" rel="Chapter" title="C Examples"/>
 <link href="#rfc.appendix.C.1" rel="Chapter" title="C.1 Examples of Signed Message"/>
@@ -582,7 +580,7 @@ ul.toc a:first-child {
 
   <meta name="dct.creator" content="Schaad, J." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-ietf-cose-msg-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-2-13" />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-2-20" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies processing for signatures, message authentication codes, and encryption using CBOR.  This document also specifies a representation for cryptographic keys using CBOR.  " />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies processing for signatures, message authentication codes, and encryption using CBOR.  This document also specifies a representation for cryptographic keys using CBOR.  " />
 
@@ -604,10 +602,10 @@ ul.toc a:first-child {
 </tr>
 <tr>
   <td class="left">Intended status: Informational</td>
-  <td class="right">February 13, 2016</td>
+  <td class="right">February 20, 2016</td>
 </tr>
 <tr>
-  <td class="left">Expires: August 16, 2016</td>
+  <td class="left">Expires: August 23, 2016</td>
   <td class="right"></td>
 </tr>
 
@@ -632,7 +630,7 @@ ul.toc a:first-child {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on August 16, 2016.</p>
+<p>This Internet-Draft will expire on August 23, 2016.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -668,7 +666,7 @@ ul.toc a:first-child {
 </ul><li>6.   <a href="#rfc.section.6">MAC Objects</a></li>
 <ul><li>6.1.   <a href="#rfc.section.6.1">MAC Message with Recipients</a></li>
 <li>6.2.   <a href="#rfc.section.6.2">MAC Messages with Implicit Key</a></li>
-<li>6.3.   <a href="#rfc.section.6.3">How to compute a MAC</a></li>
+<li>6.3.   <a href="#rfc.section.6.3">How to compute and verify a MAC</a></li>
 </ul><li>7.   <a href="#rfc.section.7">Key Structure</a></li>
 <ul><li>7.1.   <a href="#rfc.section.7.1">COSE Key Common Parameters</a></li>
 </ul><li>8.   <a href="#rfc.section.8">Signature Algorithms</a></li>
@@ -725,9 +723,7 @@ ul.toc a:first-child {
 <ul><li>19.1.   <a href="#rfc.references.1">Normative References</a></li>
 <li>19.2.   <a href="#rfc.references.2">Informative References</a></li>
 </ul><li>Appendix A.   <a href="#rfc.appendix.A">Making Mandatory Items Optional</a></li>
-<ul><li>A.1.   <a href="#rfc.appendix.A.1">Algorithm Identification</a></li>
-<li>A.2.   <a href="#rfc.appendix.A.2">Countersignature Without Headers</a></li>
-</ul><li>Appendix B.   <a href="#rfc.appendix.B">Three Levels of Recipient Information</a></li>
+<li>Appendix B.   <a href="#rfc.appendix.B">Three Levels of Recipient Information</a></li>
 <li>Appendix C.   <a href="#rfc.appendix.C">Examples</a></li>
 <ul><li>C.1.   <a href="#rfc.appendix.C.1">Examples of Signed Message</a></li>
 <ul><li>C.1.1.   <a href="#rfc.appendix.C.1.1">Single Signature</a></li>
@@ -859,7 +855,7 @@ values = any
   <li>The specific message type is known from the context.  This may be defined by a marker in the containing structure or by restrictions specified by the application protocol.  </li>
   <li>The message type is identified by a CBOR tag.  This document defines a CBOR tag for each of the message structures.  These tags can be found in <a href="#CBOR-Tags">Table 1</a>.  </li>
   <li>When a COSE object is carried in a media type of application/cose, the optional parameter 'cose-type' can be used to identify the embedded object.  The parameter is OPTIONAL if the tagged version of the structure is used.  The parameter is REQUIRED if the untagged version of the structure is used.  The value to use with the parameter for each of the structures can be found in <a href="#CBOR-Tags">Table 1</a>.  </li>
-  <li>When a COSE object is carried in a CoAP message, the CoAP content type parameter can be used to identify the message content.  The CoAP content types can be found in <a href="#CoAP_content_type">Table 23</a>.  The CBOR Tag for the message structure is not required as each security message is uniquely identified.  </li>
+  <li>When a COSE object is carried as a CoAP payload, the CoAP content type parameter can be used to identify the message content.  The CoAP content types can be found in <a href="#CoAP_content_type">Table 23</a>.  The CBOR Tag for the message structure is not required as each security message is uniquely identified.  </li>
 </ol>
 
 <p> </p>
@@ -933,7 +929,7 @@ COSE_Tagged_Message = COSE_Sign_Tagged / COSE_Sign1_Tagged /
     COSE_Mac_Tagged / COSE_Mac0_Tagged
 </pre>
 <h1 id="rfc.section.3"><a href="#rfc.section.3">3.</a> <a href="#header-parameters" id="header-parameters">Header Parameters</a></h1>
-<p id="rfc.section.3.p.1">The structure of COSE has been designed to have two buckets of information that are not considered to be part of the payload itself, but are used for holding information about content, algorithms, keys, or evaluation hints for the  processing of the layer.  These two buckets are available for use in all of the structures except for keys.  While these buckets can be present, they may not all be usable in all instances.  For example, while the protected bucket is defined as part of recipient structures, most of the algorithms that are used for recipients do not provide for authenticated data and thus the bucket should not be used.  </p>
+<p id="rfc.section.3.p.1">The structure of COSE has been designed to have two buckets of information that are not considered to be part of the payload itself, but are used for holding information about content, algorithms, keys, or evaluation hints for the  processing of the layer.  These two buckets are available for use in all of the structures except for keys.  While these buckets can be present, they may not all be usable in all instances.  For example, while the protected bucket is defined as part of the recipient structure, some of the algorithms used for recipient structures do not provide for authenticated data.  If this is the case, the protected bucket should be left empty.  </p>
 <p id="rfc.section.3.p.2">Both buckets are implemented as CBOR maps.  The map key is a 'label' (<a href="#label">Section 1.4</a>).  The value portion is dependent on the definition for the label.  Both maps use the same set of label/value pairs.  The integer and string values for labels has been divided into several sections with a standard range, a private range, and a range that is dependent on the algorithm selected.  The defined labels can be found in the 'COSE Header Parameters' IANA registry (<a href="#cose-header-key-table">Section 16.2</a>).  </p>
 <p id="rfc.section.3.p.3">Two buckets are provided for each layer: </p>
 
@@ -974,7 +970,7 @@ header_map = {
   <dt>content type</dt>
   <dd style="margin-left: 8">This parameter is used to indicate the content type of the data in the payload or ciphertext fields.  Integers are from the 'CoAP Content-Formats' IANA registry table.  Strings are from the IANA 'Media Types' registry.  Applications SHOULD provide this parameter if the content structure is potentially ambiguous.  </dd>
   <dt>kid</dt>
-  <dd style="margin-left: 8">This parameter one of the ways that can be used to find the key to be used.  The value of this parameter is matched against the 'kid' member in a COSE_Key structure.  Applications MUST NOT assume that 'kid' values are unique.  There may be more than one key with the same 'kid' value, it may be required that all of the keys need to be checked to find the correct one.  The internal structure of 'kid' values is not defined and cannot be relied on by applications.  Key identifier values are hints about which key to use.  They are not directly a security critical field.  For this reason, they can be placed in the unprotected headers bucket.  </dd>
+  <dd style="margin-left: 8">This parameter identifies one piece of data that can be used as input to find the needed cryptographic key.  The value of this parameter can be matched against the 'kid' member in a COSE_Key structure.  Other methods of key distribution can define an equivalent field to be matched.  Applications MUST NOT assume that 'kid' values are unique.  There may be more than one key with the same 'kid' value, it may be required that all of the keys need to be checked to find the correct one.  The internal structure of 'kid' values is not defined and cannot be relied on by applications.  Key identifier values are hints about which key to use.  They are not directly a security critical field.  For this reason, they can be placed in the unprotected headers bucket.  </dd>
   <dt>Initialization Vector</dt>
   <dd style="margin-left: 8">This parameter holds the Initialization Vector (IV) value.  For some symmetric encryption algorithms this may be referred to as a nonce.  As the IV is authenticated by encryption process, it can be placed in the unprotected header bucket.  </dd>
   <dt>Partial Initialization Vector</dt>
@@ -982,7 +978,7 @@ header_map = {
   <dt>counter signature</dt>
   <dd style="margin-left: 8">This parameter holds a counter signature value.  Counter signatures provide a method of having a second party sign some data.  The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_Sign1, COSE_Signature, COSE_Enveloped, COSE_recipient, COSE_Encrypted, COSE_Mac and COSE_Mac0.  These structures all have the same beginning elements so that a consistent calculation of the counter signature can be computed.  Details on computing counter signatures are found in <a href="#counter_signature">Section 4.5</a>.  </dd>
   <dt>operation time</dt>
-  <dd style="margin-left: 8">This parameter provides the time the content cryptographic operation is performed.  For signatures and recipient structures, this would be the time that the signature or recipient key object was created.  For content structures, this would be the time that the content structure was created.  The unsigned integer value is the number of seconds, excluding leap seconds, after midnight UTC, January 1, 1970.  The field is primarily intended to be to be used for countersignatures, however it can additionally be used for replay detection as well.  </dd>
+  <dd style="margin-left: 8">This parameter provides the time the content cryptographic operation is performed.  For signatures and recipient structures, this would be the time that the signature or recipient key object was created.  For content structures, this would be the time that the content structure was created.  The unsigned integer value is the number of seconds, excluding leap seconds, after midnight UTC, January 1, 1970.  The field is primarily intended to be to be used for counter signatures, however it can additionally be used for replay detection as well.  </dd>
 </dl>
 
 <p> </p>
@@ -1067,14 +1063,14 @@ Generic_Headers = (
     ? 4 =&gt; bstr,        ; key identifier
     ? 5 =&gt; bstr,        ; IV
     ? 6 =&gt; bstr,        ; Partial IV
-    ? 7 =&gt; COSE_Signature, ; Counter signature
+    ? 7 =&gt; COSE_Signature / [+COSE_Signature], ; Counter signature
     ? 8 =&gt; uint         ; Operation time
 )
 </pre>
 <h1 id="rfc.section.4"><a href="#rfc.section.4">4.</a> <a href="#signing-structure" id="signing-structure">Signing Objects</a></h1>
 <p id="rfc.section.4.p.1">COSE supports two different signature structures.  COSE_Sign allows for one or more signers to be applied to a single content.  COSE_Sign1 is restricted to a single signer.  The structures cannot be converted between each other, the signature computation includes a parameter identifying which structure is being used.  </p>
 <h1 id="rfc.section.4.1"><a href="#rfc.section.4.1">4.1.</a> <a href="#full-signature" id="full-signature">Signing with One or More Signers</a></h1>
-<p id="rfc.section.4.1.p.1">The signature structure allows for one or more signatures to be applied to a message payload.  There are provisions for parameters about the content and parameters about the signature to be carried along with the signature itself.  These parameters may be authenticated by the signature, or just present.  An example of a parameter about the content is the content type.  Examples of parameters about the signature would be the algorithm and key used to create the signature, when the signature was created, and a counter-signature.  </p>
+<p id="rfc.section.4.1.p.1">The signature structure allows for one or more signatures to be applied to a message payload.  There are provisions for parameters about the content and parameters about the signature to be carried along with the signature itself.  These parameters may be authenticated by the signature, or just present.  An example of a parameter about the content is the content type.  Examples of parameters about the signature would be the algorithm and key used to create the signature, when the signature was created, and counter signatures.  </p>
 <p id="rfc.section.4.1.p.2">When more than one signature is present, the successful validation of one signature associated with a given signer is usually treated as a successful signature by that signer.  However, there are some application environments where other rules are needed.  An application that employs a rule other than one valid signature for each signer must specify those rules.  Also, where simple matching of the signer identifier is not sufficient to determine whether the signatures were generated by the same signer, the application specification must describe how to determine which signatures were generated by the same signer.  Support of different communities of recipients is the primary reason that signers choose to include more than one signature.  For example, the COSE_Sign structure might include signatures generated with the RSA signature algorithm and with the Elliptic Curve Digital Signature Algorithm (ECDSA) signature algorithm.  This allows recipients to verify the signature associated with one algorithm or the other.  (The original source of this text is <a href="#RFC5652">[RFC5652]</a>.) More detailed information on multiple signature evaluation can be found in <a href="#RFC5752">[RFC5752]</a>.  </p>
 <p id="rfc.section.4.1.p.3">The signature structure can be encoded either with or without a tag depending on the context it will be used in.  The signature structure is identified by the CBOR tag TBD1.  The CDDL fragment that represents this is.  </p>
 <pre>
@@ -1127,7 +1123,8 @@ COSE_Signature =  [
 <pre>
 COSE_Sign1_Tagged = #6.997(COSE_Sign1) ; Replace 997 with TBD7
 </pre>
-<p id="rfc.section.4.2.p.2">The COSE_Sign1 structure is a CBOR array.  The fields of the array in order are: </p>
+<p id="rfc.section.4.2.p.2">The CBOR object that carries the body, the signature and the information about the body and signature is called the COSE_Sign1 structure.  Examples of COSE Single signature messages can be found in <a href="#Sign1_Examples">Appendix C.2</a>.  </p>
+<p id="rfc.section.4.2.p.3">The COSE_Sign1 structure is a CBOR array.  The fields of the array in order are: </p>
 
 <dl>
   <dt>protected</dt>
@@ -1141,7 +1138,7 @@ COSE_Sign1_Tagged = #6.997(COSE_Sign1) ; Replace 997 with TBD7
 </dl>
 
 <p> </p>
-<p id="rfc.section.4.2.p.3">The CDDL fragment which represents the above text for COSE_Sign1 follows.  </p>
+<p id="rfc.section.4.2.p.4">The CDDL fragment which represents the above text for COSE_Sign1 follows.  </p>
 <pre>
 COSE_Sign1 = [
     Headers,
@@ -1150,7 +1147,7 @@ COSE_Sign1 = [
 ]
 </pre>
 <h1 id="rfc.section.4.3"><a href="#rfc.section.4.3">4.3.</a> <a href="#Extern_AAD" id="Extern_AAD">Externally Supplied Data</a></h1>
-<p id="rfc.section.4.3.p.1">One of the features that we supply in the COSE document is the ability for applications to provide additional data to be authenticated as part of the security, but that is not carried as part of the COSE object.  The primary reason for supporting this can be seen by looking at the CoAP message structure <a href="#RFC7252">[RFC7252]</a> where the facility exists for options to be carried before the payload.  An example of data that can be placed in this location would be CoAP options for transaction ids and nonces to check for replay protection.  If the data is in the options section, then it is available for routers to help in performing the replay detection and prevention.  However, it may also be desired to protect these values so that if they cannot be modified in transit it can be detected.  This is the purpose of the externally supplied data field.  </p>
+<p id="rfc.section.4.3.p.1">One of the features that we supply in the COSE document is the ability for applications to provide additional data to be authenticated as part of the security, but that is not carried as part of the COSE object.  The primary reason for supporting this can be seen by looking at the CoAP message structure <a href="#RFC7252">[RFC7252]</a> where the facility exists for options to be carried before the payload.  An example of data that can be placed in this location would be CoAP options for transaction ids and nonces to check for replay protection.  If the data is in the options section, then it is available for routers to help in performing the replay detection and prevention.  However, it may also be desired to protect these values so that if they are be modified in transit it can be detected.  This is the purpose of the externally supplied data field.  </p>
 <p id="rfc.section.4.3.p.2">This document describes the process for using a byte array of externally supplied authenticated data, however the method of constructing the byte array is a function of the application.  Applications that use this feature need to define how the externally supplied authenticated data is to be constructed.  Such a construction needs to take into account the following issues: </p>
 
 <ul>
@@ -1166,7 +1163,7 @@ COSE_Sign1 = [
   <li>A text string identifying the context of the signature.  The context string is: <dl><dt>"Signature"</dt><dd style="margin-left: 8">for signatures using the COSE_Signature structure.</dd><dt>"Signature1"</dt><dd style="margin-left: 8">for signatures using the COSE_Sign1 structure.</dd><dt>"CounterSignature"</dt><dd style="margin-left: 8">for signatures used as counter signature attributes.</dd></dl><p> </p></li>
   <li>The protected attributes from the body structure encoded in a bstr type.  If there are no protected attributes, a bstr of length zero is used.  </li>
   <li>The protected attributes from the signer structure encoded in a bstr type.  If there are no protected attributes, a bstr of length zero is used.  This field is omitted for the COSE_Sign1 signature structure.  </li>
-  <li>The protected attributes from the application encoded in a bstr type.  If this field is not supplied, it defaults to a zero length binary string.  </li>
+  <li>The protected attributes from the application encoded in a bstr type.  If this field is not supplied, it defaults to a zero length binary string.  (See <a href="#Extern_AAD">Section 4.3</a> for application guidance on constructing this field.) </li>
   <li>The payload to be signed encoded in a bstr type.  The payload is placed here independent of how it is transported.  </li>
 </ol>
 
@@ -1185,9 +1182,9 @@ Sig_structure = [
 
 <ol>
   <li>Create a Sig_structure and populate it with the appropriate fields.  </li>
-  <li>Create the value ToBeSigned by encoding the Sig_structure to a byte string.  </li>
+  <li>Create the value ToBeSigned by encoding the Sig_structure to a byte string using the encoding described in <a href="#CBOR-Canonical">Section 14</a>.  </li>
   <li>Call the signature creation algorithm passing in K (the key to sign with), alg (the algorithm to sign with) and ToBeSigned (the value to sign).  </li>
-  <li>Place the resulting signature value in the 'signature' field of the map.  </li>
+  <li>Place the resulting signature value in the 'signature' field of the array.  </li>
 </ol>
 
 <p> </p>
@@ -1195,7 +1192,7 @@ Sig_structure = [
 
 <ol>
   <li>Create a Sig_structure object and populate it with the appropriate fields.  </li>
-  <li>Create the value ToBeSigned by encoding the Sig_structure to a byte string.  </li>
+  <li>Create the value ToBeSigned by encoding the Sig_structure to a byte string using the encoding described in <a href="#CBOR-Canonical">Section 14</a>..  </li>
   <li>Call the signature verification algorithm passing in K (the key to verify with), alg (the algorithm used sign with), ToBeSigned (the value to sign), and sig (the signature to be verified).  </li>
 </ol>
 
@@ -1204,13 +1201,13 @@ Sig_structure = [
 <h1 id="rfc.section.4.5"><a href="#rfc.section.4.5">4.5.</a> <a href="#counter_signature" id="counter_signature">Computing Counter Signatures</a></h1>
 <p id="rfc.section.4.5.p.1">Counter signatures provide a method of having a different signature occur on some piece of content.  This is normally used to provide a signature on a signature allowing for a proof that a signature existed at a given time (i.e. a Timestamp).  In this document we allow for counter signatures to exist in a greater number of environments.  As an example, it is possible to place a counter signature in the unprotected attributes of a COSE_Enveloped object.  This would allow for an intermediary to either verify that the encrypted byte stream has not been modified, without being able to decrypt it.  Or for the intermediary to assert that an encrypted byte stream either existed at a given time or passed through it in terms of routing (i.e. a proxy signature).  </p>
 <p id="rfc.section.4.5.p.2">An example of a counter signature on a signature can be found in <a href="#Appendix_B_1_3">Appendix C.1.3</a>.  An example of a counter signature in an encryption object can be found in <a href="#Appendix_B_3_3">Appendix C.3.3</a>.  </p>
-<p id="rfc.section.4.5.p.3">The creation and validation of counter signatures over the different items relies on the fact that the structure of the objects have the same structure.  The elements are a set of protected attributes, a set of unprotected attributes and a body in that order.  This means that the Sig_structure can be used for in a uniform manner to get the byte stream for processing a signature.  If the counter signature is going to be computed over a COSE_Enveloped structure, the body_protected and payload items can be mapped into the Sig_structure in the same manner as from the COSE_Sign structure.  </p>
-<p id="rfc.section.4.5.p.4">It should be noted that only a signature algorithm with appendix (see <a href="#SigAlgs">Section 8</a>) can be used for counter signatures.  This is because the body should be able to be processed without having to evaluate the countersignature, and this is not possible for signature schemes with message recovery.  </p>
+<p id="rfc.section.4.5.p.3">The creation and validation of counter signatures over the different items relies on the fact that the structure of the objects have the same structure.  The elements are a set of protected attributes, a set of unprotected attributes and a body in that order.  This means that the Sig_structure can be used in a uniform manner to get the byte stream for processing a signature.  If the counter signature is going to be computed over a COSE_Enveloped structure, the body_protected and payload items can be mapped into the Sig_structure in the same manner as from the COSE_Sign structure.  </p>
+<p id="rfc.section.4.5.p.4">It should be noted that only a signature algorithm with appendix (see <a href="#SigAlgs">Section 8</a>) can be used for counter signatures.  This is because the body should be able to be processed without having to evaluate the counter signature, and this is not possible for signature schemes with message recovery.  </p>
 <h1 id="rfc.section.5"><a href="#rfc.section.5">5.</a> <a href="#encryption-object" id="encryption-object">Encryption Objects</a></h1>
 <p id="rfc.section.5.p.1">COSE supports two different encryption structures.  COSE_Encrypted is used when a recipient structure is not needed because the key to be used is known implicitly.  COSE_Enveloped is used the rest of time time.  This includes cases where there are multiple recipients, a recipient algorithm other than direct is to be used, or the key to be used is not known.  </p>
 <h1 id="rfc.section.5.1"><a href="#rfc.section.5.1">5.1.</a> <a href="#EnvelopedData" id="EnvelopedData">Enveloped COSE Structure</a></h1>
 <p id="rfc.section.5.1.p.1">The enveloped structure allows for one or more recipients of a message.  There are provisions for parameters about the content and parameters about the recipient information to be carried in the message.  The protected parameters associated with the content are authenticated by the content encryption algorithm.  The protected parameters associated with the recipient are authenticated by the recipient algorithm (when the algorithm supports it).  Examples of parameters about the content are the type of the content, and the content encryption algorithm.  Examples of parameters about the recipient are the recipient's key identifier, the recipient encryption algorithm.  </p>
-<p id="rfc.section.5.1.p.2">The same techniques and structures are used for encrypting both the plain text and the keys used to protect the text.  This is different from the approach used by both <a href="#RFC5652">[RFC5652]</a> and <a href="#RFC7516">[RFC7516]</a> where different structures are used for the content layer and for the recipient layer.  Two structures are defined: COSE_Enveloped to hold the encrypted content, and COSE_recipient to hold the encrypted keys for recipients.  Examples of encrypted messages can be found in <a href="#EncryptedExamples">Appendix C.3</a>.  </p>
+<p id="rfc.section.5.1.p.2">The same techniques and structures are used for encrypting both the plain text and the keys used to protect the text.  This is different from the approach used by both <a href="#RFC5652">[RFC5652]</a> and <a href="#RFC7516">[RFC7516]</a> where different structures are used for the content layer and for the recipient layer.  Two structures are defined: COSE_Enveloped to hold the encrypted content, and COSE_recipient to hold the encrypted keys for recipients.  Examples of encrypted messages can be found in <a href="#EnvelopedExamples">Appendix C.3</a>.  </p>
 <p id="rfc.section.5.1.p.3">The COSE Enveloped structure can be encoded either with or without a tag depending on the context it will be used in.  The COSE Enveloped structure is identified by the CBOR tag TBD2.  The CDDL fragment that represents this is.  </p>
 <pre>
 COSE_Enveloped_Tagged = #6.992(COSE_Enveloped) ; Replace 992 with TBD2
@@ -1278,7 +1275,7 @@ COSE_recipient = [
 <p> </p>
 <h1 id="rfc.section.5.2"><a href="#rfc.section.5.2">5.2.</a> Encrypted COSE structure</h1>
 <p id="rfc.section.5.2.p.1">The encrypted structure does not have the ability to specify recipients of the message.  The structure assumes that the recipient of the object will already know the identity of the key to be used in order to decrypt the message.  If a key needs to be identified to the recipient, the enveloped structure ought to be used.  </p>
-<p id="rfc.section.5.2.p.2">The structure defined to hold an encrypted message is COSE_Encrypted.  Examples of encrypted messages can be found in <a href="#EncryptedExamples">Appendix C.3</a>.  </p>
+<p id="rfc.section.5.2.p.2">The structure defined to hold an encrypted message is COSE_Encrypted.  Examples of encrypted messages can be found in <a href="#EnvelopedExamples">Appendix C.3</a>.  </p>
 <p id="rfc.section.5.2.p.3">The COSE_Encrypted structure can be encoded either with or without a tag depending on the context it will be used in.  The COSE_Encrypted structure is identified by the CBOR tag TBD3.  The CDDL fragment that represents this is.  </p>
 <pre>
 COSE_Encrypted_Tagged = #6.993(COSE_Encrypted) ; Replace 993 with TBD3
@@ -1303,22 +1300,16 @@ COSE_Encrypted = [
 ]
 </pre>
 <h1 id="rfc.section.5.3"><a href="#rfc.section.5.3">5.3.</a> <a href="#encryption-algorithm-for-aead-algorithms" id="encryption-algorithm-for-aead-algorithms">Encryption Algorithm for AEAD algorithms</a></h1>
-<p id="rfc.section.5.3.p.1">The encryption algorithm for AEAD algorithms is fairly simple.  </p>
-<p/>
+<p id="rfc.section.5.3.p.1">The encryption algorithm for AEAD algorithms is fairly simple.  The first step is to create a consistent byte stream for the authenticated data structure.  For this purpose we use a CBOR array,  the fields of the array in order are: </p>
 
 <ol>
-  <li>Create a CBOR array (Enc_structure) to encode the authenticated data.  </li>
-  <li>Place a context string in the form of a tstr in the first location to identify the data and location being encoded.  The strings defined are: <dl><dt>"Encrypted"</dt><dd style="margin-left: 8">for the content encryption of an encrypted data structure.</dd><dt>"Enveloped"</dt><dd style="margin-left: 8">for the first level of an enveloped data structure (i.e. for content encryption).</dd><dt>"Env_Recipient"</dt><dd style="margin-left: 8">for a recipient encoding to be placed in an enveloped data structure.</dd><dt>"Mac_Recipient"</dt><dd style="margin-left: 8">for a recipient encoding to be placed in a MAC message structure.</dd><dt>"Rec_Recipient"</dt><dd style="margin-left: 8">for a recipient encoding to be placed in a recipient structure.</dd></dl><p> </p></li>
-  <li>Copy the protected header field from the message to be sent to the second location in the Enc_structure.  </li>
-  <li>If the application has supplied external additional authenticated data to be included in the computation, then it is placed in the third location ('external_aad' field) of the Enc_structure.  If no data was supplied, then a zero length binary value is used.  (See <a href="#Extern_AAD">Section 4.3</a> for application guidance on constructing this field.) </li>
-  <li>Encode the Enc_structure using a CBOR Canonical encoding <a href="#CBOR-Canonical">Section 14</a> to get the AAD value.  </li>
-  <li>Determine the encryption key.  This step is dependent on the class of recipient algorithm being used.  For: <dl><dt>No Recipients:</dt><dd style="margin-left: 8">The key to be used is determined by the algorithm and key at the current level.  </dd><dt>Direct and Direct Key Agreement:</dt><dd style="margin-left: 8">The key is determined by the key and algorithm in the recipient structure.  The encryption algorithm and size of the key to be used are inputs into the KDF used for the recipient.  (For direct, the KDF can be thought of as the identity operation.) </dd><dt>Other:</dt><dd style="margin-left: 8">The key is randomly generated.  </dd></dl><p> </p></li>
-  <li>Call the encryption algorithm with K (the encryption key to use), P (the plain text) and AAD (the additional authenticated data).  Place the returned cipher text into the 'ciphertext' field of the structure.  </li>
-  <li>For recipients of the message, recursively perform the encryption algorithm for that recipient using the encryption key as the plain text.  </li>
+  <li>A text string identifying the context of the authenticated data structure.  The context string is: <dl><dt>"Encrypted"</dt><dd style="margin-left: 8">for the content encryption of an encrypted data structure.</dd><dt>"Enveloped"</dt><dd style="margin-left: 8">for the first level of an enveloped data structure (i.e. for content encryption).</dd><dt>"Env_Recipient"</dt><dd style="margin-left: 8">for a recipient encoding to be placed in an enveloped data structure.</dd><dt>"Mac_Recipient"</dt><dd style="margin-left: 8">for a recipient encoding to be placed in a MAC message structure.</dd><dt>"Rec_Recipient"</dt><dd style="margin-left: 8">for a recipient encoding to be placed in a recipient structure.</dd></dl><p> </p></li>
+  <li>The protected attributes from the body structure encoded in a bstr type.  If there are no protected attributes, a bstr of length zero is used.  </li>
+  <li>The protected attributes from the application encoded in a bstr type.  If this field is not supplied, it defaults to a zero length bstr.  (See <a href="#Extern_AAD">Section 4.3</a> for application guidance on constructing this field.) </li>
 </ol>
 
 <p> </p>
-<p id="rfc.section.5.3.p.3">The CDDL fragment which defines the Enc_structure used for the authenticated data structure is: </p>
+<p id="rfc.section.5.3.p.2">The CDDL fragment which describes the above text is: </p>
 <pre>
 Enc_structure = [
     context : "Enveloped" / "Encrypted" / "Env_Recipient" /
@@ -1327,8 +1318,29 @@ Enc_structure = [
     external_aad: bstr
 ]
 </pre>
+<p id="rfc.section.5.3.p.3">How to encrypt a message: </p>
+
+<ol>
+  <li>Create a Enc_structure and populate it with the appropriate fields.  </li>
+  <li>Encode the Enc_structure to a byte stream (AAD) using the encoding described in <a href="#CBOR-Canonical">Section 14</a>.  </li>
+  <li>Determine the encryption key.  This step is dependent on the class of recipient algorithm being used.  For: <dl><dt>No Recipients:</dt><dd style="margin-left: 8">The key to be used is determined by the algorithm and key at the current level.  </dd><dt>Direct and Direct Key Agreement:</dt><dd style="margin-left: 8">The key is determined by the key and algorithm in the recipient structure.  The encryption algorithm and size of the key to be used are inputs into the KDF used for the recipient.  (For direct, the KDF can be thought of as the identity operation.) </dd><dt>Other:</dt><dd style="margin-left: 8">The key is randomly generated.  </dd></dl><p> </p></li>
+  <li>Call the encryption algorithm with K (the encryption key to use), P (the plain text) and AAD.  Place the returned cipher text into the 'ciphertext' field of the structure.  </li>
+  <li>For recipients of the message, recursively perform the encryption algorithm for that recipient using the encryption key as the plain text.  </li>
+</ol>
+
+<p> </p>
+<p id="rfc.section.5.3.p.4">How to decrypt a message: </p>
+
+<ol>
+  <li>Create a Enc_structure and populate it with the appropriate fields.  </li>
+  <li>Encode the Enc_structure to a byte stream (AAD) using the encoding described in <a href="#CBOR-Canonical">Section 14</a>.  </li>
+  <li>Determine the decryption key.  This step is dependent on the class of recipient algorithm being used.  For: <dl><dt>No Recipients:</dt><dd style="margin-left: 8">The key to be used is determined by the algorithm and key at the current level.  </dd><dt>Direct and Direct Key Agreement:</dt><dd style="margin-left: 8">The key is determined by the key and algorithm in the recipient structure.  The encryption algorithm and size of the key to be used are inputs into the KDF used for the recipient.  (For direct, the KDF can be thought of as the identity operation.) </dd><dt>Other:</dt><dd style="margin-left: 8">The key is determined by decoding and decrypting the recipient structure.  </dd></dl><p> </p></li>
+  <li>Call the decryption algorithm with K (the decryption key to use), C (the cipher text) and AAD.  </li>
+</ol>
+
+<p> </p>
 <h1 id="rfc.section.5.4"><a href="#rfc.section.5.4">5.4.</a> <a href="#encryption-algorithm-for-ae-algorithms" id="encryption-algorithm-for-ae-algorithms">Encryption algorithm for AE algorithms</a></h1>
-<p/>
+<p id="rfc.section.5.4.p.1">How to encrypt a message: </p>
 
 <ol>
   <li>Verify that the 'protected' field is absent.  </li>
@@ -1336,6 +1348,16 @@ Enc_structure = [
   <li>Determine the encryption key.  This step is dependent on the class of recipient algorithm being used.  For: <dl><dt>No Recipients:</dt><dd style="margin-left: 8">The key to be used is determined by the algorithm and key at the current level.  </dd><dt>Direct and Direct Key Agreement:</dt><dd style="margin-left: 8">The key is determined by the key and algorithm in the recipient structure.  The encryption algorithm and size of the key to be used are inputs into the KDF used for the recipient.  (For direct, the KDF can be thought of as the identity operation.) </dd><dt>Other:</dt><dd style="margin-left: 8">The key is randomly generated.  </dd></dl><p> </p></li>
   <li>Call the encryption algorithm with K (the encryption key to use) and the P (the plain text).  Place the returned cipher text into the 'ciphertext' field of the structure.  </li>
   <li>For recipients of the message, recursively perform the encryption algorithm for that recipient using the encryption key as the plain text.  </li>
+</ol>
+
+<p> </p>
+<p id="rfc.section.5.4.p.2">How to decrypt a message: </p>
+
+<ol>
+  <li>Verify that the 'protected' field is absent.  </li>
+  <li>Verify that there was no external additional authenticated data supplied for this operation.  </li>
+  <li>Determine the decryption key.  This step is dependent on the class of recipient algorithm being used.  For: <dl><dt>No Recipients:</dt><dd style="margin-left: 8">The key to be used is determined by the algorithm and key at the current level.  </dd><dt>Direct and Direct Key Agreement:</dt><dd style="margin-left: 8">The key is determined by the key and algorithm in the recipient structure.  The encryption algorithm and size of the key to be used are inputs into the KDF used for the recipient.  (For direct, the KDF can be thought of as the identity operation.) </dd><dt>Other:</dt><dd style="margin-left: 8">The key is determined by decoding and decrypting the recipient structure.  </dd></dl><p> </p></li>
+  <li>Call the decryption algorithm with K (the decryption key to use), C (the cipher text) and AAD.  </li>
 </ol>
 
 <p> </p>
@@ -1376,7 +1398,7 @@ COSE_Mac = [
 </pre>
 <h1 id="rfc.section.6.2"><a href="#rfc.section.6.2">6.2.</a> MAC Messages with Implicit Key</h1>
 <p id="rfc.section.6.2.p.1">In this section we describe the structure and methods to be used when doing MAC authentication for those cases where the recipient is implicitly known.  </p>
-<p id="rfc.section.6.2.p.2">The MAC message uses the COSE_Mac0 structure defined in this section for carrying the body.  </p>
+<p id="rfc.section.6.2.p.2">The MAC message uses the COSE_Mac0 structure defined in this section for carrying the body.  Examples of MAC messages with an implicit key can be found in <a href="#Mac0Examples">Appendix C.6</a>.  </p>
 <p id="rfc.section.6.2.p.3">The MAC structure can be encoded either with or without a tag depending on the context it will be used in.  The MAC structure is identified by the CBOR tag TBD6.  The CDDL fragment that represents this is: </p>
 <pre>
 COSE_Mac0_Tagged = #6.996(COSE_Mac0)    ; Replace 996 with TBD6
@@ -1403,7 +1425,7 @@ COSE_Mac0 = [
    tag: bstr,
 ]
 </pre>
-<h1 id="rfc.section.6.3"><a href="#rfc.section.6.3">6.3.</a> How to compute a MAC</h1>
+<h1 id="rfc.section.6.3"><a href="#rfc.section.6.3">6.3.</a> How to compute and verify a MAC</h1>
 <p id="rfc.section.6.3.p.1">In order to get a consistent encoding of the data to be authenticated, the MAC_structure is used to have a canonical form.  The MAC_structure is a CBOR array.  The fields of the MAC_structure in order are: </p>
 
 <ol>
@@ -1426,10 +1448,22 @@ MAC_structure = [
 <p id="rfc.section.6.3.p.3">The steps to compute a MAC are: </p>
 
 <ol>
-  <li>Create a MAC_structure and fill  in the fields.  </li>
-  <li>Encode the MAC_structure using a canonical CBOR encoder.  The resulting bytes are the value to compute the MAC on.  </li>
-  <li>Compute the MAC and place the result in the 'tag' field of the COSE_Mac structure.  </li>
+  <li>Create a MAC_structure and populate it with the appropriate fields.  </li>
+  <li>Encode the MAC_structure to a byte stream using the encoding described in <a href="#CBOR-Canonical">Section 14</a>.  </li>
+  <li>Call the MAC creation algorithm passing in K (the key to use), alg (the algorithm to MAC with) and ToBeMaced (the value to compute the MAC on).  </li>
+  <li>Place the resulting MAC in the 'tag' field of the COSE_Mac structure.  </li>
   <li>Encrypt and encode the MAC key for each recipient of the message.  </li>
+</ol>
+
+<p> </p>
+<p id="rfc.section.6.3.p.4">How to verify a MAC are: </p>
+
+<ol>
+  <li>Create a MAC_structure object and populate it with the appropriate fields.  </li>
+  <li>Encode the MAC_structure to a byte stream using the encoding described in <a href="#CBOR-Canonical">Section 14</a>.  </li>
+  <li>Obtain the cryptographic key from one of the recipients of the message.  </li>
+  <li>Call the MAC creation algorithm passing in K (the key to use), alg (the algorithm to MAC with) and ToBeMaced (the value to compute the MAC on).  </li>
+  <li>Compare the MAC value to the 'tag' field of the COSE_Mac structure.  </li>
 </ol>
 
 <p> </p>
@@ -2764,9 +2798,9 @@ COSE_KDF_Context = [
 <p id="rfc.section.15.p.2">Applications are therefore intended to profile the usage of this document.  This section provides a set of guidelines and topics that applications need to consider when using this document.  </p>
 
 <ul>
-  <li>Applications need to determine the set of messages defined in this document that it will be using.  The set of messages corresponds fairly directly to the set of security services that are needed and to the security levels needed.  </li>
+  <li>Applications need to determine the set of messages defined in this document that they will be using.  The set of messages corresponds fairly directly to the set of security services that are needed and to the security levels needed.  </li>
   <li>Applications may define new header parameters for a specific purpose.  Applications will often times select specific header parameters to use or not to use.  For example, an application would normally state a preference for using either the IV or the partial IV parameter.  If the partial IV parameter is specified, then the application would also need to define how the fixed portion of the IV would be determined.  </li>
-  <li>When applications use externally defined authenticated data, they need to define how that data is to be defined.  This document assumes that the data will be provided as a byte stream.  More information can be found in <a href="#Extern_AAD">Section 4.3</a>.  </li>
+  <li>When applications use externally defined authenticated data, they need to define how that data is encoded.  This document assumes that the data will be provided as a byte stream.  More information can be found in <a href="#Extern_AAD">Section 4.3</a>.  </li>
   <li>Applications need to determine the set of security algorithms that are to be used.  When selecting the algorithms to be used as the mandatory to implement set, consideration should be given to choosing different types of algorithms when two are chosen for a specific purpose.  An example of this would be choosing HMAC-SHA512 and AES-CMAC as different MAC algorithms, the construction is vastly different between these two algorithms.  This means that a weakening of one algorithm would be unlikely to lead to a weakening of the other algorithms.  Of course, these algorithms do not provide the same level of security and thus may not be comparable for the desired security functionality.  </li>
   <li>Applications may need to provide some type of negotiation or discovery method if multiple algorithms or message structures are permitted.  The method can be as simple as requiring preconfiguration of the set of algorithms to providing a discovery method built into the protocol.  S/MIME provided a number of different ways to approach the problem that applications could follow: <ul><li>Advertising in the message (S/MIME capabilities) <a href="#RFC5751">[RFC5751]</a>.</li><li>Advertising in the certificate (capabilities extension) <a href="#RFC4262">[RFC4262]</a>.</li><li>Minimum requirements for the S/MIME, which have been updated over time <a href="#RFC2633">[RFC2633]</a><a href="#RFC5751">[RFC5751]</a>.</li></ul><p> </p></li>
 </ul>
@@ -3054,11 +3088,11 @@ COSE_KDF_Context = [
 
 <p> </p>
 <h1 id="rfc.section.17"><a href="#rfc.section.17">17.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a></h1>
-<p id="rfc.section.17.p.1">There are a number of security considerations that need to be taken into account by implementers of this specification.  The security considerations that are specific to an individual algorithm are placed next to the description of the algorithm.  While some considerations have been highlighted here, additional considerations may be found in the documents referred to that have full details of the algorithm.  </p>
+<p id="rfc.section.17.p.1">There are a number of security considerations that need to be taken into account by implementers of this specification.  The security considerations that are specific to an individual algorithm are placed next to the description of the algorithm.  While some considerations have been highlighted here, additional considerations may be found in the documents listed in the references.  </p>
 <p id="rfc.section.17.p.2">Implementations need to protect the private key for any individuals.  There are some cases in this document that need to be highlighted on this issue.  </p>
 
 <ul>
-  <li>Using a the same key for two different algorithms can leak information about the key.  It is therefore recommended that keys be restricted to a single algorithm.  </li>
+  <li>Using the same key for two different algorithms can leak information about the key.  It is therefore recommended that keys be restricted to a single algorithm.  </li>
   <li>Use of 'direct' as a recipient algorithm combined with a second recipient algorithm, either directly in a separate message, exposes the direct key to the second recipient.  </li>
   <li>Several of the algorithms in this document have limits on the number of times that a key can be used without leaking information about the key.  </li>
 </ul>
@@ -3066,12 +3100,12 @@ COSE_KDF_Context = [
 <p> </p>
 <p id="rfc.section.17.p.3">The use of ECDH and direct plus KDF (with no key wrap) will not directly lead to the private key being leaked, the one way function of the KDF will prevent that.  There is however a different issue that needs to be addressed.  Having two recipients, requires that the CEK be shared between two recipients.  The second recipient therefore has a CEK that was derived from material that can be used for the weak proof of origin.  The second recipient could create a message using the same CEK and send it to the first recipient, the first recipient would, for either static-static ECDH or direct plus KDF, make an assumption that the CEK could be used for proof of origin even though it is from the wrong entity.  If the key wrap step is added, then no proof of origin is implied and thus is not an issue.  </p>
 <p id="rfc.section.17.p.4">Although it has been mentioned before, the use of a single key for multiple algorithms has been demonstrated in some cases to leak information about a key, provide for attackers to forge integrity tags, or gain information about encrypted content.  Binding a key to a single algorithm prevents these problems.  Key creators and key consumers are strongly encourged not only to create new keys for each different algorithm, but to include that selection of algorithm in any distribution of key material and strictly enforce the matching of algorithms in the key structure to algorithms in the message structure.  In addition to checking that algorithms are correct, the key form needs to be checked as well.  Do not use an 'EC2' key where an 'oct' key is expected.  </p>
-<p id="rfc.section.17.p.5">Before using a key for transmission, or before acting on information recieved, a trust decision on a key needs to be made.  Is the data or action something that the entity associated with the key has a right to see or a right to request.  A number of factors are assoicated with this trust decision.  Some of the ones that are highlighted here are: </p>
+<p id="rfc.section.17.p.5">Before using a key for transmission, or before acting on information recieved, a trust decision on a key needs to be made.  Is the data or action something that the entity associated with the key has a right to see or a right to request.  A number of factors are associated with this trust decision.  Some of the ones that are highlighted here are: </p>
 
 <ul>
-  <li>What are the permissions assoicated with the key owner?</li>
+  <li>What are the permissions associated with the key owner?</li>
   <li>Is the cryptographic algorithm acceptable in the current context?</li>
-  <li>Have the restrictions associated with the key, such as algorithm or freshness, been checked are are correct?</li>
+  <li>Have the restrictions associated with the key, such as algorithm or freshness, been checked and are correct?</li>
   <li>Is the request something that is reasonable given the current state of the application?</li>
   <li>Have any security considerations that are part of the message been enforced?  (As specified by the application or crit parameter.)</li>
 </ul>
@@ -3302,11 +3336,6 @@ COSE_KDF_Context = [
   </tbody>
 </table>
 <h1 id="rfc.appendix.A"><a href="#rfc.appendix.A">Appendix A.</a> Making Mandatory Items Optional</h1>
-<p id="rfc.section.A.p.1">There has been a minority of the working group who have expressed a strong desire to relax the rule that the algorithm identifier be required to appear in each level of a COSE mesage.  There are two basic reasons that have been advanced to support this position.  First, the resulting message will be smaller if the algorithm identifier is omitted from the most common messages in a CoAP environment.  Second, there is a potential bug that will arise if full checking is not done correctly between the different places that an algorithm identifier could be placed.  (The message itself, an application statement, the key structure that the sender possesses and the key structure the recipient possesses.) </p>
-<p id="rfc.section.A.p.2">This appendix lays out how such a change can be made and the details that an application needs to specify in order to use this option.  Two different sets of details are specified:  Those needed to omit an algorithm identifier and those needed to use a variant on the counter signature attribute which contains no attributes about itself.  </p>
-<h1 id="rfc.appendix.A.1"><a href="#rfc.appendix.A.1">A.1.</a> Algorithm Identification</h1>
-<p/>
-<h1 id="rfc.appendix.A.2"><a href="#rfc.appendix.A.2">A.2.</a> Countersignature Without Headers</h1>
 <h1 id="rfc.appendix.B"><a href="#rfc.appendix.B">Appendix B.</a> <a href="#three-layer" id="three-layer">Three Levels of Recipient Information</a></h1>
 <p id="rfc.section.B.p.1">All of the currently defined recipient algorithms classes only use two levels of the COSE_Enveloped structure.  The first level is the message content and the second level is the content key encryption.  However, if one uses a recipient algorithm such as RSA-KEM (see Appendix A of RSA-KEM <a href="#RFC5990">[RFC5990]</a>, then it make sense to have three levels of the COSE_Enveloped structure.  </p>
 <p id="rfc.section.B.p.2">These levels would be: </p>
@@ -3541,7 +3570,7 @@ d16b2474483e367b'
   ]
 )
 </pre>
-<h1 id="rfc.appendix.C.2"><a href="#rfc.appendix.C.2">C.2.</a> Single Signer Examples</h1>
+<h1 id="rfc.appendix.C.2"><a href="#rfc.appendix.C.2">C.2.</a> <a href="#Sign1_Examples" id="Sign1_Examples">Single Signer Examples</a></h1>
 <h1 id="rfc.appendix.C.2.1"><a href="#rfc.appendix.C.2.1">C.2.1.</a> Single ECDSA signature</h1>
 <p id="rfc.section.C.2.1.p.1">This example uses the following: </p>
 
@@ -3566,7 +3595,7 @@ e19f43d6c6ba654472da301b645b293c9ba939295b97c4bdb847782bff384c5794'
   ]
 )
 </pre>
-<h1 id="rfc.appendix.C.3"><a href="#rfc.appendix.C.3">C.3.</a> <a href="#EncryptedExamples" id="EncryptedExamples">Examples of Enveloped Messages</a></h1>
+<h1 id="rfc.appendix.C.3"><a href="#rfc.appendix.C.3">C.3.</a> <a href="#EnvelopedExamples" id="EnvelopedExamples">Examples of Enveloped Messages</a></h1>
 <h1 id="rfc.appendix.C.3.1"><a href="#rfc.appendix.C.3.1">C.3.1.</a> <a href="#Appendix_B_3_1" id="Appendix_B_3_1">Direct ECDH</a></h1>
 <p id="rfc.section.C.3.1.p.1">This example uses the following: </p>
 
