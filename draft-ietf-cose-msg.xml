@@ -4235,6 +4235,107 @@ COSE_KDF_Context = [
 
     
     <section title="Making Mandatory Items Optional">
+      <t>
+        There has been a minority of the working group who have expressed a strong desire to relax the rule that the algorithm identifier be required to appear in each level of a COSE mesage.
+        There are two basic reasons that have been advanced to support this position.
+        First, the resulting message will be smaller if the algorithm identifier is omitted from the most common messages in a CoAP environment.
+        Second, there is a potential bug that will arise if full checking is not done correctly between the different places that an algorithm identifier could be placed.
+        (The message itself, an application statement, the key structure that the sender possesses and the key structure the recipient possesses.)
+      </t>
+      <t>
+        This appendix lays out how such a change can be made and the details that an application needs to specify in order to use this option.
+        Two different sets of details are specified:
+        Those needed to omit an algorithm identifier and those needed to use a variant on the counter signature attribute which contains no attributes about itself.
+      </t>
+      
+      <section title="Algorithm Identification">
+        <t>
+          In this section are laid out two sets of recommendations.
+          The first set of recommendations apply to having an implicit algorithm identified for a single layer of a COSE message.
+          The second set of recommendations apply to having an implicit algorithm identified for multiple layers of a COSE message or for multiple COSE message constructs.
+          (Examples of are:
+          A context that identifies the key and algorithm for both a COSE_Recipient and an COSE_Enveloped structure.
+          A context that identifies the keys and algorithms for both a COSE_Encrypted structure and an accompanying counter signature.)
+        </t>
+
+        <t>
+          The use of RFC 2119 language is deliberately not used, this specification can provide recommendations, but it cannot enforce them.
+        </t>
+
+        <t>
+          For implicit algorithm identifiers applying to a single layer of a COSE message, the following items should be taken into account:
+          
+          <list style="symbols">
+            <t>
+              Applications need to list the set of COSE structures that implicit algorithms are to be used in.
+              Applications need to require that the receipt of an explicit algorithm identifier in one of these structures will lead to the message being rejected.
+              This requirement is stated so that there will never be a case where there is any ambiguity about the question of which algorithm should be used, the implicit or the explicit one.
+              This applies even if the transported algorithm is a protected attribute.
+              The expectation is that implicit algorithms would be used for the COSE_Encrypted, COSE_Sign1 and COSE_Mac0 structures.
+            </t>
+            
+            <t>
+              Applications need to define the set of information that is to be considered to be part of a context when omitting algorithm identifiers.
+              At a minimum this would be the key identifier, the key, the algorithm and the COSE structures it can be used for.
+              Applications should restrict the use of a single key to a single algorithm.
+              As noted for some of the algorithms in this document, the use of the same key in different related algorithms can lead to leakage of information about the key, leakage about the data or the ability to perform forgeries.
+            </t>
+            
+            <t>
+              In many cases applications which make the algorithm identifier will also want to make the context identifier implicit for the same reason.
+              That is omitting the context identifier will decrease the message size (potentially significantly depending on the length of the identifier).
+              Applications that do this will need to describe the circumstances where the context identifier is to be omitted and how the context identifier is to be inferred in these cases.
+              (Exhaustive search would normally not be considered to be acceptable.)
+              An example of how this can be done is to tie the context to a transaction identifier.
+              Both would be sent on the original message, but only the transaction identifier would need to be sent after that point as the context is tied into the transaction identifier.
+              Another way would be to associate a context with a network address.
+              All messages coming from a single network address can be assumed to be associated with a specific context.
+              (In this case the address would probably be distributed as part of the context.)
+            </t>
+            
+            <t>
+              Applications cannot rely on key identifiers being unique unless they take significant efforts to ensure that they are computed in such a way as to create this guarantee.
+              Even when an application does this, the uniqueness might be violated if the application is run in different contexts (i.e. with a different security coordinator) or if the system the application runs on combines security contexts from different applications together into a single store.
+            </t>
+            
+            <t>
+              Applications should continue the practice of protecting the algorithm identifier.
+              Since this is not done by placing it in the protected attributes field, applications should define an application specific external data structure which includes this value.
+              This external data field can be used as such for content encryption, MAC and signature algorithms.
+              It can be used in the SuppPrivInfo field for those algorithms which use a KDF function to derive a key value.
+              Applications may also want to protect other information that is part of the context structure as well.
+              It should be noted that those fields, such as the key or a base IV are already protected by virtue of being used in the cryptogrpahic computation and do not need to be included in the external data field.
+            </t>
+          </list>
+        </t>
+
+        <t>
+          
+        <t>
+            Direct,
+            Direct + kdf
+
+            ecdh + kdf
+            ecdh+kdf+key wrap
+            rsa+oeap
+            pbe
+            rsa+kem+kdf
+          </t>
+      </section>
+      <section title="Counter Signature Without Headers">
+        <t>
+          * No parameter for counter sig
+          * Define to be signed structure
+          * id how key is decided
+          * external data struture includes alg id
+          * bind key in distribution
+          * single alg of key structure
+          * uniques of kid not real
+
+          very specialized for small size
+          kid can be either implied OR show as kid of what is counter signed
+        </t>
+      </section>
     </section>
 
     <section anchor="three-layer" title="Three Levels of Recipient Information">
