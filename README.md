@@ -1,6 +1,4 @@
-[![Build Status](https://circleci.com/gh/cose-wg/cose-spec.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/cose-wg/cose-spec)
-
-# CBOR Encoded Message Syntax
+# CBOR Encoded Message Syntax [![Build Status](https://circleci.com/gh/cose-wg/cose-spec.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/cose-wg/cose-spec)
 
 This is the working area for the expected IETF COSE draft of CBOR Encoded Message Syntax
 
