@@ -571,7 +571,7 @@ header_map = {
           <list style="hanging">
             <t hangText='alg'>
               This parameter is used to indicate the algorithm used for the security processing.
-              This parameter MUST be present at each level of a signed, encrypted or authenticated message.
+              This parameter MUST be present at each level of a signed, encrypted or authenticated message except the COSE_Sign structure.
               When the algorithm supports authenticating associated data, this parameter MUST be in the protected header bucket.
               The value is taken from the 'COSE Algorithm Registry' (see <xref target="cose-algorithm-registry"/>).
             </t>
@@ -4234,7 +4234,7 @@ COSE_KDF_Context = [
         -->
 
     
-    <section title="Making Mandatory Items Optional">
+    <section title="Making Mandatory Algorithm Header Optional">
       <t>
         There has been a minority of the working group who have expressed a strong desire to relax the rule that the algorithm identifier be required to appear in each level of a COSE mesage.
         There are two basic reasons that have been advanced to support this position.
@@ -4242,6 +4242,7 @@ COSE_KDF_Context = [
         Second, there is a potential bug that will arise if full checking is not done correctly between the different places that an algorithm identifier could be placed.
         (The message itself, an application statement, the key structure that the sender possesses and the key structure the recipient possesses.)
       </t>
+      
       <t>
         This appendix lays out how such a change can be made and the details that an application needs to specify in order to use this option.
         Two different sets of details are specified:
@@ -4250,12 +4251,10 @@ COSE_KDF_Context = [
       
       <section title="Algorithm Identification">
         <t>
-          In this section are laid out two sets of recommendations.
+          In this section are laid out three sets of recommendations.
           The first set of recommendations apply to having an implicit algorithm identified for a single layer of a COSE message.
-          The second set of recommendations apply to having an implicit algorithm identified for multiple layers of a COSE message or for multiple COSE message constructs.
-          (Examples of are:
-          A context that identifies the key and algorithm for both a COSE_Recipient and an COSE_Enveloped structure.
-          A context that identifies the keys and algorithms for both a COSE_Encrypted structure and an accompanying counter signature.)
+          The second set of recommendations apply to having multiple implicit algorithm identified for multiple layers of a COSE message.
+          The third set of recommendations apply to having implicit algorithms for multiple COSE message constructs.
         </t>
 
         <t>
@@ -4263,7 +4262,12 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          For implicit algorithm identifiers applying to a single layer of a COSE message, the following items should be taken into account:
+          This set of recommendations applies to the case where an application is distributing a fixed algorithm along with the key information for use in a single COSE message object.
+          This normally applies to the smallest of the COSE messages, specifically COSE_Sign1, COSE_Mac0 and COSE_Encrypted, but could apply to the other structures as well.
+        </t>
+
+        <t>
+          The following items should be taken into account:
           
           <list style="symbols">
             <t>
@@ -4271,7 +4275,7 @@ COSE_KDF_Context = [
               Applications need to require that the receipt of an explicit algorithm identifier in one of these structures will lead to the message being rejected.
               This requirement is stated so that there will never be a case where there is any ambiguity about the question of which algorithm should be used, the implicit or the explicit one.
               This applies even if the transported algorithm is a protected attribute.
-              The expectation is that implicit algorithms would be used for the COSE_Encrypted, COSE_Sign1 and COSE_Mac0 structures.
+              This applies even if the transported algorithm is the same as the implicit algorithm.
             </t>
             
             <t>
@@ -4310,6 +4314,19 @@ COSE_KDF_Context = [
         </t>
 
         <t>
+          The second case is having multiple implicit algorithm identifiers specified for a multiple layer COSE message.
+          An example of how this would work is that the encryption context that an application specifies contains a content encryption algorithm, a key wrap algorithm, a key identifier, and a shared secret.
+          The sender would then omit sending the algorithm identifier at both the content layer and the recipient layer leaving only the key identifier in situations where it could not be implied.
+        </t>
+
+        <t>
+          The following additional items need to be taken into consideration:
+          <list style="symbols">
+            <t>
+              
+            </t>
+          </list>
+        </t>
           
         <t>
             Direct,
@@ -4320,7 +4337,9 @@ COSE_KDF_Context = [
             rsa+oeap
             pbe
             rsa+kem+kdf
-          </t>
+        </t>
+
+        
       </section>
       <section title="Counter Signature Without Headers">
         <t>
