@@ -580,7 +580,7 @@ ul.toc a:first-child {
 
   <meta name="dct.creator" content="Schaad, J." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-ietf-cose-msg-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-2-20" />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-3-21" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies processing for signatures, message authentication codes, and encryption using CBOR.  This document also specifies a representation for cryptographic keys using CBOR.  " />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies processing for signatures, message authentication codes, and encryption using CBOR.  This document also specifies a representation for cryptographic keys using CBOR.  " />
 
@@ -602,10 +602,10 @@ ul.toc a:first-child {
 </tr>
 <tr>
   <td class="left">Intended status: Informational</td>
-  <td class="right">February 20, 2016</td>
+  <td class="right">March 21, 2016</td>
 </tr>
 <tr>
-  <td class="left">Expires: August 23, 2016</td>
+  <td class="left">Expires: September 22, 2016</td>
   <td class="right"></td>
 </tr>
 
@@ -630,7 +630,7 @@ ul.toc a:first-child {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on August 23, 2016.</p>
+<p>This Internet-Draft will expire on September 22, 2016.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -1527,6 +1527,13 @@ COSE_KeySet = [+COSE_Key]
       <td class="left"/>
       <td class="left">Key Identification value - match to kid in message</td>
     </tr>
+    <tr>
+      <td class="left">Base IV</td>
+      <td class="left">5</td>
+      <td class="left">bstr</td>
+      <td class="left"/>
+      <td class="left">Base IV to be xor-ed with Partial IVs</td>
+    </tr>
   </tbody>
 </table>
 <p/>
@@ -1540,6 +1547,8 @@ COSE_KeySet = [+COSE_Key]
   <dd style="margin-left: 8">This parameter is used to give an identifier for a key.  The identifier is not structured and can be anything from a user provided string to a value computed on the public portion of the key.  This field is intended for matching against a 'kid' parameter in a message in order to filter down the set of keys that need to be checked.  </dd>
   <dt>key_ops:</dt>
   <dd style="margin-left: 8">This parameter is defined to restrict the set of operations that a key is to be used for.  The value of the field is an array of values from <a href="#table-key-ops">Table 4</a>.  </dd>
+  <dt>Base IV:</dt>
+  <dd style="margin-left: 8">This parameter is defined to carry the base portion of an IV.  It is designed to be used with the partial IV header parameter defined in <a href="#cose-headers">Section 3.1</a>.  This field provides the ability to associate a partial IV with a key that is then modified on a per message basis with the parital IV.  <br/><br/> Care needs to be taken that this is only used as part of a key distribution algorithm that will ensure that it will be given only to parties that will use it correctly.  This is due to the fact that many of the content encryption algorithms defined for COSE require that IVs be unique for every message.  Use of this field will easily allow for this rule to be broken if not used carefully.  This field MUST be ignored unless an application specifically calls for its use.  </dd>
 </dl>
 
 <p> </p>
@@ -2479,7 +2488,7 @@ COSE_KDF_Context = [
       <td class="left">HKDF - SHA-256</td>
       <td class="left">no</td>
       <td class="left">none</td>
-      <td class="left">ECDH ES w/ HKDF - generate key directly</td>
+      <td class="left">ECDH SS w/ HKDF - generate key directly</td>
     </tr>
     <tr>
       <td class="left">ECDH-SS + HKDF-512</td>
@@ -2487,7 +2496,7 @@ COSE_KDF_Context = [
       <td class="left">HKDF - SHA-512</td>
       <td class="left">no</td>
       <td class="left">none</td>
-      <td class="left">ECDH ES w/ HKDF - generate key directly</td>
+      <td class="left">ECDH SS w/ HKDF - generate key directly</td>
     </tr>
     <tr>
       <td class="left">ECDH-ES + A128KW</td>
@@ -2808,7 +2817,7 @@ COSE_KDF_Context = [
 <p> </p>
 <h1 id="rfc.section.16"><a href="#rfc.section.16">16.</a> <a href="#iana-considerations" id="iana-considerations">IANA Considerations</a></h1>
 <h1 id="rfc.section.16.1"><a href="#rfc.section.16.1">16.1.</a> <a href="#cbor-tag-assignment" id="cbor-tag-assignment">CBOR Tag assignment</a></h1>
-<p id="rfc.section.16.1.p.1">It is requested that IANA assign the following tags from the "Concise Binary Object Representation (CBOR) Tags" registry.  It is requested that the tags be assigned in the 24 to 255 value range.  </p>
+<p id="rfc.section.16.1.p.1">It is requested that IANA assign the following tags from the "Concise Binary Object Representation (CBOR) Tags" registry.  It is requested that the tags for COSE_Sign1, COSE_Encrypted and COSE_Mac0 be assigned in the 1 to 23 value range (i.e. one byte long when encoded).  It is requested that the rest of the tags be assigned in the 24 to 255 value range (i.e. two bytes long when encoded).  </p>
 <p id="rfc.section.16.1.p.2">The tags to be assigned are in table <a href="#CBOR-Tags">Table 1</a>.  </p>
 <h1 id="rfc.section.16.2"><a href="#rfc.section.16.2">16.2.</a> <a href="#cose-header-key-table" id="cose-header-key-table">COSE Header Parameter Registry</a></h1>
 <p id="rfc.section.16.2.p.1">It is requested that IANA create a new registry entitled "COSE Header Parameters".  The registry is to be created as Expert Review Required.  Expert review guidelines are provided in <a href="#review">Section 16.10</a> </p>
@@ -3199,7 +3208,7 @@ COSE_KDF_Context = [
       <td class="reference">
         <b id="I-D.greevenbosch-appsawg-cbor-cddl">[I-D.greevenbosch-appsawg-cbor-cddl]</b>
       </td>
-      <td class="top"><a>Vigano, C.</a> and <a>H. Birkholz</a>, "<a href="http://tools.ietf.org/html/draft-greevenbosch-appsawg-cbor-cddl-07">CBOR data definition language (CDDL): a notational convention to express CBOR data structures</a>", Internet-Draft draft-greevenbosch-appsawg-cbor-cddl-07, October 2015.</td>
+      <td class="top"><a>Vigano, C.</a> and <a>H. Birkholz</a>, "<a href="http://tools.ietf.org/html/draft-greevenbosch-appsawg-cbor-cddl-08">CBOR data definition language (CDDL): a notational convention to express CBOR data structures</a>", Internet-Draft draft-greevenbosch-appsawg-cbor-cddl-08, March 2016.</td>
     </tr>
     <tr>
       <td class="reference">
