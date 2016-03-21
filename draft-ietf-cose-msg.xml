@@ -4258,7 +4258,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          The use of RFC 2119 language is deliberately not used, this specification can provide recommendations, but it cannot enforce them.
+          RFC 2119 language is deliberately not used here, this specification can provide recommendations, but it cannot enforce them.
         </t>
 
         <t>
@@ -4323,36 +4323,72 @@ COSE_KDF_Context = [
           The following additional items need to be taken into consideration:
           <list style="symbols">
             <t>
-              
+              Applications that want to support this will need to define a structure that allows for, and clearly identifies, both the COSE structure to be used with a given key and the structure and algorithm to be used for the secondary layer.
+              The key for the secondary layer is computed normally in the recipient layer.
+            </t>
+
+            <t>
+
             </t>
           </list>
         </t>
-          
-        <t>
-            Direct,
-            Direct + kdf
 
-            ecdh + kdf
-            ecdh+kdf+key wrap
-            rsa+oeap
-            pbe
-            rsa+kem+kdf
+        <t>
+          The third case is having multiple implicit algorithm identifiers, but targeted at potentially unrelated layers or different COSE messages.
+          There are a number of different scenarios where this might be applicable.
+          Some of these scenarios are:
+          <list style="symbols">
+            <t>
+              Two contexts are distributed as a pair.
+              Each of the contexts is for use with a COSE_Encrypt message.
+              Each context will consist of distinct secret keys and IVs and potentially even different algorithms.
+              One context is for sending messages from party A to party B, the second context is for sending messages from party B to party A.
+              This means that there is no chance for a reflection attack to occur as each party uses different secret keys to send its messages, a message that is reflected back to it would fail to decrypt.
+            </t>
+            
+            <t>
+              Two contexts are distributed as a pair.
+              The first context is used for encryption of the message, the second context is used to place a counter signature on the message.
+              The intention is that the second context can be distributed to other entities independently of the first context.
+              This allows these entities to validate that the message came from an individual without being able to decrypt the message and see the content.
+            </t>
+
+            <t>
+              Two contexts are distributed as a pair.
+              The first context contains a key for dealing with MAC messages, the second context contains a key for dealing with encrypted messages.
+              This allows for a unified distribution of keys to participants for different types of messages which have different keys, but where the keys may be used in coordinated manner.
+            </t>
+          </list>
         </t>
 
+        <t>
+          For these cases, the following items need to be considered:
+          <list style="symbols">
+            <t>
+              Applications need to ... 
+            </t>
+          </list>
+        </t>
         
       </section>
+      
       <section title="Counter Signature Without Headers">
         <t>
-          * No parameter for counter sig
-          * Define to be signed structure
-          * id how key is decided
-          * external data struture includes alg id
-          * bind key in distribution
-          * single alg of key structure
-          * uniques of kid not real
+          TBD
+        </t>
+        <t>
+          <list style="symbols">
+          <t>No parameter for counter sig</t>
+          <t>Define to be signed structure</t>
+          <t>id how key is decided</t>
+          <t>external data struture includes alg id</t>
+          <t>bind key in distribution</t>
+          <t>single alg of key structure</t>
+          <t>uniques of kid not real</t>
 
-          very specialized for small size
-          kid can be either implied OR show as kid of what is counter signed
+          <t>very specialized for small size</t>
+          <t>kid can be either implied OR show as kid of what is counter signed</t>
+          </list>
         </t>
       </section>
     </section>
