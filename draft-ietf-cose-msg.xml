@@ -1756,6 +1756,7 @@ COSE_KeySet = [+COSE_Key]
         <c>key_ops</c>    <c>4</c>        <c>[+ (tstr/int)]</c> <c></c>     <c>Restrict set of permissible operations</c>
         <c>alg</c>        <c>3</c>        <c>tstr / int</c>  <c>COSE Algorithm Values</c>        <c>Key usage restriction to this algorithm</c>
         <c>kid</c>        <c>2</c>        <c>bstr</c>        <c></c>        <c>Key Identification value - match to kid in message</c>
+        <c>Base IV</c>    <c>5</c>        <c>bstr</c>        <c></c>        <c>Base IV to be xor-ed with Partial IVs</c>
       </texttable>
 
       <t>
@@ -1784,6 +1785,17 @@ COSE_KeySet = [+COSE_Key]
           <t hangText="key_ops:">
             This parameter is defined to restrict the set of operations that a key is to be used for.
             The value of the field is an array of values from <xref target="table-key-ops"/>.
+          </t>
+
+          <t hangText="Base IV:">
+            This parameter is defined to carry the base portion of an IV.
+            It is designed to be used with the partial IV header parameter defined in <xref target="cose-headers"/>.
+            This field provides the ability to associate a partial IV with a key that is then modified on a per message basis with the parital IV.
+            <vspace blankLines="1"/>
+            Care needs to be taken that this is only used as part of a key distribution algorithm that will ensure that it will be given only to parties that will use it correctly.
+            This is due to the fact that many of the content encryption algorithms defined for COSE require that IVs be unique for every message.
+            Use of this field will easily allow for this rule to be broken if not used carefully.
+            This field MUST be ignored unless an application specifically calls for its use.
           </t>
           
         </list>
@@ -3073,8 +3085,8 @@ COSE_KDF_Context = [
             
             <c>ECDH-ES + HKDF-256</c>      <c>-25</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
             <c>ECDH-ES + HKDF-512</c>      <c>-26</c>        <c>HKDF - SHA-512</c>     <c>yes</c>      <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
-            <c>ECDH-SS + HKDF-256</c>      <c>-27</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
-            <c>ECDH-SS + HKDF-512</c>      <c>-28</c>        <c>HKDF - SHA-512</c>     <c>no</c>       <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
+            <c>ECDH-SS + HKDF-256</c>      <c>-27</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>none</c>       <c>ECDH SS w/ HKDF - generate key directly</c>
+            <c>ECDH-SS + HKDF-512</c>      <c>-28</c>        <c>HKDF - SHA-512</c>     <c>no</c>       <c>none</c>       <c>ECDH SS w/ HKDF - generate key directly</c>
             <c>ECDH-ES + A128KW</c>          <c>-29</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A128KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
             <c>ECDH-ES + A192KW</c>          <c>-30</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A192KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
             <c>ECDH-ES + A256KW</c>          <c>-31</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A256KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
@@ -3442,7 +3454,8 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA assign the following tags from the "Concise Binary Object Representation (CBOR) Tags" registry.
-          It is requested that the tags be assigned in the 24 to 255 value range.
+          It is requested that the tags for COSE_Sign1, COSE_Encrypted and COSE_Mac0 be assigned in the 1 to 23 value range (i.e. one byte long when encoded).
+          It is requested that the rest of the tags be assigned in the 24 to 255 value range (i.e. two bytes long when encoded).
         </t>
 
         <t>
