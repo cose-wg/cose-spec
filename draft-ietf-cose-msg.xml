@@ -571,7 +571,7 @@ header_map = {
           <list style="hanging">
             <t hangText='alg'>
               This parameter is used to indicate the algorithm used for the security processing.
-              This parameter MUST be present at each level of a signed, encrypted or authenticated message.
+              This parameter MUST be present at each level of a signed, encrypted or authenticated message except the COSE_Sign structure.
               When the algorithm supports authenticating associated data, this parameter MUST be in the protected header bucket.
               The value is taken from the 'COSE Algorithm Registry' (see <xref target="cose-algorithm-registry"/>).
             </t>
@@ -4247,7 +4247,163 @@ COSE_KDF_Context = [
         -->
 
     
-    <section title="Making Mandatory Items Optional">
+    <section title="Making Mandatory Algorithm Header Optional">
+      <t>
+        There has been a minority of the working group who have expressed a strong desire to relax the rule that the algorithm identifier be required to appear in each level of a COSE mesage.
+        There are two basic reasons that have been advanced to support this position.
+        First, the resulting message will be smaller if the algorithm identifier is omitted from the most common messages in a CoAP environment.
+        Second, there is a potential bug that will arise if full checking is not done correctly between the different places that an algorithm identifier could be placed.
+        (The message itself, an application statement, the key structure that the sender possesses and the key structure the recipient possesses.)
+      </t>
+      
+      <t>
+        This appendix lays out how such a change can be made and the details that an application needs to specify in order to use this option.
+        Two different sets of details are specified:
+        Those needed to omit an algorithm identifier and those needed to use a variant on the counter signature attribute which contains no attributes about itself.
+      </t>
+      
+      <section title="Algorithm Identification">
+        <t>
+          In this section are laid out three sets of recommendations.
+          The first set of recommendations apply to having an implicit algorithm identified for a single layer of a COSE message.
+          The second set of recommendations apply to having multiple implicit algorithm identified for multiple layers of a COSE message.
+          The third set of recommendations apply to having implicit algorithms for multiple COSE message constructs.
+        </t>
+
+        <t>
+          RFC 2119 language is deliberately not used here, this specification can provide recommendations, but it cannot enforce them.
+        </t>
+
+        <t>
+          This set of recommendations applies to the case where an application is distributing a fixed algorithm along with the key information for use in a single COSE message object.
+          This normally applies to the smallest of the COSE messages, specifically COSE_Sign1, COSE_Mac0 and COSE_Encrypted, but could apply to the other structures as well.
+        </t>
+
+        <t>
+          The following items should be taken into account:
+          
+          <list style="symbols">
+            <t>
+              Applications need to list the set of COSE structures that implicit algorithms are to be used in.
+              Applications need to require that the receipt of an explicit algorithm identifier in one of these structures will lead to the message being rejected.
+              This requirement is stated so that there will never be a case where there is any ambiguity about the question of which algorithm should be used, the implicit or the explicit one.
+              This applies even if the transported algorithm is a protected attribute.
+              This applies even if the transported algorithm is the same as the implicit algorithm.
+            </t>
+            
+            <t>
+              Applications need to define the set of information that is to be considered to be part of a context when omitting algorithm identifiers.
+              At a minimum this would be the key identifier, the key, the algorithm and the COSE structures it can be used for.
+              Applications should restrict the use of a single key to a single algorithm.
+              As noted for some of the algorithms in this document, the use of the same key in different related algorithms can lead to leakage of information about the key, leakage about the data or the ability to perform forgeries.
+            </t>
+            
+            <t>
+              In many cases applications which make the algorithm identifier will also want to make the context identifier implicit for the same reason.
+              That is omitting the context identifier will decrease the message size (potentially significantly depending on the length of the identifier).
+              Applications that do this will need to describe the circumstances where the context identifier is to be omitted and how the context identifier is to be inferred in these cases.
+              (Exhaustive search would normally not be considered to be acceptable.)
+              An example of how this can be done is to tie the context to a transaction identifier.
+              Both would be sent on the original message, but only the transaction identifier would need to be sent after that point as the context is tied into the transaction identifier.
+              Another way would be to associate a context with a network address.
+              All messages coming from a single network address can be assumed to be associated with a specific context.
+              (In this case the address would probably be distributed as part of the context.)
+            </t>
+            
+            <t>
+              Applications cannot rely on key identifiers being unique unless they take significant efforts to ensure that they are computed in such a way as to create this guarantee.
+              Even when an application does this, the uniqueness might be violated if the application is run in different contexts (i.e. with a different security coordinator) or if the system the application runs on combines security contexts from different applications together into a single store.
+            </t>
+            
+            <t>
+              Applications should continue the practice of protecting the algorithm identifier.
+              Since this is not done by placing it in the protected attributes field, applications should define an application specific external data structure which includes this value.
+              This external data field can be used as such for content encryption, MAC and signature algorithms.
+              It can be used in the SuppPrivInfo field for those algorithms which use a KDF function to derive a key value.
+              Applications may also want to protect other information that is part of the context structure as well.
+              It should be noted that those fields, such as the key or a base IV are already protected by virtue of being used in the cryptogrpahic computation and do not need to be included in the external data field.
+            </t>
+          </list>
+        </t>
+
+        <t>
+          The second case is having multiple implicit algorithm identifiers specified for a multiple layer COSE message.
+          An example of how this would work is that the encryption context that an application specifies contains a content encryption algorithm, a key wrap algorithm, a key identifier, and a shared secret.
+          The sender would then omit sending the algorithm identifier at both the content layer and the recipient layer leaving only the key identifier in situations where it could not be implied.
+        </t>
+
+        <t>
+          The following additional items need to be taken into consideration:
+          <list style="symbols">
+            <t>
+              Applications that want to support this will need to define a structure that allows for, and clearly identifies, both the COSE structure to be used with a given key and the structure and algorithm to be used for the secondary layer.
+              The key for the secondary layer is computed normally in the recipient layer.
+            </t>
+
+            <t>
+
+            </t>
+          </list>
+        </t>
+
+        <t>
+          The third case is having multiple implicit algorithm identifiers, but targeted at potentially unrelated layers or different COSE messages.
+          There are a number of different scenarios where this might be applicable.
+          Some of these scenarios are:
+          <list style="symbols">
+            <t>
+              Two contexts are distributed as a pair.
+              Each of the contexts is for use with a COSE_Encrypt message.
+              Each context will consist of distinct secret keys and IVs and potentially even different algorithms.
+              One context is for sending messages from party A to party B, the second context is for sending messages from party B to party A.
+              This means that there is no chance for a reflection attack to occur as each party uses different secret keys to send its messages, a message that is reflected back to it would fail to decrypt.
+            </t>
+            
+            <t>
+              Two contexts are distributed as a pair.
+              The first context is used for encryption of the message, the second context is used to place a counter signature on the message.
+              The intention is that the second context can be distributed to other entities independently of the first context.
+              This allows these entities to validate that the message came from an individual without being able to decrypt the message and see the content.
+            </t>
+
+            <t>
+              Two contexts are distributed as a pair.
+              The first context contains a key for dealing with MAC messages, the second context contains a key for dealing with encrypted messages.
+              This allows for a unified distribution of keys to participants for different types of messages which have different keys, but where the keys may be used in coordinated manner.
+            </t>
+          </list>
+        </t>
+
+        <t>
+          For these cases, the following items need to be considered:
+          <list style="symbols">
+            <t>
+              Applications need to ... 
+            </t>
+          </list>
+        </t>
+        
+      </section>
+      
+      <section title="Counter Signature Without Headers">
+        <t>
+          TBD
+        </t>
+        <t>
+          <list style="symbols">
+          <t>No parameter for counter sig</t>
+          <t>Define to be signed structure</t>
+          <t>id how key is decided</t>
+          <t>external data struture includes alg id</t>
+          <t>bind key in distribution</t>
+          <t>single alg of key structure</t>
+          <t>uniques of kid not real</t>
+
+          <t>very specialized for small size</t>
+          <t>kid can be either implied OR show as kid of what is counter signed</t>
+          </list>
+        </t>
+      </section>
     </section>
 
     <section anchor="three-layer" title="Three Levels of Recipient Information">
