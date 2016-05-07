@@ -22,6 +22,7 @@
   <!ENTITY RFC6090 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6090.xml" >
   <!ENTITY RFC6151 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6151.xml" >
   <!ENTITY RFC6979 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6979.xml" >
+  <!ENTITY RFC6982 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6982.xml" >
   <!ENTITY RFC7049 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7049.xml" >
   <!ENTITY RFC7159 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7159.xml" >
   <!ENTITY RFC7252 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7252.xml" >
@@ -34,6 +35,7 @@
   <!ENTITY CDDL SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.greevenbosch-appsawg-cbor-cddl.xml" >
   <!ENTITY CBCMAC SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.mcgrew-aead-aes-cbc-hmac-sha2.xml" >
   <!ENTITY CFRG-EC SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.irtf-cfrg-curves.xml" >
+  <!ENTITY CFRG-EDDSA SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.irtf-cfrg-eddsa.xml" >
 
 <!ENTITY Appendix_A SYSTEM "includes/Appendix_A.xml">
 <!ENTITY Appendix_B_3_1 SYSTEM "includes/Appendix_B_3_1.xml">
@@ -650,13 +652,16 @@ header_map = {
               Details on computing counter signatures are found in <xref target="counter_signature"/>.
             </t>
 
+            <!--
+                Removed following IETF 95
             <t hangText='operation time'>
               This parameter provides the time the content cryptographic operation is performed.
               For signatures and recipient structures, this would be the time that the signature or recipient key object was created.
               For content structures, this would be the time that the content structure was created.
               The unsigned integer value is the number of seconds, excluding leap seconds, after midnight UTC, January 1, 1970.
               The field is primarily intended to be to be used for counter signatures, however it can additionally be used for replay detection as well.
-            </t>
+              </t>
+              -->
 
           </list>
         </t>
@@ -676,7 +681,10 @@ header_map = {
           <c>IV</c>         <c>5</c>        <c>bstr</c>              <c></c>                              <c>Full Initialization Vector</c>
           <c>Partial IV</c> <c>6</c>        <c>bstr</c>              <c></c>                              <c>Partial Initialization Vector</c>
           <c>counter signature</c> <c>7</c> <c>COSE_Signature / [+ COSE_Signature ]</c>    <c></c>                              <c>CBOR encoded signature structure</c>
-          <c>operation time</c><c>8</c>      <c>uint</c>              <c></c>                             <c>Time the COSE structure was created</c>
+          <!--
+              Removed following IETF 95
+              <c>operation time</c><c>8</c>      <c>uint</c>              <c></c>                             <c>Time the COSE structure was created</c>
+              -->
         </texttable>
 
         <t>
@@ -692,8 +700,7 @@ Generic_Headers = (
     ? 4 => bstr,        ; key identifier
     ? 5 => bstr,        ; IV
     ? 6 => bstr,        ; Partial IV
-    ? 7 => COSE_Signature / [+COSE_Signature], ; Counter signature
-    ? 8 => uint         ; Operation time
+    ? 7 => COSE_Signature / [+COSE_Signature] ; Counter signature
 )
 ]]></artwork></figure>
 
@@ -715,7 +722,7 @@ Generic_Headers = (
         There are provisions for parameters about the content and parameters about the signature to be carried along with the signature itself.
         These parameters may be authenticated by the signature, or just present.
         An example of a parameter about the content is the content type.
-        Examples of parameters about the signature would be the algorithm and key used to create the signature, when the signature was created, and counter signatures.
+        Examples of parameters about the signature would be the algorithm and key used to create the signature and counter signatures.
       </t>
 
       <t>
@@ -1949,44 +1956,90 @@ valid, message content = Verification(message sent, key, signature)
 
         <section title="Security Considerations">
           <t>
-          The security strength of the signature is no greater than the minimum of the security strength associated with the bit length of the key and the security strength of the hash function.
-        </t>
+            The security strength of the signature is no greater than the minimum of the security strength associated with the bit length of the key and the security strength of the hash function.
+          </t>
 
-        <t>
-          System which have poor random number generation can leak their keys by signing two different messages with the same value 'k' (the per-message random value).
-          <xref target="RFC6979"/> provides a method to deal with this problem by making 'k' be deterministic based on the message content rather than randomly generated.
-          Applications that specify ECDSA should evaluate the ability to get good random number generation and require this when it is not possible.
-        </t>
-        <t>
-          Note: Use of this technique a good idea even when good random number generation exists.
-          Doing so both reduces the possibility of having the same value of 'k' in two signature operations and allows for reproducible signature values which helps testing.
-        </t>
+          <t>
+            System which have poor random number generation can leak their keys by signing two different messages with the same value 'k' (the per-message random value).
+            <xref target="RFC6979"/> provides a method to deal with this problem by making 'k' be deterministic based on the message content rather than randomly generated.
+            Applications that specify ECDSA should evaluate the ability to get good random number generation and require this when it is not possible.
+          </t>
+          <t>
+            Note: Use of this technique a good idea even when good random number generation exists.
+            Doing so both reduces the possibility of having the same value of 'k' in two signature operations and allows for reproducible signature values which helps testing.
+          </t>
 
-        <t>
-          There are two substitution attacks that can theoretically be mounted against the ECDSA signature algorithm.
-          <list style="symbols">
-            <t>
-              Changing the curve used to validate the signature:
-              If one changes the curve used to validate the signature, then potentially one could have a two messages with the same signature each computed under a different curve.
-              The only requirement on the new curve is that its order be the same as the old one and it be acceptable to the client.
-              An example would be to change from using the curve secp256r1 (aka P-256) to using secp256k1.
-              (Both are 256 bit curves.)
-              We current do not have any way to deal with this version of the attack except to restrict the overall set of curves that can be used.
-            </t>
+          <t>
+            There are two substitution attacks that can theoretically be mounted against the ECDSA signature algorithm.
+            <list style="symbols">
+              <t>
+                Changing the curve used to validate the signature:
+                If one changes the curve used to validate the signature, then potentially one could have a two messages with the same signature each computed under a different curve.
+                The only requirement on the new curve is that its order be the same as the old one and it be acceptable to the client.
+                An example would be to change from using the curve secp256r1 (aka P-256) to using secp256k1.
+                (Both are 256 bit curves.)
+                We current do not have any way to deal with this version of the attack except to restrict the overall set of curves that can be used.
+              </t>
 
-            <t>
-              Change the hash function used to validate the signature:
-              If one has either two different hash functions of the same length, or one can truncate a hash function down, then one could potentially find collisions between the hash functions rather than within a single hash function.
-              (For example, truncating SHA-512 to 256 bits might collide with a SHA-256 bit hash value.)
-              This attack can be mitigated by including the signature algorithm identifier in the data to be signed.
-            </t>
-          </list>
-        </t>
+              <t>
+                Change the hash function used to validate the signature:
+                If one has either two different hash functions of the same length, or one can truncate a hash function down, then one could potentially find collisions between the hash functions rather than within a single hash function.
+                (For example, truncating SHA-512 to 256 bits might collide with a SHA-256 bit hash value.)
+                This attack can be mitigated by including the signature algorithm identifier in the data to be signed.
+              </t>
+            </list>
+          </t>
         </section>
         
       </section>
 
+      <section title="Edwards-curve Digital Signature Algorithms (EdDSA)">
+        <t>
+          
+          <xref target="I-D.irtf-cfrg-eddsa"/> describes the elliptic curve signature scheme Edwards-curve Digital Signature Algorithm (EdDSA).
+          In that document, the signature algorithm is instantiated using parameters for edwards25519 and edwards448 curves.
+          The document additionally describes two variants of the EdDSA algorithm:
+          Pure EdDSA, where no hash function is applied to the content before signing and, HashEdDSA where a hash function is applied to the content before signing and the result of that hash function is signed.
+          For use with COSE, on the pure EdDSA version is used.
+          This is because it is not expected that extremely large contents are going to be needed and, based on the arrangement of the message structure, the entire message is going to need to be held in memory in order to create or verify a signature.
+          Thus, the use of an incremental update process would not be useful.
+          Applications can provide the same features by defining the content of the message as a hash value and transporting the COSE message and the content as separate items.
+        </t>
+
+        <t>
+          The algorithms defined in this document can be found in <xref target="table-eddsa-algs"/>.
+          A single signature algorithm is defined which can be used for multiple curves.
+        </t>
+        
+        <texttable anchor="table-eddsa-algs" title="EdDSA Algorithm Values">
+          <ttcol align='left'>name</ttcol>
+          <ttcol align='left'>value</ttcol>
+          <ttcol align='left'>description</ttcol>
+          <c>EdDSA</c>        <c>*</c>        <c>EdDSA</c>
+        </texttable>
+
+        <t>
+          <xref target="I-D.irtf-cfrg-eddsa"/> describes the method of encoding the signature value.
+        </t>
+
+        <t>
+          When using a COSE key for this algorithm the following checks are made:
+
+          <list style="symbols">
+            <t> The 'kty' field MUST be present and it MUST be 'OKP'.</t>
+            <t>The 'crv' field MUST be present, and it MUST be a curve defined for this signature algorithm.</t>
+            <t>If the 'alg' field is present, it MUST match 'EdDSA'.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'sign' when creating an EdDSA signature.</t>
+            <t>If the 'key_ops' field is present, it MUST include 'verify' when verifying an EdDSA signature.</t>
+          </list>
+        </t>
+
+      </section>
+
+
+      
     </section>
+
 
     <section title="Message Authentication (MAC) Algorithms">
       <t>
@@ -3024,6 +3077,7 @@ COSE_KDF_Context = [
         <section title="ECDH" anchor="ECDH">
           <t>
             The mathematics for Elliptic Curve Diffie-Hellman can be found in <xref target="RFC6090"/>.
+          In this document the algorithm is extended to be used with the two curves defined in <xref target="I-D.irtf-cfrg-curves"/>.
           </t>
 
           <t>
@@ -3118,7 +3172,7 @@ COSE_KDF_Context = [
           <t>
             When using a COSE key for this algorithm, the following checks are made:
             <list style="symbols">
-              <t>The 'kty' field MUST be present and it MUST be 'EC2'.</t>
+              <t>The 'kty' field MUST be present and it MUST be 'EC2' or 'OKP'.</t>
               <t>If the 'alg' field present, it MUST match the Key Agreement algorithm being used.</t>
               <t>If the 'key_ops' field is present, it MUST include 'derive key' or 'derive bits' for the private key.</t>
               <t>If the 'key_ops' field is present, it MUST be empty for the public key.</t>
@@ -3239,7 +3293,7 @@ COSE_KDF_Context = [
         <ttcol>name</ttcol>
         <ttcol>value</ttcol>
         <ttcol>description</ttcol>
-<!--        <c>EC1</c>      <c>1</c>        <c>Elliptic Curve Keys w/ X Coordinate only</c> -->
+        <c>OPK</c>      <c>TBDXX</c>        <c>Octet Key Pair</c>
         <c>EC2</c>      <c>2</c>        <c>Elliptic Curve Keys w/ X,Y Coordinate pair</c>
         <c>Symmetric</c><c>4</c>        <c>Symmetric Keys</c>
         <c>Reserved</c> <c>0</c>        <c>This value is reserved</c>
@@ -3263,6 +3317,10 @@ COSE_KDF_Context = [
           <c>P-256</c>        <c>EC2</c>      <c>1</c>       <c>NIST P-256 also known as secp256r1</c>
           <c>P-384</c>        <c>EC2</c>      <c>2</c>       <c>NIST P-384 also known as secp384r1</c>
           <c>P-521</c>        <c>EC2</c>      <c>3</c>       <c>NIST P-521 also known as secp521r1</c>
+          <c>Curve25519</c>   <c>EC1</c>      <c>TBDYY1</c>       <c>Curve 25519</c>
+          <c>Curve448</c>     <c>EC1</c>      <c>TBDYY2</c>       <c>Curve 448</c>
+          <c>X25519</c>       <c>EC1</c>      <c>TBDYY1</c>       <c>Curve 25519</c>
+          <c>X448</c>         <c>EC1</c>      <c>TBDYY2</c>       <c>Curve 448</c>
         </texttable>
 
         <section title="Double Coordinate Curves" anchor="EC2-Keys">
@@ -3332,6 +3390,59 @@ COSE_KDF_Context = [
             <c>d</c>      <c>2</c>      <c>-4</c>       <c>bstr</c>             <c>Private key</c>
           </texttable>
         </section>
+      </section>
+
+      <section title="Octet Key Pair">
+        <t>
+          A new key type is defined for Octet Key Pairs (OKP).
+          Do not assume that keys using this type are elliptic curves.
+          This key type could be used for other curve types (for example mathematics based on hyper-elliptic surfaces).
+        </t>
+        
+        <t>
+          The key parameters defined in this section are summarized in <xref target="table-ec1-keys"/>.
+          The members that are defined for this key type are:
+            
+          <list style="hanging">
+            <t hangText="crv">
+              contains an identifier of the curve to be used with the key.
+              <cref source="JLS">
+                Is is the same registry for both OKP and EC2?
+              </cref>
+              The curves defined in this document for this key type can be found in <xref target="table-ec-curves"/>.
+              Other curves may be registered in the future and private curves can be used as well.
+            </t>
+            
+            <t hangText="x">
+              contains the x coordinate for the EC point.
+              The octet string represents a little-endian encoding of x.
+            </t>
+            
+            <t hangText="d">
+              contains the private key.
+            </t>
+            
+          </list>
+        </t>
+
+        <t>
+          For public keys, it is REQUIRED that 'crv' and  'x' be present in the structure.
+          For private keys, it is REQUIRED that 'crv' and 'd' be present in the structure.
+          For private keys, it is RECOMMENDED that 'x' also be present, but it can be recomputed from the required elements and omitting it saves on space.
+        </t>
+          
+        <texttable title="EC Key Parameters" anchor="table-ec1-keys">
+          <ttcol>name</ttcol>
+          <ttcol>key type</ttcol>
+          <ttcol>value</ttcol>
+          <ttcol>type</ttcol>
+          <ttcol>description</ttcol>
+          <c>crv</c>    <c>1</c>      <c>-1</c>       <c>int / tstr</c>       <c>EC Curve identifier - Taken from the COSE General Registry</c>
+          <c>x</c>      <c>1</c>      <c>-2</c>       <c>bstr</c>             <c>X Coordinate</c>
+          <c>d</c>      <c>1</c>      <c>-4</c>       <c>bstr</c>             <c>Private key</c>
+        </texttable>
+
+
       </section>
 
       <section title="Symmetric Keys">
@@ -3983,6 +4094,105 @@ COSE_KDF_Context = [
       </section>
                
     </section>
+
+    <section title="Implementation Status">
+      <!--  RFC Editor - Please remove this section and reference RFC6982 prior to publication -->
+      
+      <t>
+        This section records the status of known implementations of the
+        protocol defined by this specification at the time of posting of
+        this Internet-Draft, and is based on a proposal described in <xref target="RFC6982"/>.  The description of implementations in this section is
+        intended to assist the IETF in its decision processes in
+        progressing drafts to RFCs.  Please note that the listing of any
+        individual implementation here does not imply endorsement by the
+        IETF.  Furthermore, no effort has been spent to verify the
+        information presented here that was supplied by IETF contributors.
+        This is not intended as, and must not be construed to be, a
+        catalog of available implementations or their features.  Readers
+        are advised to note that other implementations may exist.
+      </t>
+
+      <t>
+        According to <xref target="RFC6982"/>, "this will allow reviewers and working
+        groups to assign due consideration to documents that have the
+        benefit of running code, which may serve as evidence of valuable
+        experimentation and feedback that have made the implemented
+        protocols more mature.  It is up to the individual working groups
+        to use this information as they see fit".
+      </t>
+
+      <section title="COSE-JAVA">
+        <t>
+          <list style="none">
+            <t>Implemenation Location: https://github.com/cose-wg/COSE-JAVA</t>
+            <t>Primary Maintainer: Jim Schaad</t>
+            <t>
+              Description: A JAVA library version of the COSE message specification.
+              The cryptography for the library is the Bouncy Castle JAVA implementation.
+            </t>
+            <t>
+              Coverage:  The library does not currently implement counter signatures.
+              The library includes some self testing both internally and againist the examples library
+            </t>
+            <t>Licensing: Revised BSD License </t>
+          </list>
+        </t>
+      </section>
+      
+      <section title="COSE-C">
+        <t>
+          <list style="none">
+            <t>Implemenation Location: https://github.com/cose-wg/COSE-C</t>
+            <t>Primary Maintainer: Jim Schaad</t>
+            <t>
+              Description: A C library version of the COSE message specification.
+              The cryptography for the library is currently OPENSSL version 1.0.
+            </t>
+            <t>
+              Coverage:  The library does not currently implement counter signatures.
+              The library includes some self testing both internally and againist the examples library.
+            </t>
+            <t>Licensing: Revised BSD License</t>
+          </list>
+        </t>
+      </section>
+      <section title="COSE-SHARP">
+        <t>
+          <list style="none">
+            <t>Implemenation Location: https://github.com/cose-wg/cose-implementations</t>
+            <t>Primary Maintainer: Jim Schaad</t>
+            <t>
+              Description: A C# library version of the COSE message specification.
+              The cryptography for the library is the Bouncy Castle C# implementation.
+            </t>
+            <t>
+              Coverage:  The library does only partially implements counter signatures.
+              The library includes some self testing both internally and againist the examples library
+            </t>
+            <t>Licensing: Revised BSD License</t>
+          </list>
+        </t>
+      </section>
+      <section title="COSE Testing Library">
+        <t>
+          <list style="none">
+            <t>Implemenation Location: https://github.com/cose-wg/Examples</t>
+            <t>Primary Maintainer: Jim Schaad</t>
+            <t>
+              Description: A set of tests for the COSE library is provided as part of the implementation effort.
+              Both success and fail tests has been provided.
+              All of the examples in this document are are part of this example set.
+            </t>
+            <t>
+              Coverage:  The attempt has been to have test cases for every message type and algorithm in the document.
+              Current examples dealing with counter signatures, EdDSA and ECDH with Curve24459 and Goldilocks are missing.
+            </t>
+            <t>Licensing: Public Domain</t>
+          </list>
+        </t>
+      </section>
+    </section>
+    
     <section anchor="security-considerations" title="Security Considerations">
 
       <t>
@@ -4139,8 +4349,8 @@ COSE_KDF_Context = [
       &RFC7518;
       &RFC4949;
       
-      <!-- &CFRG-EC; -->
-
+      &CFRG-EC;
+      &CFRG-EDDSA;
 
       <reference anchor="SP800-56A">
         <front>
@@ -4173,6 +4383,8 @@ COSE_KDF_Context = [
         </front>
         <format target="https://www.certicom.com/images/pdfs/CerticomWP-PVSigSec_login.pdf" type="PDF"/>
       </reference>
+
+      &RFC6982;
 
     </references>
 
@@ -4531,14 +4743,16 @@ COSE_KDF_Context = [
 
         </section>
 
-        <section anchor="Appendix_B_1_4" title="Signature w/ Operation Time and Criticality">
+        <section anchor="Appendix_B_1_4" title="Signature w/ Criticality">
 
           <t>
             This example uses the following:
 
             <list style="symbols">
               <t>Signature Algorithm: ECDSA w/ SHA-256, Curve P-256-1</t>
-              <t>There is an operation time of 2014-02-14T12:00Z</t>
+              <!--  Removed IETF95
+                   <t>There is an operation time of 2014-02-14T12:00Z</t>
+                   -->
               <t>There is a criticality marker on the "reserved" header parameter</t>
             </list>
           </t>
