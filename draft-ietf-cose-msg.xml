@@ -351,8 +351,8 @@ values = any
             <ttcol>Tag Value</ttcol>    <ttcol>cose-type</ttcol>        <ttcol>Data Item</ttcol>        <ttcol>Semantics</ttcol>
             <c>TBD1</c>                 <c>cose-sign</c>                <c>COSE_Sign</c>                <c>COSE Signed Data Object</c>
             <c>TBD7</c>                 <c>cose-sign1</c>               <c>COSE_Sign1</c>               <c>COSE Single Signer Data Object</c>
-            <c>TBD2</c>                 <c>cose-enveloped</c>           <c>COSE_Enveloped</c>           <c>COSE Enveloped Data Object</c>
-            <c>TBD3</c>                 <c>cose-encrypted</c>           <c>COSE_Encrypted</c>           <c>COSE Encrypted Data Object</c>
+            <c>TBD2</c>                 <c>cose-enveloped</c>           <c>COSE_Encrypt</c>           <c>COSE Enveloped Data Object</c>
+            <c>TBD3</c>                 <c>cose-encrypted</c>           <c>COSE_Encrypt1</c>           <c>COSE Encrypted Data Object</c>
             <c>TBD4</c>                 <c>cose-mac</c>                 <c>COSE_Mac</c>                 <c>COSE Mac-ed Data Object</c>
             <c>TBD6</c>                 <c>cose-mac0</c>                <c>COSE_Mac0</c>                <c>COSE Mac w/o Recipients Object</c>
             <c>TBD5</c>                 <c>N/A</c>                      <c>COSE_Key, COSE_KeySet</c>    <c>COSE Key or COSE Key Set Object</c>
@@ -428,11 +428,11 @@ values = any
 COSE_Messages = COSE_Untagged_Message / COSE_Tagged_Message
       
 COSE_Untagged_Message = COSE_Sign / COSE_Sign1 /
-    COSE_Enveloped / COSE_Encrypted /
+    COSE_Encrypt / COSE_Encrypt1 /
     COSE_Mac / COSE_Mac0
 
 COSE_Tagged_Message = COSE_Sign_Tagged / COSE_Sign1_Tagged /
-    COSE_Enveloped_Tagged / COSE_Encrypted_Tagged /
+    COSE_Encrypt_Tagged / COSE_Encrypt1_Tagged /
     COSE_Mac_Tagged / COSE_Mac0_Tagged
 ]]></artwork></figure>
 
@@ -450,7 +450,7 @@ COSE_Tagged_Message = COSE_Sign_Tagged / COSE_Sign1_Tagged /
         <c>signatures</c>       <c>5</c>        <c>For COSE_Sign - array of signatures</c>
         <c>signature</c>        <c>6</c>        <c>For COSE_signature only</c>
         <c>ciphertext</c>       <c>4</c>        <c>TODO: Should we reuse the same as payload or not?</c>
-        <c>recipients</c>       <c>9</c>        <c>For COSE_Enveloped and COSE_mac</c>
+        <c>recipients</c>       <c>9</c>        <c>For COSE_Encrypt and COSE_mac</c>
         <c>tag</c>              <c>10</c>       <c>For COSE_mac only</c>
       </texttable>
 
@@ -632,7 +632,7 @@ header_map = {
 
             <t hangText='Partial Initialization Vector'>
               This parameter holds a part of the IV value.
-              When using the COSE_Encrypted structure, frequently a portion of the IV is part of the context associated with the key value.
+              When using the COSE_Encrypt1 structure, frequently a portion of the IV is part of the context associated with the key value.
               This field is used to carry a value that causes the IV to be changed for each message.
               As the IV is authenticated by the encryption process, this value can be placed in the unprotected header bucket.
               The 'Initialization Vector' and 'Partial Initialization Vector' parameters MUST NOT be present in the same security layer.
@@ -647,7 +647,7 @@ header_map = {
             <t hangText='counter signature'>
               This parameter holds a counter signature value.
               Counter signatures provide a method of having a second party sign some data.
-	      The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_Sign1, COSE_Signature, COSE_Enveloped, COSE_recipient, COSE_Encrypted, COSE_Mac and COSE_Mac0.
+	      The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_Sign1, COSE_Signature, COSE_Encrypt, COSE_recipient, COSE_Encrypt1, COSE_Mac and COSE_Mac0.
               These structures all have the same beginning elements so that a consistent calculation of the counter signature can be computed.
               Details on computing counter signatures are found in <xref target="counter_signature"/>.
             </t>
@@ -1038,7 +1038,7 @@ Sig_structure = [
           Counter signatures provide a method of having a different signature occur on some piece of content.
           This is normally used to provide a signature on a signature allowing for a proof that a signature existed at a given time (i.e. a Timestamp).
           In this document we allow for counter signatures to exist in a greater number of environments.
-          As an example, it is possible to place a counter signature in the unprotected attributes of a COSE_Enveloped object.
+          As an example, it is possible to place a counter signature in the unprotected attributes of a COSE_Encrypt object.
           This would allow for an intermediary to either verify that the encrypted byte stream has not been modified, without being able to decrypt it.
           Or for the intermediary to assert that an encrypted byte stream either existed at a given time or passed through it in terms of routing (i.e. a proxy signature).
         </t>
@@ -1052,7 +1052,7 @@ Sig_structure = [
           The creation and validation of counter signatures over the different items relies on the fact that the structure of the objects have the same structure.
           The elements are a set of protected attributes, a set of unprotected attributes and a body in that order.
           This means that the Sig_structure can be used in a uniform manner to get the byte stream for processing a signature.
-          If the counter signature is going to be computed over a COSE_Enveloped structure, the body_protected and payload items can be mapped into the Sig_structure in the same manner as from the COSE_Sign structure.
+          If the counter signature is going to be computed over a COSE_Encrypt structure, the body_protected and payload items can be mapped into the Sig_structure in the same manner as from the COSE_Sign structure.
         </t>
 
         <t>
@@ -1065,8 +1065,8 @@ Sig_structure = [
     <section anchor="encryption-object" title="Encryption Objects">
       <t>
         COSE supports two different encryption structures.
-        COSE_Encrypted is used when a recipient structure is not needed because the key to be used is known implicitly.
-        COSE_Enveloped is used the rest of time.
+        COSE_Encrypt1 is used when a recipient structure is not needed because the key to be used is known implicitly.
+        COSE_Encrypt is used the rest of time time.
         This includes cases where there are multiple recipients, a recipient algorithm other than direct is to be used, or the key to be used is not known.
       </t>
 
@@ -1085,7 +1085,7 @@ Sig_structure = [
         The same techniques and structures are used for encrypting both the plain text and the keys used to protect the text.
         
         This is different from the approach used by both <xref target="RFC5652"/> and <xref target="RFC7516"/> where different structures are used for the content layer and for the recipient layer.
-        Two structures are defined: COSE_Enveloped to hold the encrypted content, and COSE_recipient to hold the encrypted keys for recipients.
+        Two structures are defined: COSE_Encrypt to hold the encrypted content, and COSE_recipient to hold the encrypted keys for recipients.
         
         Examples of encrypted messages can be found in <xref target="EnvelopedExamples"/>.
       </t>
@@ -1097,11 +1097,11 @@ Sig_structure = [
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_Enveloped_Tagged = #6.992(COSE_Enveloped) ; Replace 992 with TBD2
+COSE_Encrypt_Tagged = #6.992(COSE_Encrypt) ; Replace 992 with TBD2
 ]]></artwork></figure>
 
       <t>
-        The COSE_Enveloped structure is a CBOR array.
+        The COSE_Encrypt structure is a CBOR array.
         The fields of the array in order are:
 
         <list style="hanging">
@@ -1137,7 +1137,7 @@ COSE_Enveloped_Tagged = #6.992(COSE_Enveloped) ; Replace 992 with TBD2
       </t>
         
       <figure><artwork type="CDDL"><![CDATA[
-COSE_Enveloped = [
+COSE_Encrypt = [
     Headers,
     ciphertext: bstr / nil,
     recipients: [+COSE_recipient]
@@ -1215,23 +1215,23 @@ COSE_recipient = [
       </t>
 
       <t>
-        The structure defined to hold an encrypted message is COSE_Encrypted.
+        The structure defined to hold an encrypted message is COSE_Encrypt1.
         Examples of encrypted messages can be found in <xref target="EnvelopedExamples"/>.
       </t>
 
       <t>
-        The COSE_Encrypted structure can be encoded either with or without a tag depending on the context it will be used in.
-        The COSE_Encrypted structure is identified by the CBOR tag TBD3.
+        The COSE_Encrypt1 structure can be encoded either with or without a tag depending on the context it will be used in.
+        The COSE_Encrypt1 structure is identified by the CBOR tag TBD3.
         The CDDL fragment that represents this is.
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_Encrypted_Tagged = #6.993(COSE_Encrypted) ; Replace 993 with TBD3
+COSE_Encrypt1_Tagged = #6.993(COSE_Encrypt1) ; Replace 993 with TBD3
 ]]></artwork></figure>
 
 
       <t>
-        The COSE_Enveloped structure is a CBOR array.
+        The COSE_Encrypt structure is a CBOR array.
         The fields of the array in order are:
 
         <list style="hanging">
@@ -1248,11 +1248,11 @@ COSE_Encrypted_Tagged = #6.993(COSE_Encrypted) ; Replace 993 with TBD3
       </t>
 
       <t>
-        The CDDL fragment for COSE_Encrypted that corresponds to the above text is:
+        The CDDL fragment for COSE_Encrypt1 that corresponds to the above text is:
       </t>
       
       <figure><artwork type="CDDL"><![CDATA[
-COSE_Encrypted = [
+COSE_Encrypt1 = [
     Headers,
     ciphertext: bstr / nil,
 ]
@@ -2778,7 +2778,7 @@ COSE_KDF_Context = [
           </t>
 
           <t>
-            The COSE_Enveloped structure for the recipient is organized as follows:
+            The COSE_Encrypt structure for the recipient is organized as follows:
           </t>
 
           <t>
@@ -2917,7 +2917,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          The COSE_Enveloped structure for the recipient is organized as follows:
+          The COSE_Encrypt structure for the recipient is organized as follows:
         </t>
 
         <t>
@@ -3003,7 +3003,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          When using a key encryption algorithm, the COSE_Enveloped structure for the recipient is organized as follows:
+          When using a key encryption algorithm, the COSE_Encrypt structure for the recipient is organized as follows:
           <list style="symbols">
             <t>
               The 'protected' field MUST be absent.
@@ -3060,7 +3060,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          The COSE_Enveloped structure for the recipient is organized as follows:
+          The COSE_Encrypt structure for the recipient is organized as follows:
         </t>
 
         <t>
@@ -3191,7 +3191,7 @@ COSE_KDF_Context = [
 
 
         <t>
-          The COSE_Enveloped structure for the recipient is organized as follows:
+          The COSE_Encrypt structure for the recipient is organized as follows:
         </t>
 
         <t>
@@ -3565,7 +3565,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA assign the following tags from the "Concise Binary Object Representation (CBOR) Tags" registry.
-          It is requested that the tags for COSE_Sign1, COSE_Encrypted and COSE_Mac0 be assigned in the 1 to 23 value range (i.e. one byte long when encoded).
+          It is requested that the tags for COSE_Sign1, COSE_Encrypt1 and COSE_Mac0 be assigned in the 1 to 23 value range (i.e. one byte long when encoded).
           It is requested that the rest of the tags be assigned in the 24 to 255 value range (i.e. two bytes long when encoded).
         </t>
 
@@ -3749,7 +3749,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          NOTE: The assignment of algorithm identifiers in this document was done so that positive numbers were used for the first level objects (COSE_Sign, COSE_Sign1, COSE_Enveloped, COSE_Encrypted, COSE_Mac and COSE_Mac0).
+          NOTE: The assignment of algorithm identifiers in this document was done so that positive numbers were used for the first level objects (COSE_Sign, COSE_Sign1, COSE_Encrypt, COSE_Encrypt1, COSE_Mac and COSE_Mac0).
           Negative numbers were used for second level objects (COSE_Signature and COSE_recipient).
           Expert reviewers should consider this practice, but are not expected to be restricted by this precedent.
         </t>
@@ -4481,7 +4481,7 @@ COSE_KDF_Context = [
 
         <t>
           This set of recommendations applies to the case where an application is distributing a fixed algorithm along with the key information for use in a single COSE message object.
-          This normally applies to the smallest of the COSE messages, specifically COSE_Sign1, COSE_Mac0 and COSE_Encrypted, but could apply to the other structures as well.
+          This normally applies to the smallest of the COSE messages, specifically COSE_Sign1, COSE_Mac0 and COSE_Encrypt1, but could apply to the other structures as well.
         </t>
 
         <t>
@@ -4616,9 +4616,9 @@ COSE_KDF_Context = [
     <section anchor="three-layer" title="Three Levels of Recipient Information">
 
       <t>
-        All of the currently defined recipient algorithms classes only use two levels of the COSE_Enveloped structure.
+        All of the currently defined recipient algorithms classes only use two levels of the COSE_Encrypt structure.
         The first level is the message content and the second level is the content key encryption.
-        However, if one uses a recipient algorithm such as RSA-KEM (see Appendix A of RSA-KEM <xref target="RFC5990"/>, then it make sense to have three levels of the COSE_Enveloped structure.
+        However, if one uses a recipient algorithm such as RSA-KEM (see Appendix A of RSA-KEM <xref target="RFC5990"/>, then it make sense to have three levels of the COSE_Encrypt structure.
       </t>
 
       <t>
