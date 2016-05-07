@@ -299,6 +299,7 @@ li, p {
 <link href="#rfc.section.8.1" rel="Chapter" title="8.1 ECDSA"/>
 <link href="#rfc.section.8.1.1" rel="Chapter" title="8.1.1 Security Considerations"/>
 <link href="#rfc.section.8.2" rel="Chapter" title="8.2 Edwards-curve Digital Signature Algorithms (EdDSA)"/>
+<link href="#rfc.section.8.2.1" rel="Chapter" title="8.2.1 Security Considerations"/>
 <link href="#rfc.section.9" rel="Chapter" title="9 Message Authentication (MAC) Algorithms"/>
 <link href="#rfc.section.9.1" rel="Chapter" title="9.1 Hash-based Message Authentication Codes (HMAC)"/>
 <link href="#rfc.section.9.1.1" rel="Chapter" title="9.1.1 Security Considerations"/>
@@ -497,7 +498,8 @@ li, p {
 <ul><li>8.1.   <a href="#rfc.section.8.1">ECDSA</a></li>
 <ul><li>8.1.1.   <a href="#rfc.section.8.1.1">Security Considerations</a></li>
 </ul><li>8.2.   <a href="#rfc.section.8.2">Edwards-curve Digital Signature Algorithms (EdDSA)</a></li>
-</ul><li>9.   <a href="#rfc.section.9">Message Authentication (MAC) Algorithms</a></li>
+<ul><li>8.2.1.   <a href="#rfc.section.8.2.1">Security Considerations</a></li>
+</ul></ul><li>9.   <a href="#rfc.section.9">Message Authentication (MAC) Algorithms</a></li>
 <ul><li>9.1.   <a href="#rfc.section.9.1">Hash-based Message Authentication Codes (HMAC)</a></li>
 <ul><li>9.1.1.   <a href="#rfc.section.9.1.1">Security Considerations</a></li>
 </ul><li>9.2.   <a href="#rfc.section.9.2">AES Message Authentication Code (AES-CBC-MAC)</a></li>
@@ -1371,7 +1373,7 @@ COSE_KeySet = [+COSE_Key]
   <dt>key_ops:</dt>
   <dd style="margin-left: 8">This parameter is defined to restrict the set of operations that a key is to be used for.  The value of the field is an array of values from <a href="#table-key-ops">Table 4</a>.  </dd>
   <dt>Base IV:</dt>
-  <dd style="margin-left: 8">This parameter is defined to carry the base portion of an IV.  It is designed to be used with the partial IV header parameter defined in <a href="#cose-headers">Section 3.1</a>.  This field provides the ability to associate a partial IV with a key that is then modified on a per message basis with the parital IV.  <br/><br/> Care needs to be taken that this is only used as part of a key distribution algorithm that will ensure that it will be given only to parties that will use it correctly.  This is due to the fact that many of the content encryption algorithms defined for COSE require that IVs be unique for every message.  Use of this field will easily allow for this rule to be broken if not used carefully.  This field MUST be ignored unless an application specifically calls for its use.  </dd>
+  <dd style="margin-left: 8">This parameter is defined to carry the base portion of an IV.  It is designed to be used with the partial IV header parameter defined in <a href="#cose-headers">Section 3.1</a>.  This field provides the ability to associate a partial IV with a key that is then modified on a per message basis with the parital IV.  <br/><br/> Extreme care needs to be taken when using a Base IV in an application.  Since many encryption algorithms have considerations about using the same IV twice, applications need to be designed so that this does not accidently happen.  The simpliest method to do this is to ensure that a unique key is derived for every direction of a conersation.  If a single group key is being used, then some algorithm needs to be used to ensure that the IV space is divided among all of the transmitters so that each entity is given a segment of the overall IV space.  This field MUST be ignored unless an application specifically calls for its use.  </dd>
 </dl>
 
 <p> </p>
@@ -1517,7 +1519,7 @@ valid, message content = Verification(message sent, key, signature)
 
 <p> </p>
 <h1 id="rfc.section.8.2"><a href="#rfc.section.8.2">8.2.</a> Edwards-curve Digital Signature Algorithms (EdDSA)</h1>
-<p><a href="#I-D.irtf-cfrg-eddsa">[I-D.irtf-cfrg-eddsa]</a> describes the elliptic curve signature scheme Edwards-curve Digital Signature Algorithm (EdDSA).  In that document, the signature algorithm is instantiated using parameters for edwards25519 and edwards448 curves.  The document additionally describes two variants of the EdDSA algorithm: Pure EdDSA, where no hash function is applied to the content before signing and, HashEdDSA where a hash function is applied to the content before signing and the result of that hash function is signed.  For use with COSE, on the pure EdDSA version is used.  This is because it is not expected that extremely large contents are going to be needed and, based on the arrangement of the message structure, the entire message is going to need to be held in memory in order to create or verify a signature.  Thus, the use of an incremental update process would not be useful.  Applications can provide the same features by defining the content of the message as a hash value and transporting the COSE message and the content as separate items.  </p>
+<p><a href="#I-D.irtf-cfrg-eddsa">[I-D.irtf-cfrg-eddsa]</a> describes the elliptic curve signature scheme Edwards-curve Digital Signature Algorithm (EdDSA).  In that document, the signature algorithm is instantiated using parameters for edwards25519 and edwards448 curves.  The document additionally describes two variants of the EdDSA algorithm: Pure EdDSA, where no hash function is applied to the content before signing and, HashEdDSA where a hash function is applied to the content before signing and the result of that hash function is signed.  For use with COSE, only the pure EdDSA version is used.  This is because it is not expected that extremely large contents are going to be needed and, based on the arrangement of the message structure, the entire message is going to need to be held in memory in order to create or verify a signature.  Thus, the use of an incremental update process would not be useful.  Applications can provide the same features by defining the content of the message as a hash value and transporting the COSE message and the content as separate items.  </p>
 <p id="rfc.section.8.2.p.2">The algorithms defined in this document can be found in <a href="#table-eddsa-algs">Table 6</a>.  A single signature algorithm is defined which can be used for multiple curves.  </p>
 <div id="rfc.table.6"/>
 <div id="table-eddsa-algs"/>
@@ -1550,6 +1552,9 @@ valid, message content = Verification(message sent, key, signature)
 </ul>
 
 <p> </p>
+<h1 id="rfc.section.8.2.1"><a href="#rfc.section.8.2.1">8.2.1.</a> Security Considerations</h1>
+<p id="rfc.section.8.2.1.p.1">The Edwards curves for EdDSA and ECDH are distinct and should not be used for the other algorithm.  </p>
+<p id="rfc.section.8.2.1.p.2">If batch signature verification is performed, a well-seeded cryptographic random number generator is REQUIRED.  Signing and non-batch signature verification are deterministic operations and do not nee random nuber of any kind.  </p>
 <h1 id="rfc.section.9"><a href="#rfc.section.9">9.</a> Message Authentication (MAC) Algorithms</h1>
 <p id="rfc.section.9.p.1">Message Authentication Codes (MACs) provide data authentication and integrity protection.  They provide either no or very limited data origination.  (One cannot, for example, be used to prove the identity of the sender to a third party.) </p>
 <p id="rfc.section.9.p.2">MACs use the same scheme as signature with appendix algorithms.  The message content is processed and an authentication code is produced.  The authentication code is frequently called a tag.  </p>
@@ -2503,7 +2508,7 @@ COSE_KDF_Context = [
   <tbody>
     <tr>
       <td class="left">OPK</td>
-      <td class="left">TBDXX</td>
+      <td class="left">1</td>
       <td class="left">Octet Key Pair</td>
     </tr>
     <tr>
@@ -2557,28 +2562,28 @@ COSE_KDF_Context = [
       <td class="left">NIST P-521 also known as secp521r1</td>
     </tr>
     <tr>
-      <td class="left">Curve25519</td>
-      <td class="left">EC1</td>
-      <td class="left">TBDYY1</td>
-      <td class="left">Curve 25519</td>
-    </tr>
-    <tr>
-      <td class="left">Curve448</td>
-      <td class="left">EC1</td>
-      <td class="left">TBDYY2</td>
-      <td class="left">Curve 448</td>
-    </tr>
-    <tr>
       <td class="left">X25519</td>
-      <td class="left">EC1</td>
-      <td class="left">TBDYY1</td>
-      <td class="left">Curve 25519</td>
+      <td class="left">OKP</td>
+      <td class="left">4</td>
+      <td class="left">X25519 for use w/ ECDH only</td>
     </tr>
     <tr>
       <td class="left">X448</td>
-      <td class="left">EC1</td>
-      <td class="left">TBDYY2</td>
-      <td class="left">Curve 448</td>
+      <td class="left">OKP</td>
+      <td class="left">5</td>
+      <td class="left">X448 for use w/ ECDH only</td>
+    </tr>
+    <tr>
+      <td class="left">Ed25519</td>
+      <td class="left">OKP</td>
+      <td class="left">6</td>
+      <td class="left">Ed25519 for use w/ EdDSA only</td>
+    </tr>
+    <tr>
+      <td class="left">Ed448</td>
+      <td class="left">OKP</td>
+      <td class="left">7</td>
+      <td class="left">Ed448 for use w/ EdDSA only</td>
     </tr>
   </tbody>
 </table>
