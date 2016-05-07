@@ -1811,9 +1811,10 @@ COSE_KeySet = [+COSE_Key]
             It is designed to be used with the partial IV header parameter defined in <xref target="cose-headers"/>.
             This field provides the ability to associate a partial IV with a key that is then modified on a per message basis with the parital IV.
             <vspace blankLines="1"/>
-            Care needs to be taken that this is only used as part of a key distribution algorithm that will ensure that it will be given only to parties that will use it correctly.
-            This is due to the fact that many of the content encryption algorithms defined for COSE require that IVs be unique for every message.
-            Use of this field will easily allow for this rule to be broken if not used carefully.
+            Extreme care needs to be taken when using a Base IV in an application.
+            Since many encryption algorithms have considerations about using the same IV twice, applications need to be designed so that this does not accidently happen.
+            The simpliest method to do this is to ensure that a unique key is derived for every direction of a conersation.
+            If a single group key is being used, then some algorithm needs to be used to ensure that the IV space is divided among all of the transmitters so that each entity is given a segment of the overall IV space.
             This field MUST be ignored unless an application specifically calls for its use.
           </t>
           
@@ -2012,7 +2013,7 @@ valid, message content = Verification(message sent, key, signature)
           In that document, the signature algorithm is instantiated using parameters for edwards25519 and edwards448 curves.
           The document additionally describes two variants of the EdDSA algorithm:
           Pure EdDSA, where no hash function is applied to the content before signing and, HashEdDSA where a hash function is applied to the content before signing and the result of that hash function is signed.
-          For use with COSE, on the pure EdDSA version is used.
+          For use with COSE, only the pure EdDSA version is used.
           This is because it is not expected that extremely large contents are going to be needed and, based on the arrangement of the message structure, the entire message is going to need to be held in memory in order to create or verify a signature.
           Thus, the use of an incremental update process would not be useful.
           Applications can provide the same features by defining the content of the message as a hash value and transporting the COSE message and the content as separate items.
@@ -2045,6 +2046,18 @@ valid, message content = Verification(message sent, key, signature)
             <t>If the 'key_ops' field is present, it MUST include 'verify' when verifying an EdDSA signature.</t>
           </list>
         </t>
+
+        <section title="Security Considerations">
+          <t>
+            The Edwards curves for EdDSA and ECDH are distinct and should not be used for the other algorithm.
+          </t>
+
+          <t>
+            If batch signature verification is performed, a well-seeded cryptographic random number generator is REQUIRED.
+            Signing and non-batch signature verification are deterministic operations and do not nee random nuber of any kind.
+          </t>
+          
+        </section>
 
       </section>
 
@@ -3305,7 +3318,7 @@ COSE_KDF_Context = [
         <ttcol>name</ttcol>
         <ttcol>value</ttcol>
         <ttcol>description</ttcol>
-        <c>OPK</c>      <c>TBDXX</c>        <c>Octet Key Pair</c>
+        <c>OPK</c>      <c>1</c>        <c>Octet Key Pair</c>
         <c>EC2</c>      <c>2</c>        <c>Elliptic Curve Keys w/ X,Y Coordinate pair</c>
         <c>Symmetric</c><c>4</c>        <c>Symmetric Keys</c>
         <c>Reserved</c> <c>0</c>        <c>This value is reserved</c>
@@ -3329,10 +3342,10 @@ COSE_KDF_Context = [
           <c>P-256</c>        <c>EC2</c>      <c>1</c>       <c>NIST P-256 also known as secp256r1</c>
           <c>P-384</c>        <c>EC2</c>      <c>2</c>       <c>NIST P-384 also known as secp384r1</c>
           <c>P-521</c>        <c>EC2</c>      <c>3</c>       <c>NIST P-521 also known as secp521r1</c>
-          <c>Curve25519</c>   <c>EC1</c>      <c>TBDYY1</c>       <c>Curve 25519</c>
-          <c>Curve448</c>     <c>EC1</c>      <c>TBDYY2</c>       <c>Curve 448</c>
-          <c>X25519</c>       <c>EC1</c>      <c>TBDYY1</c>       <c>Curve 25519</c>
-          <c>X448</c>         <c>EC1</c>      <c>TBDYY2</c>       <c>Curve 448</c>
+          <c>X25519</c>       <c>OKP</c>      <c>4</c>       <c>X25519 for use w/ ECDH only</c>
+          <c>X448</c>         <c>OKP</c>      <c>5</c>       <c>X448 for use w/ ECDH only</c>
+          <c>Ed25519</c>      <c>OKP</c>      <c>6</c>       <c>Ed25519 for use w/ EdDSA only</c>
+          <c>Ed448</c>        <c>OKP</c>      <c>7</c>       <c>Ed448 for use w/ EdDSA only</c>
         </texttable>
 
         <section title="Double Coordinate Curves" anchor="EC2-Keys">
