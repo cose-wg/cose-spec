@@ -64,7 +64,7 @@
 <?rfc sortrefs="yes"?>
 <?rfc comments="yes"?>
 
-<rfc ipr="trust200902" docName="draft-ietf-cose-msg-latest" category="info">
+<rfc ipr="trust200902" docName="draft-ietf-cose-msg-latest" category="std">
   <front>
     <title>CBOR Encoded Message Syntax</title>
 
@@ -105,16 +105,16 @@
 
       <t>
         There has been an increased focus on the small, constrained devices that make up the Internet of Things (IOT). 
-        One of the standards that has come out of this process is the Concise Binary Object Representation (CBOR). 
-        CBOR extended the data model of the JavaScript Object Notation (JSON) by allowing for binary data among other changes. 
+        One of the standards that has come out of this process is the Concise Binary Object Representation (CBOR) <xref target="RFC7049"/>. 
+        CBOR extended the data model of the JavaScript Object Notation (JSON) <xref target="RFC7159"/> by allowing for binary data among other changes. 
         CBOR is being adopted by several of the IETF working groups dealing with the IOT world as their encoding of data structures. 
         CBOR was designed specifically to be both small in terms of messages transport and implementation size as well having a schema free decoder.
         A need exists to provide message security services for IOT and using CBOR as the message encoding format makes sense.
       </t>
 
       <t>
-        The JOSE working group produced a set of documents <xref target="RFC7515"/><xref target="RFC7516"/><xref target="RFC7517"/><xref target="RFC7518"/> using JSON <xref target="RFC7159"/> that specified how to process encryption, signatures and message authentication (MAC) operations, and how to encode keys using JSON.
-        This document does the same work for use with the CBOR <xref target="RFC7049"/> document format.
+        The JOSE working group produced a set of documents <xref target="RFC7515"/><xref target="RFC7516"/><xref target="RFC7517"/><xref target="RFC7518"/> using JSON that specified how to process encryption, signatures and message authentication (MAC) operations, and how to encode keys using JSON.
+        This document does the same work for use with the CBOR document format.
         While there is a strong attempt to keep the flavor of the original JOSE documents, two considerations are taken into account:
       </t>
 
@@ -127,7 +127,7 @@
           <t>
             COSE is not a direct copy of the JOSE specification.
             In the process of creating COSE, decisions that were made for JOSE were re-examined.
-            In many cases different results were decided on as the criteria were not always the same as for JOSE.
+            In many cases different results were decided on as the criteria was not always the same.
             <!--
                 Hannes
                 
@@ -146,7 +146,7 @@
         <t>
           <list style="symbols">
             <t>
-              Define a top level message structure so that encrypted, signed and MACed messages can easily identified and still have a consistent view.
+              Define a single top level message structure so that encrypted, signed and MACed messages can easily identified and still have a consistent view.
             </t>
             <t>
               Signed messages separate the concept of protected and unprotected parameters that are for the content and the signature.
@@ -155,7 +155,7 @@
               MAC messages are separated from signed messages.
             </t>
             <t>
-              MAC messages have the ability to use the same set of recipient algorithms as enveloped messages do to obtain the MAC authentication key.
+              MAC messages have the ability to use the same set of recipient algorithms as enveloped messages for obtaining the MAC authentication key.
             </t>
             <t>
               Use binary encodings for binary data rather than base64url encodings.
@@ -201,7 +201,7 @@
 
         <t>
           The document was developed by first working on the grammar and then developing the prose to go with it.
-          An artifact of this is that the prose was written using the primitive type strings defined by CDDL.
+          An artifact of this is that the prose was written using the primitive type strings defined by CBOR Data Definition Language (CDDL) <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>.
          In this specification, the following primitive types are used:
          <list style="empty">
            <t>any - non-specific value that permits all CBOR values to be placed here.</t>
@@ -215,10 +215,9 @@
           </list>
         </t>
 
-      <t>
-          There is a version of a CBOR grammar in the CBOR Data Definition Language (CDDL) <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>.
-          Since CDDL has not be published as an RFC, this grammar may not work with the final version of CDDL when it is published.
-          For those people who prefer using a formal language to describe the syntax of the CBOR, an informational version of the CBOR grammar is interweaved into the text as well.
+        <t>
+          As well as the prose description, a version of a CBOR grammar is presented in CDDL.
+          Since CDDL has not be published as an RFC, this grammar may not work with the final version of CDDL.
           The CDDL grammar is informational, the prose description is normative.
       </t>
       
@@ -290,16 +289,19 @@ values = any
           Constrained Application Protocol (CoAP) is a specialized web transfer protocol for use in constrained systems.
           It is defined in <xref target="RFC7252"/>.
         </t>
-        
+
+        <!--
         <t>
           Key management is used as a term to describe how a key at level n is obtained from level n+1 in encrypted and MACed messages.
           The term is also used to discuss key life cycle management,  this document does not discuss key life cycle operations.
-          <!-- Ilari OPEN
+          <! - - Ilari DONE
                Should we remove the term "KEY MANAGEMENT" in this location as well.
 
-               JLS - perhaps we should do a discussion of how the term is used in different places and punt?
-          -->
+          JLS - perhaps we should do a discussion of how the term is used in different places and punt?
+
+          Now gone.
         </t>
+          -->
       </section>
 
     </section>
@@ -342,17 +344,17 @@ values = any
           <t>
             When a COSE object is carried as a CoAP payload, the CoAP content type parameter can be used to identify the message content.
             The CoAP content types can be found in <xref target="CoAP_content_type"/>.
-            The CBOR Tag for the message structure is not required as each security message is uniquely identified.
+            The CBOR tag for the message structure is not required as each security message is uniquely identified.
           </t>
         </list>
       </t>
 
           <texttable anchor="CBOR-Tags" title="COSE Object Identification">
-            <ttcol>Tag Value</ttcol>    <ttcol>cose-type</ttcol>        <ttcol>Data Item</ttcol>        <ttcol>Semantics</ttcol>
+            <ttcol>CBOR Tag</ttcol>    <ttcol>cose-type</ttcol>        <ttcol>Data Item</ttcol>        <ttcol>Semantics</ttcol>
             <c>TBD1</c>                 <c>cose-sign</c>                <c>COSE_Sign</c>                <c>COSE Signed Data Object</c>
             <c>TBD7</c>                 <c>cose-sign1</c>               <c>COSE_Sign1</c>               <c>COSE Single Signer Data Object</c>
-            <c>TBD2</c>                 <c>cose-enveloped</c>           <c>COSE_Encrypt</c>           <c>COSE Enveloped Data Object</c>
-            <c>TBD3</c>                 <c>cose-encrypted</c>           <c>COSE_Encrypt1</c>           <c>COSE Encrypted Data Object</c>
+            <c>TBD2</c>                 <c>cose-encrypt</c>           <c>COSE_Encrypt</c>           <c>COSE Encrypted Data Object</c>
+            <c>TBD3</c>                 <c>cose-encrypt1</c>           <c>COSE_Encrypt1</c>           <c>COSE Single Recipient Encrypted Data Object</c>
             <c>TBD4</c>                 <c>cose-mac</c>                 <c>COSE_Mac</c>                 <c>COSE Mac-ed Data Object</c>
             <c>TBD6</c>                 <c>cose-mac0</c>                <c>COSE_Mac0</c>                <c>COSE Mac w/o Recipients Object</c>
             <c>TBD5</c>                 <c>N/A</c>                      <c>COSE_Key, COSE_KeySet</c>    <c>COSE Key or COSE Key Set Object</c>
@@ -421,7 +423,7 @@ values = any
 
       <t>
         The following CDDL fragment identifies all of the top level messages defined in this document.
-        Separate non-terminals are defined for the tagged and the untagged versions of the messages for the convenience of applications.
+        Separate non-terminals are defined for the tagged and the untagged versions of the messages.
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
@@ -481,7 +483,7 @@ tag=10
         These two buckets are available for use in all of the structures except for keys.
         While these buckets can be present, they may not all be usable in all instances.
         For example, while the protected bucket is defined as part of the recipient structure, some of the algorithms used for recipient structures do not provide for authenticated data.
-        If this is the case, the protected bucket should be left empty.
+        If this is the case, the protected bucket is left empty.
       </t>
 
       <t>
@@ -597,7 +599,7 @@ header_map = {
                 </t>
                 <t>
                   Labels for parameters required for an application MAY be omitted.
-                  Applications should have a statement if the label can or cannot be omitted.
+                  Applications should have a statement if the label can be omitted.
                 </t>
               </list>
               
@@ -632,7 +634,7 @@ header_map = {
 
             <t hangText='Partial Initialization Vector'>
               This parameter holds a part of the IV value.
-              When using the COSE_Encrypt1 structure, frequently a portion of the IV is part of the context associated with the key value.
+              When using the COSE_Encrypt1 structure, a portion of the IV can be part of the context associated with the key.
               This field is used to carry a value that causes the IV to be changed for each message.
               As the IV is authenticated by the encryption process, this value can be placed in the unprotected header bucket.
               The 'Initialization Vector' and 'Partial Initialization Vector' parameters MUST NOT be present in the same security layer.
@@ -718,7 +720,7 @@ Generic_Headers = (
 
       <section title="Signing with One or More Signers" anchor="full-signature">
       <t>
-        The signature structure allows for one or more signatures to be applied to a message payload.
+        The COSE_Sign structure allows for one or more signatures to be applied to a message payload.
         There are provisions for parameters about the content and parameters about the signature to be carried along with the signature itself.
         These parameters may be authenticated by the signature, or just present.
         An example of a parameter about the content is the content type.
@@ -731,7 +733,7 @@ Generic_Headers = (
         An application that employs a rule other than one valid signature for each signer must specify those rules.
         Also, where simple matching of the signer identifier is not sufficient to determine whether the signatures were generated by the same signer, the application specification must describe how to determine which signatures were generated by the same signer.
         Support of different communities of recipients is the primary reason that signers choose to include more than one signature.
-        For example, the COSE_Sign structure might include signatures generated with the RSA signature algorithm and with the Elliptic Curve Digital Signature Algorithm (ECDSA) signature algorithm.
+        For example, the COSE_Sign structure might include signatures generated with the Edwards Digital Signature Algorithm (EdDSA) signature algorithm and with the Elliptic Curve Digital Signature Algorithm (ECDSA) signature algorithm.
         This allows recipients to verify the signature associated with one algorithm or the other.
         (The original source of this text is <xref target="RFC5652"/>.)
         <!-- RFC Editor: This is not a direct quote from RFC 5652, but the basic text has come from there.  I want to acknowledge the original source of the quote but am not sure what is the correct way to go about this.-->
@@ -839,10 +841,15 @@ COSE_Signature =  [
 ]]></artwork></figure>
     </section>
 
-      <section title="Signing with One Signer">
+    <section title="Signing with One Signer">
+      <t>
+        The COSE_Sign1 signature structure is used when only one signer is going to be placed on a message.
+        The parameters dealing with the content and the signature are placed in the same pair of buckets rather than having the separation of COSE_Sign.
+      </t>
+      
         <t>
-          The signature structure can be encoded either with or without a tag depending on the context it will be used in.
-          The signature structure is identified by the CBOR tag TBD7.
+          The structure can be encoded either with or without a tag depending on the context it will be used in.
+          The structure is identified by the CBOR tag TBD7.
           The CDDL fragment that represents this is:
         </t>
 
@@ -908,7 +915,6 @@ COSE_Sign1 = [
           An example of data that can be placed in this location would be CoAP options for transaction ids and nonces to check for replay protection.
           If the data is in the options section, then it is available for routers to help in performing the replay detection and prevention.
           However, it may also be desired to protect these values so that if they are be modified in transit it can be detected.
-          This is the purpose of the externally supplied data field.
         </t>
 
         <t>
@@ -925,6 +931,12 @@ COSE_Sign1 = [
               If multiple items are included, a defined order for the items needs to be defined.
               Using options from CoAP as an example, an application could state that the fields are to be ordered by the option number.
             </t>
+            <t>
+              Applications need to ensure that the byte stream is going to be the same on both sides.
+              Using options from CoAP might give a problem if the same relative numbering is kept.
+              An intermediate node could insert or remove an option changing how the relative number is done.
+              An application would need to specify that the relative number must be re-encoded to be relative only to the options that are in the external data.
+            </t>
           </list>
         </t>
       </section>
@@ -934,7 +946,7 @@ COSE_Sign1 = [
 
         <t>
           In order to create a signature, a consistent byte stream is needed.
-          This algorithm takes in the body information (COSE_Sign), the signer information (COSE_Signature), and the application data (External).
+          This algorithm takes in the body information (COSE_Sign or COSE_Sign1), the signer information (COSE_Signature), and the application data (External).
           A CBOR array is used to construct the byte stream.
           The fields of the array in order are:
           <list style="numbers">
@@ -1018,7 +1030,7 @@ Sig_structure = [
             </t>
             
             <t>
-              Create the value ToBeSigned by encoding the Sig_structure to a byte string using the encoding described in <xref target="CBOR-Canonical"/>..
+              Create the value ToBeSigned by encoding the Sig_structure to a byte string using the encoding described in <xref target="CBOR-Canonical"/>.
             </t>
             
             <t>
@@ -1067,7 +1079,7 @@ Sig_structure = [
         COSE supports two different encryption structures.
         COSE_Encrypt1 is used when a recipient structure is not needed because the key to be used is known implicitly.
         COSE_Encrypt is used the rest of time time.
-        This includes cases where there are multiple recipients, a recipient algorithm other than direct is to be used, or the key to be used is not known.
+        This includes cases where there are multiple recipients or a recipient algorithm other than direct is used.
       </t>
 
       <section title="Enveloped COSE Structure" anchor="EnvelopedData">
@@ -1084,15 +1096,15 @@ Sig_structure = [
       <t>
         The same techniques and structures are used for encrypting both the plain text and the keys used to protect the text.
         
-        This is different from the approach used by both <xref target="RFC5652"/> and <xref target="RFC7516"/> where different structures are used for the content layer and for the recipient layer.
+        This is different from the approach used by both CMS <xref target="RFC5652"/> and JSON Web Encryption (JWE) <xref target="RFC7516"/> where different structures are used for the content layer and for the recipient layer.
         Two structures are defined: COSE_Encrypt to hold the encrypted content, and COSE_recipient to hold the encrypted keys for recipients.
         
         Examples of encrypted messages can be found in <xref target="EnvelopedExamples"/>.
       </t>
 
       <t>
-        The COSE Enveloped structure can be encoded either with or without a tag depending on the context it will be used in.
-        The COSE Enveloped structure is identified by the CBOR tag TBD2.
+        The COSE_Encrypt structure can be encoded either with or without a tag depending on the context it will be used in.
+        The structure is identified by the CBOR tag TBD2.
         The CDDL fragment that represents this is.
       </t>
 
@@ -1122,7 +1134,7 @@ COSE_Encrypt_Tagged = #6.992(COSE_Encrypt) ; Replace 992 with TBD2
           
           <t hangText='ciphertext'>
             contains the cipher text encoded as a bstr.
-            If the ciphertext is to be transported independently of the control information about the encryption process (i.e. detached content) then the field is encoded as a null object.
+            If the ciphertext is to be transported independently of the control information about the encryption process (i.e. detached content) then the field is encoded as a nil value.
           </t>
           
           <t hangText='recipients'>
@@ -1186,7 +1198,7 @@ COSE_recipient = [
 
       <section anchor="key-management-methods" title="Recipient Algorithm Classes">
         <t>
-          A typical encrypted message consists of an encrypted content and an encrypted CEK for one or more recipients.
+          An encrypted message consists of an encrypted content and an encrypted CEK for one or more recipients.
           The CEK is encrypted for each recipient, using a key specific to that recipient.
           The details of this encryption depends on which class the recipient algorithm falls into.
           Specific details on each of the classes can be found in <xref target="key-management-algs"/>.
@@ -4043,8 +4055,8 @@ COSE_KDF_Context = [
 
           <c>application/cose; cose-type="cose-sign"</c>        <c/> <c>TBD10</c>   <c>[This Document]</c>
           <c>application/cose; cose-type="cose-sign1"</c>       <c/> <c>TBD11</c>   <c>[This Document]</c>
-          <c>application/cose; cose-type="cose-enveloped"</c>   <c/> <c>TBD12</c>   <c>[This Document]</c>
-          <c>application/cose; cose-type="cose-encrypted"</c>   <c/> <c>TBD13</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-encrypt"</c>     <c/> <c>TBD12</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-encrypt1"</c>    <c/> <c>TBD13</c>   <c>[This Document]</c>
           <c>application/cose; cose-type="cose-mac"</c>         <c/> <c>TBD14</c>   <c>[This Document]</c>
           <c>application/cose; cose-type="cose-mac0"</c>        <c/> <c>TBD15</c>   <c>[This Document]</c>
           <c>application/cose-key</c> <c/> <c>TBD16</c> <c>[This Document]</c>
@@ -4662,6 +4674,8 @@ COSE_KDF_Context = [
 
 
     <section anchor="examples" title="Examples">
+      <!-- RFC Editor - Note that some of the examples will need to be re-generated after we have gotten final code point assignments from IANA -->
+      
       <t>
         This appendix includes a set of examples that show the different features and message types that have been defined in this document.
         To make the examples easier to read, they are presented using the extended CBOR diagnostic notation (defined in <xref target="I-D.greevenbosch-appsawg-cbor-cddl"/>) rather than as a binary dump.
