@@ -1219,15 +1219,14 @@ COSE_recipient = [
 
     </section>
 
-    <section title="Encrypted COSE structure">
+    <section title="Single Recipient Encrypted">
       <t>
-        The encrypted structure does not have the ability to specify recipients of the message.
+        The COSE_Encrypt1 encrypted structure does not have the ability to specify recipients of the message.
         The structure assumes that the recipient of the object will already know the identity of the key to be used in order to decrypt the message.
         If a key needs to be identified to the recipient, the enveloped structure ought to be used.
       </t>
 
       <t>
-        The structure defined to hold an encrypted message is COSE_Encrypt1.
         Examples of encrypted messages can be found in <xref target="EnvelopedExamples"/>.
       </t>
 
@@ -1284,9 +1283,9 @@ COSE_Encrypt1 = [
             <t>
               A text string identifying the context of the authenticated data structure.  The context string is:
               <list style="hanging">
-                <t hangText='"Encrypted"'> for the content encryption of an encrypted data structure.</t>
-                <t hangText='"Enveloped"'> for the first level of an enveloped data structure (i.e. for content encryption).</t>
-                <t hangText='"Env_Recipient"'> for a recipient encoding to be placed in an enveloped data structure.</t>
+                <t hangText='"Encrypt1"'> for the content encryption of an COSE_Encrypt1 data structure.</t>
+                <t hangText='"Encrypt"'> for the first level of an COSE_Encrypt data structure (i.e. for content encryption).</t>
+                <t hangText='"Enc_Recipient"'> for a recipient encoding to be placed in an COSE_Encrypt data structure.</t>
                 <t hangText='"Mac_Recipient"'> for a recipient encoding to be placed in a MAC message structure.</t>
                 <t hangText='"Rec_Recipient"'>for a recipient encoding to be placed in a recipient structure.</t>
               </list>
@@ -1309,7 +1308,7 @@ COSE_Encrypt1 = [
         
         <figure><artwork type="CDDL"><![CDATA[
 Enc_structure = [
-    context : "Enveloped" / "Encrypted" / "Env_Recipient" /
+    context : "Encrypt" / "Encrypt1" / "Enc_Recipient" /
         "Mac_Recipient" / "Rec_Recipient",
     protected: bstr,
     external_aad: bstr
@@ -1385,7 +1384,7 @@ Enc_structure = [
                   (For direct, the KDF can be thought of as the identity operation.)
                 </t>
                 <t hangText="Other:">
-                  The key is determined by decoding and decrypting the recipient structure.
+                  The key is determined by decoding and decrypting one of the recipient structures.
                 </t>
               </list>
             </t>
@@ -1465,13 +1464,13 @@ Enc_structure = [
                   (For direct, the KDF can be thought of as the identity operation.)
                 </t>
                 <t hangText="Other:">
-                  The key is determined by decoding and decrypting the recipient structure.
+                  The key is determined by decoding and decrypting one of the recipient structures.
                 </t>
               </list>
             </t>
             
             <t>
-              Call the decryption algorithm with K (the decryption key to use), C (the cipher text) and AAD.
+              Call the decryption algorithm with K (the decryption key to use), and C (the cipher text).
             </t>
 
           </list>
@@ -1489,8 +1488,6 @@ Enc_structure = [
         These include a requirement for multiple recipients, the key being unknown, a recipient algorithm of other than direct.
       </t>
 
-      <section title="MAC Message with Recipients" anchor="Mac_n">
-      
       <t>
         In this section we describe the structure and methods to be used when doing MAC authentication in COSE. 
         This document allows for the use of all of the same classes of recipient algorithms as are allowed for encryption.
@@ -1505,8 +1502,10 @@ Enc_structure = [
         (This knowledge of sender assumes that there are only two parties involved and you did not send the message yourself.)
       </t>
 
+      <section title="MAC Message with Recipients" anchor="Mac_n">
+
       <t>
-        The MAC message uses two structures, the COSE_Mac structure defined in this section for carrying the body and the COSE_recipient structure (<xref target="EnvelopedData"/>) to hold the key used for the MAC computation.
+        The multiple recipient MAC message uses two structures, the COSE_Mac structure defined in this section for carrying the body and the COSE_recipient structure (<xref target="EnvelopedData"/>) to hold the key used for the MAC computation.
         Examples of MAC messages can be found in <xref target="MacExamples"/>.
       </t>
 
@@ -1544,7 +1543,7 @@ COSE_Mac_Tagged = #6.994(COSE_Mac)         ; Replace 994 with TBD4
             contains the serialized content to be MACed.
             If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes.
-            If the payload is transported separately (i.e. detached content), then a null CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
+            If the payload is transported separately (i.e. detached content), then a nil CBOR value is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
           </t>
 
           <t hangText='tag'>
@@ -1726,12 +1725,11 @@ MAC_structure = [
         A COSE Key Set uses a CBOR array object as its underlying type.
         The values of the array elements are COSE Keys.
         A Key Set MUST have at least one element in the array.
-        <!--
-        <cref source="JLS">
-          Is there a reason to assign a CBOR tag to identify keys and/or key sets?
-          </cref>
-          Done
-        -->
+      </t>
+
+      <t>
+        Each element in a key set MUST be processed independently.
+        If one element in a key set is either malformed or uses a key which is not understood by an application, that key is ignored and the other keys are processed normally.
       </t>
 
       <t>
@@ -1789,7 +1787,7 @@ COSE_KeySet = [+COSE_Key]
           </t>
           
           <t hangText="alg:">
-            This parameter is used to restrict the algorithms that are to be used with this key.
+            This parameter is used to restrict the algorithm that is used with the key.
             If this parameter is present in the key structure, the application MUST verify that this algorithm matches the algorithm for which the key is being used.
             If the algorithms do not match, then this key object MUST NOT be used to perform the cryptographic operation.
             Note that the same key can be in a different key structure with a different or no algorithm specified, however this is considered to be a poor security practice.
@@ -1804,6 +1802,7 @@ COSE_KeySet = [+COSE_Key]
           <t hangText="key_ops:">
             This parameter is defined to restrict the set of operations that a key is to be used for.
             The value of the field is an array of values from <xref target="table-key-ops"/>.
+            Algorithms define the values of key ops that are permitted to appear and are required for specific operations.
           </t>
 
           <t hangText="Base IV:">
@@ -1813,9 +1812,10 @@ COSE_KeySet = [+COSE_Key]
             <vspace blankLines="1"/>
             Extreme care needs to be taken when using a Base IV in an application.
             Since many encryption algorithms have considerations about using the same IV twice, applications need to be designed so that this does not accidently happen.
-            The simpliest method to do this is to ensure that a unique key is derived for every direction of a conersation.
+            The simpliest method to do this is to ensure that a unique key is derived for every direction of a conversation.
             If a single group key is being used, then some algorithm needs to be used to ensure that the IV space is divided among all of the transmitters so that each entity is given a segment of the overall IV space.
             This field MUST be ignored unless an application specifically calls for its use.
+            <cref source="Cabo"> - Conversation. ("do this" also is misleading, because this alone doesn't guarantee uniqueness.)</cref>
           </t>
           
         </list>
@@ -1975,7 +1975,7 @@ valid, message content = Verification(message sent, key, signature)
           <t>
             System which have poor random number generation can leak their keys by signing two different messages with the same value 'k' (the per-message random value).
             <xref target="RFC6979"/> provides a method to deal with this problem by making 'k' be deterministic based on the message content rather than randomly generated.
-            Applications that specify ECDSA should evaluate the ability to get good random number generation and require this when it is not possible.
+            Applications that specify ECDSA should evaluate the ability to get good random number generation and require deterministic signatures where poor random number generation exists.
           </t>
           <t>
             Note: Use of this technique a good idea even when good random number generation exists.
@@ -2090,7 +2090,7 @@ valid = MAC_Verify(message content, key, tag)
 
       <t>
         MAC algorithms can be based on either a block cipher algorithm (i.e. AES-MAC) or a hash algorithm (i.e. HMAC).
-        This document defines a MAC algorithm for each of these two constructions.
+        This document defines a MAC algorithm using each of these constructions.
       </t>
 
       <section title="Hash-based Message Authentication Codes (HMAC)">
@@ -2147,7 +2147,7 @@ valid = MAC_Verify(message content, key, tag)
 
         <section title="Security Considerations">
           <t>
-            HMAC has proved to be resistant to attack even when used with weakening hash algorithms.
+            HMAC has proved to be resistant to attack even when used with weakened hash algorithms.
             The current best method appears to be a brute force attack on the key.
             This means that key size is going to be directly related to the security of an HMAC operation.
           </t>
@@ -2205,7 +2205,7 @@ valid = MAC_Verify(message content, key, tag)
                 If this is not the case, an attacker will be able to generate a message with a valid tag given two message, tag pairs.
                 This can be addressed by using different keys for different length messages.
                 The current structure mitigates this problem as a specific encoding structure which includes lengths is build and signed.
-                (CMAC mode also addresses this issue.)
+                (CMAC also addresses this issue.)
               </t>
               <t>
                 If the same key is used for both encryption and authentication operations, using CBC modes an attacker can produce messages with a valid authentication code.
@@ -2227,7 +2227,7 @@ valid = MAC_Verify(message content, key, tag)
         Content Encryption Algorithms provide data confidentiality for potentially large blocks of data using a symmetric key.
         They provide integrity on the data that was encrypted, however they provide either no or very limited data origination.
         (One cannot, for example, be used to prove the identity of the sender to a third party.)
-        The ability to provide data origination is linked to how the symmetric key is obtained.
+        The ability to provide data origination is linked to how the CEK is obtained.
       </t>
 
       <t>
@@ -2307,7 +2307,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
           <t>
             Consideration was given to supporting smaller tag values, the constrained community would desire tag sizes in the 64-bit range.
             <!-- Appendix C in NIST SP 800-38D -->
-            Doing show drastically changes both the maximum messages size (generally not an issue) and the number of times that a key can be used.
+            Doing so drastically changes both the maximum messages size (generally not an issue) and the number of times that a key can be used.
             Given that CCM is the usual mode for constrained environments restricted modes are not supported.
           </t>
 
@@ -2323,7 +2323,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
         <t>
           The CCM mode has two parameter choices.
           The first choice is M, the size of the authentication field.
-          The choice of the value for M involves a trade-off between message expansion and the probably that an attacker can undetectably modify a message.
+          The choice of the value for M involves a trade-off between message growth (from the tag) and the probably that an attacker can undetectably modify a message.
           
           The second choice is L, the size of the length field.
           This value requires a trade-off between the maximum message size and the size of the Nonce.
@@ -2333,7 +2333,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
           It is unfortunate that the specification for CCM specified L and M as a count of bytes rather than a count of bits.
           This leads to possible misunderstandings where AES-CCM-8 is frequently used to refer to a version of CCM mode where the size of the authentication is 64 bits and not 8 bits.
           These values have traditionally been specified as bit counts rather than byte counts.
-          This document will follow the tradition of using bit counts so that it is easier to compare the different algorithms presented in this document.
+          This document will follow the convention of using bit counts so that it is easier to compare the different algorithms presented in this document.
         </t>
 
         <t>
@@ -2435,8 +2435,8 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
       <section title="ChaCha20 and Poly1305">
         <t>
-          ChaCha20 and Poly1305 combined together is a new AEAD mode that is defined in <xref target="RFC7539"/>.
-          This is a new algorithm defined to be a cipher that is not AES and thus would not suffer from any future weaknesses found in AES.
+          ChaCha20 and Poly1305 combined together is an AEAD mode that is defined in <xref target="RFC7539"/>.
+          This is an algorithm defined to be a cipher that is not AES and thus would not suffer from any future weaknesses found in AES.
           These cryptographic functions are designed to be fast in software-only implementations.
         </t>
 
@@ -2533,16 +2533,17 @@ valid, message content = Decrypt(cipher text, key, additional data)
             <t>
               length - the number of bytes of output that need to be generated.
             </t>
+            
             <t>
               context information - Information that describes the context in which the resulting value will be used.
-              Making this information specific to the context that the material is going to be used ensures that the resulting material will always be tied to the context.
-              The context structure used is encoded into the algorithm identifier.
+              Making this information specific to the context in which the material is going to be used ensures that the resulting material will always be tied to that usage.
+              The context structure defined in <xref target="context"/> is used by the KDF functions in this document.
             </t>
 
             <t>
               PRF - The underlying pseudo-random function to be used in the HKDF algorithm.
               The PRF is encoded into the HKDF algorithm selection.
-u            </t>
+            </t>
 
           </list>
         </t>
@@ -2568,7 +2569,7 @@ u            </t>
         <texttable title="HKDF algorithms" anchor="table-hkdf">
           <ttcol>name</ttcol>
           <ttcol>PRF</ttcol>
-          <ttcol>context</ttcol>
+          <ttcol>description</ttcol>
           <c>HKDF SHA-256</c>       <c>HMAC with SHA-256</c>             <c>HKDF using HMAC SHA-256 as the PRF</c>
           <c>HKDF SHA-512</c>       <c>HMAC with SHA-512</c>             <c>HKDF using HMAC SHA-512 as the PRF</c>
           <c>HKDF AES-MAC-128</c>   <c>AES-CBC-MAC-128</c>        <c>HKDF using AES-MAC as the PRF w/ 128-bit key</c>
@@ -2747,7 +2748,7 @@ u            </t>
             </t>
 
             <t hangText="SuppPrivInfo">
-              This field contains private information that is mutually known information.
+              This field contains private information that is mutually known private information.
               An example of this information would be a pre-existing shared secret.
               (This could for example, be used in combination with an ECDH key agreement to provide a secondary proof of identity.)
               The field is optional and will only be present if the application defines a structure for this information.
@@ -2874,11 +2875,11 @@ COSE_KDF_Context = [
 
           <section title="Direct Key with KDF">
             <t>
-              These recipient algorithms take a common shared secret between the two parties and applies the HKDF function (<xref target="HKDF"/>) using the context structure defined in <xref target="context"/> to transform the shared secret into the necessary key.
+              These recipient algorithms take a common shared secret between the two parties and applies the HKDF function (<xref target="HKDF"/>) using the context structure defined in <xref target="context"/> to transform the shared secret into the CEK.
               The 'protected' field can be of non-zero length.
               Either the 'salt' parameter of HKDF or the partyU 'nonce' parameter of the context structure MUST be present.
               The salt/nonce parameter can be generated either randomly or deterministically.
-	      The requirement is that it be a unique value for the key/IV pair in question.
+	      The requirement is that it be a unique value for the shared secret in question.
             </t>
 
             <t>
@@ -2888,9 +2889,12 @@ COSE_KDF_Context = [
             </t>
 
             <t>
-              A new IV must be used if the same key is used in more than one message.
-              The IV can be modified in a predictable manner, a random manner or an unpredictable manner.
-              One unpredictable manner that can be used is to use the HKDF function to generate the IV.
+              A new IV must be used for each message if the same key is used.
+              The IV can be modified in a predictable manner, a random manner or an unpredictable manner (i.e. encrypting a counter).
+            </t>
+
+            <t>
+              The IV used for a key can also be generated from the same HKDF functionality as the key is generated.
               If HKDF is used for generating the IV, the algorithm identifier is set to "IV-GENERATION".
             </t>
 
@@ -2917,7 +2921,7 @@ COSE_KDF_Context = [
               When using a COSE key for this algorithm, the following checks are made:
               <list style="symbols">
                 <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
-                <t>If the 'alg' field present, it MUST match the KDF algorithm being used.</t>
+                <t>If the 'alg' field present, it MUST match the algorithm being used.</t>
                 <t>If the 'key_ops' field is present, it MUST include 'deriveKey or 'deriveBits'.</t>
               </list>
             </t>
@@ -2927,6 +2931,11 @@ COSE_KDF_Context = [
                 The shared secret needs to have some method to be regularly updated over time.
                 The shared secret forms the basis of trust.
 		Although not used directly, it should still be subject to scheduled rotation.
+              </t>
+
+              <t>
+                While these methods do not provide for PFS, as the same shared secret is used for all of the keys generated, if the key for any single message is discovered only the message (or series of messages) using that derived key are compromised.
+                A new key derivation step will generate a new key which requires the same amount of work to get the key.
               </t>
             </section>
           </section>
@@ -2986,7 +2995,6 @@ COSE_KDF_Context = [
 
           <t>
             Keys may be obtained either from a key structure or from a recipient structure.
-            If the key obtained from a key structure, the key type MUST be 'Symmetric'.
             Implementations encrypting and decrypting MUST validate that the key type, key length and algorithm are correct and appropriate for the entities involved.
           </t>
           
@@ -3116,7 +3124,6 @@ COSE_KDF_Context = [
                 A set of curves are defined in <xref target="table-ec-curves"/>.
                 <vspace/>
                 Since the only the math is changed by changing the curve, the curve is not fixed for any of the algorithm identifiers we define.
-		Instead, it is defined by the points used.
               </t>
               
               <t>
@@ -3124,7 +3131,7 @@ COSE_KDF_Context = [
                 The key agreement process may be done using either a static or an ephemeral key for the sender's side.
                 When using ephemeral keys, the sender MUST generate a new ephemeral key for every key agreement operation.
                 The ephemeral key is placed in the 'ephemeral key' parameter and MUST be present for all algorithm identifiers that use ephemeral keys.
-                When using static keys, the sender MUST either generate a new random value or otherwise create a unique value to be  placed in either in the KDF parameters or the context structure.
+                When using static keys, the sender MUST either generate a new random value or otherwise create a unique value.
                 For the KDF functions used, this means either in the 'salt' parameter for HKDF (<xref target="HKDF_Alg_Params"/>) or in the 'PartyU nonce' parameter for the context structure (<xref target="KDF_Context_Alg_Params"/>) MUST be present.
                 (Both may be present if desired.)
                 The value in the parameter MUST be unique for the pair of keys being used.
@@ -3138,7 +3145,7 @@ COSE_KDF_Context = [
                 Key derivation algorithm:
                 The result of an ECDH key agreement process does not provide a uniformly random secret.
 		As such, it needs to be run through a KDF in order to produce a usable key.
-                Processing the secret through a KDF also allows for the introduction of both context material, how the key is going to be used, and one time material in the event of a static-static key agreement.
+                Processing the secret through a KDF also allows for the introduction of context material: how the key is going to be used, and one time material for static-static key agreement.
               </t>
 
               <t>
@@ -3166,12 +3173,6 @@ COSE_KDF_Context = [
             <c>ECDH-ES + HKDF-512</c>      <c>-26</c>        <c>HKDF - SHA-512</c>     <c>yes</c>      <c>none</c>       <c>ECDH ES w/ HKDF - generate key directly</c>
             <c>ECDH-SS + HKDF-256</c>      <c>-27</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>none</c>       <c>ECDH SS w/ HKDF - generate key directly</c>
             <c>ECDH-SS + HKDF-512</c>      <c>-28</c>        <c>HKDF - SHA-512</c>     <c>no</c>       <c>none</c>       <c>ECDH SS w/ HKDF - generate key directly</c>
-            <c>ECDH-ES + A128KW</c>          <c>-29</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A128KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
-            <c>ECDH-ES + A192KW</c>          <c>-30</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A192KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
-            <c>ECDH-ES + A256KW</c>          <c>-31</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A256KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
-            <c>ECDH-SS + A128KW</c>          <c>-32</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>A128KW</c>     <c>ECDH SS w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
-            <c>ECDH-SS + A192KW</c>          <c>-33</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>A192KW</c>     <c>ECDH SS w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
-            <c>ECDH-SS + A256KW</c>          <c>-34</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>A256KW</c>     <c>ECDH SS w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
 
           </texttable>
 
@@ -3188,7 +3189,7 @@ COSE_KDF_Context = [
           </texttable>
 
           <t>
-            This document defines these algorithms to be used with the curves P-256, P-384, P-521.
+            This document defines these algorithms to be used with the curves P-256, P-384, P-521, X25519, and X448.
             Implementations MUST verify that the key type and curve are correct.
 	    Different curves are restricted to different key types.
             Implementations MUST verify that the curve and algorithm are appropriate for the entities involved.
@@ -3240,7 +3241,7 @@ COSE_KDF_Context = [
         <section title="ECDH">
 
           <t>
-            These algorithms are defined in <xref target="table-ecdh-es-table"/>.
+            These algorithms are defined in <xref target="table-ecdh-es-table-wrap"/>.
           </t>
         
 
@@ -3250,16 +3251,30 @@ COSE_KDF_Context = [
             <t>
               Key Wrap Algorithm: Any of the key wrap algorithms defined in <xref target="key_wrap_algs"/> are supported.
               The size of the key used for the key wrap algorithm is fed into the KDF function.
-              The set of identifiers are found in <xref target="table-ecdh-es-table"/>.
+              The set of identifiers are found in <xref target="table-ecdh-es-table-wrap"/>.
             </t>
           </list>
         </t>
+          <texttable title="ECDH Algorithm Values" anchor="table-ecdh-es-table-wrap">
+            <ttcol align='left' width='9em'>name</ttcol>
+            <ttcol align='left' width='5em'>value</ttcol>
+            <ttcol align='left' width='7em'>KDF</ttcol>
+            <ttcol align='left' width='10em'>Ephemeral- Static</ttcol>
+            <ttcol align='left' width='6em'>Key Wrap</ttcol>
+            <ttcol align='left' width='11em'>description</ttcol>
+            <c>ECDH-ES + A128KW</c>          <c>-29</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A128KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
+            <c>ECDH-ES + A192KW</c>          <c>-30</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A192KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
+            <c>ECDH-ES + A256KW</c>          <c>-31</c>        <c>HKDF - SHA-256</c>     <c>yes</c>      <c>A256KW</c>     <c>ECDH ES w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
+            <c>ECDH-SS + A128KW</c>          <c>-32</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>A128KW</c>     <c>ECDH SS w/ Concat KDF and AES Key wrap w/ 128 bit key</c>
+            <c>ECDH-SS + A192KW</c>          <c>-33</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>A192KW</c>     <c>ECDH SS w/ Concat KDF and AES Key wrap w/ 192 bit key</c>
+            <c>ECDH-SS + A256KW</c>          <c>-34</c>        <c>HKDF - SHA-256</c>     <c>no</c>       <c>A256KW</c>     <c>ECDH SS w/ Concat KDF and AES Key wrap w/ 256 bit key</c>
+          </texttable>
 
 
         <t>
             When using a COSE key for this algorithm, the following checks are made:
             <list style="symbols">
-              <t>The 'kty' field MUST be present and it MUST be 'EC2'.</t>
+              <t>The 'kty' field MUST be present and it MUST be 'EC2' or 'OKP'.</t>
               <t>If the 'alg' field present, it MUST match the Key Agreement algorithm being used.</t>
               <t>If the 'key_ops' field is present, it MUST include 'derive key' or 'derive bits' for the private key.</t>
               <t>If the 'key_ops' field is present, it MUST be empty for the public key.</t>
@@ -3302,7 +3317,7 @@ COSE_KDF_Context = [
       <t>
         For each of the key types, we define both public and private members.
         The public members are what is transmitted to others for their usage.
-        We define private members mainly for the purpose of archival of keys by individuals.
+        Private members allow for the archival of keys by individuals.
         However, there are some circumstances in which private keys may be distributed to entities in a protocol.
         Examples include:  entities that have poor random number generation,
         centralized key creation for multi-cast type operations,
@@ -3327,11 +3342,14 @@ COSE_KDF_Context = [
       <section title="Elliptic Curve Keys">
         <t>
           Two different key structures could be defined for Elliptic Curve keys.
-          One version uses both an x and a y coordinate, potentially with point compression.
+          One version uses both an x and a y coordinate, potentially with point compression ('EC2').
           This is the traditional EC point representation that is used in <xref target="RFC5480"/>.
           
-          The other version uses only the x coordinate as the y coordinate is either to be recomputed or not needed for the key agreement operation.
-          Currently no algorithms are defined using this key structure.
+          The other version uses only the x coordinate as the y coordinate is either to be recomputed or not needed for the key agreement operation ('OKP').
+        </t>
+
+        <t>
+          Applications MUST check that the curve and the key type are consistent and reject a key if they are not.
         </t>
         
         <texttable title="EC Curves" anchor="table-ec-curves">
