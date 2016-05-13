@@ -31,10 +31,10 @@
   <!ENTITY RFC7517 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7517.xml" >
   <!ENTITY RFC7518 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7518.xml" >
   <!ENTITY RFC7539 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7539.xml" >
+  <!ENTITY RFC7748 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7748.xml" >
 
   <!ENTITY CDDL SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.greevenbosch-appsawg-cbor-cddl.xml" >
   <!ENTITY CBCMAC SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.mcgrew-aead-aes-cbc-hmac-sha2.xml" >
-  <!ENTITY CFRG-EC SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.irtf-cfrg-curves.xml" >
   <!ENTITY CFRG-EDDSA SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.irtf-cfrg-eddsa.xml" >
 
 <!ENTITY Appendix_A SYSTEM "includes/Appendix_A.xml">
@@ -161,7 +161,7 @@
               Use binary encodings for binary data rather than base64url encodings.
             </t>
             <t>
-              Combine the authentication tag for encryption algorithms with the ciphertext.
+              Combine the authentication tag for encryption algorithms with the cipher text.
             </t>
             <t>
               The set of cryptographic algorithms has been expanded in some directions, and trimmed in others.
@@ -234,13 +234,13 @@
 
       <t>
         CDDL expects the initial non-terminal symbol to be the first symbol in the file.
-        For this reason the first fragment of CDDL is presented here.
+        For this, reason the first fragment of CDDL is presented here.
       </t>
 
       <figure><artwork type='CDDL'><![CDATA[
 start = COSE_Messages / COSE_Key / COSE_KeySet / Internal_Types
 
-; This is define to make the tool quieter
+; This is defined to make the tool quieter
 Internal_Types = Sig_structure / Enc_structure / MAC_structure /
         COSE_KDF_Context
 ]]></artwork></figure>
@@ -278,10 +278,6 @@ values = any
       <section title="Document Terminology">
         <t>
           In this document we use the following terminology:
-          <cref source="JLS">
-            I have not gone through the document to determine what needs to be here yet.
-            We mostly want to grab terms that are used in unusual ways or are not generally understood.
-          </cref>
         </t>
         
         <t>Byte is a synonym for octet.</t>
@@ -317,7 +313,8 @@ values = any
           <t>
             The content of the message.  
             The content is either the plain text or the cipher text as appropriate.
-            (The content may be detached, but the location is still used.)
+            The content may be detached, but the location is still used.
+            The content is wrapped in a bstr when present and is a nil value when detached.
           </t>
         </list>
         Elements after this point are dependent on the specific message type.
@@ -481,7 +478,7 @@ tag=10
       <t>
         The structure of COSE has been designed to have two buckets of information that are not considered to be part of the payload itself, but are used for holding information about content, algorithms, keys, or evaluation hints for the  processing of the layer.
         These two buckets are available for use in all of the structures except for keys.
-        While these buckets can be present, they may not all be usable in all instances.
+        While these buckets are present, they may not all be usable in all instances.
         For example, while the protected bucket is defined as part of the recipient structure, some of the algorithms used for recipient structures do not provide for authenticated data.
         If this is the case, the protected bucket is left empty.
       </t>
@@ -608,7 +605,7 @@ header_map = {
             </t>
             
             <t hangText='content type'>
-              This parameter is used to indicate the content type of the data in the payload or ciphertext fields.
+              This parameter is used to indicate the content type of the data in the payload or cipher text fields.
               Integers are from the 'CoAP Content-Formats' IANA registry table.
               Strings are from the IANA 'Media Types' registry.
               Applications SHOULD provide this parameter if the content structure is potentially ambiguous.
@@ -715,7 +712,7 @@ Generic_Headers = (
         COSE supports two different signature structures.
         COSE_Sign allows for one or more signers to be applied to a single content.
         COSE_Sign1 is restricted to a single signer.
-        The structures cannot be converted between each other, the signature computation includes a parameter identifying which structure is being used.
+        The structures cannot be converted between each other; the signature computation includes a parameter identifying which structure is being used.
       </t>
 
       <section title="Signing with One or More Signers" anchor="full-signature">
@@ -914,7 +911,7 @@ COSE_Sign1 = [
           The primary reason for supporting this can be seen by looking at the CoAP message structure <xref target="RFC7252"/> where the facility exists for options to be carried before the payload.
           An example of data that can be placed in this location would be CoAP options for transaction ids and nonces to check for replay protection.
           If the data is in the options section, then it is available for routers to help in performing the replay detection and prevention.
-          However, it may also be desired to protect these values so that if they are be modified in transit it can be detected.
+          However, it may also be desired to protect these values so that if they are modified in transit it can be detected.
         </t>
 
         <t>
@@ -1078,7 +1075,7 @@ Sig_structure = [
       <t>
         COSE supports two different encryption structures.
         COSE_Encrypt1 is used when a recipient structure is not needed because the key to be used is known implicitly.
-        COSE_Encrypt is used the rest of time time.
+        COSE_Encrypt is used the rest of time.
         This includes cases where there are multiple recipients or a recipient algorithm other than direct is used.
       </t>
 
@@ -1134,7 +1131,7 @@ COSE_Encrypt_Tagged = #6.992(COSE_Encrypt) ; Replace 992 with TBD2
           
           <t hangText='ciphertext'>
             contains the cipher text encoded as a bstr.
-            If the ciphertext is to be transported independently of the control information about the encryption process (i.e. detached content) then the field is encoded as a nil value.
+            If the cipher text is to be transported independently of the control information about the encryption process (i.e. detached content) then the field is encoded as a nil value.
           </t>
           
           <t hangText='recipients'>
@@ -1277,7 +1274,7 @@ COSE_Encrypt1 = [
         <t>
           The encryption algorithm for AEAD algorithms is fairly simple.
           The first step is to create a consistent byte stream for the authenticated data structure.
-          For this purpose we use a CBOR array,  the fields of the array in order are:
+          For this purpose, we use a CBOR array,  the fields of the array in order are:
 
           <list style="numbers">
             <t>
@@ -1808,14 +1805,14 @@ COSE_KeySet = [+COSE_Key]
           <t hangText="Base IV:">
             This parameter is defined to carry the base portion of an IV.
             It is designed to be used with the partial IV header parameter defined in <xref target="cose-headers"/>.
-            This field provides the ability to associate a partial IV with a key that is then modified on a per message basis with the parital IV.
+            This field provides the ability to associate a partial IV with a key that is then modified on a per message basis with the partial IV.
             <vspace blankLines="1"/>
             Extreme care needs to be taken when using a Base IV in an application.
-            Since many encryption algorithms have considerations about using the same IV twice, applications need to be designed so that this does not accidently happen.
-            The simpliest method to do this is to ensure that a unique key is derived for every direction of a conversation.
-            If a single group key is being used, then some algorithm needs to be used to ensure that the IV space is divided among all of the transmitters so that each entity is given a segment of the overall IV space.
-            This field MUST be ignored unless an application specifically calls for its use.
-            <cref source="Cabo"> - Conversation. ("do this" also is misleading, because this alone doesn't guarantee uniqueness.)</cref>
+            Many encryption algorithms loose security if the same IV is used twice.
+            <vspace blankLines="1"/>
+            If different keys are derived for each sender, starting at the same base IV is likely to satisfy this condition.
+            If the same key is used for multiple senders, then the application needs to provide for a method of dividing the IV space up between the senders.
+            This could be done by providing a different base point to start from or a different partial IV to start with and restricting the number of messages to be sent before re-keying.
           </t>
           
         </list>
@@ -1901,6 +1898,7 @@ valid, message content = Verification(message sent, key, signature)
 ]]></artwork></figure>
 
       <t>
+        Signature algorithms are used with the COSE_Signature and COSE_Sign1 structures.
         At this time, only signatures with appendixes are defined for use with COSE, however considerable interest has been expressed in using a signature with message recovery algorithm due to the effective size reduction that is possible.
         Implementations will need to keep this in mind for later possible integration.
       </t>
@@ -1933,7 +1931,7 @@ valid, message content = Verification(message sent, key, signature)
           This document defines ECDSA to work only with the curves P-256, P-384 and P-521.
           This document requires that the curves be encoded using the 'EC2' key type.
           Implementations need to check that the key type and curve are correct when creating and verifying a signature.
-          Other documents can defined it to work with other curves and points in the future.
+          Other documents can define it to work with other curves and points in the future.
         </t>
 
         <t>
@@ -2028,7 +2026,7 @@ valid, message content = Verification(message sent, key, signature)
           <ttcol align='left'>name</ttcol>
           <ttcol align='left'>value</ttcol>
           <ttcol align='left'>description</ttcol>
-          <c>EdDSA</c>        <c>*</c>        <c>EdDSA</c>
+          <c>EdDSA</c>        <c>-8</c>        <c>EdDSA</c>
         </texttable>
 
         <t>
@@ -2054,7 +2052,7 @@ valid, message content = Verification(message sent, key, signature)
 
           <t>
             If batch signature verification is performed, a well-seeded cryptographic random number generator is REQUIRED.
-            Signing and non-batch signature verification are deterministic operations and do not nee random nuber of any kind.
+            Signing and non-batch signature verification are deterministic operations and do not need random numbers of any kind.
           </t>
           
         </section>
@@ -2091,6 +2089,10 @@ valid = MAC_Verify(message content, key, tag)
       <t>
         MAC algorithms can be based on either a block cipher algorithm (i.e. AES-MAC) or a hash algorithm (i.e. HMAC).
         This document defines a MAC algorithm using each of these constructions.
+      </t>
+
+      <t>
+        MAC algorithms are used in the COSE_Mac and COSE_Mac1 structures.
       </t>
 
       <section title="Hash-based Message Authentication Codes (HMAC)">
@@ -2246,6 +2248,10 @@ valid, message content = Decrypt(cipher text, key, additional data)
         Most AEAD algorithms are logically defined as returning the message content only if the decryption is valid.
         Many but not all implementations will follow this convention.
         The message content MUST NOT be used if the decryption does not validate.
+      </t>
+
+      <t>
+        These algorithms are used in COSE_Encrypt and COSE_Encrypt1.
       </t>
       
       <section title="AES GCM">
@@ -2504,7 +2510,12 @@ valid, message content = Decrypt(cipher text, key, additional data)
         When using KDF functions, one component that is included is context information.
         Context information is used to allow for different keying information to be derived from the same secret.
         The use of context based keying material is considered to be a good security practice.
+      </t>
+
+      <t>
         This document defines a single context structure and a single KDF function.
+        These elements are used for all of the recipient algorithms defined in this document that require a KDF process.
+        These algorithms are defined in <xref target="direct-kdf"/>, <xref target="ECDH"/>, and <xref target="ECDH-wrap"/>.
       </t>
       
       <section title="HMAC-based Extract-and-Expand Key Derivation Function (HKDF)" anchor="HKDF">
@@ -2623,7 +2634,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
           This information can be obtained from a variety of sources:
           <list style="symbols">
             <t>
-              Fields can be define by the application.
+              Fields can be defined by the application.
               This is commonly used to assign fixed names to parties, but can be used for other items such as nonces.
             </t>
             <t>
@@ -2799,7 +2810,7 @@ COSE_KDF_Context = [
 
       <section title="Direct Encryption">
           <t>
-            The direct encryption class algorithms share a secret between the sender and the recipient that is used either directly or after manipulation as the content key.
+            The direct encryption class algorithms share a secret between the sender and the recipient that is used either directly or after manipulation as the CEK.
             When direct encryption mode is used, it MUST be the only mode used on the message.
           </t>
 
@@ -2873,7 +2884,7 @@ COSE_KDF_Context = [
             </section>
           </section>
 
-          <section title="Direct Key with KDF">
+          <section title="Direct Key with KDF" anchor="direct-kdf">
             <t>
               These recipient algorithms take a common shared secret between the two parties and applies the HKDF function (<xref target="HKDF"/>) using the context structure defined in <xref target="context"/> to transform the shared secret into the CEK.
               The 'protected' field can be of non-zero length.
@@ -3110,7 +3121,7 @@ COSE_KDF_Context = [
         <section title="ECDH" anchor="ECDH">
           <t>
             The mathematics for Elliptic Curve Diffie-Hellman can be found in <xref target="RFC6090"/>.
-          In this document the algorithm is extended to be used with the two curves defined in <xref target="I-D.irtf-cfrg-curves"/>.
+          In this document the algorithm is extended to be used with the two curves defined in <xref target="RFC7748"/>.
           </t>
 
           <t>
@@ -3146,6 +3157,7 @@ COSE_KDF_Context = [
                 The result of an ECDH key agreement process does not provide a uniformly random secret.
 		As such, it needs to be run through a KDF in order to produce a usable key.
                 Processing the secret through a KDF also allows for the introduction of context material: how the key is going to be used, and one time material for static-static key agreement.
+                All of the algorithm define in this document use one of the HKDF algorithms defined in <xref target="HKDF"/> with the context structure defined in <xref target="context"/>.
               </t>
 
               <t>
@@ -3238,7 +3250,7 @@ COSE_KDF_Context = [
           </list>
         </t>
 
-        <section title="ECDH">
+        <section title="ECDH" anchor="ECDH-wrap">
 
           <t>
             These algorithms are defined in <xref target="table-ecdh-es-table-wrap"/>.
@@ -3449,9 +3461,12 @@ COSE_KDF_Context = [
           <list style="hanging">
             <t hangText="crv">
               contains an identifier of the curve to be used with the key.
+              <!-- 
               <cref source="JLS">
                 Is is the same registry for both OKP and EC2?
-              </cref>
+                </cref>
+                YES
+                -->
               The curves defined in this document for this key type can be found in <xref target="table-ec-curves"/>.
               Other curves may be registered in the future and private curves can be used as well.
             </t>
@@ -3505,7 +3520,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          This key structure contains only private key information, care must be taken that it is never transmitted accidentally.
+          This key structure contains only private key information; care must be taken that it is never transmitted accidentally.
           For public keys, there are no required fields.
           For private keys, it is REQUIRED that 'k' be present in the structure.
         </t>
@@ -3663,7 +3678,7 @@ COSE_KDF_Context = [
               Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.
 
               <!-- These are >= 5 byte items -->
-              Integer values of greater than 65535 and strings of length greater than 2 are designated as first come, first served.
+              Integer values of greater than 65535 and strings of length greater than 2 are designated as expert review.
 
               <!-- These are 1, 2 and 3 byte items -->
               Integer values in the range -1 to -65536 are delegated to the "COSE Header Algorithm Label" registry.
@@ -3773,7 +3788,7 @@ COSE_KDF_Context = [
               The value can be a positive integer, a negative integer or a string.
               Integer values between -256 and 255 and strings of length 1 are designated as Standards Track Document required.
               Integer values from -65536 to 65535 and strings of length 2 are designated as Specification Required.
-              Integer values of greater than 65535 and strings of length greater than 2 are designated as first come, first served.
+              Integer values of greater than 65535 and strings of length greater than 2 are designated as expert review.
               Integer values beyond -65536 are marked as private use.
             </t>
             <t hangText='description'>
@@ -3821,7 +3836,7 @@ COSE_KDF_Context = [
               The label can be a positive integer, a negative integer or a string.
               Integer values between 0 and 255 and strings of length 1 are designated as Standards Track Document required.
               Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.
-              Integer values of greater than 65535 and strings of length greater than 2 are designated as first come, first served.
+              Integer values of greater than 65535 and strings of length greater than 2 are designated as expert review.
               Integer values in the range -1 to -65536 are used for key parameters specific to a single algorithm delegated to the "COSE Key Type Parameter Label" registry.
               Integer values beyond -65536 are marked as private use.
             </t>
@@ -3916,7 +3931,7 @@ COSE_KDF_Context = [
               These values MUST be unique.
               The integer values from -256 to 255 are designated as Standards Track Document Required.
               The integer values from 256 to 65535 and -65536 to -257 are designated as Specification Required.
-              Integer values over 65535 are designated as first come, first served.
+              Integer values over 65535 are designated as expert review.
               Integer values less than -65536 are marked as private use.
             </t>
             <t hangText='key type'>
@@ -4164,67 +4179,50 @@ COSE_KDF_Context = [
         to use this information as they see fit".
       </t>
 
-      <section title="COSE-JAVA">
+      <section title="Author's Versions">
+        <t>
+          There are three different implementations that have been created by the author of the document both to create the examples that are included in the document and to validate the structures and methodology used in the design of COSE.
+        </t>
         <t>
           <list style="none">
-            <t>Implemenation Location: https://github.com/cose-wg/COSE-JAVA</t>
+            <t>Implementation Location: https://github.com/cose-wg</t>
             <t>Primary Maintainer: Jim Schaad</t>
             <t>
-              Description: A JAVA library version of the COSE message specification.
-              The cryptography for the library is the Bouncy Castle JAVA implementation.
+              Languages:
+              There are three different languages that are current supported:  JAVA, C# and C.
             </t>
             <t>
-              Coverage:  The library does not currently implement counter signatures.
-              The library includes some self testing both internally and againist the examples library
+              Cryptography: The JAVA and C# libraries use Bouncy Castle to provide the required cryptography.
+              The C version uses OPENSSL Version 1.0 for the cryptography.
+            </t>
+            <t>
+              Coverage:
+              The libraries currently do not have full support for counter signatures of either variety.
+              They do have support to allow for implicit algorithm support as they allow for the application to set attributes which are not to be sent in the message.
+            </t>
+            <t>
+              Testing:
+              All of the examples in the example library are generated by the C# library and then validated using the JAVA and C libraries.
+              All three libraries have tests to allow for the creating of the same messages that are in the example library followed by validating them.
+              These are not compared against the example library.
+              The JAVA and C# libraries have unit testing included.
+              Not all of the MUST statements in the document have been implemented as part of the libraries.
+              One such statement is the requirement that unique labels be present.
             </t>
             <t>Licensing: Revised BSD License </t>
           </list>
         </t>
       </section>
       
-      <section title="COSE-C">
-        <t>
-          <list style="none">
-            <t>Implemenation Location: https://github.com/cose-wg/COSE-C</t>
-            <t>Primary Maintainer: Jim Schaad</t>
-            <t>
-              Description: A C library version of the COSE message specification.
-              The cryptography for the library is currently OPENSSL version 1.0.
-            </t>
-            <t>
-              Coverage:  The library does not currently implement counter signatures.
-              The library includes some self testing both internally and againist the examples library.
-            </t>
-            <t>Licensing: Revised BSD License</t>
-          </list>
-        </t>
-      </section>
-      <section title="COSE-SHARP">
-        <t>
-          <list style="none">
-            <t>Implemenation Location: https://github.com/cose-wg/cose-implementations</t>
-            <t>Primary Maintainer: Jim Schaad</t>
-            <t>
-              Description: A C# library version of the COSE message specification.
-              The cryptography for the library is the Bouncy Castle C# implementation.
-            </t>
-            <t>
-              Coverage:  The library does only partially implements counter signatures.
-              The library includes some self testing both internally and againist the examples library
-            </t>
-            <t>Licensing: Revised BSD License</t>
-          </list>
-        </t>
-      </section>
       <section title="COSE Testing Library">
         <t>
           <list style="none">
-            <t>Implemenation Location: https://github.com/cose-wg/Examples</t>
+            <t>Implementation Location: https://github.com/cose-wg/Examples</t>
             <t>Primary Maintainer: Jim Schaad</t>
             <t>
               Description: A set of tests for the COSE library is provided as part of the implementation effort.
               Both success and fail tests has been provided.
-              All of the examples in this document are are part of this example set.
+              All of the examples in this document are part of this example set.
             </t>
             <t>
               Coverage:  The attempt has been to have test cases for every message type and algorithm in the document.
@@ -4278,13 +4276,13 @@ COSE_KDF_Context = [
       <t>
         Although it has been mentioned before, the use of a single key for multiple algorithms has been demonstrated in some cases to leak information about a key, provide for attackers to forge integrity tags, or gain information about encrypted content.
         Binding a key to a single algorithm prevents these problems.
-        Key creators and key consumers are strongly encourged not only to create new keys for each different algorithm, but to include that selection of algorithm in any distribution of key material and strictly enforce the matching of algorithms in the key structure to algorithms in the message structure.
+        Key creators and key consumers are strongly encouraged not only to create new keys for each different algorithm, but to include that selection of algorithm in any distribution of key material and strictly enforce the matching of algorithms in the key structure to algorithms in the message structure.
         In addition to checking that algorithms are correct, the key form needs to be checked as well.
         Do not use an 'EC2' key where an 'oct' key is expected.
       </t>
 
       <t>
-        Before using a key for transmission, or before acting on information recieved, a trust decision on a key needs to be made.
+        Before using a key for transmission, or before acting on information received, a trust decision on a key needs to be made.
         Is the data or action something that the entity associated with the key has a right to see or a right to request.
         A number of factors are associated with this trust decision.
         Some of the ones that are highlighted here are:
@@ -4303,6 +4301,10 @@ COSE_KDF_Context = [
         An observer can distinguish between two different strings (for example 'YES' and 'NO') based on length for all of the content encryption algorithms that are defined in this document.
         This means that it is up to applications to document how content padding is to be done in order to prevent or discourage such analysis.
         (For example the strings could be defined as 'YES' and 'NO '.)
+      </t>
+
+      <t>
+        Timing Issues - TBD
       </t>
 
     </section>
@@ -4392,7 +4394,7 @@ COSE_KDF_Context = [
       &RFC7518;
       &RFC4949;
       
-      &CFRG-EC;
+      &RFC7748;
       &CFRG-EDDSA;
 
       <reference anchor="SP800-56A">
@@ -4497,7 +4499,7 @@ COSE_KDF_Context = [
     
     <section title="Making Mandatory Algorithm Header Optional">
       <t>
-        There has been a minority of the working group who have expressed a strong desire to relax the rule that the algorithm identifier be required to appear in each level of a COSE message.
+        There has been a portion of the working group who have expressed a strong desire to relax the rule that the algorithm identifier be required to appear in each level of a COSE message.
         There are two basic reasons that have been advanced to support this position.
         First, the resulting message will be smaller if the algorithm identifier is omitted from the most common messages in a CoAP environment.
         Second, there is a potential bug that will arise if full checking is not done correctly between the different places that an algorithm identifier could be placed.
@@ -4569,7 +4571,7 @@ COSE_KDF_Context = [
               This external data field can be used as such for content encryption, MAC and signature algorithms.
               It can be used in the SuppPrivInfo field for those algorithms which use a KDF function to derive a key value.
               Applications may also want to protect other information that is part of the context structure as well.
-              It should be noted that those fields, such as the key or a base IV, protected by virtue of being used in the cryptogrpahic computation and do not need to be included in the external data field.
+              It should be noted that those fields, such as the key or a base IV, protected by virtue of being used in the cryptographic computation and do not need to be included in the external data field.
             </t>
           </list>
         </t>
@@ -4606,7 +4608,7 @@ COSE_KDF_Context = [
             
             <t>
               Two contexts are distributed as a pair.
-              The first context is used for encryption of the message, the second context is used to place a counter signature on the message.
+              The first context is used for encryption of the message; the second context is used to place a counter signature on the message.
               The intention is that the second context can be distributed to other entities independently of the first context.
               This allows these entities to validate that the message came from an individual without being able to decrypt the message and see the content.
             </t>
@@ -4661,7 +4663,7 @@ COSE_KDF_Context = [
       <t>
         All of the currently defined recipient algorithms classes only use two levels of the COSE_Encrypt structure.
         The first level is the message content and the second level is the content key encryption.
-        However, if one uses a recipient algorithm such as RSA-KEM (see Appendix A of RSA-KEM <xref target="RFC5990"/>, then it make sense to have three levels of the COSE_Encrypt structure.
+        However, if one uses a recipient algorithm such as RSA-KEM (see Appendix A of RSA-KEM <xref target="RFC5990"/>, then it makes sense to have three levels of the COSE_Encrypt structure.
       </t>
 
       <t>
@@ -4702,7 +4704,6 @@ COSE_KDF_Context = [
       &Appendix_A;
 
     </section>
-
 
     <section anchor="examples" title="Examples">
       <!-- RFC Editor - Note that some of the examples will need to be re-generated after we have gotten final code point assignments from IANA -->
@@ -4928,7 +4929,7 @@ COSE_KDF_Context = [
         
         <section anchor="Appendix_B_5_1" title="Shared Secret Direct MAC">
           <t>
-            This example users the following:
+            This example uses the following:
             <list style="symbols">
               <t>MAC: AES-CMAC, 256-bit key, truncated to 64 bits</t>
               <t>Recipient class: direct shared secret</t>
@@ -4992,7 +4993,7 @@ COSE_KDF_Context = [
       <section title="Examples of MAC0 messages" anchor="Mac0Examples">
         <section anchor="Appendix_B_6_1" title="Shared Secret Direct MAC">
           <t>
-            This example users the following:
+            This example uses the following:
             <list style="symbols">
               <t>MAC: AES-CMAC, 256-bit key, truncated to 64 bits</t>
               <t>Recipient class: direct shared secret</t>
@@ -5071,9 +5072,9 @@ COSE_KDF_Context = [
 
     </section>
     -->
-
+<!--
     <section title="Document Updates">
-      <!-- RFC Editor - Please remove this appendix before publishing -->
+      <! - - RFC Editor - Please remove this appendix before publishing - ->
       <section title="Version -09 to -10">
         <t>
           <list style="symbols">
@@ -5194,6 +5195,7 @@ COSE_KDF_Context = [
         </t>
       </section>
     </section>
+        -->
 
     <section title="Acknowledgments" numbered='no'>
       <t>
@@ -5215,7 +5217,6 @@ COSE_KDF_Context = [
       </t>
         
     </section>
-     
     
   </back>
 </rfc>
