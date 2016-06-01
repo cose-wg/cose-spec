@@ -1903,7 +1903,7 @@ valid, message content = Verification(message sent, key, signature)
         Implementations will need to keep this in mind for later possible integration.
       </t>
       
-      <section title="ECDSA">
+      <section title="ECDSA" anchor="ECDSA">
         <t>
           ECDSA <xref target="DSS"/> defines a signature algorithm using ECC.
         </t>
@@ -3121,7 +3121,7 @@ COSE_KDF_Context = [
         <section title="ECDH" anchor="ECDH">
           <t>
             The mathematics for Elliptic Curve Diffie-Hellman can be found in <xref target="RFC6090"/>.
-          In this document the algorithm is extended to be used with the two curves defined in <xref target="RFC7748"/>.
+            In this document the algorithm is extended to be used with the two curves defined in <xref target="RFC7748"/>.
           </t>
 
           <t>
@@ -3135,6 +3135,14 @@ COSE_KDF_Context = [
                 A set of curves are defined in <xref target="table-ec-curves"/>.
                 <vspace/>
                 Since the only the math is changed by changing the curve, the curve is not fixed for any of the algorithm identifiers we define.
+              </t>
+
+              <t>
+                Shared Secret to Byte String:
+                Once the shared secret is computed using the correct mathematics, the resulting value needs to be converted to a byte string to run the KDF function.
+                The X coordinate is used for all of the curves defined in this document.
+                For curves X25519 and X448, the resulting value is used directly as it is a byte string of a known length.
+                For the P-256, P-384 and P-521 curves, the X coordinate is run through the I2OSP function defined in <xref target="RFC3447"/> using the same computation for n as is defined in <xref target="ECDSA"/>.
               </t>
               
               <t>
@@ -3217,6 +3225,27 @@ COSE_KDF_Context = [
             </list>
           </t>
 
+        </section>
+
+        <section title="Security Considerations">
+          <t>
+            Some method of checking that points provided from external entities are valid.
+            For the 'EC2' key format, this can be done by checking that the x and y values form a point on the curve.
+            For the 'OKP' format, there is no simple way to do point validation.
+          </t>
+
+          <t>
+            Consideration was given to requiring that the public keys of both entities be provided as part of the key derivation process.
+            (As recommended in section 6.1 of <xref target="RFC7748"/>.)
+            This was not done as COSE is used in a store and forward format rather than in on line key exchange.
+            In order for this to be a problem, either the receiver public key has to be chosen maliciously or the sender has to be malicious.
+            In either case, all security evaporates anyway.
+          </t>
+
+          <t>
+            A proof of possession of the private key associated with the public key is recommended when a key is moved from untrusted to trusted.
+            (Either by the end user or by the entity that is responsible for making trust statements on keys.)
+          </t>
         </section>
       </section>
 
@@ -4303,9 +4332,6 @@ COSE_KDF_Context = [
         (For example the strings could be defined as 'YES' and 'NO '.)
       </t>
 
-      <t>
-        Timing Issues - TBD
-      </t>
 
     </section>
 
