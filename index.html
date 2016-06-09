@@ -1279,6 +1279,7 @@ COSE_Key = {
     ? key_ops =&gt; [+ (tstr / int) ],
     ? key_alg =&gt; tstr / int,
     ? key_kid =&gt; bstr,
+    ? key_baseIV =&gt; bstr,
     * label =&gt; values
 }
 
@@ -1414,6 +1415,7 @@ key_kty=1
 key_kid=2
 key_alg=3
 key_ops=4
+key_baseIV=5
 </pre>
 <h1 id="rfc.section.8"><a href="#rfc.section.8">8.</a> <a href="#SigAlgs" id="SigAlgs">Signature Algorithms</a></h1>
 <p id="rfc.section.8.p.1">There are two signature algorithm schemes.  The first is signature with appendix.  In this scheme, the message content is processed and a signature is produced, the signature is called the appendix.  This is the scheme used by algorithms such as ECDSA and RSASSA-PSS.  (In fact the SSA in RSASSA-PSS stands for Signature Scheme with Appendix.) </p>
@@ -2050,7 +2052,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
 <dl>
   <dt>AlgorithmID</dt>
-  <dd style="margin-left: 8">This field indicates the algorithm for which the key material will be used.  This field is required to be present.  The field exists in the context information so that if the same environment is used for different algorithms, then completely different keys will be generated for each of those algorithms.  (This practice means if algorithm A is broken and  thus can is easier to find, the key derived for algorithm B will not be the same as the key for algorithm B.) </dd>
+  <dd style="margin-left: 8">This field indicates the algorithm for which the key material will be used.  This field is required to be present.  The field exists in the context information so that if the same environment is used for different algorithms, then completely different keys will be generated for each of those algorithms.  (This practice means if algorithm A is broken and thus can is easier to find, the key derived for algorithm B will not be the same as the key derived for algorithm A.) </dd>
   <dt>PartyUInfo</dt>
   <dd style="margin-left: 8">This field holds information about party U.  The PartyUInfo is encoded as a CBOR array.  The elements of PartyUInfo are encoded in the order presented, however if the element does not exist no element is placed in the array.  The elements of the PartyUInfo array are: <dl><dt>identity</dt><dd style="margin-left: 8">This contains the identity information for party U.  The identities can be assigned in one of two manners.  Firstly, a protocol can assign identities based on roles.  For example, the roles of "client" and "server" may be assigned to different entities in the protocol.  Each entity would then use the correct label for the data they send or receive.  The second way for a protocol to assign identities is to use a name based on a naming system (i.e. DNS, X.509 names).  <br/> We define an algorithm parameter 'PartyU identity' that can be used to carry identity information in the message.  However, identity information is often known as part of the protocol and can thus be inferred rather than made explicit.  If identity information is carried in the message, applications SHOULD have a way of validating the supplied identity information.  The identity information does not need to be specified and can be left as absent.  </dd><dt>nonce</dt><dd style="margin-left: 8">This contains a nonce value.  The nonce can either be implicit from the protocol or carried as a value in the unprotected headers.  <br/> We define an algorithm parameter 'PartyU nonce' that can be used to carry this value in the message However, the nonce value could be determined by the application and the value determined from elsewhere.  <br/> This item is optional and can be absent.  </dd><dt>other</dt><dd style="margin-left: 8">This contains other information that is defined by the protocol.  <br/> This item is optional and can be absent.  </dd></dl><p> </p></dd>
   <dt>PartyVInfo</dt>
@@ -3654,8 +3656,9 @@ be470355c9657ce0'
       / kid / 4:'11'
     }, 
     / payload / 'This is the content.', 
-    h'eae868ecc176883766c5dc5ba5b8dca25dab3c2e56a551ce5705b793914348
-e19f43d6c6ba654472da301b645b293c9ba939295b97c4bdb847782bff384c5794'
+    / signature / h'eae868ecc176883766c5dc5ba5b8dca25dab3c2e56a551ce
+5705b793914348e19f43d6c6ba654472da301b645b293c9ba939295b97c4bdb84778
+2bff384c5794'
   ]
 )
 </pre>

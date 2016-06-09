@@ -1721,15 +1721,15 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
    The CDDL grammar describing COSE_Key and COSE_KeySet is:
 
-   COSE_Key = {
-       key_kty => tstr / int,
-       ? key_ops => [+ (tstr / int) ],
-       ? key_alg => tstr / int,
-       ? key_kid => bstr,
-       * label => values
-   }
 
-   COSE_KeySet = [+COSE_Key]
+
+
+
+
+
+
+
+
 
 
 
@@ -1737,6 +1737,17 @@ Schaad                  Expires December 11, 2016              [Page 31]
 
 Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
+
+   COSE_Key = {
+       key_kty => tstr / int,
+       ? key_ops => [+ (tstr / int) ],
+       ? key_alg => tstr / int,
+       ? key_kid => bstr,
+       ? key_baseIV => bstr,
+       * label => values
+   }
+
+   COSE_KeySet = [+COSE_Key]
 
 7.1.  COSE Key Common Parameters
 
@@ -1775,6 +1786,14 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
       structure, and thus the set of key type specific parameters to be
       found.  The set of values defined in this document can be found in
       Table 21.  This parameter MUST be present in a key object.
+
+
+
+Schaad                  Expires December 11, 2016              [Page 32]
+
+Internet-Draft         CBOR Encoded Message Syntax             June 2016
+
+
       Implementations MUST verify that the key type is appropriate for
       the algorithm being processed.  The key type MUST be included as
       part of the trust decision process.
@@ -1786,14 +1805,6 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
       not match, then this key object MUST NOT be used to perform the
       cryptographic operation.  Note that the same key can be in a
       different key structure with a different or no algorithm
-
-
-
-Schaad                  Expires December 11, 2016              [Page 32]
-
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
-
-
       specified, however this is considered to be a poor security
       practice.
 
@@ -1827,17 +1838,6 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
       senders.  This could be done by providing a different base point
       to start from or a different partial IV to start with and
       restricting the number of messages to be sent before re-keying.
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1886,6 +1886,7 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
    key_kid=2
    key_alg=3
    key_ops=4
+   key_baseIV=5
 
 8.  Signature Algorithms
 
@@ -1897,7 +1898,6 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
    Appendix.)
 
    The signature functions for this scheme are:
-
 
 
 
@@ -2893,7 +2893,7 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
       different keys will be generated for each of those algorithms.
       (This practice means if algorithm A is broken and thus can is
       easier to find, the key derived for algorithm B will not be the
-      same as the key for algorithm B.)
+      same as the key derived for algorithm A.)
 
    PartyUInfo  This field holds information about party U.  The
       PartyUInfo is encoded as a CBOR array.  The elements of PartyUInfo
@@ -5555,8 +5555,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
          / kid / 4:'11'
        },
        / payload / 'This is the content.',
-       h'eae868ecc176883766c5dc5ba5b8dca25dab3c2e56a551ce5705b793914348
-   e19f43d6c6ba654472da301b645b293c9ba939295b97c4bdb847782bff384c5794'
+       / signature / h'eae868ecc176883766c5dc5ba5b8dca25dab3c2e56a551ce
+   5705b793914348e19f43d6c6ba654472da301b645b293c9ba939295b97c4bdb84778
+   2bff384c5794'
      ]
    )
 
@@ -5571,7 +5572,6 @@ C.3.1.  Direct ECDH
    o  Recipient class: ECDH Ephemeral-Static, Curve P-256
 
    Size of binary file is 185 bytes
-
 
 
 
