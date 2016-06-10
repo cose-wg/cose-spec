@@ -114,7 +114,7 @@
 
       <t>
         The JOSE working group produced a set of documents <xref target="RFC7515"/><xref target="RFC7516"/><xref target="RFC7517"/><xref target="RFC7518"/> using JSON that specified how to process encryption, signatures and message authentication (MAC) operations, and how to encode keys using JSON.
-        This document does the same work for use with the CBOR document format.
+        This document defines the CBOR Object Encryption and Signing (COSE) standard which does the same thing for the CBOR encoding format.
         While there is a strong attempt to keep the flavor of the original JOSE documents, two considerations are taken into account:
       </t>
 
@@ -146,7 +146,7 @@
         <t>
           <list style="symbols">
             <t>
-              Define a single top level message structure so that encrypted, signed and MACed messages can easily identified and still have a consistent view.
+              Define a single top message structure so that encrypted, signed and MACed messages can easily identified and still have a consistent view.
             </t>
             <t>
               Signed messages separate the concept of protected and unprotected parameters that are for the content and the signature.
@@ -304,7 +304,7 @@ values = any
     
     <section anchor="the-cosemsg-structure" title="Basic COSE Structure">
       <t>
-        The COSE Message structure is designed so that there can be a large amount of common code when parsing and processing the different security messages.
+        The COSE object structure is designed so that there can be a large amount of common code when parsing and processing the different security messages.
         All of the message structures are built on the CBOR array type.
         The first three elements of the array contain the same information.
         <list style="numbers">
@@ -346,7 +346,7 @@ values = any
         </list>
       </t>
 
-          <texttable anchor="CBOR-Tags" title="COSE Object Identification">
+          <texttable anchor="CBOR-Tags" title="COSE Message Identification">
             <ttcol>CBOR Tag</ttcol>    <ttcol>cose-type</ttcol>        <ttcol>Data Item</ttcol>        <ttcol>Semantics</ttcol>
             <c>TBD1</c>                 <c>cose-sign</c>                <c>COSE_Sign</c>                <c>COSE Signed Data Object</c>
             <c>TBD7</c>                 <c>cose-sign1</c>               <c>COSE_Sign1</c>               <c>COSE Single Signer Data Object</c>
@@ -419,7 +419,7 @@ values = any
       -->
 
       <t>
-        The following CDDL fragment identifies all of the top level messages defined in this document.
+        The following CDDL fragment identifies all of the top messages defined in this document.
         Separate non-terminals are defined for the tagged and the untagged versions of the messages.
       </t>
 
@@ -476,7 +476,7 @@ tag=10
     <section anchor="header-parameters" title="Header Parameters">
 
       <t>
-        The structure of COSE has been designed to have two buckets of information that are not considered to be part of the payload itself, but are used for holding information about content, algorithms, keys, or evaluation hints for the  processing of the layer.
+        The structure of COSE has been designed to have two buckets of information that are not considered to be part of the payload itself, but are used for holding information about content, algorithms, keys, or evaluation hints for the processing of the layer.
         These two buckets are available for use in all of the structures except for keys.
         While these buckets are present, they may not all be usable in all instances.
         For example, while the protected bucket is defined as part of the recipient structure, some of the algorithms used for recipient structures do not provide for authenticated data.
@@ -572,7 +572,7 @@ header_map = {
           <list style="hanging">
             <t hangText='alg'>
               This parameter is used to indicate the algorithm used for the security processing.
-              This parameter MUST be present at each level of a signed, encrypted or authenticated message except the COSE_Sign structure.
+              This parameter MUST be present at each layer of a signed, encrypted or authenticated message except the COSE_Sign structure.
               When the algorithm supports authenticating associated data, this parameter MUST be in the protected header bucket.
               The value is taken from the 'COSE Algorithm Registry' (see <xref target="cose-algorithm-registry"/>).
             </t>
@@ -908,9 +908,9 @@ COSE_Sign1 = [
       <section title="Externally Supplied Data" anchor="Extern_AAD">
         <t>
           One of the features that we supply in the COSE document is the ability for applications to provide additional data to be authenticated as part of the security, but that is not carried as part of the COSE object.
-          The primary reason for supporting this can be seen by looking at the CoAP message structure <xref target="RFC7252"/> where the facility exists for options to be carried before the payload.
-          An example of data that can be placed in this location would be CoAP options for transaction ids and nonces to check for replay protection.
-          If the data is in the options section, then it is available for routers to help in performing the replay detection and prevention.
+          The primary reason for supporting this can be seen by looking at the CoAP message structure <xref target="RFC7252"/> where the facility exists for information to be carried before the payload.
+          Examples of data that can be placed in this location would be the CoAP code, CoAP token, or CoAP options.
+          If the data is in the header section, then it is available for routers to help in performing the replay detection and prevention.
           However, it may also be desired to protect these values so that if they are modified in transit it can be detected.
         </t>
 
@@ -1281,7 +1281,7 @@ COSE_Encrypt1 = [
               A text string identifying the context of the authenticated data structure.  The context string is:
               <list style="hanging">
                 <t hangText='"Encrypt1"'> for the content encryption of a COSE_Encrypt1 data structure.</t>
-                <t hangText='"Encrypt"'> for the first level of a COSE_Encrypt data structure (i.e. for content encryption).</t>
+                <t hangText='"Encrypt"'> for the first layer of a COSE_Encrypt data structure (i.e. for content encryption).</t>
                 <t hangText='"Enc_Recipient"'> for a recipient encoding to be placed in an COSE_Encrypt data structure.</t>
                 <t hangText='"Mac_Recipient"'> for a recipient encoding to be placed in a MAC message structure.</t>
                 <t hangText='"Rec_Recipient"'>for a recipient encoding to be placed in a recipient structure.</t>
@@ -1331,7 +1331,7 @@ Enc_structure = [
 
               <list style="hanging">
                 <t hangText="No Recipients:">
-                  The key to be used is determined by the algorithm and key at the current level.
+                  The key to be used is determined by the algorithm and key at the current layer.
                 </t>
                 <t hangText="Direct and Direct Key Agreement:">
                   The key is determined by the key and algorithm in the recipient structure.
@@ -1373,7 +1373,7 @@ Enc_structure = [
 
               <list style="hanging">
                 <t hangText="No Recipients:">
-                  The key to be used is determined by the algorithm and key at the current level.
+                  The key to be used is determined by the algorithm and key at the current layer.
                 </t>
                 <t hangText="Direct and Direct Key Agreement:">
                   The key is determined by the key and algorithm in the recipient structure.
@@ -1413,7 +1413,7 @@ Enc_structure = [
 
               <list style="hanging">
                 <t hangText="No Recipients:">
-                  The key to be used is determined by the algorithm and key at the current level.
+                  The key to be used is determined by the algorithm and key at the current layer.
                 </t>
                 <t hangText="Direct and Direct Key Agreement:">
                   The key is determined by the key and algorithm in the recipient structure.
@@ -1453,7 +1453,7 @@ Enc_structure = [
 
               <list style="hanging">
                 <t hangText="No Recipients:">
-                  The key to be used is determined by the algorithm and key at the current level.
+                  The key to be used is determined by the algorithm and key at the current layer.
                 </t>
                 <t hangText="Direct and Direct Key Agreement:">
                   The key is determined by the key and algorithm in the recipient structure.
@@ -2016,7 +2016,7 @@ valid, message content = Verification(message sent, key, signature)
           For use with COSE, only the pure EdDSA version is used.
           This is because it is not expected that extremely large contents are going to be needed and, based on the arrangement of the message structure, the entire message is going to need to be held in memory in order to create or verify a signature.
           Thus, the use of an incremental update process would not be useful.
-          Applications can provide the same features by defining the content of the message as a hash value and transporting the COSE message and the content as separate items.
+          Applications can provide the same features by defining the content of the message as a hash value and transporting the COSE object and the content as separate items.
         </t>
 
         <t>
@@ -3080,7 +3080,7 @@ COSE_KDF_Context = [
           The most commonly used key agreement algorithm is Diffie-Hellman, but other variants exist.
           Since COSE is designed for a store and forward environment rather than an on-line environment, many of the DH variants cannot be used as the receiver of the message cannot provide any dynamic key material.
           One side-effect of this is that perfect forward secrecy (see <xref target="RFC4949"/>) is not achievable.
-	  A static key will always be used for the receiver of the COSE message.
+	  A static key will always be used for the receiver of the COSE object.
         </t>
 
         <t>
@@ -3839,8 +3839,8 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          NOTE: The assignment of algorithm identifiers in this document was done so that positive numbers were used for the first level objects (COSE_Sign, COSE_Sign1, COSE_Encrypt, COSE_Encrypt1, COSE_Mac and COSE_Mac0).
-          Negative numbers were used for second level objects (COSE_Signature and COSE_recipient).
+          NOTE: The assignment of algorithm identifiers in this document was done so that positive numbers were used for the first layer objects (COSE_Sign, COSE_Sign1, COSE_Encrypt, COSE_Encrypt1, COSE_Mac and COSE_Mac0).
+          Negative numbers were used for second layer objects (COSE_Signature and COSE_recipient).
           Expert reviewers should consider this practice, but are not expected to be restricted by this precedent.
         </t>
 
@@ -4528,7 +4528,7 @@ COSE_KDF_Context = [
     
     <section title="Making Mandatory Algorithm Header Optional">
       <t>
-        There has been a portion of the working group who have expressed a strong desire to relax the rule that the algorithm identifier be required to appear in each level of a COSE message.
+        There has been a portion of the working group who have expressed a strong desire to relax the rule that the algorithm identifier be required to appear in each layer of a COSE object.
         There are two basic reasons that have been advanced to support this position.
         First, the resulting message will be smaller if the algorithm identifier is omitted from the most common messages in a CoAP environment.
         Second, there is a potential bug that will arise if full checking is not done correctly between the different places that an algorithm identifier could be placed.
@@ -4544,9 +4544,9 @@ COSE_KDF_Context = [
       <section title="Algorithm Identification">
         <t>
           In this section are laid out three sets of recommendations.
-          The first set of recommendations apply to having an implicit algorithm identified for a single layer of a COSE message.
-          The second set of recommendations apply to having multiple implicit algorithm identified for multiple layers of a COSE message.
-          The third set of recommendations apply to having implicit algorithms for multiple COSE message constructs.
+          The first set of recommendations apply to having an implicit algorithm identified for a single layer of a COSE object.
+          The second set of recommendations apply to having multiple implicit algorithm identified for multiple layers of a COSE object.
+          The third set of recommendations apply to having implicit algorithms for multiple COSE object constructs.
         </t>
 
         <t>
@@ -4554,8 +4554,8 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          This set of recommendations applies to the case where an application is distributing a fixed algorithm along with the key information for use in a single COSE message object.
-          This normally applies to the smallest of the COSE messages, specifically COSE_Sign1, COSE_Mac0 and COSE_Encrypt1, but could apply to the other structures as well.
+          This set of recommendations applies to the case where an application is distributing a fixed algorithm along with the key information for use in a single COSE object object.
+          This normally applies to the smallest of the COSE objects, specifically COSE_Sign1, COSE_Mac0 and COSE_Encrypt1, but could apply to the other structures as well.
         </t>
 
         <t>
@@ -4606,7 +4606,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          The second case is having multiple implicit algorithm identifiers specified for a multiple layer COSE message.
+          The second case is having multiple implicit algorithm identifiers specified for a multiple layer COSE object.
           An example of how this would work is the encryption context that an application specifies contains a content encryption algorithm, a key wrap algorithm, a key identifier, and a shared secret.
           The sender omits sending the algorithm identifier for both the content layer and the recipient layer leaving only the key identifier.
           The receiver then uses the key identifier to get the implicit algorithm identifiers.
@@ -4623,7 +4623,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          The third case is having multiple implicit algorithm identifiers, but targeted at potentially unrelated layers or different COSE messages.
+          The third case is having multiple implicit algorithm identifiers, but targeted at potentially unrelated layers or different COSE objects.
           There are a number of different scenarios where this might be applicable.
           Some of these scenarios are:
           <list style="symbols">
@@ -4687,26 +4687,26 @@ COSE_KDF_Context = [
       </section>
     </section>
 
-    <section anchor="three-layer" title="Three Levels of Recipient Information">
+    <section anchor="three-layer" title="Two Layers of Recipient Information">
 
       <t>
-        All of the currently defined recipient algorithms classes only use two levels of the COSE_Encrypt structure.
-        The first level is the message content and the second level is the content key encryption.
-        However, if one uses a recipient algorithm such as RSA-KEM (see Appendix A of RSA-KEM <xref target="RFC5990"/>), then it makes sense to have three levels of the COSE_Encrypt structure.
+        All of the currently defined recipient algorithms classes only use two layers of the COSE_Encrypt structure.
+        The first layer is the message content and the second layer is the content key encryption.
+        However, if one uses a recipient algorithm such as RSA-KEM (see Appendix A of RSA-KEM <xref target="RFC5990"/>), then it makes sense to have three layers of the COSE_Encrypt structure.
       </t>
 
       <t>
-        These levels would be:
+        These layers would be:
 
         <list style="symbols">
           <t>
-            Level 0: The content encryption level.  This level contains the payload of the message.
+            Layer 0: The content encryption layer.  This layer contains the payload of the message.
           </t>
           <t>
-            Level 1: The encryption of the CEK by a KEK.
+            Layer 1: The encryption of the CEK by a KEK.
           </t>
           <t>
-            Level 2: The encryption of a long random secret using an RSA key and a key derivation function to convert that secret into the KEK.
+            Layer 2: The encryption of a long random secret using an RSA key and a key derivation function to convert that secret into the KEK.
           </t>
         </list>
       </t>
@@ -4717,13 +4717,13 @@ COSE_KDF_Context = [
 
         <list style="symbols">
           <t>
-            Level 0: Has a content encrypted with AES-GCM using a 128-bit key.
+            Layer 0: Has a content encrypted with AES-GCM using a 128-bit key.
           </t>
           <t>
-            Level 1: Uses the AES Key wrap algorithm with a 128-bit key.
+            Layer 1: Uses the AES Key wrap algorithm with a 128-bit key.
           </t>
           <t>
-            Level 2: Uses ECDH Ephemeral-Static direct to generate the level 1 key.
+            Layer 2: Uses ECDH Ephemeral-Static direct to generate the layer 1 key.
           </t>
         </list>
 
