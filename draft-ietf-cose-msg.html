@@ -393,7 +393,7 @@ li, p {
 
   <meta name="dct.creator" content="Schaad, J." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-ietf-cose-msg-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-6-9" />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-6-10" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies processing for signatures, message authentication codes, and encryption using CBOR.  This document also specifies a representation for cryptographic keys using CBOR.  " />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document specifies processing for signatures, message authentication codes, and encryption using CBOR.  This document also specifies a representation for cryptographic keys using CBOR.  " />
 
@@ -414,10 +414,10 @@ li, p {
 </tr>
 <tr>
   <td class="left">Intended status: Standards Track</td>
-  <td class="right">June 9, 2016</td>
+  <td class="right">June 10, 2016</td>
 </tr>
 <tr>
-  <td class="left">Expires: December 11, 2016</td>
+  <td class="left">Expires: December 12, 2016</td>
   <td class="right"></td>
 </tr>
 
@@ -442,7 +442,7 @@ li, p {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on December 11, 2016.</p>
+<p>This Internet-Draft will expire on December 12, 2016.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -2288,8 +2288,8 @@ COSE_KDF_Context = [
 <p id="rfc.section.12.4.1.p.2">ECDH is parameterized by the following: </p>
 
 <ul>
-  <li>Curve Type/Curve: The curve selected controls not only the size of the shared secret, but the mathematics for computing the shared secret.  The curve selected also controls how a point in the curve is represented and what happens for the identity points on the curve.  In this specification, we allow for a number of different curves to be used.  A set of curves are defined in <a href="#table-ec-curves">Table 22</a>.  <br/> Since the only the math is changed by changing the curve, the curve is not fixed for any of the algorithm identifiers we define.  </li>
-  <li>Shared Secret to Byte String: Once the shared secret is computed using the correct mathematics, the resulting value needs to be converted to a byte string to run the KDF function.  The X coordinate is used for all of the curves defined in this document.  For curves X25519 and X448, the resulting value is used directly as it is a byte string of a known length.  For the P-256, P-384 and P-521 curves, the X coordinate is run through the I2OSP function defined in <a href="#RFC3447">[RFC3447]</a> using the same computation for n as is defined in <a href="#ECDSA">Section 8.1</a>.  </li>
+  <li>Curve Type/Curve: The curve selected controls not only the size of the shared secret, but the mathematics for computing the shared secret.  The curve selected also controls how a point in the curve is represented and what happens for the identity points on the curve.  In this specification, we allow for a number of different curves to be used.  A set of curves are defined in <a href="#table-ec-curves">Table 22</a>.  <br/> The math used to obtain the computed secret is based on the curve selected and not on the ECDH algorithm.  For this reason, a new algorithm does not need to be defined for each of the curves.  </li>
+  <li>Computed Secret to Shared Secret: Once the computed secret is known, the resulting value needs to be converted to a byte string to run the KDF function.  The X coordinate is used for all of the curves defined in this document.  For curves X25519 and X448, the resulting value is used directly as it is a byte string of a known length.  For the P-256, P-384 and P-521 curves, the X coordinate is run through the I2OSP function defined in <a href="#RFC3447">[RFC3447]</a> using the same computation for n as is defined in <a href="#ECDSA">Section 8.1</a>.  </li>
   <li>Ephemeral-static or static-static: The key agreement process may be done using either a static or an ephemeral key for the sender's side.  When using ephemeral keys, the sender MUST generate a new ephemeral key for every key agreement operation.  The ephemeral key is placed in the 'ephemeral key' parameter and MUST be present for all algorithm identifiers that use ephemeral keys.  When using static keys, the sender MUST either generate a new random value or otherwise create a unique value.  For the KDF functions used, this means either in the 'salt' parameter for HKDF (<a href="#HKDF_Alg_Params">Table 13</a>) or in the 'PartyU nonce' parameter for the context structure (<a href="#KDF_Context_Alg_Params">Table 14</a>) MUST be present.  (Both may be present if desired.) The value in the parameter MUST be unique for the pair of keys being used.  It is acceptable to use a global counter that is incremented for every static-static operation and use the resulting value.  When using static keys, the static key should be identified to the recipient.  The static key can be identified either by providing the key ('static key') or by providing a key identifier for the static key ('static key id').  Both of these parameters are defined in <a href="#table-ecdh-es-parameter-table">Table 19</a> </li>
   <li>Key derivation algorithm: The result of an ECDH key agreement process does not provide a uniformly random secret.  As such, it needs to be run through a KDF in order to produce a usable key.  Processing the secret through a KDF also allows for the introduction of context material: how the key is going to be used, and one time material for static-static key agreement.  All of the algorithm define in this document use one of the HKDF algorithms defined in <a href="#HKDF">Section 11.1</a> with the context structure defined in <a href="#context">Section 11.2</a>.  </li>
   <li>Key Wrap algorithm: No key wrap algorithm is used.  This is represented in <a href="#table-ecdh-es-table">Table 18</a> as 'none'.  The key size for the context structure is the content layer encryption algorithm size.  </li>
