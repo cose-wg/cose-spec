@@ -104,12 +104,12 @@
     <section anchor="introduction" title="Introduction">
 
       <t>
-        There has been an increased focus on the small, constrained devices that make up the Internet of Things (IOT). 
+        There has been an increased focus on the small, constrained devices that make up the Internet of Things (IoT). 
         One of the standards that has come out of this process is the Concise Binary Object Representation (CBOR) <xref target="RFC7049"/>. 
         CBOR extended the data model of the JavaScript Object Notation (JSON) <xref target="RFC7159"/> by allowing for binary data among other changes. 
-        CBOR is being adopted by several of the IETF working groups dealing with the IOT world as their encoding of data structures. 
+        CBOR is being adopted by several of the IETF working groups dealing with the IoT world as their encoding of data structures. 
         CBOR was designed specifically to be both small in terms of messages transport and implementation size as well having a schema free decoder.
-        A need exists to provide message security services for IOT and using CBOR as the message encoding format makes sense.
+        A need exists to provide message security services for IoT and using CBOR as the message encoding format makes sense.
       </t>
 
       <t>
@@ -217,7 +217,7 @@
 
         <t>
           As well as the prose description, a version of a CBOR grammar is presented in CDDL.
-          Since CDDL has not be published as an RFC, this grammar may not work with the final version of CDDL.
+          Since CDDL has not been published as an RFC, this grammar may not work with the final version of CDDL.
           The CDDL grammar is informational, the prose description is normative.
       </t>
       
@@ -256,7 +256,7 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
           In JSON, maps are called objects and only have one kind of map key: a string.
           In COSE, we use strings, negative integers and unsigned integers as map keys.
           The integers are used for compactness of encoding and easy comparison.
-          Since the work "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage as a map key.
+          Since the word "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage as a map key.
         </t>
 
         <t>
@@ -339,8 +339,9 @@ values = any
             The value to use with the parameter for each of the structures can be found in <xref target="CBOR-Tags"/>.
           </t>
           <t>
-            When a COSE object is carried as a CoAP payload, the CoAP content type parameter can be used to identify the message content.
-            The CoAP content types can be found in <xref target="CoAP_content_type"/>.
+            When a COSE object is carried as a CoAP payload, the CoAP
+            Content-Format Option can be used to identify the message content.
+            The CoAP Content-Format values can be found in <xref target="CoAP_content_type"/>.
             The CBOR tag for the message structure is not required as each security message is uniquely identified.
           </t>
         </list>
@@ -618,7 +619,7 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
               The value of this parameter can be matched against the 'kid' member in a COSE_Key structure.
               Other methods of key distribution can define an equivalent field to be matched.
               Applications MUST NOT assume that 'kid' values are unique.
-              There may be more than one key with the same 'kid' value, it may be required that all of the keys need to be checked to find the correct one.
+              There may be more than one key with the same 'kid' value, so all of the keys may need to be checked to find the correct one.
               The internal structure of 'kid' values is not defined and cannot be relied on by applications.
               Key identifier values are hints about which key to use.
 	      They are not directly a security critical field.
@@ -628,7 +629,7 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
             <t hangText="Initialization Vector">
               This parameter holds the Initialization Vector (IV) value.
               For some symmetric encryption algorithms this may be referred to as a nonce.
-              As the IV is authenticated by encryption process, it can be placed in the unprotected header bucket.
+              As the IV is authenticated by the encryption process, it can be placed in the unprotected header bucket.
             </t>
 
             <t hangText='Partial Initialization Vector'>
@@ -636,7 +637,7 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
               When using the COSE_Encrypt1 structure, a portion of the IV can be part of the context associated with the key.
               This field is used to carry a value that causes the IV to be changed for each message.
               As the IV is authenticated by the encryption process, this value can be placed in the unprotected header bucket.
-              The 'Initialization Vector' and 'Partial Initialization Vector' parameters MUST NOT be present in the same security layer.
+              The 'Initialization Vector' and 'Partial Initialization Vector' parameters MUST NOT both be present in the same security layer.
               <vspace/>
               The message IV is generated by the following steps:
               <list style="numbers">
@@ -646,7 +647,7 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
             </t>
 
             <t hangText='counter signature'>
-              This parameter holds a counter signature value.
+              This parameter holds one or more counter signature values.
               Counter signatures provide a method of having a second party sign some data.
 	      The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_Sign1, COSE_Signature, COSE_Encrypt, COSE_recipient, COSE_Encrypt1, COSE_Mac and COSE_Mac0.
               These structures all have the same beginning elements so that a consistent calculation of the counter signature can be computed.
@@ -677,7 +678,7 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
           
           <c>alg</c>        <c>1</c>        <c>int / tstr</c>        <c>COSE Algorithm Registry</c>       <c>Cryptographic algorithm to use</c>
           <c>crit</c>       <c>2</c>        <c>[+ label]</c>         <c>COSE Header Label Registry</c>    <c>Critical headers to be understood</c>
-          <c>content type</c> <c>3</c>      <c>tstr / int</c>        <c>CoAP Content- Formats or Media Types registry</c>          <c>Content type of the payload</c>
+          <c>content type</c> <c>3</c>      <c>tstr / uint</c>        <c>CoAP Content- Formats or Media Types registry</c>          <c>Content type of the payload</c>
           <c>kid</c>        <c>4</c>        <c>bstr</c>              <c></c>                              <c>key identifier</c>
           <c>IV</c>         <c>5</c>        <c>bstr</c>              <c></c>                              <c>Full Initialization Vector</c>
           <c>Partial IV</c> <c>6</c>        <c>bstr</c>              <c></c>                              <c>Partial Initialization Vector</c>
@@ -750,7 +751,7 @@ COSE_Sign_Tagged = #6.991(COSE_Sign) ; Replace 991 with TBD1
 ]]></artwork></figure>
       
       <t>
-        A COSE Signed Message is divided into two parts.
+        A COSE Signed Message is defined in two parts.
         The CBOR object that carries the body and information about the body is called the COSE_Sign structure.
         The CBOR object that carries the signature and information about the signature is called the COSE_Signature structure.
         Examples of COSE Signed Messages can be found in <xref target="SignedExamples"/>.
@@ -780,7 +781,7 @@ COSE_Sign_Tagged = #6.991(COSE_Sign) ; Replace 991 with TBD1
             contains the serialized content to be signed.
             If the payload is not present in the message, the application is required to supply the payload separately.
             The payload is wrapped in a bstr to ensure that it is transported without changes.
-            If the payload is transported separately (i.e. detached content), then a nil CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
+            If the payload is transported separately ("detached content"), then a nil CBOR object is placed in this location and it is the responsibility of the application to ensure that it will be transported without changes.
             <vspace blankLines="1"/>
             Note: When a signature with message recovery algorithm is used (<xref target="SigAlgs"/>), the maximum number of bytes that can be recovered is the length of the payload.
             The size of the payload is reduced by the number of bytes that will be recovered.
@@ -944,7 +945,7 @@ COSE_Sign1 = [
       <section title="Signing and Verification Process" anchor="Sig_structure">
 
         <t>
-          In order to create a signature, a consistent byte stream is needed.
+          In order to create a signature, a well-defined byte stream is needed.
           This algorithm takes in the body information (COSE_Sign or COSE_Sign1), the signer information (COSE_Signature), and the application data (External).
           A CBOR array is used to construct the byte stream.
           The fields of the array in order are:
@@ -1319,7 +1320,7 @@ Enc_structure = [
           How to encrypt a message:
           <list style="numbers">
             <t>
-              Create a Enc_structure and populate it with the appropriate fields.
+              Create an Enc_structure and populate it with the appropriate fields.
             </t>
 
             <t>
@@ -1403,7 +1404,7 @@ Enc_structure = [
           How to encrypt a message:
           <list style="numbers">
             <t>
-              Verify that the 'protected' field is absent.
+              Verify that the 'protected' field is empty.
             </t>
             <t>
               Verify that there was no external additional authenticated data supplied for this operation.
@@ -1443,7 +1444,7 @@ Enc_structure = [
           How to decrypt a message:
           <list style="numbers">
             <t>
-              Verify that the 'protected' field is absent.
+              Verify that the 'protected' field is empty.
             </t>
             <t>
               Verify that there was no external additional authenticated data supplied for this operation.
@@ -1811,7 +1812,7 @@ COSE_KeySet = [+COSE_Key]
             This field provides the ability to associate a partial IV with a key that is then modified on a per message basis with the partial IV.
             <vspace blankLines="1"/>
             Extreme care needs to be taken when using a Base IV in an application.
-            Many encryption algorithms loose security if the same IV is used twice.
+            Many encryption algorithms lose security if the same IV is used twice.
             <vspace blankLines="1"/>
             If different keys are derived for each sender, starting at the same base IV is likely to satisfy this condition.
             If the same key is used for multiple senders, then the application needs to provide for a method of dividing the IV space up between the senders.
@@ -1963,7 +1964,7 @@ valid, message content = Verification(message sent, key, signature)
           When using a COSE key for this algorithm, the following checks are made:
           <list style="symbols">
             <t>The 'kty' field MUST be present and it MUST be 'EC2'.</t>
-            <t>If the 'alg' field present, it MUST match the ECDSA signature algorithm being used.</t>
+            <t>If the 'alg' field is present, it MUST match the ECDSA signature algorithm being used.</t>
             <t>If the 'key_ops' field is present, it MUST include 'sign' when creating an ECDSA signature.</t>
             <t>If the 'key_ops' field is present, it MUST include 'verify' when verifying an ECDSA signature.</t>
           </list>
@@ -1980,7 +1981,7 @@ valid, message content = Verification(message sent, key, signature)
             Applications that specify ECDSA should evaluate the ability to get good random number generation and require deterministic signatures where poor random number generation exists.
           </t>
           <t>
-            Note: Use of this technique a good idea even when good random number generation exists.
+            Note: Use of this technique is a good idea even when good random number generation exists.
             Doing so both reduces the possibility of having the same value of 'k' in two signature operations and allows for reproducible signature values which helps testing.
           </t>
 
@@ -2116,7 +2117,7 @@ valid = MAC_Verify(message content, key, tag)
         </t>
 
         <t>
-          The algorithm defined in this document can be found in <xref target="table-hmac"/>.
+          The algorithms defined in this document can be found in <xref target="table-hmac"/>.
         </t>
         
         <texttable title="HMAC Algorithm Values" anchor="table-hmac">
@@ -2133,8 +2134,8 @@ valid = MAC_Verify(message content, key, tag)
 
         <t>
           Some recipient algorithms carry the key while others derive a key from secret data.
-          For those algorithms that carry the key (i.e. AES-KeyWrap), the size of the HMAC key SHOULD be the same size as the underlying hash function.
-          For those algorithms that derive the key (i.e. ECDH), the derived key MUST be the same size as the underlying hash function.
+          For those algorithms that carry the key (such as AES-KeyWrap), the size of the HMAC key SHOULD be the same size as the underlying hash function.
+          For those algorithms that derive the key (such as ECDH), the derived key MUST be the same size as the underlying hash function.
         </t>
 
         <t>
@@ -2265,8 +2266,8 @@ valid, message content = Decrypt(cipher text, key, additional data)
         </t>
 
         <t>
-          The GCM mode is parameterized with by the size of the authentication tag and the size of the nonce.
-          This document fixes the size of the nonce at 96-bits.
+          The GCM mode is parameterized by the size of the authentication tag and the size of the nonce.
+          This document fixes the size of the nonce at 96 bits.
           The size of the authentication tag is limited to a small set of values.
           For this document however, the size of the authentication tag is fixed at 128 bits.
         </t>
@@ -2350,7 +2351,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
           We define a matrix of algorithms in this document over the values of L and M.
           Constrained devices are usually operating in situations where they use short messages and want to avoid doing recipient specific cryptographic operations.
           This favors smaller values of both L and M.
-          Less constrained devices do will want to be able to user larger messages and are more willing to generate new keys for every operation.
+          Less constrained devices will want to be able to user larger messages and are more willing to generate new keys for every operation.
           This favors larger values of L and M.
         </t>
 
@@ -2359,7 +2360,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
           <list style="hanging">
             <t hangText="16 bits (2)">
               limits messages to 2^16 bytes (64 KiB) in length.
-              This sufficiently long for messages in the constrained world.
+              This is sufficiently long for messages in the constrained world.
               The nonce length is 13 bytes allowing for 2^(13*8) possible values of the nonce without repeating.
             </t>
             <t hangText="64 bits (8)"> 
@@ -2505,7 +2506,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
       </t>
 
       <t>
-        The same KDF function can be setup to deal with the first two types of secrets different.
+        The same KDF function can be setup to deal with the first two types of secrets in a different way.
         The KDF function defined in <xref target="HKDF"/> is such a function.
         This is reflected in the set of algorithms defined for HKDF.
       </t>
@@ -2681,7 +2682,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
               This field indicates the algorithm for which the key material will be used.
               This field is required to be present.
               The field exists in the context information so that if the same environment is used for different algorithms, then completely different keys will be generated for each of those algorithms.
-              (This practice means if algorithm A is broken and thus can is easier to find, the key derived for algorithm B will not be the same as the key derived for algorithm A.)
+              (This practice means if algorithm A is broken and thus is easier to find, the key derived for algorithm B will not be the same as the key derived for algorithm A.)
             </t>
 
             <t hangText="PartyUInfo">
@@ -3117,7 +3118,7 @@ COSE_KDF_Context = [
               At a minimum, headers  MUST contain the 'alg' parameter and SHOULD contain a parameter identifying the recipient's asymmetric key.
             </t>
             <t>
-              The headers SHOULD identify the senders key for the static-static versions and MUST contain the senders ephemeral key for the ephemeral-static versions.
+              The headers SHOULD identify the sender's key for the static-static versions and MUST contain the sender's ephemeral key for the ephemeral-static versions.
             </t>
           </list>
         </t>
@@ -3162,7 +3163,7 @@ COSE_KDF_Context = [
                 It is acceptable to use a global counter that is incremented for every static-static operation and use the resulting value.
                 When using static keys, the static key should be identified to the recipient.
                 The static key can be identified either by providing the key ('static key') or by providing a key identifier for the static key ('static key id').
-                Both of these parameters are defined in <xref target="table-ecdh-es-parameter-table"/>
+                Both of these parameters are defined in <xref target="table-ecdh-es-parameter-table"/>.
               </t>
               
               <t>
@@ -3170,7 +3171,7 @@ COSE_KDF_Context = [
                 The result of an ECDH key agreement process does not provide a uniformly random secret.
 		As such, it needs to be run through a KDF in order to produce a usable key.
                 Processing the secret through a KDF also allows for the introduction of context material: how the key is going to be used, and one time material for static-static key agreement.
-                All of the algorithm define in this document use one of the HKDF algorithms defined in <xref target="HKDF"/> with the context structure defined in <xref target="context"/>.
+                All of the algorithms defined in this document use one of the HKDF algorithms defined in <xref target="HKDF"/> with the context structure defined in <xref target="context"/>.
               </t>
 
               <t>
@@ -3379,7 +3380,7 @@ COSE_KDF_Context = [
         <ttcol>name</ttcol>
         <ttcol>value</ttcol>
         <ttcol>description</ttcol>
-        <c>OPK</c>      <c>1</c>        <c>Octet Key Pair</c>
+        <c>OKP</c>      <c>1</c>        <c>Octet Key Pair</c>
         <c>EC2</c>      <c>2</c>        <c>Elliptic Curve Keys w/ X,Y Coordinate pair</c>
         <c>Symmetric</c><c>4</c>        <c>Symmetric Keys</c>
         <c>Reserved</c> <c>0</c>        <c>This value is reserved</c>
@@ -3632,7 +3633,7 @@ COSE_KDF_Context = [
           <t>
             Applications need to determine the set of security algorithms that are to be used.
             When selecting the algorithms to be used as the mandatory to implement set, consideration should be given to choosing different types of algorithms when two are chosen for a specific purpose.
-            An example of this would be choosing HMAC-SHA512 and AES-CMAC as different MAC algorithms, the construction is vastly different between these two algorithms.
+            An example of this would be choosing HMAC-SHA512 and AES-CMAC as different MAC algorithms; the construction is vastly different between these two algorithms.
             This means that a weakening of one algorithm would be unlikely to lead to a weakening of the other algorithms.
             Of course, these algorithms do not provide the same level of security and thus may not be comparable for the desired security functionality.
           </t>
@@ -3662,7 +3663,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          The tags to be assigned are in table <xref target="CBOR-Tags"/>.
+          The tags to be assigned are in <xref target="CBOR-Tags"/>.
         </t>
 
       </section>
@@ -3687,7 +3688,7 @@ COSE_KDF_Context = [
         <t>
           It is requested that IANA create a new registry entitled "COSE Header Parameters".
           The registry is to be created as Expert Review Required.
-          Expert review guidelines are provided in <xref target="review"/>
+          Expert review guidelines are provided in <xref target="review"/>.
         </t>
 
         <t>
@@ -3718,7 +3719,7 @@ COSE_KDF_Context = [
               Integer values in the range -1 to -65536 are delegated to the "COSE Header Algorithm Label" registry.
 
               <!-- These are >= 5 byte items -->
-              Integer values beyond -65536 are marked as private use.
+              Integer values less than -65536 are marked as private use.
             </t>
 
             <t hangText='value'>
@@ -3756,7 +3757,7 @@ COSE_KDF_Context = [
         <t>
           It is requested that IANA create a new registry entitled "COSE Header Algorithm Labels".
           The registry is to be created as Expert Review Required.
-          Expert review guidelines are provided in <xref target="review"/>
+          Expert review guidelines are provided in <xref target="review"/>.
         </t>
 
         <t>
@@ -3808,7 +3809,7 @@ COSE_KDF_Context = [
         <t>
           It is requested that IANA create a new registry entitled "COSE Algorithm Registry".
           The registry is to be created as Expert Review Required.
-          Expert review guidelines are provided in <xref target="review"/>
+          Expert review guidelines are provided in <xref target="review"/>.
         </t>
 
         <t>
@@ -3823,7 +3824,7 @@ COSE_KDF_Context = [
               Integer values between -256 and 255 and strings of length 1 are designated as Standards Track Document required.
               Integer values from -65536 to 65535 and strings of length 2 are designated as Specification Required.
               Integer values of greater than 65535 and strings of length greater than 2 are designated as expert review.
-              Integer values beyond -65536 are marked as private use.
+              Integer values less than -65536 are marked as private use.
             </t>
             <t hangText='description'>
               A short description of the algorithm.
@@ -3852,7 +3853,7 @@ COSE_KDF_Context = [
         <t>
           It is requested that IANA create a new registry entitled "COSE Key Common Parameter" Registry.
           The registry is to be created as Expert Review Required.
-          Expert review guidelines are provided in <xref target="review"/>
+          Expert review guidelines are provided in <xref target="review"/>.
         </t>
 
         <t>
@@ -3872,16 +3873,16 @@ COSE_KDF_Context = [
               Integer values from 256 to 65535 and strings of length 2 are designated as Specification Required.
               Integer values of greater than 65535 and strings of length greater than 2 are designated as expert review.
               Integer values in the range -1 to -65536 are used for key parameters specific to a single algorithm delegated to the "COSE Key Type Parameter Label" registry.
-              Integer values beyond -65536 are marked as private use.
+              Integer values less than -65536 are marked as private use.
             </t>
             <t hangText='CBOR Type'>
-              This field contains the CBOR type for the field
+              This field contains the CBOR type for the field.
             </t>
             <t hangText='registry'>
               This field denotes the registry that values come from, if one exists.
             </t>
             <t hangText='description'>
-              This field contains a brief description for the field
+              This field contains a brief description for the field.
             </t>
             <t hangText='specification'>
               This contains a pointer to the public specification for the field if one exists
@@ -3902,7 +3903,7 @@ COSE_KDF_Context = [
         <t>
           It is requested that IANA create a new registry "COSE Key Type Parameters".
           The registry is to be created as Expert Review Required.
-          Expert review guidelines are provided in <xref target="review"/>
+          Expert review guidelines are provided in <xref target="review"/>.
         </t>
 
         <t>
@@ -3924,13 +3925,13 @@ COSE_KDF_Context = [
               Labels are expected to be reused for different keys.
             </t>
             <t hangText='CBOR type'>
-              This field contains the CBOR type for the field
+              This field contains the CBOR type for the field.
             </t>
             <t hangText='description'>
-              This field contains a brief description for the field
+              This field contains a brief description for the field.
             </t>
             <t hangText='specification'>
-              This contains a pointer to the public specification for the field if one exists
+              This contains a pointer to the public specification for the field if one exists.
             </t>
           </list>
         </t>
@@ -3947,7 +3948,7 @@ COSE_KDF_Context = [
         <t>
           It is requested that IANA create a new registry "COSE Elliptic Curve Parameters".
           The registry is to be created as Expert Review Required.
-          Expert review guidelines are provided in <xref target="review"/>
+          Expert review guidelines are provided in <xref target="review"/>.
         </t>
 
         <t>
@@ -4059,14 +4060,14 @@ COSE_KDF_Context = [
         <section title="COSE Key media type">
 
           <t>
-            This section registers the "application/cose-key+cbor" and "application/cose-key-set+cbor" media types in the "Media Types" registry.
+            This section registers the "application/cose-key" and "application/cose-key-set" media types in the "Media Types" registry.
             These media types are used to indicate, respectively, that content is a COSE_Key or COSE_KeySet object.
           </t>
 
           <t>
           <list style="empty">
             <t>Type name: application</t>
-            <t>Subtype name: cose-key+cbor</t>
+            <t>Subtype name: cose-key</t>
             <t>Required parameters: N/A</t>
             <t>Optional parameters: N/A</t>
             <t>Encoding considerations: binary</t>
@@ -4094,7 +4095,7 @@ COSE_KDF_Context = [
           <t>
           <list style="empty">
             <t>Type name: application</t>
-            <t>Subtype name: cose-key-set+cbor</t>
+            <t>Subtype name: cose-key-set</t>
             <t>Required parameters: N/A</t>
             <t>Optional parameters: N/A</t>
             <t>Encoding considerations: binary</t>
@@ -4164,7 +4165,7 @@ COSE_KDF_Context = [
             <t>
               Specifications are required for the standards track range of point assignment.
               Specifications should exist for specification required ranges, but early assignment before a specification is available is considered to be permissible.
-              Specifications are needed for the first-come, first-serve range if they are expected to be used outside of closed environments in an inoperable way.
+              Specifications are needed for the first-come, first-serve range if they are expected to be used outside of closed environments in an interoperable way.
               When specifications are not provided, the description provided needs to have sufficient information to identify what point is being used for.
             </t>
 
@@ -4223,10 +4224,10 @@ COSE_KDF_Context = [
             <t>Primary Maintainer: Jim Schaad</t>
             <t>
               Languages:
-              There are three different languages that are current supported:  JAVA, C# and C.
+              There are three different languages that are currently supported:  Java, C# and C.
             </t>
             <t>
-              Cryptography: The JAVA and C# libraries use Bouncy Castle to provide the required cryptography.
+              Cryptography: The Java and C# libraries use Bouncy Castle to provide the required cryptography.
               The C version uses OPENSSL Version 1.0 for the cryptography.
             </t>
             <t>
@@ -4236,10 +4237,10 @@ COSE_KDF_Context = [
             </t>
             <t>
               Testing:
-              All of the examples in the example library are generated by the C# library and then validated using the JAVA and C libraries.
+              All of the examples in the example library are generated by the C# library and then validated using the Java and C libraries.
               All three libraries have tests to allow for the creating of the same messages that are in the example library followed by validating them.
               These are not compared against the example library.
-              The JAVA and C# libraries have unit testing included.
+              The Java and C# libraries have unit testing included.
               Not all of the MUST statements in the document have been implemented as part of the libraries.
               One such statement is the requirement that unique labels be present.
             </t>
@@ -4312,12 +4313,12 @@ COSE_KDF_Context = [
         Binding a key to a single algorithm prevents these problems.
         Key creators and key consumers are strongly encouraged not only to create new keys for each different algorithm, but to include that selection of algorithm in any distribution of key material and strictly enforce the matching of algorithms in the key structure to algorithms in the message structure.
         In addition to checking that algorithms are correct, the key form needs to be checked as well.
-        Do not use an 'EC2' key where an 'oct' key is expected.
+        Do not use an 'EC2' key where an 'OKP' key is expected.
       </t>
 
       <t>
         Before using a key for transmission, or before acting on information received, a trust decision on a key needs to be made.
-        Is the data or action something that the entity associated with the key has a right to see or a right to request.
+        Is the data or action something that the entity associated with the key has a right to see or a right to request?
         A number of factors are associated with this trust decision.
         Some of the ones that are highlighted here are:
         <list style="symbols">
@@ -4745,7 +4746,7 @@ COSE_KDF_Context = [
       </t>
 
       <t>
-        A GITHUB project has been created at https://github.com/cose-wg/Examples that contains not only the examples presented in this document, but a more complete set of testing examples as well.
+        A GitHub project has been created at https://github.com/cose-wg/Examples that contains not only the examples presented in this document, but a more complete set of testing examples as well.
         Each example is found in a JSON file that contains the inputs used to create the example, some of the intermediate values that can be used in debugging the example and the output of the example presented in both a hex and a CBOR diagnostic notation format.
         Some of the examples at the site are designed failure testing cases, these are clearly marked as such in the JSON file.
         If errors in the examples in this document are found, the examples on github will be updated and a note to that effect will be placed in the JSON file.
@@ -4753,7 +4754,7 @@ COSE_KDF_Context = [
 
       <t>
         As noted, the examples are presented using the CBOR's diagnostic notation.
-        A ruby based tool exists that can convert between the diagnostic notation and binary.
+        A Ruby based tool exists that can convert between the diagnostic notation and binary.
         This tool can be installed with the command line:
       </t>
       <figure>
@@ -4763,7 +4764,7 @@ COSE_KDF_Context = [
       <t>
         The diagnostic notation can be converted into binary files using the following command line:
       </t>
-      <figure><artwork><![CDATA[diag2cbor < inputfile > outputfile
+      <figure><artwork><![CDATA[diag2cbor.rb < inputfile > outputfile
 ]]></artwork></figure>
 
       <t>
