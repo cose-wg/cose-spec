@@ -70,12 +70,12 @@
 
     <author initials="J." surname="Schaad" fullname="Jim Schaad">
       <organization>August Cellars</organization>
-      <address>
+p      <address>
         <email>ietf@augustcellars.com</email>
       </address>
     </author>
 
-    <date/>
+y    <date/>
 
     <area>Security</area>
     <workgroup>COSE Working Group</workgroup>
@@ -152,10 +152,10 @@
               Signed messages separate the concept of protected and unprotected parameters that are for the content and the signature.
             </t>
             <t>
-              MAC messages are separated from signed messages.
+              MACed messages are separated from signed messages.
             </t>
             <t>
-              MAC messages have the ability to use the same set of recipient algorithms as enveloped messages for obtaining the MAC authentication key.
+              MACed messages have the ability to use the same set of recipient algorithms as enveloped messages for obtaining the MAC authentication key.
             </t>
             <t>
               Use binary encodings for binary data rather than base64url encodings.
@@ -260,8 +260,8 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
         </t>
 
         <t>
-          The presence of a label in a map which is not a string or an integer is an error.
-          Applications can either fail processing or process messages with incorrect labels, however they MUST NOT create messages with incorrect labels.
+          The presence of a label in a COSE map which is not a string or an integer is an error.
+          Applications can either fail processing or process messages with incorrect labels, however they MUST NOT create such messages.
         </t>
 
         <t>
@@ -283,7 +283,13 @@ values = any
         <t>Byte is a synonym for octet.</t>
         <t>
           Constrained Application Protocol (CoAP) is a specialized web transfer protocol for use in constrained systems.
-          It is defined in <xref target="RFC7252"/>.
+yp          It is defined in <xref target="RFC7252"/>.
+        </t>
+        <t>
+          Authenticated Encryption (AE) algorithms are those encryption algorithms which provide an authentication check of the contents algorithm with the encryption service.
+        </t>
+        <t>
+          Authenticated Encryption with Authenticated Data (AEAD) algorithms provide the same content authentication service as AE algorithms, but additionally provide for authentication of non-encrypted data as well.
         </t>
 
         <!--
@@ -329,6 +335,7 @@ values = any
           </t>
           <t>
             The message type is identified by a CBOR tag.
+            (Such messages are known in this specification as tagged messages while those without the CBOR tagged are known as untagged messages.)
             This document defines a CBOR tag for each of the message structures.
             These tags can be found in <xref target="CBOR-Tags"/>.
           </t>
@@ -352,7 +359,7 @@ values = any
             <c>TBD1</c>                 <c>cose-sign</c>                <c>COSE_Sign</c>                <c>COSE Signed Data Object</c>
             <c>TBD7</c>                 <c>cose-sign1</c>               <c>COSE_Sign1</c>               <c>COSE Single Signer Data Object</c>
             <c>TBD2</c>                 <c>cose-encrypt</c>           <c>COSE_Encrypt</c>           <c>COSE Encrypted Data Object</c>
-            <c>TBD3</c>                 <c>cose-encrypt1</c>           <c>COSE_Encrypt1</c>           <c>COSE Single Recipient Encrypted Data Object</c>
+            <c>TBD3</c>                 <c>cose-encrypt1</c>           <c>COSE_Encrypt0</c>           <c>COSE Single Recipient Encrypted Data Object</c>
             <c>TBD4</c>                 <c>cose-mac</c>                 <c>COSE_Mac</c>                 <c>COSE Mac-ed Data Object</c>
             <c>TBD6</c>                 <c>cose-mac0</c>                <c>COSE_Mac0</c>                <c>COSE Mac w/o Recipients Object</c>
             <c>TBD5</c>                 <c>N/A</c>                      <c>COSE_Key, COSE_KeySet</c>    <c>COSE Key or COSE Key Set Object</c>
@@ -428,11 +435,11 @@ values = any
 COSE_Messages = COSE_Untagged_Message / COSE_Tagged_Message
       
 COSE_Untagged_Message = COSE_Sign / COSE_Sign1 /
-    COSE_Encrypt / COSE_Encrypt1 /
+    COSE_Encrypt / COSE_Encrypt0 /
     COSE_Mac / COSE_Mac0
 
 COSE_Tagged_Message = COSE_Sign_Tagged / COSE_Sign1_Tagged /
-    COSE_Encrypt_Tagged / COSE_Encrypt1_Tagged /
+    COSE_Encrypt_Tagged / COSE_Encrypt0_Tagged /
     COSE_Mac_Tagged / COSE_Mac0_Tagged
 ]]></artwork></figure>
 
@@ -502,11 +509,12 @@ tag=10
             This bucket MUST be empty if it is not going to be included in a cryptographic computation.
             This bucket is encoded in the message as a binary object.
             This value is obtained by CBOR encoding the protected map and wrapping it in a bstr object.
-            Senders SHOULD encode an empty protected map as a zero length binary object (it is both shorter and the version used in the authentication structures).
+            Senders SHOULD encode an empty protected map as a zero length binary object (i.e., the byte string h'a0').
+            This encoding is used because it is both shorter and the version used in the serialization structures for cryptographic computation.
             Recipients MUST accept both a zero length binary value and a zero length map encoded in the binary value.
             The wrapping allows for the encoding of the protected map to be transported with a greater chance that it will not be altered in transit.
             (Badly behaved intermediates could decode and re-encode, but this will result in a failure to verify unless the re-encoded byte string is identical to the decoded byte string.)
-            This finesses the problem of all parties needing to be able to do a common canonical encoding.
+            This avoids the problem of all parties needing to be able to do a common canonical encoding.
           </t>
           
           <t hangText='unprotected:'>
@@ -532,7 +540,7 @@ tag=10
       <t>
         Labels in each of the maps MUST be unique.
         When processing messages, if a label appears multiple times the message MUST be rejected as malformed.
-        Applications SHOULD perform the same checks that the labels appearing in the protected and unprotected headers are unique as well.
+        Applications SHOULD perform the same checks that the same labels does not occur in both the protected and unprotected headers.
         If the message is not rejected as malformed, attributes MUST be obtained from the protected bucket before they are obtained from the unprotected bucket.
       </t>
 
@@ -610,7 +618,9 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
             <t hangText='content type'>
               This parameter is used to indicate the content type of the data in the payload or cipher text fields.
               Integers are from the 'CoAP Content-Formats' IANA registry table.
-              Strings are from the IANA 'Media Types' registry.
+              Text values following the syntax of Content-Type defined in Section 5.1 of <xref target="RFC2045"/> omitting the prefix string "Content-Type:".
+              Leading and trailing whitespace is also omitted.
+              Textual content values along with parameters and subparameters can be located using the IANA 'Media Types' registry.
               Applications SHOULD provide this parameter if the content structure is potentially ambiguous.
             </t>
             
@@ -634,7 +644,7 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
 
             <t hangText='Partial Initialization Vector'>
               This parameter holds a part of the IV value.
-              When using the COSE_Encrypt1 structure, a portion of the IV can be part of the context associated with the key.
+              When using the COSE_Encrypt0 structure, a portion of the IV can be part of the context associated with the key.
               This field is used to carry a value that causes the IV to be changed for each message.
               As the IV is authenticated by the encryption process, this value can be placed in the unprotected header bucket.
               The 'Initialization Vector' and 'Partial Initialization Vector' parameters MUST NOT both be present in the same security layer.
@@ -649,7 +659,7 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
             <t hangText='counter signature'>
               This parameter holds one or more counter signature values.
               Counter signatures provide a method of having a second party sign some data.
-	      The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_Sign1, COSE_Signature, COSE_Encrypt, COSE_recipient, COSE_Encrypt1, COSE_Mac and COSE_Mac0.
+	      The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_Sign1, COSE_Signature, COSE_Encrypt, COSE_recipient, COSE_Encrypt0, COSE_Mac and COSE_Mac0.
               These structures all have the same beginning elements so that a consistent calculation of the counter signature can be computed.
               Details on computing counter signatures are found in <xref target="counter_signature"/>.
             </t>
@@ -715,7 +725,7 @@ Generic_Headers = (
         COSE supports two different signature structures.
         COSE_Sign allows for one or more signers to be applied to a single content.
         COSE_Sign1 is restricted to a single signer.
-        The structures cannot be converted between each other; the signature computation includes a parameter identifying which structure is being used.
+        The structures cannot be converted between each other; as the signature computation includes a parameter identifying which structure is being used, the converted structure will fail signature validation.
       </t>
 
       <section title="Signing with One or More Signers" anchor="full-signature">
@@ -859,7 +869,7 @@ COSE_Sign1_Tagged = #6.997(COSE_Sign1) ; Replace 997 with TBD7
 
         <t>
           The CBOR object that carries the body, the signature and the information about the body and signature is called the COSE_Sign1 structure.
-          Examples of COSE Single signature messages can be found in <xref target="Sign1_Examples"/>.
+          Examples of COSE_Sign1 messages can be found in <xref target="Sign1_Examples"/>.
         </t>
         
         <t>
@@ -990,11 +1000,11 @@ COSE_Sign1 = [
 
         <figure><artwork type="CDDL"><![CDATA[
 Sig_structure = [
-    context: "Signature" / "Signature1" / "CounterSignature",
-    body_protected: empty_or_serialized_map,
-    ? sign_protected: empty_or_serialized_map,
-    external_aad: bstr,
-    payload: bstr
+    context : "Signature" / "Signature1" / "CounterSignature",
+    body_protected : empty_or_serialized_map,
+    ? sign_protected : empty_or_serialized_map,
+    external_aad : bstr,
+    payload : bstr
 ]
 ]]></artwork></figure>
 
@@ -1077,7 +1087,7 @@ Sig_structure = [
     <section anchor="encryption-object" title="Encryption Objects">
       <t>
         COSE supports two different encryption structures.
-        COSE_Encrypt1 is used when a recipient structure is not needed because the key to be used is known implicitly.
+        COSE_Encrypt0 is used when a recipient structure is not needed because the key to be used is known implicitly.
         COSE_Encrypt is used the rest of the time.
         This includes cases where there are multiple recipients or a recipient algorithm other than direct is used.
       </t>
@@ -1151,8 +1161,8 @@ COSE_Encrypt_Tagged = #6.992(COSE_Encrypt) ; Replace 992 with TBD2
       <figure><artwork type="CDDL"><![CDATA[
 COSE_Encrypt = [
     Headers,
-    ciphertext: bstr / nil,
-    recipients: [+COSE_recipient]
+    ciphertext : bstr / nil,
+    recipients : [+COSE_recipient]
 ]
 ]]></artwork></figure>
 
@@ -1191,8 +1201,8 @@ COSE_Encrypt = [
       <figure><artwork type="CDDL"><![CDATA[
 COSE_recipient = [    
     Headers,
-    ciphertext: bstr / nil,
-    ? recipients: [+COSE_recipient]
+    ciphertext : bstr / nil,
+    ? recipients : [+COSE_recipient]
 ]
 ]]></artwork></figure>
 
@@ -1221,7 +1231,7 @@ COSE_recipient = [
 
     <section title="Single Recipient Encrypted">
       <t>
-        The COSE_Encrypt1 encrypted structure does not have the ability to specify recipients of the message.
+        The COSE_Encrypt0 encrypted structure does not have the ability to specify recipients of the message.
         The structure assumes that the recipient of the object will already know the identity of the key to be used in order to decrypt the message.
         If a key needs to be identified to the recipient, the enveloped structure ought to be used.
       </t>
@@ -1231,13 +1241,13 @@ COSE_recipient = [
       </t>
 
       <t>
-        The COSE_Encrypt1 structure can be encoded either with or without a tag depending on the context it will be used in.
-        The COSE_Encrypt1 structure is identified by the CBOR tag TBD3.
+        The COSE_Encrypt0 structure can be encoded either with or without a tag depending on the context it will be used in.
+        The COSE_Encrypt0 structure is identified by the CBOR tag TBD3.
         The CDDL fragment that represents this is.
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
-COSE_Encrypt1_Tagged = #6.993(COSE_Encrypt1) ; Replace 993 with TBD3
+COSE_Encrypt0_Tagged = #6.993(COSE_Encrypt0) ; Replace 993 with TBD3
 ]]></artwork></figure>
 
 
@@ -1259,13 +1269,13 @@ COSE_Encrypt1_Tagged = #6.993(COSE_Encrypt1) ; Replace 993 with TBD3
       </t>
 
       <t>
-        The CDDL fragment for COSE_Encrypt1 that corresponds to the above text is:
+        The CDDL fragment for COSE_Encrypt0 that corresponds to the above text is:
       </t>
       
       <figure><artwork type="CDDL"><![CDATA[
-COSE_Encrypt1 = [
+COSE_Encrypt0 = [
     Headers,
-    ciphertext: bstr / nil,
+    ciphertext : bstr / nil,
 ]
 ]]></artwork></figure>
       
@@ -1283,10 +1293,10 @@ COSE_Encrypt1 = [
             <t>
               A text string identifying the context of the authenticated data structure.  The context string is:
               <list style="hanging">
-                <t hangText='"Encrypt1"'> for the content encryption of a COSE_Encrypt1 data structure.</t>
+                <t hangText='"Encrypt0"'> for the content encryption of a COSE_Encrypt0 data structure.</t>
                 <t hangText='"Encrypt"'> for the first level of a COSE_Encrypt data structure (i.e. for content encryption).</t>
                 <t hangText='"Enc_Recipient"'> for a recipient encoding to be placed in an COSE_Encrypt data structure.</t>
-                <t hangText='"Mac_Recipient"'> for a recipient encoding to be placed in a MAC message structure.</t>
+                <t hangText='"Mac_Recipient"'> for a recipient encoding to be placed in a MACed message structure.</t>
                 <t hangText='"Rec_Recipient"'>for a recipient encoding to be placed in a recipient structure.</t>
               </list>
             </t>
@@ -1308,10 +1318,10 @@ COSE_Encrypt1 = [
         
         <figure><artwork type="CDDL"><![CDATA[
 Enc_structure = [
-    context : "Encrypt" / "Encrypt1" / "Enc_Recipient" /
+    context : "Encrypt" / "Encrypt0" / "Enc_Recipient" /
         "Mac_Recipient" / "Rec_Recipient",
-    protected: empty_or_serialized_map,
-    external_aad: bstr
+    protected : empty_or_serialized_map,
+    external_aad : bstr
 ]
 ]]></artwork></figure>
 
@@ -1502,11 +1512,11 @@ Enc_structure = [
         (This knowledge of sender assumes that there are only two parties involved and you did not send the message yourself.)
       </t>
 
-      <section title="MAC Message with Recipients" anchor="Mac_n">
+      <section title="MACed Message with Recipients" anchor="Mac_n">
 
       <t>
-        The multiple recipient MAC message uses two structures, the COSE_Mac structure defined in this section for carrying the body and the COSE_recipient structure (<xref target="EnvelopedData"/>) to hold the key used for the MAC computation.
-        Examples of MAC messages can be found in <xref target="MacExamples"/>.
+        The multiple recipient MACed message uses two structures, the COSE_Mac structure defined in this section for carrying the body and the COSE_recipient structure (<xref target="EnvelopedData"/>) to hold the key used for the MAC computation.
+        Examples of MACed messages can be found in <xref target="MacExamples"/>.
       </t>
 
       <t>
@@ -1562,22 +1572,22 @@ COSE_Mac_Tagged = #6.994(COSE_Mac)         ; Replace 994 with TBD4
       <figure><artwork type="CDDL"><![CDATA[
 COSE_Mac = [
    Headers,
-   payload: bstr / nil,
-   tag: bstr,
-   recipients: [+COSE_recipient]
+   payload : bstr / nil,
+   tag : bstr,
+   recipients :[+COSE_recipient]
 ]
 ]]></artwork></figure>
 
       </section>
 
-      <section title="MAC Messages with Implicit Key">
+      <section title="MACed Messages with Implicit Key">
       <t>
         In this section we describe the structure and methods to be used when doing MAC authentication for those cases where the recipient is implicitly known.
       </t>
       
       <t>
-        The MAC message uses the COSE_Mac0 structure defined in this section for carrying the body.
-        Examples of MAC messages with an implicit key can be found in <xref target="Mac0Examples"/>.
+        The MACed message uses the COSE_Mac0 structure defined in this section for carrying the body.
+        Examples of MACed messages with an implicit key can be found in <xref target="Mac0Examples"/>.
       </t>
 
       <t>
@@ -1612,8 +1622,8 @@ COSE_Mac0_Tagged = #6.996(COSE_Mac0)    ; Replace 996 with TBD6
       <figure><artwork type="CDDL"><![CDATA[
 COSE_Mac0 = [
    Headers,
-   payload: bstr / nil,
-   tag: bstr,
+   payload : bstr / nil,
+   tag : bstr,
 ]
 ]]></artwork></figure>
 
@@ -1635,8 +1645,8 @@ COSE_Mac0 = [
                 If there are no protected attributes, a zero length bstr is used.
               </t>
               <t>
-                If the application has supplied external authenticated data, encode it as a binary value and place in the MAC_structure.
-                If there is no external authenticated data, then use a zero length 'bstr'.
+                The protected attributes from the application encoded as a bstr type.
+                If this field is not supplied, it defaults to a zero length binary string.
                 (See <xref target="Extern_AAD"/> for application guidance on constructing this field.)
               </t>
               <t>
@@ -1652,10 +1662,10 @@ COSE_Mac0 = [
           
           <figure><artwork type="CDDL"><![CDATA[
 MAC_structure = [
-     context: "MAC" / "MAC0",
-     protected: empty_or_serialized_map,
-     external_aad: bstr,
-     payload: bstr
+     context : "MAC" / "MAC0",
+     protected : empty_or_serialized_map,
+     external_aad : bstr,
+     payload : bstr
 ]
 ]]></artwork></figure>
 
@@ -1668,7 +1678,7 @@ MAC_structure = [
               </t>
               
               <t>
-                Encode the MAC_structure to a byte stream using the encoding described in <xref target="CBOR-Canonical"/>.
+                Create the value ToBeMaced by encoding the MAC_structure to a byte stream using the encoding described in <xref target="CBOR-Canonical"/>.
               </t>
               
               <t>
@@ -1694,7 +1704,7 @@ MAC_structure = [
             </t>
             
             <t>
-                Encode the MAC_structure to a byte stream using the encoding described in <xref target="CBOR-Canonical"/>.
+                Create the value ToBeMaced by encoding the MAC_structure to a byte stream using the encoding described in <xref target="CBOR-Canonical"/>.
             </t>
 
             <t>
@@ -2104,7 +2114,7 @@ valid = MAC_Verify(message content, key, tag)
         <t>
           The Hash-base Message Authentication Code algorithm (HMAC) <xref target="RFC2104"/><xref target="RFC4231"/> was designed to deal with length extension attacks.
           The algorithm was also designed to allow for new hash algorithms to be directly plugged in without changes to the hash function.
-          The HMAC design process has been vindicated as, while the security of hash algorithms such as MD5 has decreased over time, the security of HMAC combined with MD5 has not yet been shown to be compromised <xref target="RFC6151"/>.
+          The HMAC design process has been shown as solid since, while the security of hash algorithms such as MD5 has decreased over time, the security of HMAC combined with MD5 has not yet been shown to be compromised <xref target="RFC6151"/>.
         </t>
 
         <t>
@@ -2256,7 +2266,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
       </t>
 
       <t>
-        These algorithms are used in COSE_Encrypt and COSE_Encrypt1.
+        These algorithms are used in COSE_Encrypt and COSE_Encrypt0.
       </t>
       
       <section title="AES GCM">
@@ -2433,7 +2443,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
           <t>
             <xref target="RFC3610"/> additionally calls out one other consideration of note.
-            It is possible to do a pre-computation attack against the algorithm in cases where the portions encryption content is highly predictable.
+            It is possible to do a pre-computation attack against the algorithm in cases where portions of the plaintext are  highly predictable.
             This reduces the security of the key size by half.
             Ways to deal with this attack include adding a random portion to the nonce value and/or increasing the key size used.
             Using a portion of the nonce for a random value will decrease the number of messages that a single key can be used for.
@@ -2726,18 +2736,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
             <t hangText="PartyVInfo">
               This field holds information about party V.
-              The PartyVInfo is encoded as a CBOR array.
-              For store and forward environments, the party V information may be minimal or even absent.
-              The elements of PartyVInfo are encoded in the order presented, however if the element does not exist no element is placed in the array.
-              The elements of the PartyVInfo array are:
-              
-              <list style="hanging">
-                <t hangText="identity">See description of PartyUInfo identity.</t>
-
-                <t hangText="nonce">See description of PartyUInfo nonce.</t>
-
-                <t hangText="other">See description of PartyUInfo other.</t>
-              </list>
+              The content of the structure are the same as for the PartyUInfo but for partyV.
             </t>
 
             <t hangText="SuppPubInfo">
@@ -3658,7 +3657,7 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA assign the following tags from the "Concise Binary Object Representation (CBOR) Tags" registry.
-          It is requested that the tags for COSE_Sign1, COSE_Encrypt1 and COSE_Mac0 be assigned in the 1 to 23 value range (i.e. one byte long when encoded).
+          It is requested that the tags for COSE_Sign1, COSE_Encrypt0 and COSE_Mac0 be assigned in the 1 to 23 value range (i.e. one byte long when encoded).
           It is requested that the rest of the tags be assigned in the 24 to 255 value range (i.e. two bytes long when encoded).
         </t>
 
@@ -3842,7 +3841,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          NOTE: The assignment of algorithm identifiers in this document was done so that positive numbers were used for the first level objects (COSE_Sign, COSE_Sign1, COSE_Encrypt, COSE_Encrypt1, COSE_Mac and COSE_Mac0).
+          NOTE: The assignment of algorithm identifiers in this document was done so that positive numbers were used for the first level objects (COSE_Sign, COSE_Sign1, COSE_Encrypt, COSE_Encrypt0, COSE_Mac and COSE_Mac0).
           Negative numbers were used for second level objects (COSE_Signature and COSE_recipient).
           Expert reviewers should consider this practice, but are not expected to be restricted by this precedent.
         </t>
@@ -4558,7 +4557,7 @@ COSE_KDF_Context = [
 
         <t>
           This set of recommendations applies to the case where an application is distributing a fixed algorithm along with the key information for use in a single COSE message object.
-          This normally applies to the smallest of the COSE messages, specifically COSE_Sign1, COSE_Mac0 and COSE_Encrypt1, but could apply to the other structures as well.
+          This normally applies to the smallest of the COSE messages, specifically COSE_Sign1, COSE_Mac0 and COSE_Encrypt0, but could apply to the other structures as well.
         </t>
 
         <t>
@@ -4647,7 +4646,7 @@ COSE_KDF_Context = [
 
             <t>
               Two contexts are distributed as a pair.
-              The first context contains a key for dealing with MAC messages, the second context contains a key for dealing with encrypted messages.
+              The first context contains a key for dealing with MACed messages, the second context contains a key for dealing with encrypted messages.
               This allows for a unified distribution of keys to participants for different types of messages which have different keys, but where the keys may be used in coordinated manner.
             </t>
           </list>
@@ -4956,7 +4955,7 @@ COSE_KDF_Context = [
         
       </section>
 
-      <section title="Examples of MAC messages" anchor="MacExamples">
+      <section title="Examples of MACed messages" anchor="MacExamples">
         <!-- RFC Editor - All of the examples will need to be modified after IANA has finaized decisions -->        
         
         <section anchor="Appendix_B_5_1" title="Shared Secret Direct MAC">
@@ -5000,7 +4999,7 @@ COSE_KDF_Context = [
 
         </section>
 
-        <section anchor="Appendix_B_5_4" title="Multi-recipient MAC message">
+        <section anchor="Appendix_B_5_4" title="Multi-recipient MACed message">
 
           <t>
             This example uses the following:
