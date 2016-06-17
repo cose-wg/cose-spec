@@ -718,12 +718,6 @@ values = any
       <td class="left">COSE_Mac0</td>
       <td class="left">COSE Mac w/o Recipients Object</td>
     </tr>
-    <tr>
-      <td class="left">TBD5</td>
-      <td class="left">N/A</td>
-      <td class="left">COSE_Key, COSE_KeySet</td>
-      <td class="left">COSE Key or COSE Key Set Object</td>
-    </tr>
   </tbody>
 </table>
 <p id="rfc.section.2.p.3">The following CDDL fragment identifies all of the top messages defined in this document.  Separate non-terminals are defined for the tagged and the untagged versions of the messages.  </p>
@@ -753,7 +747,7 @@ COSE_Tagged_Message = COSE_Sign_Tagged / COSE_Sign1_Tagged /
 <p> Only parameters that deal with the current layer are to be placed at that layer.  As an example of this, the parameter 'content type' describes the content of the message being carried in the message.  As such, this parameter is placed only in the content layer and is not placed in the recipient or signature layers.  In principle, one should be able to process any given layer without reference to any other layer.  (With the exception of the COSE_Sign structure, the only data that needs to cross layers is the cryptographic key.) </p>
 <p id="rfc.section.3.p.4">The buckets are present in all of the security objects defined in this document.  The fields in order are the 'protected' bucket (as a CBOR 'bstr' type) and then the 'unprotected' bucket (as a CBOR 'map' type).  The presence of both buckets is required.  The parameters that go into the buckets come from the IANA "COSE Header Parameters" registry (<a href="#cose-header-key-table">Section 16.2</a>).  Some common parameters are defined in the next section, but a number of parameters are defined throughout this document.  </p>
 <p id="rfc.section.3.p.5">Labels in each of the maps MUST be unique.  When processing messages, if a label appears multiple times, the message MUST be rejected as malformed.  Applications SHOULD perform the same checks that the same label does not occur in both the protected and unprotected headers.  If the message is not rejected as malformed, attributes MUST be obtained from the protected bucket before they are obtained from the unprotected bucket.  </p>
-<p id="rfc.section.3.p.6">The following CDDL fragment represents the two header buckets.  A group Headers is defined in CDDL that represents the two buckets in which attributes are placed.  This group is used to provide these two fields consistently in all locations.  A type is also defined that represents the map of header values.  It uses forward references to a group definition of headers for generic and algorithms.  </p>
+<p id="rfc.section.3.p.6">The following CDDL fragment represents the two header buckets.  A group Headers is defined in CDDL that represents the two buckets in which attributes are placed.  This group is used to provide these two fields consistently in all locations.  A type is also defined which represents the map of common headers.  </p>
 <pre>
 Headers = (
     protected : empty_or_serialized_map,
@@ -762,7 +756,6 @@ Headers = (
 
 header_map = {
     Generic_Headers,
-    ; Algorithm_Headers,
     * label =&gt; values
 }
 
@@ -1001,7 +994,7 @@ Sig_structure = [
 </ol>
 
 <p> </p>
-<p id="rfc.section.4.4.p.5">In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the appropriate authorization is done.  </p>
+<p id="rfc.section.4.4.p.5">In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the signing identity is authorized before performing actions.  </p>
 <h1 id="rfc.section.4.5"><a href="#rfc.section.4.5">4.5.</a> <a href="#counter_signature" id="counter_signature">Computing Counter Signatures</a></h1>
 <p id="rfc.section.4.5.p.1">Counter signatures provide a method of having a different signature occur on some piece of content.  This is normally used to provide a signature on a signature allowing for a proof that a signature existed at a given time (i.e., a Timestamp).  In this document, we allow for counter signatures to exist in a greater number of environments.  As an example, it is possible to place a counter signature in the unprotected attributes of a COSE_Encrypt object.  This would allow for an intermediary to either verify that the encrypted byte stream has not been modified, without being able to decrypt it, or for the intermediary to assert that an encrypted byte stream either existed at a given time or passed through it in terms of routing (i.e., a proxy signature).  </p>
 <p id="rfc.section.4.5.p.2">An example of a counter signature on a signature can be found in <a href="#Appendix_B_1_3">Appendix C.1.3</a>.  An example of a counter signature in an encryption object can be found in <a href="#Appendix_B_3_3">Appendix C.3.3</a>.  </p>
@@ -1127,9 +1120,9 @@ Enc_structure = [
 <ol>
   <li>Create an Enc_structure and populate it with the appropriate fields.  </li>
   <li>Encode the Enc_structure to a byte stream (AAD), using the encoding described in <a href="#CBOR-Canonical">Section 14</a>.  </li>
-  <li>Determine the encryption key.  This step is dependent on the class of recipient algorithm being used.  For: <dl><dt>No Recipients:</dt><dd style="margin-left: 8">The key to be used is determined by the algorithm and key at the current layer.  </dd><dt>Direct and Direct Key Agreement:</dt><dd style="margin-left: 8">The key is determined by the key and algorithm in the recipient structure.  The encryption algorithm and size of the key to be used are inputs into the KDF used for the recipient.  (For direct, the KDF can be thought of as the identity operation.) </dd><dt>Other:</dt><dd style="margin-left: 8">The key is randomly generated.  </dd></dl><p> </p></li>
-  <li>Call the encryption algorithm with K (the encryption key to use), P (the plain text) and AAD.  Place the returned cipher text into the 'ciphertext' field of the structure.  </li>
-  <li>For recipients of the message, recursively perform the encryption algorithm for that recipient, using the encryption key as the plain text.  </li>
+  <li>Determine the encryption key (K).  This step is dependent on the class of recipient algorithm being used.  For: <dl><dt>No Recipients:</dt><dd style="margin-left: 8">The key to be used is determined by the algorithm and key at the current layer.  </dd><dt>Direct and Direct Key Agreement:</dt><dd style="margin-left: 8">The key is determined by the key and algorithm in the recipient structure.  The encryption algorithm and size of the key to be used are inputs into the KDF used for the recipient.  (For direct, the KDF can be thought of as the identity operation.) </dd><dt>Other:</dt><dd style="margin-left: 8">The key is randomly generated.  </dd></dl><p> </p></li>
+  <li>Call the encryption algorithm with K (the encryption key), P (the plain text) and AAD.  Place the returned cipher text into the 'ciphertext' field of the structure.  </li>
+  <li>For recipients of the message, recursively perform the encryption algorithm for that recipient, using K (the encryption key) as the plain text.  </li>
 </ol>
 
 <p> </p>
@@ -1151,7 +1144,7 @@ Enc_structure = [
   <li>Verify that there was no external additional authenticated data supplied for this operation.  </li>
   <li>Determine the encryption key.  This step is dependent on the class of recipient algorithm being used.  For: <dl><dt>No Recipients:</dt><dd style="margin-left: 8">The key to be used is determined by the algorithm and key at the current layer.  </dd><dt>Direct and Direct Key Agreement:</dt><dd style="margin-left: 8">The key is determined by the key and algorithm in the recipient structure.  The encryption algorithm and size of the key to be used are inputs into the KDF used for the recipient.  (For direct, the KDF can be thought of as the identity operation.) </dd><dt>Other:</dt><dd style="margin-left: 8">The key is randomly generated.  </dd></dl><p> </p></li>
   <li>Call the encryption algorithm with K (the encryption key to use) and the P (the plain text).  Place the returned cipher text into the 'ciphertext' field of the structure.  </li>
-  <li>For recipients of the message, recursively perform the encryption algorithm for that recipient, using the encryption key as the plain text.  </li>
+  <li>For recipients of the message, recursively perform the encryption algorithm for that recipient, using K (the encryption key) as the plain text.  </li>
 </ol>
 
 <p> </p>
@@ -1313,13 +1306,6 @@ COSE_KeySet = [+COSE_Key]
       <td class="left">Identification of the key type</td>
     </tr>
     <tr>
-      <td class="left">key_ops</td>
-      <td class="left">4</td>
-      <td class="left">[+ (tstr/int)]</td>
-      <td class="left"/>
-      <td class="left">Restrict set of permissible operations</td>
-    </tr>
-    <tr>
       <td class="left">alg</td>
       <td class="left">3</td>
       <td class="left">tstr / int</td>
@@ -1332,6 +1318,13 @@ COSE_KeySet = [+COSE_Key]
       <td class="left">bstr</td>
       <td class="left"/>
       <td class="left">Key Identification value - match to kid in message</td>
+    </tr>
+    <tr>
+      <td class="left">key_ops</td>
+      <td class="left">4</td>
+      <td class="left">[+ (tstr/int)]</td>
+      <td class="left"/>
+      <td class="left">Restrict set of permissible operations</td>
     </tr>
     <tr>
       <td class="left">Base IV</td>
@@ -2066,7 +2059,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
 <dl>
   <dt>AlgorithmID</dt>
-  <dd style="margin-left: 8">This field indicates the algorithm for which the key material will be used.  This field is required to be present.  The field exists in the context information so that if the same environment is used for different algorithms, then completely different keys will be generated for each of those algorithms.  (This practice means if algorithm A is broken and thus is easier to find, the key derived for algorithm B will not be the same as the key derived for algorithm A.) </dd>
+  <dd style="margin-left: 8">This field indicates the algorithm for which the key material will be used.  This normally is either a Key Wrap algorithm identifier or a Content Encryption algorithm identifier.  The values are from the "COSE Algorithm Value" registry.  This field is required to be present.  The field exists in the context information so that if the same environment is used for different algorithms, then completely different keys will be generated for each of those algorithms.  (This practice means if algorithm A is broken and thus is easier to find, the key derived for algorithm B will not be the same as the key derived for algorithm A.) </dd>
   <dt>PartyUInfo</dt>
   <dd style="margin-left: 8">This field holds information about party U.  The PartyUInfo is encoded as a CBOR array.  The elements of PartyUInfo are encoded in the order presented, however if the element does not exist no element is placed in the array.  The elements of the PartyUInfo array are: <dl><dt>identity</dt><dd style="margin-left: 8">This contains the identity information for party U.  The identities can be assigned in one of two manners.  Firstly, a protocol can assign identities based on roles.  For example, the roles of "client" and "server" may be assigned to different entities in the protocol.  Each entity would then use the correct label for the data they send or receive.  The second way for a protocol to assign identities is to use a name based on a naming system (i.e., DNS, X.509 names).  <br/> We define an algorithm parameter 'PartyU identity' that can be used to carry identity information in the message.  However, identity information is often known as part of the protocol and can thus be inferred rather than made explicit.  If identity information is carried in the message, applications SHOULD have a way of validating the supplied identity information.  The identity information does not need to be specified and is set to nil in that case.  </dd><dt>nonce</dt><dd style="margin-left: 8">This contains a nonce value.  The nonce can either be implicit from the protocol or carried as a value in the unprotected headers.  <br/> We define an algorithm parameter 'PartyU nonce' that can be used to carry this value in the message However, the nonce value could be determined by the application and the value determined from elsewhere.  <br/> This option does not need to be specified and is set to nil in that case </dd><dt>other</dt><dd style="margin-left: 8">This contains other information that is defined by the protocol.  <br/> This option does not need to be specified and is set to nil in that case </dd></dl><p> </p></dd>
   <dt>PartyVInfo</dt>
@@ -2802,7 +2795,7 @@ COSE_KDF_Context = [
 </dl>
 
 <p> </p>
-<p id="rfc.section.16.2.p.3">The initial contents of the registry can be found in <a href="#Header-Table">Table 2</a>.  The specification column for all rows in that table should be this document.  </p>
+<p id="rfc.section.16.2.p.3">The initial contents of the registry can be found in <a href="#Header-Table">Table 2</a> and <a href="#CounterSign0">Table 27</a>.  The specification column for all rows in that table should be this document.  </p>
 <p id="rfc.section.16.2.p.4">Additionally, the label of 0 is to be marked as 'Reserved'.  </p>
 <h1 id="rfc.section.16.3"><a href="#rfc.section.16.3">16.3.</a> <a href="#IANA-Alg-Registry" id="IANA-Alg-Registry">COSE Header Algorithm Labels Registry</a></h1>
 <p id="rfc.section.16.3.p.1">It is requested that IANA create a new registry entitled "COSE Header Algorithm Labels".  The registry is to be created as Expert Review Required.  Expert review guidelines are provided in <a href="#review">Section 16.10</a>.  </p>
