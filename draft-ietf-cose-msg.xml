@@ -66,7 +66,7 @@
 
 <rfc ipr="trust200902" docName="draft-ietf-cose-msg-latest" category="std">
   <front>
-    <title>CBOR Encoded Message Syntax</title>
+    <title>COSE: A Message Based Security Solution for CBOR</title>
 
     <author initials="J." surname="Schaad" fullname="Jim Schaad">
       <organization>August Cellars</organization>
@@ -83,8 +83,9 @@
       <t>
         Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.
         There is a need for the ability to have the basic security services defined for this data format.
-        This document specifies processing for signatures, message authentication codes, and encryption using CBOR.
-        This document also specifies a representation for cryptographic keys using CBOR.
+        This document defines the CBOR Object Signing and Encyption (COSE) specification.
+        This specification describes how to create and process signature, message authentication codes and encryption using CBOR for serialization.
+        This specifiction additionally specifies how to representat cryptographic keys using CBOR.
       </t>
     </abstract>
 
@@ -2715,7 +2716,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
                   We define an algorithm parameter 'PartyU identity' that can be used to carry identity information in the message.
                   However, identity information is often known as part of the protocol and can thus be inferred rather than made explicit.
                   If identity information is carried in the message, applications SHOULD have a way of validating the supplied identity information.
-                  The identity information does not need to be specified and can be left as absent.
+                  The identity information does not need to be specified and is set to nil in that case.
                 </t>
 
                 <t hangText="nonce">
@@ -2725,13 +2726,13 @@ valid, message content = Decrypt(cipher text, key, additional data)
                   We define an algorithm parameter 'PartyU nonce' that can be used to carry this value in the message
                   However, the nonce value could be determined by the application and the value determined from elsewhere.
                   <vspace/>
-                  This item is optional and can be absent.
+                  This option does not need to be specified and is set to nil in that case
                 </t>
 
                 <t hangText="other">
                   This contains other information that is defined by the protocol.
                   <vspace/>
-                  This item is optional and can be absent.
+                  This option does not need to be specified and is set to nil in that case
                 </t>
               </list>
             </t>
@@ -2780,9 +2781,9 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
       <figure><artwork type='CDDL'><![CDATA[
 PartyInfo = (
-    ? nonce : bstr / int,
-    ? identity : bstr,
-    ? other : bstr,
+    identity : bstr / nil,
+    nonce : bstr / int / nil,
+    other : bstr / nil,
 )
 
 COSE_KDF_Context = [
