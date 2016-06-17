@@ -363,7 +363,6 @@ values = any
             <c>TBD3</c>                 <c>cose-encrypt1</c>           <c>COSE_Encrypt0</c>           <c>COSE Single Recipient Encrypted Data Object</c>
             <c>TBD4</c>                 <c>cose-mac</c>                 <c>COSE_Mac</c>                 <c>COSE Mac-ed Data Object</c>
             <c>TBD6</c>                 <c>cose-mac0</c>                <c>COSE_Mac0</c>                <c>COSE Mac w/o Recipients Object</c>
-            <c>TBD5</c>                 <c>N/A</c>                      <c>COSE_Key, COSE_KeySet</c>    <c>COSE Key or COSE Key Set Object</c>
           </texttable>
       
       <!--
@@ -549,8 +548,7 @@ tag=10
         The following CDDL fragment represents the two header buckets.
         A group Headers is defined in CDDL that represents the two buckets in which attributes are placed.
         This group is used to provide these two fields consistently in all locations.
-        A type is also defined that represents the map of header values.
-        It uses forward references to a group definition of headers for generic and algorithms.
+        A type is also defined which represents the map of common headers.
       </t>
 
       <figure><artwork type="CDDL"><![CDATA[
@@ -561,7 +559,6 @@ Headers = (
 
 header_map = {
     Generic_Headers,
-    ; Algorithm_Headers,
     * label => values
 }
 
@@ -1051,7 +1048,7 @@ Sig_structure = [
         </t>
 
         <t>
-          In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the appropriate authorization is done.
+          In addition to performing the signature verification, one must also perform the appropriate checks to ensure that the key is correctly paired with the signing identity and that the signing identity is authorized before performing actions.
         </t>
 
       </section>
@@ -1339,7 +1336,7 @@ Enc_structure = [
             </t>
 
             <t>
-              Determine the encryption key.
+              Determine the encryption key (K).
               This step is dependent on the class of recipient algorithm being used.
               For:
 
@@ -1359,12 +1356,12 @@ Enc_structure = [
             </t>
             
             <t>
-              Call the encryption algorithm with K (the encryption key to use), P (the plain text) and AAD.
+              Call the encryption algorithm with K (the encryption key), P (the plain text) and AAD.
               Place the returned cipher text into the 'ciphertext' field of the structure.
             </t>
 
             <t>
-              For recipients of the message, recursively perform the encryption algorithm for that recipient, using the encryption key as the plain text.
+              For recipients of the message, recursively perform the encryption algorithm for that recipient, using K (the encryption key) as the plain text.
             </t>
           </list>
         </t>
@@ -1446,7 +1443,7 @@ Enc_structure = [
             </t>
 
             <t>
-              For recipients of the message, recursively perform the encryption algorithm for that recipient, using the encryption key as the plain text.
+              For recipients of the message, recursively perform the encryption algorithm for that recipient, using K (the encryption key) as the plain text.
             </t>
           </list>
         </t>
@@ -1782,9 +1779,9 @@ COSE_KeySet = [+COSE_Key]
         <ttcol align='left'>description</ttcol>
         
         <c>kty</c>        <c>1</c>        <c>tstr / int</c>  <c>COSE Key Common Parameters</c>        <c>Identification of the key type</c>
-        <c>key_ops</c>    <c>4</c>        <c>[+ (tstr/int)]</c> <c></c>     <c>Restrict set of permissible operations</c>
         <c>alg</c>        <c>3</c>        <c>tstr / int</c>  <c>COSE Algorithm Values</c>        <c>Key usage restriction to this algorithm</c>
         <c>kid</c>        <c>2</c>        <c>bstr</c>        <c></c>        <c>Key Identification value - match to kid in message</c>
+        <c>key_ops</c>    <c>4</c>        <c>[+ (tstr/int)]</c> <c></c>     <c>Restrict set of permissible operations</c>
         <c>Base IV</c>    <c>5</c>        <c>bstr</c>        <c></c>        <c>Base IV to be xor-ed with Partial IVs</c>
       </texttable>
 
@@ -2693,6 +2690,8 @@ valid, message content = Decrypt(cipher text, key, additional data)
           <list style="hanging">
             <t hangText="AlgorithmID">
               This field indicates the algorithm for which the key material will be used.
+              This normally is either a Key Wrap algorithm identifier or a Content Encryption algorithm identifier.
+              The values are from the "COSE Algorithm Value" registry.
               This field is required to be present.
               The field exists in the context information so that if the same environment is used for different algorithms, then completely different keys will be generated for each of those algorithms.
               (This practice means if algorithm A is broken and thus is easier to find, the key derived for algorithm B will not be the same as the key derived for algorithm A.)
@@ -3743,7 +3742,7 @@ COSE_KDF_Context = [
         </t>
 
         <t>
-          The initial contents of the registry can be found in <xref target="Header-Table"/>.
+          The initial contents of the registry can be found in <xref target="Header-Table"/> and <xref target="CounterSign0"/>.
           The specification column for all rows in that table should be this document.
         </t>
 
