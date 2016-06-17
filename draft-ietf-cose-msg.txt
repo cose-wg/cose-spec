@@ -8,7 +8,7 @@ Intended status: Standards Track                           June 17, 2016
 Expires: December 19, 2016
 
 
-                      CBOR Encoded Message Syntax
+            COSE: A Message Based Security Solution for CBOR
                        draft-ietf-cose-msg-latest
 
 Abstract
@@ -16,9 +16,11 @@ Abstract
    Concise Binary Object Representation (CBOR) is data format designed
    for small code size and small message size.  There is a need for the
    ability to have the basic security services defined for this data
-   format.  This document specifies processing for signatures, message
-   authentication codes, and encryption using CBOR.  This document also
-   specifies a representation for cryptographic keys using CBOR.
+   format.  This document defines the CBOR Object Signing and Encyption
+   (COSE) specification.  This specification describes how to create and
+   process signature, message authentication codes and encryption using
+   CBOR for serialization.  This specifiction additionally specifies how
+   to representat cryptographic keys using CBOR.
 
 Contributing to this document
 
@@ -45,18 +47,21 @@ Status of This Memo
 
    This Internet-Draft will expire on December 19, 2016.
 
-Copyright Notice
 
-   Copyright (c) 2016 IETF Trust and the persons identified as the
-   document authors.  All rights reserved.
+
 
 
 
 
 Schaad                  Expires December 19, 2016               [Page 1]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
+
+Copyright Notice
+
+   Copyright (c) 2016 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
    Provisions Relating to IETF Documents
@@ -78,133 +83,133 @@ Table of Contents
      1.5.  Document Terminology  . . . . . . . . . . . . . . . . . .   7
    2.  Basic COSE Structure  . . . . . . . . . . . . . . . . . . . .   8
    3.  Header Parameters . . . . . . . . . . . . . . . . . . . . . .  10
-     3.1.  Common COSE Headers Parameters  . . . . . . . . . . . . .  11
-   4.  Signing Objects . . . . . . . . . . . . . . . . . . . . . . .  15
-     4.1.  Signing with One or More Signers  . . . . . . . . . . . .  15
-     4.2.  Signing with One Signer . . . . . . . . . . . . . . . . .  17
-     4.3.  Externally Supplied Data  . . . . . . . . . . . . . . . .  18
-     4.4.  Signing and Verification Process  . . . . . . . . . . . .  19
-     4.5.  Computing Counter Signatures  . . . . . . . . . . . . . .  20
-   5.  Encryption Objects  . . . . . . . . . . . . . . . . . . . . .  21
-     5.1.  Enveloped COSE Structure  . . . . . . . . . . . . . . . .  21
-       5.1.1.  Recipient Algorithm Classes . . . . . . . . . . . . .  23
-     5.2.  Single Recipient Encrypted  . . . . . . . . . . . . . . .  24
-     5.3.  Encryption Algorithm for AEAD algorithms  . . . . . . . .  24
-     5.4.  Encryption algorithm for AE algorithms  . . . . . . . . .  26
-   6.  MAC Objects . . . . . . . . . . . . . . . . . . . . . . . . .  28
-     6.1.  MACed Message with Recipients . . . . . . . . . . . . . .  28
-     6.2.  MACed Messages with Implicit Key  . . . . . . . . . . . .  29
-     6.3.  How to compute and verify a MAC . . . . . . . . . . . . .  30
-   7.  Key Structure . . . . . . . . . . . . . . . . . . . . . . . .  31
-     7.1.  COSE Key Common Parameters  . . . . . . . . . . . . . . .  32
-   8.  Signature Algorithms  . . . . . . . . . . . . . . . . . . . .  35
-     8.1.  ECDSA . . . . . . . . . . . . . . . . . . . . . . . . . .  36
-       8.1.1.  Security Considerations . . . . . . . . . . . . . . .  37
-     8.2.  Edwards-curve Digital Signature Algorithms (EdDSA)  . . .  38
-       8.2.1.  Security Considerations . . . . . . . . . . . . . . .  39
-   9.  Message Authentication (MAC) Algorithms . . . . . . . . . . .  39
-     9.1.  Hash-based Message Authentication Codes (HMAC)  . . . . .  40
-       9.1.1.  Security Considerations . . . . . . . . . . . . . . .  41
-     9.2.  AES Message Authentication Code (AES-CBC-MAC) . . . . . .  41
+     3.1.  Common COSE Headers Parameters  . . . . . . . . . . . . .  12
+   4.  Signing Objects . . . . . . . . . . . . . . . . . . . . . . .  16
+     4.1.  Signing with One or More Signers  . . . . . . . . . . . .  16
+     4.2.  Signing with One Signer . . . . . . . . . . . . . . . . .  18
+     4.3.  Externally Supplied Data  . . . . . . . . . . . . . . . .  19
+     4.4.  Signing and Verification Process  . . . . . . . . . . . .  20
+     4.5.  Computing Counter Signatures  . . . . . . . . . . . . . .  21
+   5.  Encryption Objects  . . . . . . . . . . . . . . . . . . . . .  22
+     5.1.  Enveloped COSE Structure  . . . . . . . . . . . . . . . .  22
+       5.1.1.  Recipient Algorithm Classes . . . . . . . . . . . . .  24
+     5.2.  Single Recipient Encrypted  . . . . . . . . . . . . . . .  25
+     5.3.  Encryption Algorithm for AEAD algorithms  . . . . . . . .  25
+     5.4.  Encryption algorithm for AE algorithms  . . . . . . . . .  27
+   6.  MAC Objects . . . . . . . . . . . . . . . . . . . . . . . . .  29
+     6.1.  MACed Message with Recipients . . . . . . . . . . . . . .  29
+     6.2.  MACed Messages with Implicit Key  . . . . . . . . . . . .  30
+     6.3.  How to compute and verify a MAC . . . . . . . . . . . . .  31
+   7.  Key Structure . . . . . . . . . . . . . . . . . . . . . . . .  32
+     7.1.  COSE Key Common Parameters  . . . . . . . . . . . . . . .  33
+   8.  Signature Algorithms  . . . . . . . . . . . . . . . . . . . .  36
+     8.1.  ECDSA . . . . . . . . . . . . . . . . . . . . . . . . . .  37
+       8.1.1.  Security Considerations . . . . . . . . . . . . . . .  38
+     8.2.  Edwards-curve Digital Signature Algorithms (EdDSA)  . . .  39
 
 
 
 Schaad                  Expires December 19, 2016               [Page 2]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
-       9.2.1.  Security Considerations . . . . . . . . . . . . . . .  42
-   10. Content Encryption Algorithms . . . . . . . . . . . . . . . .  43
-     10.1.  AES GCM  . . . . . . . . . . . . . . . . . . . . . . . .  43
-       10.1.1.  Security Considerations  . . . . . . . . . . . . . .  44
-     10.2.  AES CCM  . . . . . . . . . . . . . . . . . . . . . . . .  45
-       10.2.1.  Security Considerations  . . . . . . . . . . . . . .  48
-     10.3.  ChaCha20 and Poly1305  . . . . . . . . . . . . . . . . .  48
-       10.3.1.  Security Considerations  . . . . . . . . . . . . . .  49
-   11. Key Derivation Functions (KDF)  . . . . . . . . . . . . . . .  49
+       8.2.1.  Security Considerations . . . . . . . . . . . . . . .  40
+   9.  Message Authentication (MAC) Algorithms . . . . . . . . . . .  40
+     9.1.  Hash-based Message Authentication Codes (HMAC)  . . . . .  41
+       9.1.1.  Security Considerations . . . . . . . . . . . . . . .  42
+     9.2.  AES Message Authentication Code (AES-CBC-MAC) . . . . . .  42
+       9.2.1.  Security Considerations . . . . . . . . . . . . . . .  43
+   10. Content Encryption Algorithms . . . . . . . . . . . . . . . .  44
+     10.1.  AES GCM  . . . . . . . . . . . . . . . . . . . . . . . .  44
+       10.1.1.  Security Considerations  . . . . . . . . . . . . . .  45
+     10.2.  AES CCM  . . . . . . . . . . . . . . . . . . . . . . . .  46
+       10.2.1.  Security Considerations  . . . . . . . . . . . . . .  49
+     10.3.  ChaCha20 and Poly1305  . . . . . . . . . . . . . . . . .  49
+       10.3.1.  Security Considerations  . . . . . . . . . . . . . .  50
+   11. Key Derivation Functions (KDF)  . . . . . . . . . . . . . . .  50
      11.1.  HMAC-based Extract-and-Expand Key Derivation Function
-            (HKDF) . . . . . . . . . . . . . . . . . . . . . . . . .  50
-     11.2.  Context Information Structure  . . . . . . . . . . . . .  52
-   12. Recipient Algorithm Classes . . . . . . . . . . . . . . . . .  55
-     12.1.  Direct Encryption  . . . . . . . . . . . . . . . . . . .  56
-       12.1.1.  Direct Key . . . . . . . . . . . . . . . . . . . . .  56
-       12.1.2.  Direct Key with KDF  . . . . . . . . . . . . . . . .  57
-     12.2.  Key Wrapping . . . . . . . . . . . . . . . . . . . . . .  58
-       12.2.1.  AES Key Wrapping . . . . . . . . . . . . . . . . . .  59
-     12.3.  Key Encryption . . . . . . . . . . . . . . . . . . . . .  60
-     12.4.  Direct Key Agreement . . . . . . . . . . . . . . . . . .  60
-       12.4.1.  ECDH . . . . . . . . . . . . . . . . . . . . . . . .  61
-       12.4.2.  Security Considerations  . . . . . . . . . . . . . .  64
-     12.5.  Key Agreement with KDF . . . . . . . . . . . . . . . . .  65
-       12.5.1.  ECDH . . . . . . . . . . . . . . . . . . . . . . . .  65
-   13. Keys  . . . . . . . . . . . . . . . . . . . . . . . . . . . .  67
-     13.1.  Elliptic Curve Keys  . . . . . . . . . . . . . . . . . .  67
-       13.1.1.  Double Coordinate Curves . . . . . . . . . . . . . .  68
-     13.2.  Octet Key Pair . . . . . . . . . . . . . . . . . . . . .  69
-     13.3.  Symmetric Keys . . . . . . . . . . . . . . . . . . . . .  70
-   14. CBOR Encoder Restrictions . . . . . . . . . . . . . . . . . .  71
-   15. Application Profiling Considerations  . . . . . . . . . . . .  71
-   16. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  73
-     16.1.  CBOR Tag assignment  . . . . . . . . . . . . . . . . . .  73
-     16.2.  COSE Header Parameters Registry  . . . . . . . . . . . .  73
-     16.3.  COSE Header Algorithm Labels Registry  . . . . . . . . .  74
-     16.4.  COSE Algorithms Registry . . . . . . . . . . . . . . . .  74
-     16.5.  COSE Key Common Parameters Registry  . . . . . . . . . .  75
-     16.6.  COSE Key Type Parameters Registry  . . . . . . . . . . .  76
-     16.7.  COSE Elliptic Curve Parameters Registry  . . . . . . . .  77
-     16.8.  Media Type Registrations . . . . . . . . . . . . . . . .  77
-       16.8.1.  COSE Security Message  . . . . . . . . . . . . . . .  77
-       16.8.2.  COSE Key media type  . . . . . . . . . . . . . . . .  78
-     16.9.  CoAP Content Format Registrations  . . . . . . . . . . .  80
-     16.10. Expert Review Instructions . . . . . . . . . . . . . . .  81
-   17. Implementation Status . . . . . . . . . . . . . . . . . . . .  82
-     17.1.  Author's Versions  . . . . . . . . . . . . . . . . . . .  83
-     17.2.  COSE Testing Library . . . . . . . . . . . . . . . . . .  83
-   18. Security Considerations . . . . . . . . . . . . . . . . . . .  84
+            (HKDF) . . . . . . . . . . . . . . . . . . . . . . . . .  51
+     11.2.  Context Information Structure  . . . . . . . . . . . . .  53
+   12. Recipient Algorithm Classes . . . . . . . . . . . . . . . . .  56
+     12.1.  Direct Encryption  . . . . . . . . . . . . . . . . . . .  57
+       12.1.1.  Direct Key . . . . . . . . . . . . . . . . . . . . .  57
+       12.1.2.  Direct Key with KDF  . . . . . . . . . . . . . . . .  58
+     12.2.  Key Wrapping . . . . . . . . . . . . . . . . . . . . . .  59
+       12.2.1.  AES Key Wrapping . . . . . . . . . . . . . . . . . .  60
+     12.3.  Key Encryption . . . . . . . . . . . . . . . . . . . . .  61
+     12.4.  Direct Key Agreement . . . . . . . . . . . . . . . . . .  61
+       12.4.1.  ECDH . . . . . . . . . . . . . . . . . . . . . . . .  62
+       12.4.2.  Security Considerations  . . . . . . . . . . . . . .  65
+     12.5.  Key Agreement with KDF . . . . . . . . . . . . . . . . .  66
+       12.5.1.  ECDH . . . . . . . . . . . . . . . . . . . . . . . .  66
+   13. Keys  . . . . . . . . . . . . . . . . . . . . . . . . . . . .  68
+     13.1.  Elliptic Curve Keys  . . . . . . . . . . . . . . . . . .  68
+       13.1.1.  Double Coordinate Curves . . . . . . . . . . . . . .  69
+     13.2.  Octet Key Pair . . . . . . . . . . . . . . . . . . . . .  70
+     13.3.  Symmetric Keys . . . . . . . . . . . . . . . . . . . . .  71
+   14. CBOR Encoder Restrictions . . . . . . . . . . . . . . . . . .  72
+   15. Application Profiling Considerations  . . . . . . . . . . . .  72
+   16. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  74
+     16.1.  CBOR Tag assignment  . . . . . . . . . . . . . . . . . .  74
+     16.2.  COSE Header Parameters Registry  . . . . . . . . . . . .  74
+     16.3.  COSE Header Algorithm Labels Registry  . . . . . . . . .  75
+     16.4.  COSE Algorithms Registry . . . . . . . . . . . . . . . .  75
+     16.5.  COSE Key Common Parameters Registry  . . . . . . . . . .  76
+     16.6.  COSE Key Type Parameters Registry  . . . . . . . . . . .  77
+     16.7.  COSE Elliptic Curve Parameters Registry  . . . . . . . .  78
+     16.8.  Media Type Registrations . . . . . . . . . . . . . . . .  78
+       16.8.1.  COSE Security Message  . . . . . . . . . . . . . . .  78
+       16.8.2.  COSE Key media type  . . . . . . . . . . . . . . . .  79
+     16.9.  CoAP Content Format Registrations  . . . . . . . . . . .  81
 
 
 
 Schaad                  Expires December 19, 2016               [Page 3]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
-   19. References  . . . . . . . . . . . . . . . . . . . . . . . . .  86
-     19.1.  Normative References . . . . . . . . . . . . . . . . . .  86
-     19.2.  Informative References . . . . . . . . . . . . . . . . .  87
-   Appendix A.  Making Mandatory Algorithm Header Optional . . . . .  89
-     A.1.  Algorithm Identification  . . . . . . . . . . . . . . . .  90
-     A.2.  Counter Signature Without Headers . . . . . . . . . . . .  93
-   Appendix B.  Two Layers of Recipient Information  . . . . . . . .  93
-   Appendix C.  Examples . . . . . . . . . . . . . . . . . . . . . .  95
-     C.1.  Examples of Signed Message  . . . . . . . . . . . . . . .  96
-       C.1.1.  Single Signature  . . . . . . . . . . . . . . . . . .  96
-       C.1.2.  Multiple Signers  . . . . . . . . . . . . . . . . . .  97
-       C.1.3.  Counter Signature . . . . . . . . . . . . . . . . . .  98
-       C.1.4.  Signature w/ Criticality  . . . . . . . . . . . . . .  99
-     C.2.  Single Signer Examples  . . . . . . . . . . . . . . . . . 100
-       C.2.1.  Single ECDSA signature  . . . . . . . . . . . . . . . 100
-     C.3.  Examples of Enveloped Messages  . . . . . . . . . . . . . 101
-       C.3.1.  Direct ECDH . . . . . . . . . . . . . . . . . . . . . 101
-       C.3.2.  Direct plus Key Derivation  . . . . . . . . . . . . . 102
-       C.3.3.  Counter Signature on Encrypted Content  . . . . . . . 103
-       C.3.4.  Encrypted Content with External Data  . . . . . . . . 105
-     C.4.  Examples of Encrypted Messages  . . . . . . . . . . . . . 105
-       C.4.1.  Simple Encrypted Message  . . . . . . . . . . . . . . 105
-       C.4.2.  Encrypted Message w/ a Partial IV . . . . . . . . . . 106
-     C.5.  Examples of MACed messages  . . . . . . . . . . . . . . . 106
-       C.5.1.  Shared Secret Direct MAC  . . . . . . . . . . . . . . 106
-       C.5.2.  ECDH Direct MAC . . . . . . . . . . . . . . . . . . . 107
-       C.5.3.  Wrapped MAC . . . . . . . . . . . . . . . . . . . . . 108
-       C.5.4.  Multi-recipient MACed message . . . . . . . . . . . . 109
-     C.6.  Examples of MAC0 messages . . . . . . . . . . . . . . . . 110
+     16.10. Expert Review Instructions . . . . . . . . . . . . . . .  82
+   17. Implementation Status . . . . . . . . . . . . . . . . . . . .  83
+     17.1.  Author's Versions  . . . . . . . . . . . . . . . . . . .  84
+     17.2.  COSE Testing Library . . . . . . . . . . . . . . . . . .  84
+   18. Security Considerations . . . . . . . . . . . . . . . . . . .  85
+   19. References  . . . . . . . . . . . . . . . . . . . . . . . . .  87
+     19.1.  Normative References . . . . . . . . . . . . . . . . . .  87
+     19.2.  Informative References . . . . . . . . . . . . . . . . .  88
+   Appendix A.  Making Mandatory Algorithm Header Optional . . . . .  90
+     A.1.  Algorithm Identification  . . . . . . . . . . . . . . . .  91
+     A.2.  Counter Signature Without Headers . . . . . . . . . . . .  94
+   Appendix B.  Two Layers of Recipient Information  . . . . . . . .  94
+   Appendix C.  Examples . . . . . . . . . . . . . . . . . . . . . .  96
+     C.1.  Examples of Signed Message  . . . . . . . . . . . . . . .  97
+       C.1.1.  Single Signature  . . . . . . . . . . . . . . . . . .  97
+       C.1.2.  Multiple Signers  . . . . . . . . . . . . . . . . . .  98
+       C.1.3.  Counter Signature . . . . . . . . . . . . . . . . . .  99
+       C.1.4.  Signature w/ Criticality  . . . . . . . . . . . . . . 100
+     C.2.  Single Signer Examples  . . . . . . . . . . . . . . . . . 101
+       C.2.1.  Single ECDSA signature  . . . . . . . . . . . . . . . 101
+     C.3.  Examples of Enveloped Messages  . . . . . . . . . . . . . 102
+       C.3.1.  Direct ECDH . . . . . . . . . . . . . . . . . . . . . 102
+       C.3.2.  Direct plus Key Derivation  . . . . . . . . . . . . . 103
+       C.3.3.  Counter Signature on Encrypted Content  . . . . . . . 104
+       C.3.4.  Encrypted Content with External Data  . . . . . . . . 106
+     C.4.  Examples of Encrypted Messages  . . . . . . . . . . . . . 106
+       C.4.1.  Simple Encrypted Message  . . . . . . . . . . . . . . 106
+       C.4.2.  Encrypted Message w/ a Partial IV . . . . . . . . . . 107
+     C.5.  Examples of MACed messages  . . . . . . . . . . . . . . . 107
+       C.5.1.  Shared Secret Direct MAC  . . . . . . . . . . . . . . 107
+       C.5.2.  ECDH Direct MAC . . . . . . . . . . . . . . . . . . . 108
+       C.5.3.  Wrapped MAC . . . . . . . . . . . . . . . . . . . . . 109
+       C.5.4.  Multi-recipient MACed message . . . . . . . . . . . . 110
+     C.6.  Examples of MAC0 messages . . . . . . . . . . . . . . . . 111
        C.6.1.  Shared Secret Direct MAC  . . . . . . . . . . . . . . 111
-     C.7.  COSE Keys . . . . . . . . . . . . . . . . . . . . . . . . 111
-       C.7.1.  Public Keys . . . . . . . . . . . . . . . . . . . . . 111
-       C.7.2.  Private Keys  . . . . . . . . . . . . . . . . . . . . 112
-   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . . 114
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . . 115
+     C.7.  COSE Keys . . . . . . . . . . . . . . . . . . . . . . . . 112
+       C.7.1.  Public Keys . . . . . . . . . . . . . . . . . . . . . 112
+       C.7.2.  Private Keys  . . . . . . . . . . . . . . . . . . . . 113
+   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . . 115
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . . 116
 
 1.  Introduction
 
@@ -213,19 +218,19 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
    has come out of this process is the Concise Binary Object
    Representation (CBOR) [RFC7049].  CBOR extended the data model of the
    JavaScript Object Notation (JSON) [RFC7159] by allowing for binary
-   data, among other changes.  CBOR is being adopted by several of the
-   IETF working groups dealing with the IoT world as their encoding of
-   data structures.  CBOR was designed specifically to be both small in
-   terms of messages transport and implementation size, as well having a
-   schema free decoder.  A need exists to provide message security
 
 
 
 Schaad                  Expires December 19, 2016               [Page 4]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
+   data, among other changes.  CBOR is being adopted by several of the
+   IETF working groups dealing with the IoT world as their encoding of
+   data structures.  CBOR was designed specifically to be both small in
+   terms of messages transport and implementation size, as well having a
+   schema free decoder.  A need exists to provide message security
    services for IoT and using CBOR as the message encoding format makes
    sense.
 
@@ -269,18 +274,16 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
    o  Combine the authentication tag for encryption algorithms with the
       cipher text.
 
-   o  The set of cryptographic algorithms has been expanded in some
-      directions, and trimmed in others.
-
-
-
 
 
 
 Schaad                  Expires December 19, 2016               [Page 5]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
+
+   o  The set of cryptographic algorithms has been expanded in some
+      directions, and trimmed in others.
 
 1.2.  Requirements Terminology
 
@@ -326,17 +329,19 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
    grammar may not work with the final version of CDDL.  The CDDL
    grammar is informational, the prose description is normative.
 
-   The collected CDDL can be extracted from the XML version of this
-   document via the following XPath expression below.  (Depending on the
-   XPath evaluator one is using, it may be necessary to deal with &gt;
-   as an entity.)
+
 
 
 
 Schaad                  Expires December 19, 2016               [Page 6]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
+
+   The collected CDDL can be extracted from the XML version of this
+   document via the following XPath expression below.  (Depending on the
+   XPath evaluator one is using, it may be necessary to deal with &gt;
+   as an entity.)
 
    //artwork[@type='CDDL']/text()
 
@@ -382,17 +387,15 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
    Byte is a synonym for octet.
 
-   Constrained Application Protocol (CoAP) is a specialized web transfer
-   protocol for use in constrained systems.  It is defined in [RFC7252].
-
-
-
 
 
 Schaad                  Expires December 19, 2016               [Page 7]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
+
+   Constrained Application Protocol (CoAP) is a specialized web transfer
+   protocol for use in constrained systems.  It is defined in [RFC7252].
 
    Authenticated Encryption (AE) algorithms are those encryption
    algorithms which provide an authentication check of the contents
@@ -439,16 +442,17 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
        cose, the optional parameter 'cose-type' can be used to identify
        the embedded object.  The parameter is OPTIONAL if the tagged
        version of the structure is used.  The parameter is REQUIRED if
-       the untagged version of the structure is used.  The value to use
-       with the parameter for each of the structures can be found in
-       Table 1.
 
 
 
 Schaad                  Expires December 19, 2016               [Page 8]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
+
+       the untagged version of the structure is used.  The value to use
+       with the parameter for each of the structures can be found in
+       Table 1.
 
    4.  When a COSE object is carried as a CoAP payload, the CoAP
        Content-Format Option can be used to identify the message
@@ -486,6 +490,22 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
    defined in this document.  Separate non-terminals are defined for the
    tagged and the untagged versions of the messages.
 
+
+
+
+
+
+
+
+
+
+
+
+Schaad                  Expires December 19, 2016               [Page 9]
+
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
+
+
    COSE_Messages = COSE_Untagged_Message / COSE_Tagged_Message
 
    COSE_Untagged_Message = COSE_Sign / COSE_Sign1 /
@@ -495,16 +515,6 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
    COSE_Tagged_Message = COSE_Sign_Tagged / COSE_Sign1_Tagged /
        COSE_Encrypt_Tagged / COSE_Encrypt0_Tagged /
        COSE_Mac_Tagged / COSE_Mac0_Tagged
-
-
-
-
-
-
-Schaad                  Expires December 19, 2016               [Page 9]
-
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
-
 
 3.  Header Parameters
 
@@ -544,6 +554,14 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
       chance that it will not be altered in transit.  (Badly behaved
       intermediates could decode and re-encode, but this will result in
       a failure to verify unless the re-encoded byte string is identical
+
+
+
+Schaad                  Expires December 19, 2016              [Page 10]
+
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
+
+
       to the decoded byte string.)  This avoids the problem of all
       parties needing to be able to do a common canonical encoding.
 
@@ -554,14 +572,6 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
    that layer.  As an example of this, the parameter 'content type'
    describes the content of the message being carried in the message.
    As such, this parameter is placed only in the content layer and is
-
-
-
-Schaad                  Expires December 19, 2016              [Page 10]
-
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
-
-
    not placed in the recipient or signature layers.  In principle, one
    should be able to process any given layer without reference to any
    other layer.  (With the exception of the COSE_Sign structure, the
@@ -591,6 +601,23 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
    represents the map of header values.  It uses forward references to a
    group definition of headers for generic and algorithms.
 
+
+
+
+
+
+
+
+
+
+
+
+
+Schaad                  Expires December 19, 2016              [Page 11]
+
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
+
+
    Headers = (
        protected : empty_or_serialized_map,
        unprotected : header_map
@@ -610,13 +637,6 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
    This section defines a set of common header parameters.  A summary of
    these parameters can be found in Table 2.  This table should be
    consulted to determine the value of label, and the type of the value.
-
-
-
-Schaad                  Expires December 19, 2016              [Page 11]
-
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
-
 
    The set of header parameters defined in this section are:
 
@@ -647,6 +667,13 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
          algorithm.  (The algorithm range is -1 to -65536; the higher
          end is for more optional algorithm specific items.)
 
+
+
+Schaad                  Expires December 19, 2016              [Page 12]
+
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
+
+
       *  Labels for parameters required for an application MAY be
          omitted.  Applications should have a statement if the label can
          be omitted.
@@ -665,15 +692,6 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
       [RFC2045] omitting the prefix string "Content-Type:".  Leading and
       trailing whitespace is also omitted.  Textual content values along
       with parameters and subparameters can be located using the IANA
-
-
-
-
-Schaad                  Expires December 19, 2016              [Page 12]
-
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
-
-
       "Media Types" registry.  Applications SHOULD provide this
       parameter if the content structure is potentially ambiguous.
 
@@ -704,6 +722,14 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
       this value can be placed in the unprotected header bucket.  The
       'Initialization Vector' and 'Partial Initialization Vector'
       parameters MUST NOT both be present in the same security layer.
+
+
+
+Schaad                  Expires December 19, 2016              [Page 13]
+
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
+
+
       The message IV is generated by the following steps:
 
       1.  Left pad the partial IV with zeros to the length of IV.
@@ -725,9 +751,39 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 13]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Schaad                  Expires December 19, 2016              [Page 14]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    +-----------+-------+----------------+-------------+----------------+
@@ -781,9 +837,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 14]
+Schaad                  Expires December 19, 2016              [Page 15]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    Generic_Headers = (
@@ -837,9 +893,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 15]
+Schaad                  Expires December 19, 2016              [Page 16]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    detailed information on multiple signature evaluation can be found in
@@ -893,9 +949,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 16]
+Schaad                  Expires December 19, 2016              [Page 17]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    COSE_Sign = [
@@ -949,9 +1005,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 17]
+Schaad                  Expires December 19, 2016              [Page 18]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    unprotected  as described in Section 3.
@@ -1005,9 +1061,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 18]
+Schaad                  Expires December 19, 2016              [Page 19]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    o  Applications need to ensure that the byte stream is going to be
@@ -1061,9 +1117,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 19]
+Schaad                  Expires December 19, 2016              [Page 20]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    Sig_structure = [
@@ -1117,9 +1173,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 20]
+Schaad                  Expires December 19, 2016              [Page 21]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    signature in the unprotected attributes of a COSE_Encrypt object.
@@ -1173,9 +1229,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 21]
+Schaad                  Expires December 19, 2016              [Page 22]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    The same techniques and structures are used for encrypting both the
@@ -1229,9 +1285,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 22]
+Schaad                  Expires December 19, 2016              [Page 23]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    ciphertext  contains the encrypted key encoded as a bstr.  If there
@@ -1285,9 +1341,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 23]
+Schaad                  Expires December 19, 2016              [Page 24]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
 5.2.  Single Recipient Encrypted
@@ -1341,9 +1397,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 24]
+Schaad                  Expires December 19, 2016              [Page 25]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
        "Encrypt"  for the first layer of a COSE_Encrypt data structure
@@ -1397,9 +1453,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 25]
+Schaad                  Expires December 19, 2016              [Page 26]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
           KDF used for the recipient.  (For direct, the KDF can be
@@ -1453,9 +1509,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 26]
+Schaad                  Expires December 19, 2016              [Page 27]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    3.  Determine the encryption key.  This step is dependent on the
@@ -1509,9 +1565,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 27]
+Schaad                  Expires December 19, 2016              [Page 28]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
 6.  MAC Objects
@@ -1565,9 +1621,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 28]
+Schaad                  Expires December 19, 2016              [Page 29]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    payload  contains the serialized content to be MACed.  If the payload
@@ -1621,9 +1677,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 29]
+Schaad                  Expires December 19, 2016              [Page 30]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    tag  contains the MAC value.
@@ -1677,9 +1733,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 30]
+Schaad                  Expires December 19, 2016              [Page 31]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    3.  Call the MAC creation algorithm passing in K (the key to use),
@@ -1733,9 +1789,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 31]
+Schaad                  Expires December 19, 2016              [Page 32]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    COSE_Key = {
@@ -1789,9 +1845,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 32]
+Schaad                  Expires December 19, 2016              [Page 33]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
       Table 21.  This parameter MUST be present in a key object.
@@ -1845,9 +1901,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 33]
+Schaad                  Expires December 19, 2016              [Page 34]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    +---------+-------+-------------------------------------------------+
@@ -1901,9 +1957,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 34]
+Schaad                  Expires December 19, 2016              [Page 35]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
 8.  Signature Algorithms
@@ -1957,9 +2013,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 35]
+Schaad                  Expires December 19, 2016              [Page 36]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    the effective size reduction that is possible.  Implementations will
@@ -2013,9 +2069,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 36]
+Schaad                  Expires December 19, 2016              [Page 37]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    Signature = I2OSP(R, n) | I2OSP(S, n)
@@ -2069,9 +2125,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 37]
+Schaad                  Expires December 19, 2016              [Page 38]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
       of the attack except to restrict the overall set of curves that
@@ -2125,9 +2181,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 38]
+Schaad                  Expires December 19, 2016              [Page 39]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    o  The 'kty' field MUST be present and it MUST be 'OKP'.
@@ -2181,9 +2237,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 39]
+Schaad                  Expires December 19, 2016              [Page 40]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
 9.1.  Hash-based Message Authentication Codes (HMAC)
@@ -2237,9 +2293,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 40]
+Schaad                  Expires December 19, 2016              [Page 41]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    (such as ECDH), the derived key MUST be the same size as the
@@ -2293,9 +2349,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 41]
+Schaad                  Expires December 19, 2016              [Page 42]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    +-------------+-------+----------+----------+-----------------------+
@@ -2349,9 +2405,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 42]
+Schaad                  Expires December 19, 2016              [Page 43]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
       specific encoding structure that includes lengths is build and
@@ -2405,9 +2461,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 43]
+Schaad                  Expires December 19, 2016              [Page 44]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    set of values.  For this document however, the size of the
@@ -2461,9 +2517,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 44]
+Schaad                  Expires December 19, 2016              [Page 45]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    Doing so drastically changes both the maximum messages size
@@ -2517,9 +2573,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 45]
+Schaad                  Expires December 19, 2016              [Page 46]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    The following values are used for M:
@@ -2573,9 +2629,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 46]
+Schaad                  Expires December 19, 2016              [Page 47]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    +--------------------+-------+----+-----+-----+---------------------+
@@ -2629,9 +2685,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 47]
+Schaad                  Expires December 19, 2016              [Page 48]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    When using a COSE key for this algorithm, the following checks are
@@ -2685,9 +2741,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 48]
+Schaad                  Expires December 19, 2016              [Page 49]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    cipher text as an option.  We define one algorithm identifier for
@@ -2741,9 +2797,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 49]
+Schaad                  Expires December 19, 2016              [Page 50]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    o  Secrets that are not random: This is the type of secret that
@@ -2797,9 +2853,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 50]
+Schaad                  Expires December 19, 2016              [Page 51]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
       length - the number of bytes of output that need to be generated.
@@ -2853,9 +2909,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 51]
+Schaad                  Expires December 19, 2016              [Page 52]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
                    +------+-------+------+-------------+
@@ -2909,9 +2965,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 52]
+Schaad                  Expires December 19, 2016              [Page 53]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    +---------------+-------+-----------+-------------------------------+
@@ -2965,9 +3021,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 53]
+Schaad                  Expires December 19, 2016              [Page 54]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
          correct label for the data they send or receive.  The second
@@ -2979,8 +3035,8 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
          can thus be inferred rather than made explicit.  If identity
          information is carried in the message, applications SHOULD have
          a way of validating the supplied identity information.  The
-         identity information does not need to be specified and can be
-         left as absent.
+         identity information does not need to be specified and is set
+         to nil in that case.
 
       nonce  This contains a nonce value.  The nonce can either be
          implicit from the protocol or carried as a value in the
@@ -2989,11 +3045,13 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
          used to carry this value in the message However, the nonce
          value could be determined by the application and the value
          determined from elsewhere.
-         This item is optional and can be absent.
+         This option does not need to be specified and is set to nil in
+         that case
 
       other  This contains other information that is defined by the
          protocol.
-         This item is optional and can be absent.
+         This option does not need to be specified and is set to nil in
+         that case
 
    PartyVInfo  This field holds information about party V.  The content
       of the structure are the same as for the PartyUInfo but for
@@ -3016,16 +3074,15 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
          two different strings to be placed here to generate different
          keys for a data stream vs a control stream.  This field is
          optional and will only be present if the application defines a
-         structure for this information.  Applications that define this
 
 
 
-
-Schaad                  Expires December 19, 2016              [Page 54]
+Schaad                  Expires December 19, 2016              [Page 55]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
+         structure for this information.  Applications that define this
          SHOULD use CBOR to encode the data so that types and lengths
          are correctly included.
 
@@ -3042,9 +3099,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
    The following CDDL fragment corresponds to the text above.
 
    PartyInfo = (
-       ? nonce : bstr / int,
-       ? identity : bstr,
-       ? other : bstr,
+       identity : bstr / nil,
+       nonce : bstr / int / nil,
+       other : bstr / nil,
    )
 
    COSE_KDF_Context = [
@@ -3076,10 +3133,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-
-Schaad                  Expires December 19, 2016              [Page 55]
+Schaad                  Expires December 19, 2016              [Page 56]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
 12.1.  Direct Encryption
@@ -3133,9 +3189,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 56]
+Schaad                  Expires December 19, 2016              [Page 57]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    o  These keys need to be dedicated to a single algorithm.  There have
@@ -3189,9 +3245,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 57]
+Schaad                  Expires December 19, 2016              [Page 58]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    +---------------------+-------+-------------+-----------------------+
@@ -3245,9 +3301,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 58]
+Schaad                  Expires December 19, 2016              [Page 59]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    superior to direct encryption if the system has any capability for
@@ -3301,9 +3357,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 59]
+Schaad                  Expires December 19, 2016              [Page 60]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    o  If the 'key_ops' field is present, it MUST include 'encrypt' or
@@ -3357,9 +3413,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 60]
+Schaad                  Expires December 19, 2016              [Page 61]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    This key is normally used as a CEK or MAC key, but could be used for
@@ -3413,9 +3469,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 61]
+Schaad                  Expires December 19, 2016              [Page 62]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    o  Curve Type/Curve: The curve selected controls not only the size of
@@ -3469,9 +3525,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 62]
+Schaad                  Expires December 19, 2016              [Page 63]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    o  Key Wrap algorithm: No key wrap algorithm is used.  This is
@@ -3525,9 +3581,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 63]
+Schaad                  Expires December 19, 2016              [Page 64]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    +-----------+-------+----------+-----------+------------------------+
@@ -3581,9 +3637,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 64]
+Schaad                  Expires December 19, 2016              [Page 65]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    public key has to be chosen maliciously or the sender has to be
@@ -3637,9 +3693,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 65]
+Schaad                  Expires December 19, 2016              [Page 66]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    +-----------+-------+---------+------------+--------+---------------+
@@ -3693,9 +3749,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 66]
+Schaad                  Expires December 19, 2016              [Page 67]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    o  If the 'alg' field present, it MUST match the Key Agreement
@@ -3749,9 +3805,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 67]
+Schaad                  Expires December 19, 2016              [Page 68]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    only the x coordinate as the y coordinate is either to be recomputed
@@ -3805,9 +3861,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 68]
+Schaad                  Expires December 19, 2016              [Page 69]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    y  contains either the sign bit or the value of y coordinate for the
@@ -3861,9 +3917,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 69]
+Schaad                  Expires December 19, 2016              [Page 70]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
       in Table 22.  Other curves may be registered in the future and
@@ -3917,9 +3973,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 70]
+Schaad                  Expires December 19, 2016              [Page 71]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
              +------+----------+-------+------+-------------+
@@ -3973,9 +4029,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 71]
+Schaad                  Expires December 19, 2016              [Page 72]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
       fairly directly to the set of security services that are needed
@@ -4029,9 +4085,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 72]
+Schaad                  Expires December 19, 2016              [Page 73]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
 16.  IANA Considerations
@@ -4085,9 +4141,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 73]
+Schaad                  Expires December 19, 2016              [Page 74]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    The initial contents of the registry can be found in Table 2.  The
@@ -4141,9 +4197,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 74]
+Schaad                  Expires December 19, 2016              [Page 75]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    value  The value to be used to identify this algorithm.  Algorithm
@@ -4197,9 +4253,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 75]
+Schaad                  Expires December 19, 2016              [Page 76]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
       -65536 are used for key parameters specific to a single algorithm
@@ -4253,9 +4309,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 76]
+Schaad                  Expires December 19, 2016              [Page 77]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
 16.7.  COSE Elliptic Curve Parameters Registry
@@ -4309,9 +4365,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 77]
+Schaad                  Expires December 19, 2016              [Page 78]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
       Security considerations: See the Security Considerations section
@@ -4365,9 +4421,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 78]
+Schaad                  Expires December 19, 2016              [Page 79]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
       Security considerations: See the Security Considerations section
@@ -4421,9 +4477,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 79]
+Schaad                  Expires December 19, 2016              [Page 80]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
       Applications that use this media type: To be identified
@@ -4477,9 +4533,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 80]
+Schaad                  Expires December 19, 2016              [Page 81]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    +---------------------------------+----------+-------+--------------+
@@ -4533,9 +4589,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 81]
+Schaad                  Expires December 19, 2016              [Page 82]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    o  Specifications are required for the standards track range of point
@@ -4589,9 +4645,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 82]
+Schaad                  Expires December 19, 2016              [Page 83]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    It is up to the individual working groups to use this information as
@@ -4645,9 +4701,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 83]
+Schaad                  Expires December 19, 2016              [Page 84]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
       have been provided.  All of the examples in this document are part
@@ -4701,9 +4757,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 84]
+Schaad                  Expires December 19, 2016              [Page 85]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    Although it has been mentioned before, the use of a single key for
@@ -4757,9 +4813,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 85]
+Schaad                  Expires December 19, 2016              [Page 86]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
 19.  References
@@ -4813,9 +4869,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 86]
+Schaad                  Expires December 19, 2016              [Page 87]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    [RFC7539]  Nir, Y. and A. Langley, "ChaCha20 and Poly1305 for IETF
@@ -4869,9 +4925,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 87]
+Schaad                  Expires December 19, 2016              [Page 88]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    [RFC4262]  Santesson, S., "X.509 Certificate Extension for Secure/
@@ -4925,9 +4981,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 88]
+Schaad                  Expires December 19, 2016              [Page 89]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    [RFC6982]  Sheffer, Y. and A. Farrel, "Improving Awareness of Running
@@ -4981,9 +5037,9 @@ Appendix A.  Making Mandatory Algorithm Header Optional
 
 
 
-Schaad                  Expires December 19, 2016              [Page 89]
+Schaad                  Expires December 19, 2016              [Page 90]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    environment.  Second, there is a potential bug that will arise if
@@ -5037,9 +5093,9 @@ A.1.  Algorithm Identification
 
 
 
-Schaad                  Expires December 19, 2016              [Page 90]
+Schaad                  Expires December 19, 2016              [Page 91]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
       used for.  Applications should restrict the use of a single key to
@@ -5093,9 +5149,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 91]
+Schaad                  Expires December 19, 2016              [Page 92]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    The second case is having multiple implicit algorithm identifiers
@@ -5149,9 +5205,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 92]
+Schaad                  Expires December 19, 2016              [Page 93]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    For these cases, the following additional items need to be
@@ -5205,9 +5261,9 @@ Appendix B.  Two Layers of Recipient Information
 
 
 
-Schaad                  Expires December 19, 2016              [Page 93]
+Schaad                  Expires December 19, 2016              [Page 94]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    Appendix A of RSA-KEM [RFC5990]), then it makes sense to have three
@@ -5261,9 +5317,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016              [Page 94]
+Schaad                  Expires December 19, 2016              [Page 95]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    992(
@@ -5282,8 +5338,8 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
            / unprotected / {
              / alg / 1:-3 / A128KW /
            },
-           / ciphertext / h'f4b117264ab6d4d1476e0204bb15db58c5834461e83
-   5e884',
+           / ciphertext / h'dbd43c4e9d719c27c6275c67d628d493f090593db82
+   18f11',
            / recipients / [
              [
                / protected / h'a1013818' / {
@@ -5317,9 +5373,9 @@ Appendix C.  Examples
 
 
 
-Schaad                  Expires December 19, 2016              [Page 95]
+Schaad                  Expires December 19, 2016              [Page 96]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    A GitHub project has been created at https://github.com/cose-wg/
@@ -5373,9 +5429,9 @@ C.1.1.  Single Signature
 
 
 
-Schaad                  Expires December 19, 2016              [Page 96]
+Schaad                  Expires December 19, 2016              [Page 97]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    991(
@@ -5429,9 +5485,9 @@ C.1.2.  Multiple Signers
 
 
 
-Schaad                  Expires December 19, 2016              [Page 97]
+Schaad                  Expires December 19, 2016              [Page 98]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    991(
@@ -5485,9 +5541,9 @@ C.1.3.  Counter Signature
 
 
 
-Schaad                  Expires December 19, 2016              [Page 98]
+Schaad                  Expires December 19, 2016              [Page 99]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    991(
@@ -5541,9 +5597,9 @@ C.1.4.  Signature w/ Criticality
 
 
 
-Schaad                  Expires December 19, 2016              [Page 99]
+Schaad                  Expires December 19, 2016             [Page 100]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    991(
@@ -5597,9 +5653,9 @@ C.2.1.  Single ECDSA signature
 
 
 
-Schaad                  Expires December 19, 2016             [Page 100]
+Schaad                  Expires December 19, 2016             [Page 101]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    997(
@@ -5627,7 +5683,7 @@ C.3.1.  Direct ECDH
 
    o  Recipient class: ECDH Ephemeral-Static, Curve P-256
 
-   Size of binary file is 185 bytes
+   Size of binary file is 152 bytes
 
 
 
@@ -5653,9 +5709,9 @@ C.3.1.  Direct ECDH
 
 
 
-Schaad                  Expires December 19, 2016             [Page 101]
+Schaad                  Expires December 19, 2016             [Page 102]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    992(
@@ -5666,8 +5722,8 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
        / unprotected / {
          / iv / 5:h'c9cf4df2fe6c632bf7886413'
        },
-       / ciphertext / h'40970cd7ab5fbd10f505bf7a86e6fc0a99a3122475fbed3
-   36488c3220f884f011ba219ea',
+       / ciphertext / h'7adbe2709ca818fb415f1e5df66f4e1a51053ba6d65a1a0
+   c52a357da7a644b8070a151b0',
        / recipients / [
          [
            / protected / h'a1013818' / {
@@ -5679,8 +5735,7 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
                / crv / -1:1,
                / x / -2:h'98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbf
    bf054e1c7b4d91d6280',
-               / y / -3:h'f01400b089867804b8e9fc96c3932161f1934f4223069
-   170d924b7e03bf822bb'
+               / y / -3:true
              },
              / kid / 4:'meriadoc.brandybuck@buckland.example'
            },
@@ -5709,9 +5764,10 @@ C.3.2.  Direct plus Key Derivation
 
 
 
-Schaad                  Expires December 19, 2016             [Page 102]
+
+Schaad                  Expires December 19, 2016             [Page 103]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    Size of binary file is 92 bytes
@@ -5724,8 +5780,8 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
        / unprotected / {
          / iv / 5:h'89f52f65a1c580933b5261a76c'
        },
-       / ciphertext / h'89bedc91e9909346a8fe87834445679ee12b2c95f57feed
-   836e6d4bd',
+       / ciphertext / h'753548a19b1307084ca7b2056924ed95f2e3b17006dfe93
+   1b687b847',
        / recipients / [
          [
            / protected / h'a10129' / {
@@ -5749,7 +5805,7 @@ C.3.3.  Counter Signature on Encrypted Content
 
    o  Recipient class: ECDH Ephemeral-Static, Curve P-256
 
-   Size of binary file is 360 bytes
+   Size of binary file is 327 bytes
 
 
 
@@ -5765,9 +5821,9 @@ C.3.3.  Counter Signature on Encrypted Content
 
 
 
-Schaad                  Expires December 19, 2016             [Page 103]
+Schaad                  Expires December 19, 2016             [Page 104]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    992(
@@ -5786,13 +5842,13 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
            },
            / signature / h'00aa98cbfd382610a375d046a275f30266e8d0faacb9
    069fde06e37825ae7825419c474f416ded0c8e3e7b55bff68f2a704135bdf99186f6
-   6659461c8cf929cc7fb301d57eb4d42d95dc0a61b72ee49dda4ce431d434dc7e02c2
-   cdff49d9189cfbffdaf0444f10bfe9a9ebd96bee2c0d76743936f6f56ac62c8ed4d3
-   ee3758390d877901'
+   6659461c8cf929cc7fb300f5e2b33c3b433655042ff719804ff73b0be3e988ecebc0
+   c70ef6616996809c6eb59a918dbe0a5edb0d15137ece0aba2a0b0f68ad2631cb62f2
+   ea4d7099804218b0'
          ]
        },
-       / ciphertext / h'40970cd7ab5fbd10f505bf7a86e6fc0a99a3122475fbed3
-   36488c3220f884f011ba219ea',
+       / ciphertext / h'7adbe2709ca818fb415f1e5df66f4e1a51053ba6d65a1a0
+   c52a357da7a644b8070a151b0',
        / recipients / [
          [
            / protected / h'a1013818' / {
@@ -5804,8 +5860,7 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
                / crv / -1:1,
                / x / -2:h'98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbf
    bf054e1c7b4d91d6280',
-               / y / -3:h'f01400b089867804b8e9fc96c3932161f1934f4223069
-   170d924b7e03bf822bb'
+               / y / -3:true
              },
              / kid / 4:'meriadoc.brandybuck@buckland.example'
            },
@@ -5821,9 +5876,10 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016             [Page 104]
+
+Schaad                  Expires December 19, 2016             [Page 105]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
 C.3.4.  Encrypted Content with External Data
@@ -5858,8 +5914,8 @@ C.3.4.  Encrypted Content with External Data
              / kid / 4:'meriadoc.brandybuck@buckland.example',
              / U nonce / -22:h'0101'
            },
-           / ciphertext / h'59463342fd2193f30daeb1ebb2dc7310b56cee0939d
-   d6692'
+           / ciphertext / h'41e0d76f579dbd0d936a662d54d8582037de2e366fd
+   e1c62'
          ]
        ]
      ]
@@ -5877,9 +5933,9 @@ C.4.1.  Simple Encrypted Message
 
 
 
-Schaad                  Expires December 19, 2016             [Page 105]
+Schaad                  Expires December 19, 2016             [Page 106]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    993(
@@ -5933,9 +5989,9 @@ C.5.1.  Shared Secret Direct MAC
 
 
 
-Schaad                  Expires December 19, 2016             [Page 106]
+Schaad                  Expires December 19, 2016             [Page 107]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    994(
@@ -5989,9 +6045,9 @@ C.5.2.  ECDH Direct MAC
 
 
 
-Schaad                  Expires December 19, 2016             [Page 107]
+Schaad                  Expires December 19, 2016             [Page 108]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    994(
@@ -6001,8 +6057,8 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
          } / ,
        / unprotected / {},
        / payload / 'This is the content.',
-       / tag / h'42cf68ae1253948c500dff27da3904342625a23e914f7aa545dcf6
-   629519f18e',
+       / tag / h'81a03448acd3d305376eaa11fb3fe416a955be2cbe7ec96f012c99
+   4bc3f16a41',
        / recipients / [
          [
            / protected / h'a101381a' / {
@@ -6045,9 +6101,9 @@ C.5.3.  Wrapped MAC
 
 
 
-Schaad                  Expires December 19, 2016             [Page 108]
+Schaad                  Expires December 19, 2016             [Page 109]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    994(
@@ -6085,7 +6141,7 @@ C.5.4.  Multi-recipient MACed message
 
       2.  AES-Key Wrap w/ 256-bit key
 
-   Size of binary file is 377 bytes
+   Size of binary file is 310 bytes
 
 
 
@@ -6101,9 +6157,9 @@ C.5.4.  Multi-recipient MACed message
 
 
 
-Schaad                  Expires December 19, 2016             [Page 109]
+Schaad                  Expires December 19, 2016             [Page 110]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    994(
@@ -6127,14 +6183,12 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
                / x / -2:h'0043b12669acac3fd27898ffba0bcd2e6c366d53bc4db
    71f909a759304acfb5e18cdc7ba0b13ff8c7636271a6924b1ac63c02688075b55ef2
    d613574e7dc242f79c3',
-               / y / -3:h'00812dd694f4ef32b11014d74010a954689c6b6e8785b
-   333d1ab44f22b9d1091ae8fc8ae40b687e5cfbe7ee6f8b47918a07bb04e9f5b1a51a
-   334a16bc09777434113'
+               / y / -3:true
              },
              / kid / 4:'bilbo.baggins@hobbiton.example'
            },
-           / ciphertext / h'c07072310285bbd3f0675774418138e14388ed47a4a
-   81219d42a8bfbe3a5559c19de83435d21c6bc'
+           / ciphertext / h'339bc4f79984cdc6b3e6ce5f315a4c7d2b0ac466fce
+   a69e8c07dfbca5bb1f661bc5f8e0df9e3eff5'
          ],
          [
            / protected / h'',
@@ -6151,22 +6205,18 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 C.6.  Examples of MAC0 messages
 
-
-
-
-
-
-
-Schaad                  Expires December 19, 2016             [Page 110]
-
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
-
-
 C.6.1.  Shared Secret Direct MAC
 
    This example uses the following:
 
    o  MAC: AES-CMAC, 256-bit key, truncated to 64 bits
+
+
+
+Schaad                  Expires December 19, 2016             [Page 111]
+
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
+
 
    o  Recipient class: direct shared secret
 
@@ -6213,9 +6263,15 @@ C.7.1.  Public Keys
 
 
 
-Schaad                  Expires December 19, 2016             [Page 111]
+
+
+
+
+
+
+Schaad                  Expires December 19, 2016             [Page 112]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    [
@@ -6269,9 +6325,9 @@ C.7.2.  Private Keys
 
 
 
-Schaad                  Expires December 19, 2016             [Page 112]
+Schaad                  Expires December 19, 2016             [Page 113]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    o  An EC key with a kid of "meriadoc.brandybuck@buckland.example"
@@ -6325,9 +6381,9 @@ Internet-Draft         CBOR Encoded Message Syntax             June 2016
 
 
 
-Schaad                  Expires December 19, 2016             [Page 113]
+Schaad                  Expires December 19, 2016             [Page 114]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
        -4:h'00085138ddabf5ca975f5860f91a08e91d6d5f9a76ad4018766a476680b
@@ -6381,9 +6437,9 @@ Acknowledgments
 
 
 
-Schaad                  Expires December 19, 2016             [Page 114]
+Schaad                  Expires December 19, 2016             [Page 115]
 
-Internet-Draft         CBOR Encoded Message Syntax             June 2016
+Internet-DraCOSE: A Message Based Security Solution for CBOR   June 2016
 
 
    Jones, Ilari Liusvaara, Francesca Palombini, Goran Selander, and
@@ -6437,4 +6493,4 @@ Author's Address
 
 
 
-Schaad                  Expires December 19, 2016             [Page 115]
+Schaad                  Expires December 19, 2016             [Page 116]
