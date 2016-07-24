@@ -4803,13 +4803,13 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
    o  Have any security considerations that are part of the message been
       enforced (as specified by the application or crit parameter)?
 
-   This document defines several algorithms where the computed
-   authentication tag can be truncated to a shorter value than the
-   default value.  Doing this truncation affects the authentication
-   service provided by this value.  In general, [CREF3]
-
    There are a large number of algorithms presented in this document
    that use nonce values.  For all of the nonces defined in this
+   document, there is some type of restriction on the nonce being a
+   unique value either for a key or for some other conditions.  In all
+   of these cases, there is no known requirement on the nonce being both
+   unique and unpredictable, under these circumstances it reasonable to
+   use a counter for creation of the nonce.  In cases where one wants
 
 
 
@@ -4818,11 +4818,6 @@ Schaad                  Expires January 25, 2017               [Page 86]
 Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
 
 
-   document, there is some type of restriction on the nonce being a
-   unique value either for a key or for some other conditions.  In all
-   of these cases, there is no known requirement on the nonce being both
-   unique and unpredictable, under these circumstances it reasonable to
-   use a counter for creation of the nonce.  In cases where one wants
    the pattern of the nonce to be unpredictable as well as unique, one
    can use a key created for that purpose and encrypt the counter to
    produce the nonce value.
@@ -4866,6 +4861,11 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
               (AES) Key Wrap Algorithm", RFC 3394, DOI 10.17487/RFC3394,
               September 2002, <http://www.rfc-editor.org/info/rfc3394>.
 
+   [RFC3610]  Whiting, D., Housley, R., and N. Ferguson, "Counter with
+              CBC-MAC (CCM)", RFC 3610, DOI 10.17487/RFC3610, September
+              2003, <http://www.rfc-editor.org/info/rfc3610>.
+
+
 
 
 
@@ -4873,10 +4873,6 @@ Schaad                  Expires January 25, 2017               [Page 87]
 
 Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
 
-
-   [RFC3610]  Whiting, D., Housley, R., and N. Ferguson, "Counter with
-              CBC-MAC (CCM)", RFC 3610, DOI 10.17487/RFC3610, September
-              2003, <http://www.rfc-editor.org/info/rfc3610>.
 
    [RFC5869]  Krawczyk, H. and P. Eronen, "HMAC-based Extract-and-Expand
               Key Derivation Function (HKDF)", RFC 5869,
@@ -4921,6 +4917,10 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
               Bodies", RFC 2045, DOI 10.17487/RFC2045, November 1996,
               <http://www.rfc-editor.org/info/rfc2045>.
 
+   [RFC2633]  Ramsdell, B., Ed., "S/MIME Version 3 Message
+              Specification", RFC 2633, DOI 10.17487/RFC2633, June 1999,
+              <http://www.rfc-editor.org/info/rfc2633>.
+
 
 
 
@@ -4929,10 +4929,6 @@ Schaad                  Expires January 25, 2017               [Page 88]
 
 Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
 
-
-   [RFC2633]  Ramsdell, B., Ed., "S/MIME Version 3 Message
-              Specification", RFC 2633, DOI 10.17487/RFC2633, June 1999,
-              <http://www.rfc-editor.org/info/rfc2633>.
 
    [RFC2898]  Kaliski, B., "PKCS #5: Password-Based Cryptography
               Specification Version 2.0", RFC 2898,
@@ -4976,6 +4972,10 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
               Specification", RFC 5751, DOI 10.17487/RFC5751, January
               2010, <http://www.rfc-editor.org/info/rfc5751>.
 
+   [RFC5752]  Turner, S. and J. Schaad, "Multiple Signatures in
+              Cryptographic Message Syntax (CMS)", RFC 5752,
+              DOI 10.17487/RFC5752, January 2010,
+              <http://www.rfc-editor.org/info/rfc5752>.
 
 
 
@@ -4985,11 +4985,6 @@ Schaad                  Expires January 25, 2017               [Page 89]
 
 Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
 
-
-   [RFC5752]  Turner, S. and J. Schaad, "Multiple Signatures in
-              Cryptographic Message Syntax (CMS)", RFC 5752,
-              DOI 10.17487/RFC5752, January 2010,
-              <http://www.rfc-editor.org/info/rfc5752>.
 
    [RFC5990]  Randall, J., Kaliski, B., Brainard, J., and S. Turner,
               "Use of the RSA-KEM Key Transport Algorithm in the
@@ -5033,6 +5028,11 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
               DOI 10.17487/RFC7517, May 2015,
               <http://www.rfc-editor.org/info/rfc7517>.
 
+   [RFC7518]  Jones, M., "JSON Web Algorithms (JWA)", RFC 7518,
+              DOI 10.17487/RFC7518, May 2015,
+              <http://www.rfc-editor.org/info/rfc7518>.
+
+
 
 
 
@@ -5041,10 +5041,6 @@ Schaad                  Expires January 25, 2017               [Page 90]
 
 Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
 
-
-   [RFC7518]  Jones, M., "JSON Web Algorithms (JWA)", RFC 7518,
-              DOI 10.17487/RFC7518, May 2015,
-              <http://www.rfc-editor.org/info/rfc7518>.
 
    [RFC7748]  Langley, A., Hamburg, M., and S. Turner, "Elliptic Curves
               for Security", RFC 7748, DOI 10.17487/RFC7748, January
@@ -5089,7 +5085,11 @@ A.1.  Algorithm Identification
    RFC 2119 language is deliberately not used here.  This specification
    can provide recommendations, but it cannot enforce them.
 
-
+   This set of recommendations applies to the case where an application
+   is distributing a fixed algorithm along with the key information for
+   use in a single COSE object.  This normally applies to the smallest
+   of the COSE objects, specifically COSE_Sign1, COSE_Mac0, and
+   COSE_Encrypt0, but could apply to the other structures as well.
 
 
 
@@ -5097,12 +5097,6 @@ Schaad                  Expires January 25, 2017               [Page 91]
 
 Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
 
-
-   This set of recommendations applies to the case where an application
-   is distributing a fixed algorithm along with the key information for
-   use in a single COSE object.  This normally applies to the smallest
-   of the COSE objects, specifically COSE_Sign1, COSE_Mac0, and
-   COSE_Encrypt0, but could apply to the other structures as well.
 
    The following items should be taken into account:
 
@@ -5146,6 +5140,12 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
       (In this case the address would normally be distributed as part of
       the context.)
 
+   o  Applications cannot rely on key identifiers being unique unless
+      they take significant efforts to ensure that they are computed in
+      such a way as to create this guarantee.  Even when an application
+      does this, the uniqueness might be violated if the application is
+      run in different contexts (i.e., with a different context
+
 
 
 
@@ -5154,11 +5154,6 @@ Schaad                  Expires January 25, 2017               [Page 92]
 Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
 
 
-   o  Applications cannot rely on key identifiers being unique unless
-      they take significant efforts to ensure that they are computed in
-      such a way as to create this guarantee.  Even when an application
-      does this, the uniqueness might be violated if the application is
-      run in different contexts (i.e., with a different context
       provider) or if the system combines the security contexts from
       different applications together into a single store.
 
@@ -5202,6 +5197,11 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
       for use with a COSE_Encrypt message.  Each context will consist of
       distinct secret keys and IVs and potentially even different
       algorithms.  One context is for sending messages from party A to
+      party B, the second context is for sending messages from party B
+      to party A.  This means that there is no chance for a reflection
+      attack to occur as each party uses different secret keys to send
+      its messages, a message that is reflected back to it would fail to
+      decrypt.
 
 
 
@@ -5209,12 +5209,6 @@ Schaad                  Expires January 25, 2017               [Page 93]
 
 Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
 
-
-      party B, the second context is for sending messages from party B
-      to party A.  This means that there is no chance for a reflection
-      attack to occur as each party uses different secret keys to send
-      its messages, a message that is reflected back to it would fail to
-      decrypt.
 
    o  Two contexts are distributed as a pair.  The first context is used
       for encryption of the message; the second context is used to place
@@ -5259,6 +5253,12 @@ A.2.  Counter Signature Without Headers
    then it should be presumed that the entity associated with that key
    produced the signature.)
 
+   When computing the signature for the bare counter signature header,
+   the same Sig_structure defined in Section 4.4 can be used.  The
+   sign_protected field is omitted, as there is no protected header
+   field in in this counter signature header.  The value of
+
+
 
 
 Schaad                  Expires January 25, 2017               [Page 94]
@@ -5266,10 +5266,6 @@ Schaad                  Expires January 25, 2017               [Page 94]
 Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
 
 
-   When computing the signature for the bare counter signature header,
-   the same Sig_structure defined in Section 4.4 can be used.  The
-   sign_protected field is omitted, as there is no protected header
-   field in in this counter signature header.  The value of
    "CounterSignature0" is placed in the context field of the
    Sig_stucture.
 
@@ -5315,14 +5311,16 @@ Appendix B.  Two Layers of Recipient Information
    In effect, this example is a decomposed version of using the ECDH-
    ES+A128KW algorithm.
 
+   Size of binary file is 184 bytes
+
+
+
 
 
 Schaad                  Expires January 25, 2017               [Page 95]
 
 Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
 
-
-   Size of binary file is 184 bytes
 
    992(
      [
@@ -5370,6 +5368,8 @@ Appendix C.  Examples
    This appendix includes a set of examples that show the different
    features and message types that have been defined in this document.
    To make the examples easier to read, they are presented using the
+   extended CBOR diagnostic notation (defined in
+   [I-D.greevenbosch-appsawg-cbor-cddl]) rather than as a binary dump.
 
 
 
@@ -5377,9 +5377,6 @@ Schaad                  Expires January 25, 2017               [Page 96]
 
 Internet-Draft  CBOR Object Signing and Encryption (COSE)      July 2016
 
-
-   extended CBOR diagnostic notation (defined in
-   [I-D.greevenbosch-appsawg-cbor-cddl]) rather than as a binary dump.
 
    A GitHub project has been created at https://github.com/cose-wg/
    Examples that contains not only the examples presented in this
@@ -5421,6 +5418,9 @@ C.1.1.  Single Signature
    o  Signature Algorithm: ECDSA w/ SHA-256, Curve P-256
 
    Size of binary file is 104 bytes
+
+
+
 
 
 
@@ -6455,14 +6455,14 @@ Editorial Comments
         had a chance to find out what 'OKP' is.  If we did this we would
         need to do it for all of the different values that show up here.
 
-[CREF3] GS: Include a birthday attack note on tag size?
-
 Author's Address
 
    Jim Schaad
    August Cellars
 
    Email: ietf@augustcellars.com
+
+
 
 
 
