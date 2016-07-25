@@ -83,7 +83,7 @@
       <t>
         Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.
         There is a need for the ability to have the basic security services defined for this data format.
-        This document defines the CBOR Object Signing and Encyption (COSE) specification.
+        This document defines the CBOR Object Signing and Encryption (COSE) specification.
         This specification describes how to create and process signature, message authentication codes and encryption using CBOR for serialization.
         This specification additionally specifies how to represent cryptographic keys using CBOR.
       </t>
@@ -2053,8 +2053,10 @@ valid, message content = Verification(message sent, key, signature)
 
           <list style="symbols">
             <t> The 'kty' field MUST be present and it MUST be 'OKP'.
+            <!--
             <cref source="GS">Should we do some type of pointer to what an OKP is - intra docpoiter?</cref>
-            <cref source="JLS">I think the answer for this can be no.  We point to the appropriate table when we defined what a 'kty' is so they have had a chance to find out what 'OKP' is.  If we did this we would need to do it for all of the different values that show up here.</cref></t>
+            <cref source="JLS">I think the answer for this can be no.  We point to the appropriate table when we defined what a 'kty' is so they have had a chance to find out what 'OKP' is.  If we did this we would need to do it for all of the different values that show up here.</cref>-->
+            </t> 
             <t>The 'crv' field MUST be present, and it MUST be a curve defined for this signature algorithm.</t>
             <t>If the 'alg' field is present, it MUST match 'EdDSA'.</t>
             <t>If the 'key_ops' field is present, it MUST include 'sign' when creating an EdDSA signature.</t>
@@ -2488,7 +2490,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
           When using a COSE key for this algorithm, the following checks are made:
           <list style="symbols">
             <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
-            <t>If the 'alg' field present, it MUST match the ChaCha algorithm being used.</t>
+            <t>If the 'alg' field present, it MUST match the ChaCha20/Poly1305 algorithm being used.</t>
             <t>If the 'key_ops' field is present, it MUST include 'encrypt' or 'wrap key' when encrypting.</t>
             <t>If the 'key_ops' field is present, it MUST include 'decrypt' or 'unwrap key'  when decrypting.</t>
           </list>
@@ -2743,7 +2745,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
             <t hangText="PartyVInfo">
               This field holds information about party V.
-              The content of the structure are the same as for the PartyUInfo but for partyV.
+              The content of the structure are the same as for the PartyUInfo but for party V.
             </t>
 
             <t hangText="SuppPubInfo">
@@ -4174,22 +4176,19 @@ COSE_KDF_Context = [
 
         <texttable anchor="CoAP_content_type">
           <ttcol align='left'>Media Type</ttcol>
+          <ttcol align='left'>Encoding</ttcol>
           <ttcol align='left'>ID</ttcol>
           <ttcol align='left'>Reference</ttcol>
 
-          <c>application/cose; cose-type="cose-sign"</c>        <c>TBD10</c>   <c>[This Document]</c>
-          <c>application/cose; cose-type="cose-sign1"</c>       <c>TBD11</c>   <c>[This Document]</c>
-          <c>application/cose; cose-type="cose-encrypt"</c>     <c>TBD12</c>   <c>[This Document]</c>
-          <c>application/cose; cose-type="cose-encrypt0"</c>    <c>TBD13</c>   <c>[This Document]</c>
-          <c>application/cose; cose-type="cose-mac"</c>         <c>TBD14</c>   <c>[This Document]</c>
-          <c>application/cose; cose-type="cose-mac0"</c>        <c>TBD15</c>   <c>[This Document]</c>
-          <c>application/cose-key</c> <c/> <c>TBD16</c> <c>[This Document]</c>
-          <c>application/cose-key-set</c> <c/> <c>TBD17</c> <c>[This Document</c>
+          <c>application/cose; cose-type="cose-sign"</c>        <c/><c>TBD10</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-sign1"</c>       <c/><c>TBD11</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-encrypt"</c>     <c/><c>TBD12</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-encrypt0"</c>    <c/><c>TBD13</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-mac"</c>         <c/><c>TBD14</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-mac0"</c>        <c/><c>TBD15</c>   <c>[This Document]</c>
+          <c>application/cose-key</c> <c/><c>TBD16</c> <c>[This Document]</c>
+          <c>application/cose-key-set</c> <c/><c>TBD17</c> <c>[This Document</c>
         </texttable>
-
-        <t>
-          The Encoding column for all of the above registrations is empty.
-        </t>
 
       </section>
 
@@ -4373,7 +4372,7 @@ COSE_KDF_Context = [
           <t>Is the cryptographic algorithm acceptable in the current context?</t>
           <t>Have the restrictions associated with the key, such as algorithm or freshness, been checked and are correct?</t>
           <t>Is the request something that is reasonable, given the current state of the application?</t>
-          <t>Have any security considerations that are part of the message been enforced (as specified by the application or crit parameter)?</t>
+          <t>Have any security considerations that are part of the message been enforced (as specified by the application or 'crit' parameter)?</t>
         </list>
       </t>
 
