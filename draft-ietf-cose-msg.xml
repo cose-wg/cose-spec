@@ -581,7 +581,7 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
           <list style="hanging">
             <t hangText='alg'>
               This parameter is used to indicate the algorithm used for the security processing.
-              This parameter MUST be present in the COSE_Signer, COSE_Sign1, COSE_Encrypt, COSE_Encrypt0, COSE_Mac, and COSE_Mac0 structures.
+              This parameter MUST be present in the COSE_Signature, COSE_Sign1, COSE_Encrypt, COSE_Encrypt0, COSE_Mac, and COSE_Mac0 structures.
               When the algorithm supports authenticating associated data, this parameter MUST be in the protected header bucket.
               The value is taken from the "COSE Algorithms" Registry (see <xref target="cose-algorithm-registry"/>).
             </t>
@@ -630,7 +630,7 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
               There may be more than one key with the same 'kid' value, so all of the keys may need to be checked to find the correct one.
               The internal structure of 'kid' values is not defined and cannot be relied on by applications.
               Key identifier values are hints about which key to use.
-	      This are not directly a security critical field.
+	      This is not a security critical field.
 	      For this reason, it SHOULD be placed in the unprotected headers bucket.
             </t>
 
@@ -1518,7 +1518,7 @@ Enc_structure = [
         The classes of recipient algorithms that support this are those that use a pre-shared secret or do static-static key agreement (without the key wrap step).
         In both of these cases, the entity that created and sent the message MAC can be validated.
         (This knowledge of sender assumes that there are only two parties involved and you did not send the message yourself.)
-        The origination property can be obtained in both of the MAC message structures.
+        The origination property can be obtained with both of the MAC message structures.
       </t>
 
       <section title="MACed Message with Recipients" anchor="Mac_n">
@@ -1762,9 +1762,9 @@ MAC_structure = [
       <figure><artwork type="CDDL"><![CDATA[
 COSE_Key = {
     1 => tstr / int,          ; kty
-    ? 4 => [+ (tstr / int) ], ; key_ops
-    ? 3 => tstr / int,        ; alg
     ? 2 => bstr,              ; kid
+    ? 3 => tstr / int,        ; alg
+    ? 4 => [+ (tstr / int) ], ; key_ops
     ? 5 => bstr,              ; Base IV
     * label => values
 }
@@ -2025,7 +2025,7 @@ valid, message content = Verification(message sent, key, signature)
           In that document, the signature algorithm is instantiated using parameters for edwards25519 and edwards448 curves.
           The document additionally describes two variants of the EdDSA algorithm:
           Pure EdDSA, where no hash function is applied to the content before signing and, HashEdDSA where a hash function is applied to the content before signing and the result of that hash function is signed.
-          For the EdDSA, the content to be signed (either the message or the pre-has value) is processed twice inside of the signature algorithm.
+          For the EdDSA, the content to be signed (either the message or the pre-hash value) is processed twice inside of the signature algorithm.
           For use with COSE, only the pure EdDSA version is used.
           This is because it is not expected that extremely large contents are going to be needed and, based on the arrangement of the message structure, the entire message is going to need to be held in memory in order to create or verify a signature.
           This means that there does not appear to be a need to be able to do block updates of the hash, followed by eliminating the message from memory.
@@ -3052,9 +3052,9 @@ COSE_KDF_Context = [
 
       <section title="Key Transport" anchor="KeyTransport">
         <t>
-          Key Transport mode is also called key Encryption mode in some standards.
-          Key Transport mode differs from Key Wrap mode in that it uses an asymmetric encryption algorithm rather than a symmetric encryption algorithm to protect the key.
-          This document does not define any Key Transport mode algorithms.
+          Key transport mode is also called key encryption mode in some standards.
+          Key transport mode differs from key wrap mode in that it uses an asymmetric encryption algorithm rather than a symmetric encryption algorithm to protect the key.
+          This document does not define any key transport mode algorithms.
         </t>
 
         <t>
@@ -3923,7 +3923,8 @@ COSE_KDF_Context = [
               This should be a value that is in the COSE Key Common Parameters table and is placed in the 'kty' field of a COSE Key structure.
             </t>
             <t hangText='name'>
-              This is a descriptive name that enables easier reference to the item.  It is not used in the encoding.
+              This is a descriptive name that enables easier reference to the item.
+              It is not used in the encoding.
             </t>
             <t hangText='label'>
               The label is to be unique for every value of key type. 
@@ -3960,13 +3961,14 @@ COSE_KDF_Context = [
           The columns of this table are:
           <list style="hanging">
             <t hangText='name'>
-              This is a descriptive name that enables easier reference to the item.  
+              This is a descriptive name that enables easier reference to the item.
+              The name MUST be unique.
               It is not used in the encoding.
             </t>
             <t hangText='value'>
               This is the value used to identify the curve.
               These values MUST be unique.
-              The values MUST be positive integers.
+              The value can be a positive integer, a negative integer or a string.
             </t>
             <t hangText='description'>
               This field contains a brief description of the curve.
@@ -4104,6 +4106,7 @@ COSE_KDF_Context = [
           </t>
 
           <t>
+            The template for registering "application/cose-key" is:
           <list style="empty">
             <t>Type name: application</t>
             <t>Subtype name: cose-key</t>
@@ -4131,9 +4134,9 @@ COSE_KDF_Context = [
           </list>
           </t>
 
-          <t>XXXXX</t>
 
           <t>
+            The template for registering "application/cose-key-set" is:
           <list style="empty">
             <t>Type name: application</t>
             <t>Subtype name: cose-key-set</t>
@@ -4171,19 +4174,21 @@ COSE_KDF_Context = [
 
         <texttable anchor="CoAP_content_type">
           <ttcol align='left'>Media Type</ttcol>
-          <ttcol align='left'>Encoding</ttcol>
           <ttcol align='left'>ID</ttcol>
           <ttcol align='left'>Reference</ttcol>
 
-          <c>application/cose; cose-type="cose-sign"</c>        <c/> <c>TBD10</c>   <c>[This Document]</c>
-          <c>application/cose; cose-type="cose-sign1"</c>       <c/> <c>TBD11</c>   <c>[This Document]</c>
-          <c>application/cose; cose-type="cose-encrypt"</c>     <c/> <c>TBD12</c>   <c>[This Document]</c>
-          <c>application/cose; cose-type="cose-encrypt0"</c>    <c/> <c>TBD13</c>   <c>[This Document]</c>
-          <c>application/cose; cose-type="cose-mac"</c>         <c/> <c>TBD14</c>   <c>[This Document]</c>
-          <c>application/cose; cose-type="cose-mac0"</c>        <c/> <c>TBD15</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-sign"</c>        <c>TBD10</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-sign1"</c>       <c>TBD11</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-encrypt"</c>     <c>TBD12</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-encrypt0"</c>    <c>TBD13</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-mac"</c>         <c>TBD14</c>   <c>[This Document]</c>
+          <c>application/cose; cose-type="cose-mac0"</c>        <c>TBD15</c>   <c>[This Document]</c>
           <c>application/cose-key</c> <c/> <c>TBD16</c> <c>[This Document]</c>
           <c>application/cose-key-set</c> <c/> <c>TBD17</c> <c>[This Document</c>
         </texttable>
+
+        <t>
+          The Encoding column for all of the above registrations is 
 
       </section>
 
@@ -4218,7 +4223,7 @@ COSE_KDF_Context = [
 
             <t>
               When algorithms are registered, vanity registrations should be discouraged.
-              One way to do this is to require applications to provide additional documentation on security analysis of algorithms.
+              One way to do this is to require registrations to provide additional documentation on security analysis of the algorithm.
               Another thing that should be considered is to request for an opinion on the algorithm from the Crypto Forum Research Group (CFRG).
               Algorithms that do not meet the security requirements of the community and the messages structures should not be registered.
             </t>
@@ -4625,7 +4630,7 @@ COSE_KDF_Context = [
             
             <t>
               Applications need to define the set of information that is to be considered to be part of a context when omitting algorithm identifiers.
-              At a minimum, this would be the key identifier (if needed), the key, the algorithm, and the COSE structure it can be used for.
+              At a minimum, this would be the key identifier (if needed), the key, the algorithm, and the COSE structure it is used with.
               Applications should restrict the use of a single key to a single algorithm.
               As noted for some of the algorithms in this document, the use of the same key in different related algorithms can lead to leakage of information about the key, leakage about the data or the ability to perform forgeries.
             </t>
@@ -4728,7 +4733,7 @@ COSE_KDF_Context = [
         </t>
         
         <t>
-          When computing the signature for the bare counter signature header, the same Sig_structure defined in <xref target="Sig_structure"/> can be used.
+          When computing the signature for the bare counter signature header, the same Sig_structure defined in <xref target="Sig_structure"/> is used.
           The sign_protected field is omitted, as there is no protected header field in in this counter signature header.
           The value of "CounterSignature0" is placed in the context field of the Sig_stucture.
         </t>
