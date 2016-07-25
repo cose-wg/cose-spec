@@ -395,8 +395,8 @@ li, p {
   <meta name="dct.creator" content="Schaad, J." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-ietf-cose-msg-latest" />
   <meta name="dct.issued" scheme="ISO8601" content="2016-7-25" />
-  <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document defines the CBOR Object Signing and Encyption (COSE) specification.  This specification describes how to create and process signature, message authentication codes and encryption using CBOR for serialization.  This specification additionally specifies how to represent cryptographic keys using CBOR.  " />
-  <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document defines the CBOR Object Signing and Encyption (COSE) specification.  This specification describes how to create and process signature, message authentication codes and encryption using CBOR for serialization.  This specification additionally specifies how to represent cryptographic keys using CBOR.  " />
+  <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document defines the CBOR Object Signing and Encryption (COSE) specification.  This specification describes how to create and process signature, message authentication codes and encryption using CBOR for serialization.  This specification additionally specifies how to represent cryptographic keys using CBOR.  " />
+  <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document defines the CBOR Object Signing and Encryption (COSE) specification.  This specification describes how to create and process signature, message authentication codes and encryption using CBOR for serialization.  This specification additionally specifies how to represent cryptographic keys using CBOR.  " />
 
 </head>
 
@@ -432,7 +432,7 @@ li, p {
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
 </h1>
-<p>Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document defines the CBOR Object Signing and Encyption (COSE) specification.  This specification describes how to create and process signature, message authentication codes and encryption using CBOR for serialization.  This specification additionally specifies how to represent cryptographic keys using CBOR.  </p>
+<p>Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document defines the CBOR Object Signing and Encryption (COSE) specification.  This specification describes how to create and process signature, message authentication codes and encryption using CBOR for serialization.  This specification additionally specifies how to represent cryptographic keys using CBOR.  </p>
 <h1>
   <a>Contributing to this document</a>
 </h1>
@@ -1522,7 +1522,7 @@ valid, message content = Verification(message sent, key, signature)
 <p id="rfc.section.8.2.p.4">When using a COSE key for this algorithm the following checks are made: </p>
 
 <ul>
-  <li>The 'kty' field MUST be present and it MUST be 'OKP'.  <a id="CREF1" class="info">[CREF1]<span class="info">GS: Should we do some type of pointer to what an OKP is - intra docpoiter?</span></a> <a id="CREF2" class="info">[CREF2]<span class="info">JLS: I think the answer for this can be no.  We point to the appropriate table when we defined what a 'kty' is so they have had a chance to find out what 'OKP' is.  If we did this we would need to do it for all of the different values that show up here.</span></a></li>
+  <li>The 'kty' field MUST be present and it MUST be 'OKP'.  </li>
   <li>The 'crv' field MUST be present, and it MUST be a curve defined for this signature algorithm.</li>
   <li>If the 'alg' field is present, it MUST match 'EdDSA'.</li>
   <li>If the 'key_ops' field is present, it MUST include 'sign' when creating an EdDSA signature.</li>
@@ -1892,7 +1892,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
 <ul>
   <li>The 'kty' field MUST be present and it MUST be 'Symmetric'.</li>
-  <li>If the 'alg' field present, it MUST match the ChaCha algorithm being used.</li>
+  <li>If the 'alg' field present, it MUST match the ChaCha20/Poly1305 algorithm being used.</li>
   <li>If the 'key_ops' field is present, it MUST include 'encrypt' or 'wrap key' when encrypting.</li>
   <li>If the 'key_ops' field is present, it MUST include 'decrypt' or 'unwrap key'  when decrypting.</li>
 </ul>
@@ -2056,7 +2056,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
   <dt>PartyUInfo</dt>
   <dd style="margin-left: 8">This field holds information about party U.  The PartyUInfo is encoded as a CBOR array.  The elements of PartyUInfo are encoded in the order presented, however if the element does not exist no element is placed in the array.  The elements of the PartyUInfo array are: <dl><dt>identity</dt><dd style="margin-left: 8">This contains the identity information for party U.  The identities can be assigned in one of two manners.  Firstly, a protocol can assign identities based on roles.  For example, the roles of "client" and "server" may be assigned to different entities in the protocol.  Each entity would then use the correct label for the data they send or receive.  The second way for a protocol to assign identities is to use a name based on a naming system (i.e., DNS, X.509 names).  <br/> We define an algorithm parameter 'PartyU identity' that can be used to carry identity information in the message.  However, identity information is often known as part of the protocol and can thus be inferred rather than made explicit.  If identity information is carried in the message, applications SHOULD have a way of validating the supplied identity information.  The identity information does not need to be specified and is set to nil in that case.  </dd><dt>nonce</dt><dd style="margin-left: 8">This contains a nonce value.  The nonce can either be implicit from the protocol or carried as a value in the unprotected headers.  <br/> We define an algorithm parameter 'PartyU nonce' that can be used to carry this value in the message However, the nonce value could be determined by the application and the value determined from elsewhere.  <br/> This option does not need to be specified and is set to nil in that case </dd><dt>other</dt><dd style="margin-left: 8">This contains other information that is defined by the protocol.  <br/> This option does not need to be specified and is set to nil in that case </dd></dl><p> </p></dd>
   <dt>PartyVInfo</dt>
-  <dd style="margin-left: 8">This field holds information about party V.  The content of the structure are the same as for the PartyUInfo but for partyV.  </dd>
+  <dd style="margin-left: 8">This field holds information about party V.  The content of the structure are the same as for the PartyUInfo but for party V.  </dd>
   <dt>SuppPubInfo</dt>
   <dd style="margin-left: 8">This field contains public information that is mutually known to both parties.  <dl><dt>keyDataLength</dt><dd style="margin-left: 8">This is set to the number of bits of the desired output value.  (This practice means if algorithm A can use two different key lengths, the key derived for longer key size will not contain the key for shorter key size as a prefix.) </dd><dt>protected</dt><dd style="margin-left: 8">This field contains the protected parameter field.  If there are no elements in the protected field, then use a zero length bstr.  </dd><dt>other</dt><dd style="margin-left: 8">This field is for free form data defined by the application.  An example is that an application could define two different strings to be placed here to generate different keys for a data stream vs a control stream.  This field is optional and will only be present if the application defines a structure for this information.  Applications that define this SHOULD use CBOR to encode the data so that types and lengths are correctly included.  </dd></dl><p> </p></dd>
   <dt>SuppPrivInfo</dt>
@@ -2994,6 +2994,7 @@ COSE_KDF_Context = [
   <thead>
     <tr>
       <th class="left">Media Type</th>
+      <th class="left">Encoding</th>
       <th class="left">ID</th>
       <th class="left">Reference</th>
     </tr>
@@ -3001,31 +3002,37 @@ COSE_KDF_Context = [
   <tbody>
     <tr>
       <td class="left">application/cose; cose-type="cose-sign"</td>
+      <td class="left"/>
       <td class="left">TBD10</td>
       <td class="left">[This Document]</td>
     </tr>
     <tr>
       <td class="left">application/cose; cose-type="cose-sign1"</td>
+      <td class="left"/>
       <td class="left">TBD11</td>
       <td class="left">[This Document]</td>
     </tr>
     <tr>
       <td class="left">application/cose; cose-type="cose-encrypt"</td>
+      <td class="left"/>
       <td class="left">TBD12</td>
       <td class="left">[This Document]</td>
     </tr>
     <tr>
       <td class="left">application/cose; cose-type="cose-encrypt0"</td>
+      <td class="left"/>
       <td class="left">TBD13</td>
       <td class="left">[This Document]</td>
     </tr>
     <tr>
       <td class="left">application/cose; cose-type="cose-mac"</td>
+      <td class="left"/>
       <td class="left">TBD14</td>
       <td class="left">[This Document]</td>
     </tr>
     <tr>
       <td class="left">application/cose; cose-type="cose-mac0"</td>
+      <td class="left"/>
       <td class="left">TBD15</td>
       <td class="left">[This Document]</td>
     </tr>
@@ -3033,19 +3040,16 @@ COSE_KDF_Context = [
       <td class="left">application/cose-key</td>
       <td class="left"/>
       <td class="left">TBD16</td>
+      <td class="left">[This Document]</td>
     </tr>
     <tr>
-      <td class="left">[This Document]</td>
       <td class="left">application/cose-key-set</td>
       <td class="left"/>
-    </tr>
-    <tr>
       <td class="left">TBD17</td>
       <td class="left">[This Document</td>
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.16.10.p.2">The Encoding column for all of the above registrations is empty.  </p>
 <h1 id="rfc.section.16.11"><a href="#rfc.section.16.11">16.11.</a> <a href="#review" id="review">Expert Review Instructions</a></h1>
 <p id="rfc.section.16.11.p.1">All of the IANA registries established in this document are defined as expert review.  This section gives some general guidelines for what the experts should be looking for, but they are being designated as experts for a reason so they should be given substantial latitude.  </p>
 <p id="rfc.section.16.11.p.2">Expert reviewers should take into consideration the following points: </p>
@@ -3108,7 +3112,7 @@ COSE_KDF_Context = [
   <li>Is the cryptographic algorithm acceptable in the current context?</li>
   <li>Have the restrictions associated with the key, such as algorithm or freshness, been checked and are correct?</li>
   <li>Is the request something that is reasonable, given the current state of the application?</li>
-  <li>Have any security considerations that are part of the message been enforced (as specified by the application or crit parameter)?</li>
+  <li>Have any security considerations that are part of the message been enforced (as specified by the application or 'crit' parameter)?</li>
 </ul>
 
 <p> </p>
