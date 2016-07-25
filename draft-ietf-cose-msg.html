@@ -394,7 +394,7 @@ li, p {
 
   <meta name="dct.creator" content="Schaad, J." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-ietf-cose-msg-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-7-24" />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-7-25" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document defines the CBOR Object Signing and Encyption (COSE) specification.  This specification describes how to create and process signature, message authentication codes and encryption using CBOR for serialization.  This specification additionally specifies how to represent cryptographic keys using CBOR.  " />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document defines the CBOR Object Signing and Encyption (COSE) specification.  This specification describes how to create and process signature, message authentication codes and encryption using CBOR for serialization.  This specification additionally specifies how to represent cryptographic keys using CBOR.  " />
 
@@ -415,10 +415,10 @@ li, p {
 </tr>
 <tr>
   <td class="left">Intended status: Standards Track</td>
-  <td class="right">July 24, 2016</td>
+  <td class="right">July 25, 2016</td>
 </tr>
 <tr>
-  <td class="left">Expires: January 25, 2017</td>
+  <td class="left">Expires: January 26, 2017</td>
   <td class="right"></td>
 </tr>
 
@@ -443,7 +443,7 @@ li, p {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on January 25, 2017.</p>
+<p>This Internet-Draft will expire on January 26, 2017.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -771,13 +771,13 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
 
 <dl>
   <dt>alg</dt>
-  <dd style="margin-left: 8">This parameter is used to indicate the algorithm used for the security processing.  This parameter MUST be present in the COSE_Signer, COSE_Sign1, COSE_Encrypt, COSE_Encrypt0, COSE_Mac, and COSE_Mac0 structures.  When the algorithm supports authenticating associated data, this parameter MUST be in the protected header bucket.  The value is taken from the "COSE Algorithms" Registry (see <a href="#cose-algorithm-registry">Section 16.4</a>).  </dd>
+  <dd style="margin-left: 8">This parameter is used to indicate the algorithm used for the security processing.  This parameter MUST be present in the COSE_Signature, COSE_Sign1, COSE_Encrypt, COSE_Encrypt0, COSE_Mac, and COSE_Mac0 structures.  When the algorithm supports authenticating associated data, this parameter MUST be in the protected header bucket.  The value is taken from the "COSE Algorithms" Registry (see <a href="#cose-algorithm-registry">Section 16.4</a>).  </dd>
   <dt>crit</dt>
   <dd style="margin-left: 8">The parameter is used to indicate which protected header labels an application that is processing a message is required to understand.  Parameters defined in this document do not need to be included as they should be understood by all implementations.  When present, this parameter MUST be placed in the protected header bucket.  The array MUST have at least one value in it.  <br/> Not all labels need to be included in the 'crit' parameter.  The rules for deciding which header labels are placed in the array are: <ul><li>Integer labels in the range of 0 to 8 SHOULD be omitted.</li><li>Integer labels in the range -1 to -255 can be omitted as they are algorithm dependent.  If an application can correctly process an algorithm, it can be assumed that it will correctly process all of the common parameters associated with that algorithm.  (The algorithm range is -1 to -65536; the higher end is for more optional algorithm specific items.) </li><li>Labels for parameters required for an application MAY be omitted.  Applications should have a statement if the label can be omitted.  </li></ul><p> The header parameter values indicated by 'crit' can be processed by either the security library code or by an application using a security library; the only requirement is that the parameter is processed.  If the 'crit' value list includes a value for which the parameter is not in the protected bucket, this is a fatal error in processing the message.  </p></dd>
   <dt>content type</dt>
   <dd style="margin-left: 8">This parameter is used to indicate the content type of the data in the payload or cipher text fields.  Integers are from the "CoAP Content-Formats" IANA registry table.  Text values following the syntax of Content-Type defined in Section 5.1 of <a href="#RFC2045">[RFC2045]</a> omitting the prefix string "Content-Type:".  Leading and trailing whitespace is also omitted.  Textual content values along with parameters and subparameters can be located using the IANA "Media Types" registry.  Applications SHOULD provide this parameter if the content structure is potentially ambiguous.  </dd>
   <dt>kid</dt>
-  <dd style="margin-left: 8">This parameter identifies one piece of data that can be used as input to find the needed cryptographic key.  The value of this parameter can be matched against the 'kid' member in a COSE_Key structure.  Other methods of key distribution can define an equivalent field to be matched.  Applications MUST NOT assume that 'kid' values are unique.  There may be more than one key with the same 'kid' value, so all of the keys may need to be checked to find the correct one.  The internal structure of 'kid' values is not defined and cannot be relied on by applications.  Key identifier values are hints about which key to use.  This are not directly a security critical field.  For this reason, it SHOULD be placed in the unprotected headers bucket.  </dd>
+  <dd style="margin-left: 8">This parameter identifies one piece of data that can be used as input to find the needed cryptographic key.  The value of this parameter can be matched against the 'kid' member in a COSE_Key structure.  Other methods of key distribution can define an equivalent field to be matched.  Applications MUST NOT assume that 'kid' values are unique.  There may be more than one key with the same 'kid' value, so all of the keys may need to be checked to find the correct one.  The internal structure of 'kid' values is not defined and cannot be relied on by applications.  Key identifier values are hints about which key to use.  This is not a security critical field.  For this reason, it SHOULD be placed in the unprotected headers bucket.  </dd>
   <dt>Initialization Vector</dt>
   <dd style="margin-left: 8">This parameter holds the Initialization Vector (IV) value.  For some symmetric encryption algorithms this may be referred to as a nonce.  As the IV is authenticated by the encryption process, it SHOULD be placed in the unprotected header bucket.  </dd>
   <dt>Partial Initialization Vector</dt>
@@ -1163,7 +1163,7 @@ Enc_structure = [
 <h1 id="rfc.section.6"><a href="#rfc.section.6">6.</a> <a href="#mac-objects" id="mac-objects">MAC Objects</a></h1>
 <p id="rfc.section.6.p.1">COSE supports two different MAC structures.  COSE_MAC0 is used when a recipient structure is not needed because the key to be used is implicitly known.  COSE_MAC is used for all other cases.  These include a requirement for multiple recipients, the key being unknown, and a recipient algorithm of other than direct.  </p>
 <p id="rfc.section.6.p.2">In this section, we describe the structure and methods to be used when doing MAC authentication in COSE.  This document allows for the use of all of the same classes of recipient algorithms as are allowed for encryption.  </p>
-<p id="rfc.section.6.p.3">When using MAC operations, there are two modes in which they can be used.  The first is just a check that the content has not been changed since the MAC was computed.  Any class of recipient algorithm can be used for this purpose.  The second mode is to both check that the content has not been changed since the MAC was computed, and to use the recipient algorithm to verify who sent it.  The classes of recipient algorithms that support this are those that use a pre-shared secret or do static-static key agreement (without the key wrap step).  In both of these cases, the entity that created and sent the message MAC can be validated.  (This knowledge of sender assumes that there are only two parties involved and you did not send the message yourself.) The origination property can be obtained in both of the MAC message structures.  </p>
+<p id="rfc.section.6.p.3">When using MAC operations, there are two modes in which they can be used.  The first is just a check that the content has not been changed since the MAC was computed.  Any class of recipient algorithm can be used for this purpose.  The second mode is to both check that the content has not been changed since the MAC was computed, and to use the recipient algorithm to verify who sent it.  The classes of recipient algorithms that support this are those that use a pre-shared secret or do static-static key agreement (without the key wrap step).  In both of these cases, the entity that created and sent the message MAC can be validated.  (This knowledge of sender assumes that there are only two parties involved and you did not send the message yourself.) The origination property can be obtained with both of the MAC message structures.  </p>
 <h1 id="rfc.section.6.1"><a href="#rfc.section.6.1">6.1.</a> <a href="#Mac_n" id="Mac_n">MACed Message with Recipients</a></h1>
 <p id="rfc.section.6.1.p.1">The multiple recipient MACed message uses two structures, the COSE_Mac structure defined in this section for carrying the body and the COSE_recipient structure (<a href="#EnvelopedData">Section 5.1</a>) to hold the key used for the MAC computation.  Examples of MACed messages can be found in <a href="#MacExamples">Appendix C.5</a>.  </p>
 <p id="rfc.section.6.1.p.2">The MAC structure can be encoded either tagged or untagged depending on the context it will be used in.  A tagged COSE_Mac structure is identified by the CBOR tag TBD4.  The CDDL fragment that represents this is: </p>
@@ -1275,9 +1275,9 @@ MAC_structure = [
 <pre>
 COSE_Key = {
     1 =&gt; tstr / int,          ; kty
-    ? 4 =&gt; [+ (tstr / int) ], ; key_ops
-    ? 3 =&gt; tstr / int,        ; alg
     ? 2 =&gt; bstr,              ; kid
+    ? 3 =&gt; tstr / int,        ; alg
+    ? 4 =&gt; [+ (tstr / int) ], ; key_ops
     ? 5 =&gt; bstr,              ; Base IV
     * label =&gt; values
 }
@@ -1497,7 +1497,7 @@ valid, message content = Verification(message sent, key, signature)
 
 <p> </p>
 <h1 id="rfc.section.8.2"><a href="#rfc.section.8.2">8.2.</a> Edwards-curve Digital Signature Algorithms (EdDSA)</h1>
-<p><a href="#I-D.irtf-cfrg-eddsa">[I-D.irtf-cfrg-eddsa]</a> describes the elliptic curve signature scheme Edwards-curve Digital Signature Algorithm (EdDSA).  In that document, the signature algorithm is instantiated using parameters for edwards25519 and edwards448 curves.  The document additionally describes two variants of the EdDSA algorithm: Pure EdDSA, where no hash function is applied to the content before signing and, HashEdDSA where a hash function is applied to the content before signing and the result of that hash function is signed.  For the EdDSA, the content to be signed (either the message or the pre-has value) is processed twice inside of the signature algorithm.  For use with COSE, only the pure EdDSA version is used.  This is because it is not expected that extremely large contents are going to be needed and, based on the arrangement of the message structure, the entire message is going to need to be held in memory in order to create or verify a signature.  This means that there does not appear to be a need to be able to do block updates of the hash, followed by eliminating the message from memory.  Applications can provide the same features by defining the content of the message as a hash value and transporting the COSE object (with the hash value) and the content as separate items.  </p>
+<p><a href="#I-D.irtf-cfrg-eddsa">[I-D.irtf-cfrg-eddsa]</a> describes the elliptic curve signature scheme Edwards-curve Digital Signature Algorithm (EdDSA).  In that document, the signature algorithm is instantiated using parameters for edwards25519 and edwards448 curves.  The document additionally describes two variants of the EdDSA algorithm: Pure EdDSA, where no hash function is applied to the content before signing and, HashEdDSA where a hash function is applied to the content before signing and the result of that hash function is signed.  For the EdDSA, the content to be signed (either the message or the pre-hash value) is processed twice inside of the signature algorithm.  For use with COSE, only the pure EdDSA version is used.  This is because it is not expected that extremely large contents are going to be needed and, based on the arrangement of the message structure, the entire message is going to need to be held in memory in order to create or verify a signature.  This means that there does not appear to be a need to be able to do block updates of the hash, followed by eliminating the message from memory.  Applications can provide the same features by defining the content of the message as a hash value and transporting the COSE object (with the hash value) and the content as separate items.  </p>
 <p id="rfc.section.8.2.p.2">The algorithms defined in this document can be found in <a href="#table-eddsa-algs">Table 6</a>.  A single signature algorithm is defined, which can be used for multiple curves.  </p>
 <div id="rfc.table.6"/>
 <div id="table-eddsa-algs"/>
@@ -2252,7 +2252,7 @@ COSE_KDF_Context = [
 <h1 id="rfc.section.12.2.1.1"><a href="#rfc.section.12.2.1.1">12.2.1.1.</a> Security Considerations for AES-KW</h1>
 <p id="rfc.section.12.2.1.1.p.1">The shared secret needs to have some method to be regularly updated over time.  The shared secret is the basis of trust.  </p>
 <h1 id="rfc.section.12.3"><a href="#rfc.section.12.3">12.3.</a> <a href="#KeyTransport" id="KeyTransport">Key Transport</a></h1>
-<p id="rfc.section.12.3.p.1">Key Transport mode is also called key Encryption mode in some standards.  Key Transport mode differs from Key Wrap mode in that it uses an asymmetric encryption algorithm rather than a symmetric encryption algorithm to protect the key.  This document does not define any Key Transport mode algorithms.  </p>
+<p id="rfc.section.12.3.p.1">Key transport mode is also called key encryption mode in some standards.  Key transport mode differs from key wrap mode in that it uses an asymmetric encryption algorithm rather than a symmetric encryption algorithm to protect the key.  This document does not define any key transport mode algorithms.  </p>
 <p id="rfc.section.12.3.p.2">When using a key transport algorithm, the COSE_Encrypt structure for the recipient is organized as follows: </p>
 
 <ul>
@@ -2881,9 +2881,9 @@ COSE_KDF_Context = [
 
 <dl>
   <dt>name</dt>
-  <dd style="margin-left: 8">This is a descriptive name that enables easier reference to the item.  It is not used in the encoding.  </dd>
+  <dd style="margin-left: 8">This is a descriptive name that enables easier reference to the item.  The name MUST be unique.  It is not used in the encoding.  </dd>
   <dt>value</dt>
-  <dd style="margin-left: 8">This is the value used to identify the curve.  These values MUST be unique.  The values MUST be positive integers.  </dd>
+  <dd style="margin-left: 8">This is the value used to identify the curve.  These values MUST be unique.  The value can be a positive integer, a negative integer or a string.  </dd>
   <dt>description</dt>
   <dd style="margin-left: 8">This field contains a brief description of the curve.  </dd>
   <dt>specification</dt>
@@ -2940,7 +2940,7 @@ COSE_KDF_Context = [
 <p> </p>
 <h1 id="rfc.section.16.9.2"><a href="#rfc.section.16.9.2">16.9.2.</a> COSE Key media type</h1>
 <p id="rfc.section.16.9.2.p.1">This section registers the "application/cose-key" and "application/cose-key-set" media types in the "Media Types" registry.  These media types are used to indicate, respectively, that content is a COSE_Key or COSE_KeySet object.  </p>
-<p/>
+<p id="rfc.section.16.9.2.p.2">The template for registering "application/cose-key" is: </p>
 
 <ul class="empty">
   <li>Type name: application</li>
@@ -2963,8 +2963,7 @@ COSE_KDF_Context = [
 </ul>
 
 <p> </p>
-<p id="rfc.section.16.9.2.p.3">XXXXX</p>
-<p/>
+<p id="rfc.section.16.9.2.p.3">The template for registering "application/cose-key-set" is: </p>
 
 <ul class="empty">
   <li>Type name: application</li>
@@ -2995,7 +2994,6 @@ COSE_KDF_Context = [
   <thead>
     <tr>
       <th class="left">Media Type</th>
-      <th class="left">Encoding</th>
       <th class="left">ID</th>
       <th class="left">Reference</th>
     </tr>
@@ -3003,37 +3001,31 @@ COSE_KDF_Context = [
   <tbody>
     <tr>
       <td class="left">application/cose; cose-type="cose-sign"</td>
-      <td class="left"/>
       <td class="left">TBD10</td>
       <td class="left">[This Document]</td>
     </tr>
     <tr>
       <td class="left">application/cose; cose-type="cose-sign1"</td>
-      <td class="left"/>
       <td class="left">TBD11</td>
       <td class="left">[This Document]</td>
     </tr>
     <tr>
       <td class="left">application/cose; cose-type="cose-encrypt"</td>
-      <td class="left"/>
       <td class="left">TBD12</td>
       <td class="left">[This Document]</td>
     </tr>
     <tr>
       <td class="left">application/cose; cose-type="cose-encrypt0"</td>
-      <td class="left"/>
       <td class="left">TBD13</td>
       <td class="left">[This Document]</td>
     </tr>
     <tr>
       <td class="left">application/cose; cose-type="cose-mac"</td>
-      <td class="left"/>
       <td class="left">TBD14</td>
       <td class="left">[This Document]</td>
     </tr>
     <tr>
       <td class="left">application/cose; cose-type="cose-mac0"</td>
-      <td class="left"/>
       <td class="left">TBD15</td>
       <td class="left">[This Document]</td>
     </tr>
@@ -3041,16 +3033,19 @@ COSE_KDF_Context = [
       <td class="left">application/cose-key</td>
       <td class="left"/>
       <td class="left">TBD16</td>
-      <td class="left">[This Document]</td>
     </tr>
     <tr>
+      <td class="left">[This Document]</td>
       <td class="left">application/cose-key-set</td>
       <td class="left"/>
+    </tr>
+    <tr>
       <td class="left">TBD17</td>
       <td class="left">[This Document</td>
     </tr>
   </tbody>
 </table>
+<p id="rfc.section.16.10.p.2">The Encoding column for all of the above registrations is empty.  </p>
 <h1 id="rfc.section.16.11"><a href="#rfc.section.16.11">16.11.</a> <a href="#review" id="review">Expert Review Instructions</a></h1>
 <p id="rfc.section.16.11.p.1">All of the IANA registries established in this document are defined as expert review.  This section gives some general guidelines for what the experts should be looking for, but they are being designated as experts for a reason so they should be given substantial latitude.  </p>
 <p id="rfc.section.16.11.p.2">Expert reviewers should take into consideration the following points: </p>
@@ -3059,7 +3054,7 @@ COSE_KDF_Context = [
   <li>Point squatting should be discouraged.  Reviewers are encouraged to get sufficient information for registration requests to ensure that the usage is not going to duplicate one that is already registered and that the point is likely to be used in deployments.  The zones tagged as private use are intended for testing purposes and closed environments, code points in other ranges should not be assigned for testing.  </li>
   <li>Specifications are required for the standards track range of point assignment.  Specifications should exist for specification required ranges, but early assignment before a specification is available is considered to be permissible.  Specifications are needed for the first-come, first-serve range if they are expected to be used outside of closed environments in an interoperable way.  When specifications are not provided, the description provided needs to have sufficient information to identify what the point is being used for.  </li>
   <li>Experts should take into account the expected usage of fields when approving point assignment.  The fact that there is a range for standards track documents does not mean that a standards track document cannot have points assigned outside of that range.  Some of the ranges are restricted in range, items that are not expected to be common or are not expected to be used in constrained environments should be assigned to values which will encode to longer byte strings.  </li>
-  <li>When algorithms are registered, vanity registrations should be discouraged.  One way to do this is to require applications to provide additional documentation on security analysis of algorithms.  Another thing that should be considered is to request for an opinion on the algorithm from the Crypto Forum Research Group (CFRG).  Algorithms that do not meet the security requirements of the community and the messages structures should not be registered.  </li>
+  <li>When algorithms are registered, vanity registrations should be discouraged.  One way to do this is to require registrations to provide additional documentation on security analysis of the algorithm.  Another thing that should be considered is to request for an opinion on the algorithm from the Crypto Forum Research Group (CFRG).  Algorithms that do not meet the security requirements of the community and the messages structures should not be registered.  </li>
 </ul>
 
 <p> </p>
@@ -3375,7 +3370,7 @@ COSE_KDF_Context = [
 
 <ul>
   <li>Applications need to list the set of COSE structures that implicit algorithms are to be used in.  Applications need to require that the receipt of an explicit algorithm identifier in one of these structures will lead to the message being rejected.  This requirement is stated so that there will never be a case where there is any ambiguity about the question of which algorithm should be used, the implicit or the explicit one.  This applies even if the transported algorithm identifier is a protected attribute.  This applies even if the transported algorithm is the same as the implicit algorithm.  </li>
-  <li>Applications need to define the set of information that is to be considered to be part of a context when omitting algorithm identifiers.  At a minimum, this would be the key identifier (if needed), the key, the algorithm, and the COSE structure it can be used for.  Applications should restrict the use of a single key to a single algorithm.  As noted for some of the algorithms in this document, the use of the same key in different related algorithms can lead to leakage of information about the key, leakage about the data or the ability to perform forgeries.  </li>
+  <li>Applications need to define the set of information that is to be considered to be part of a context when omitting algorithm identifiers.  At a minimum, this would be the key identifier (if needed), the key, the algorithm, and the COSE structure it is used with.  Applications should restrict the use of a single key to a single algorithm.  As noted for some of the algorithms in this document, the use of the same key in different related algorithms can lead to leakage of information about the key, leakage about the data or the ability to perform forgeries.  </li>
   <li>In many cases, applications that make the algorithm identifier implicit will also want to make the context identifier implicit for the same reason.  That is, omitting the context identifier will decrease the message size (potentially significantly depending on the length of the identifier).  Applications that do this will need to describe the circumstances where the context identifier is to be omitted and how the context identifier is to be inferred in these cases.  (Exhaustive search over all of the keys would normally not be considered to be acceptable.) An example of how this can be done is to tie the context to a transaction identifier.  Both would be sent on the original message, but only the transaction identifier would need to be sent after that point as the context is tied into the transaction identifier.  Another way would be to associate a context with a network address.  All messages coming from a single network address can be assumed to be associated with a specific context.  (In this case the address would normally be distributed as part of the context.) </li>
   <li>Applications cannot rely on key identifiers being unique unless they take significant efforts to ensure that they are computed in such a way as to create this guarantee.  Even when an application does this, the uniqueness might be violated if the application is run in different contexts (i.e., with a different context provider) or if the system combines the security contexts from different applications together into a single store.  </li>
   <li>Applications should continue the practice of protecting the algorithm identifier.  Since this is not done by placing it in the protected attributes field, applications should define an application specific external data structure that includes this value.  This external data field can be used as such for content encryption, MAC, and signature algorithms.  It can be used in the SuppPrivInfo field for those algorithms which use a KDF function to derive a key value.  Applications may also want to protect other information that is part of the context structure as well.  It should be noted that those fields, such as the key or a base IV, are protected by virtue of being used in the cryptographic computation and do not need to be included in the external data field.  </li>
@@ -3408,7 +3403,7 @@ COSE_KDF_Context = [
 <p> </p>
 <h1 id="rfc.appendix.A.2"><a href="#rfc.appendix.A.2">A.2.</a> Counter Signature Without Headers</h1>
 <p id="rfc.section.A.2.p.1">There is a group of people who want to have a counter signature parameter that is directly tied to the value being signed and thus the authenticated and unauthenticated buckets can be removed from the message being sent.  The focus on this is an even smaller size, as all of the information on the process of creating the counter signature is implicit rather than being explicitly carried in the message.  This includes not only the algorithm identifier as presented above, but also items such as the key identification is always external to the signature structure.  This means that the entities that are doing the validation of the counter signature are required to infer which key is to be used from context rather than being explicit.  One way of doing this would be to presume that all data coming from a specific port (or to a specific URL) is to be validated by a specific key.  (Note that this does not require that the key identifier be part of the value signed as it does not serve a cryptographic purpose.  If the key validates the counter signature, then it should be presumed that the entity associated with that key produced the signature.) </p>
-<p id="rfc.section.A.2.p.2">When computing the signature for the bare counter signature header, the same Sig_structure defined in <a href="#Sig_structure">Section 4.4</a> can be used.  The sign_protected field is omitted, as there is no protected header field in in this counter signature header.  The value of "CounterSignature0" is placed in the context field of the Sig_stucture.  </p>
+<p id="rfc.section.A.2.p.2">When computing the signature for the bare counter signature header, the same Sig_structure defined in <a href="#Sig_structure">Section 4.4</a> is used.  The sign_protected field is omitted, as there is no protected header field in in this counter signature header.  The value of "CounterSignature0" is placed in the context field of the Sig_stucture.  </p>
 <div id="rfc.table.27"/>
 <div id="CounterSign0"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
