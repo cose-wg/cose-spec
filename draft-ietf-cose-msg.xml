@@ -197,7 +197,7 @@
 
         <t>
           There currently is no standard CBOR grammar available for use by specifications.
-          We therefore describe the CBOR structures in prose.
+          The CBOR structures are therefore described in prose.
         </t>
 
         <t>
@@ -257,6 +257,7 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
           In JSON, maps are called objects and only have one kind of map key: a string.
           In COSE, we use strings, negative integers and unsigned integers as map keys.
           The integers are used for compactness of encoding and easy comparison.
+          The incusion of strings allows for an additional range of short encoded values to be used as well.
           Since the word "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage as a map key.
         </t>
 
@@ -526,7 +527,7 @@ tag=10
         As an example of this, the parameter 'content type' describes the content of the message being carried in the message.
         As such, this parameter is placed only in the content layer and is not placed in the recipient or signature layers.
         In principle, one should be able to process any given layer without reference to any other layer.
-        (With the exception of the COSE_Sign structure, the only data that needs to cross layers is the cryptographic key.)
+        With the exception of the COSE_Sign structure, the only data that needs to cross layers is the cryptographic key.
       </t>
 
       <t>
@@ -634,13 +635,13 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
 	      For this reason, it SHOULD be placed in the unprotected headers bucket.
             </t>
 
-            <t hangText="Initialization Vector">
+            <t hangText="IV">
               This parameter holds the Initialization Vector (IV) value.
               For some symmetric encryption algorithms this may be referred to as a nonce.
               As the IV is authenticated by the encryption process, it SHOULD be placed in the unprotected header bucket.
             </t>
 
-            <t hangText='Partial Initialization Vector'>
+            <t hangText='Partial IV'>
               This parameter holds a part of the IV value.
               When using the COSE_Encrypt0 structure, a portion of the IV can be part of the context associated with the key.
               This field is used to carry a value that causes the IV to be changed for each message.
@@ -657,7 +658,7 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
             <t hangText='counter signature'>
               This parameter holds one or more counter signature values.
               Counter signatures provide a method of having a second party sign some data.
-	      The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_Sign1, COSE_Signature, COSE_Encrypt, COSE_recipient, COSE_Encrypt0, COSE_Mac and COSE_Mac0.
+	      The counter signature parameter can occur as an unprotected attribute in any of the following structures: COSE_Sign1, COSE_Signature, COSE_Encrypt, COSE_recipient, COSE_Encrypt0, COSE_Mac and COSE_Mac0.
               These structures all have the same beginning elements so that a consistent calculation of the counter signature can be computed.
               Details on computing counter signatures are found in <xref target="counter_signature"/>.
             </t>
@@ -1282,7 +1283,7 @@ COSE_Encrypt0 = [
     </section>
 
       
-      <section anchor="encryption-algorithm-for-aead-algorithms" title="Encryption Algorithm for AEAD algorithms">
+      <section anchor="encryption-algorithm-for-aead-algorithms" title="How to encrypt and decrypt for AEAD Algorithms">
 
         <t>
           The encryption algorithm for AEAD algorithms is fairly simple.
@@ -1412,7 +1413,7 @@ Enc_structure = [
 
       </section>
 
-      <section anchor="encryption-algorithm-for-ae-algorithms" title="Encryption algorithm for AE algorithms">
+      <section anchor="encryption-algorithm-for-ae-algorithms" title="How to encrypt and decrypt for AE Algorithms">
 
         <t>
           How to encrypt a message:
@@ -1744,6 +1745,7 @@ MAC_structure = [
         A COSE Key Set uses a CBOR array object as its underlying type.
         The values of the array elements are COSE Keys.
         A Key Set MUST have at least one element in the array.
+        Examples of Key Sets can be found in <xref target="COSE_KEYS"/>.
       </t>
 
       <t>
@@ -5097,7 +5099,7 @@ COSE_KDF_Context = [
       
 
 
-      <section title="COSE Keys">
+      <section title="COSE Keys" anchor="COSE_KEYS">
         <section title="Public Keys">
           <t>
             This is an example of a COSE Key set.
