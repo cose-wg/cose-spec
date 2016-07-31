@@ -287,8 +287,8 @@ li, p {
 <link href="#rfc.section.5.1" rel="Chapter" title="5.1 Enveloped COSE Structure"/>
 <link href="#rfc.section.5.1.1" rel="Chapter" title="5.1.1 Recipient Algorithm Classes"/>
 <link href="#rfc.section.5.2" rel="Chapter" title="5.2 Single Recipient Encrypted"/>
-<link href="#rfc.section.5.3" rel="Chapter" title="5.3 Encryption Algorithm for AEAD algorithms"/>
-<link href="#rfc.section.5.4" rel="Chapter" title="5.4 Encryption algorithm for AE algorithms"/>
+<link href="#rfc.section.5.3" rel="Chapter" title="5.3 How to encrypt and decrypt for AEAD Algorithms"/>
+<link href="#rfc.section.5.4" rel="Chapter" title="5.4 How to encrypt and decrypt for AE Algorithms"/>
 <link href="#rfc.section.6" rel="Chapter" title="6 MAC Objects"/>
 <link href="#rfc.section.6.1" rel="Chapter" title="6.1 MACed Message with Recipients"/>
 <link href="#rfc.section.6.2" rel="Chapter" title="6.2 MACed Messages with Implicit Key"/>
@@ -394,7 +394,7 @@ li, p {
 
   <meta name="dct.creator" content="Schaad, J." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-ietf-cose-msg-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-7-25" />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-7-31" />
   <meta name="dct.abstract" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document defines the CBOR Object Signing and Encryption (COSE) specification.  This specification describes how to create and process signature, message authentication codes and encryption using CBOR for serialization.  This specification additionally specifies how to represent cryptographic keys using CBOR.  " />
   <meta name="description" content="Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.  There is a need for the ability to have the basic security services defined for this data format.  This document defines the CBOR Object Signing and Encryption (COSE) specification.  This specification describes how to create and process signature, message authentication codes and encryption using CBOR for serialization.  This specification additionally specifies how to represent cryptographic keys using CBOR.  " />
 
@@ -415,10 +415,10 @@ li, p {
 </tr>
 <tr>
   <td class="left">Intended status: Standards Track</td>
-  <td class="right">July 25, 2016</td>
+  <td class="right">July 31, 2016</td>
 </tr>
 <tr>
-  <td class="left">Expires: January 26, 2017</td>
+  <td class="left">Expires: February 1, 2017</td>
   <td class="right"></td>
 </tr>
 
@@ -443,7 +443,7 @@ li, p {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on January 26, 2017.</p>
+<p>This Internet-Draft will expire on February 1, 2017.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -474,8 +474,8 @@ li, p {
 <ul><li>5.1.   <a href="#rfc.section.5.1">Enveloped COSE Structure</a></li>
 <ul><li>5.1.1.   <a href="#rfc.section.5.1.1">Recipient Algorithm Classes</a></li>
 </ul><li>5.2.   <a href="#rfc.section.5.2">Single Recipient Encrypted</a></li>
-<li>5.3.   <a href="#rfc.section.5.3">Encryption Algorithm for AEAD algorithms</a></li>
-<li>5.4.   <a href="#rfc.section.5.4">Encryption algorithm for AE algorithms</a></li>
+<li>5.3.   <a href="#rfc.section.5.3">How to encrypt and decrypt for AEAD Algorithms</a></li>
+<li>5.4.   <a href="#rfc.section.5.4">How to encrypt and decrypt for AE Algorithms</a></li>
 </ul><li>6.   <a href="#rfc.section.6">MAC Objects</a></li>
 <ul><li>6.1.   <a href="#rfc.section.6.1">MACed Message with Recipients</a></li>
 <li>6.2.   <a href="#rfc.section.6.2">MACed Messages with Implicit Key</a></li>
@@ -607,7 +607,7 @@ li, p {
 <p id="rfc.section.1.2.p.1">The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in <a href="#RFC2119">[RFC2119]</a>.  </p>
 <p id="rfc.section.1.2.p.2">When the words appear in lower case, their natural language meaning is used.  </p>
 <h1 id="rfc.section.1.3"><a href="#rfc.section.1.3">1.3.</a> <a href="#cbor-grammar" id="cbor-grammar">CBOR Grammar</a></h1>
-<p id="rfc.section.1.3.p.1">There currently is no standard CBOR grammar available for use by specifications.  We therefore describe the CBOR structures in prose.  </p>
+<p id="rfc.section.1.3.p.1">There currently is no standard CBOR grammar available for use by specifications.  The CBOR structures are therefore described in prose.  </p>
 <p id="rfc.section.1.3.p.2">The document was developed by first working on the grammar and then developing the prose to go with it.  An artifact of this is that the prose was written using the primitive type strings defined by CBOR Data Definition Language (CDDL) <a href="#I-D.greevenbosch-appsawg-cbor-cddl">[I-D.greevenbosch-appsawg-cbor-cddl]</a>.  In this specification, the following primitive types are used: </p>
 
 <ul class="empty">
@@ -638,7 +638,7 @@ Internal_Types = Sig_structure / Enc_structure / MAC_structure /
 </pre>
 <p id="rfc.section.1.3.p.7">The non-terminal Internal_Types is defined for dealing with the automated validation tools used during the writing of this document.  It references those non-terminals that are used for security computations, but are not emitted for transport.  </p>
 <h1 id="rfc.section.1.4"><a href="#rfc.section.1.4">1.4.</a> <a href="#label" id="label">CBOR Related Terminology</a></h1>
-<p id="rfc.section.1.4.p.1">In JSON, maps are called objects and only have one kind of map key: a string.  In COSE, we use strings, negative integers and unsigned integers as map keys.  The integers are used for compactness of encoding and easy comparison.  Since the word "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage as a map key.  </p>
+<p id="rfc.section.1.4.p.1">In JSON, maps are called objects and only have one kind of map key: a string.  In COSE, we use strings, negative integers and unsigned integers as map keys.  The integers are used for compactness of encoding and easy comparison.  The incusion of strings allows for an additional range of short encoded values to be used as well.  Since the word "key" is mainly used in its other meaning, as a cryptographic key, we use the term "label" for this usage as a map key.  </p>
 <p id="rfc.section.1.4.p.2">The presence of a label in a COSE map which is not a string or an integer is an error.  Applications can either fail processing or process messages with incorrect labels, however they MUST NOT create messages with incorrect labels.  </p>
 <p id="rfc.section.1.4.p.3">A CDDL grammar fragment is defined that defines the non-terminals 'label', as in the previous paragraph and 'values', which permits any value to be used.  </p>
 <pre>
@@ -746,7 +746,7 @@ COSE_Tagged_Message = COSE_Sign_Tagged / COSE_Sign1_Tagged /
   <dd style="margin-left: 8">Contains parameters about the current layer that are not cryptographically protected.  </dd>
 </dl>
 
-<p> Only parameters that deal with the current layer are to be placed at that layer.  As an example of this, the parameter 'content type' describes the content of the message being carried in the message.  As such, this parameter is placed only in the content layer and is not placed in the recipient or signature layers.  In principle, one should be able to process any given layer without reference to any other layer.  (With the exception of the COSE_Sign structure, the only data that needs to cross layers is the cryptographic key.) </p>
+<p> Only parameters that deal with the current layer are to be placed at that layer.  As an example of this, the parameter 'content type' describes the content of the message being carried in the message.  As such, this parameter is placed only in the content layer and is not placed in the recipient or signature layers.  In principle, one should be able to process any given layer without reference to any other layer.  With the exception of the COSE_Sign structure, the only data that needs to cross layers is the cryptographic key.  </p>
 <p id="rfc.section.3.p.4">The buckets are present in all of the security objects defined in this document.  The fields in order are the 'protected' bucket (as a CBOR 'bstr' type) and then the 'unprotected' bucket (as a CBOR 'map' type).  The presence of both buckets is required.  The parameters that go into the buckets come from the IANA "COSE Header Parameters" registry (<a href="#cose-header-key-table">Section 16.2</a>).  Some common parameters are defined in the next section, but a number of parameters are defined throughout this document.  </p>
 <p id="rfc.section.3.p.5">Labels in each of the maps MUST be unique.  When processing messages, if a label appears multiple times, the message MUST be rejected as malformed.  Applications SHOULD perform the same checks that the same label does not occur in both the protected and unprotected headers.  If the message is not rejected as malformed, attributes MUST be obtained from the protected bucket before they are obtained from the unprotected bucket.  </p>
 <p id="rfc.section.3.p.6">The following CDDL fragment represents the two header buckets.  A group Headers is defined in CDDL that represents the two buckets in which attributes are placed.  This group is used to provide these two fields consistently in all locations.  A type is also defined which represents the map of common headers.  </p>
@@ -778,12 +778,12 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
   <dd style="margin-left: 8">This parameter is used to indicate the content type of the data in the payload or cipher text fields.  Integers are from the "CoAP Content-Formats" IANA registry table.  Text values following the syntax of Content-Type defined in Section 5.1 of <a href="#RFC2045">[RFC2045]</a> omitting the prefix string "Content-Type:".  Leading and trailing whitespace is also omitted.  Textual content values along with parameters and subparameters can be located using the IANA "Media Types" registry.  Applications SHOULD provide this parameter if the content structure is potentially ambiguous.  </dd>
   <dt>kid</dt>
   <dd style="margin-left: 8">This parameter identifies one piece of data that can be used as input to find the needed cryptographic key.  The value of this parameter can be matched against the 'kid' member in a COSE_Key structure.  Other methods of key distribution can define an equivalent field to be matched.  Applications MUST NOT assume that 'kid' values are unique.  There may be more than one key with the same 'kid' value, so all of the keys may need to be checked to find the correct one.  The internal structure of 'kid' values is not defined and cannot be relied on by applications.  Key identifier values are hints about which key to use.  This is not a security critical field.  For this reason, it SHOULD be placed in the unprotected headers bucket.  </dd>
-  <dt>Initialization Vector</dt>
+  <dt>IV</dt>
   <dd style="margin-left: 8">This parameter holds the Initialization Vector (IV) value.  For some symmetric encryption algorithms this may be referred to as a nonce.  As the IV is authenticated by the encryption process, it SHOULD be placed in the unprotected header bucket.  </dd>
-  <dt>Partial Initialization Vector</dt>
+  <dt>Partial IV</dt>
   <dd style="margin-left: 8">This parameter holds a part of the IV value.  When using the COSE_Encrypt0 structure, a portion of the IV can be part of the context associated with the key.  This field is used to carry a value that causes the IV to be changed for each message.  As the IV is authenticated by the encryption process, this value can be placed in the unprotected header bucket.  The 'Initialization Vector' and 'Partial Initialization Vector' parameters MUST NOT both be present in the same security layer.  <br/> The message IV is generated by the following steps: <ol><li>Left pad the partial IV with zeros to the length of IV.</li><li>XOR the padded partial IV with the context IV.</li></ol><p> </p></dd>
   <dt>counter signature</dt>
-  <dd style="margin-left: 8">This parameter holds one or more counter signature values.  Counter signatures provide a method of having a second party sign some data.  The counter signature can occur as an unprotected attribute in any of the following structures: COSE_Sign, COSE_Sign1, COSE_Signature, COSE_Encrypt, COSE_recipient, COSE_Encrypt0, COSE_Mac and COSE_Mac0.  These structures all have the same beginning elements so that a consistent calculation of the counter signature can be computed.  Details on computing counter signatures are found in <a href="#counter_signature">Section 4.5</a>.  </dd>
+  <dd style="margin-left: 8">This parameter holds one or more counter signature values.  Counter signatures provide a method of having a second party sign some data.  The counter signature parameter can occur as an unprotected attribute in any of the following structures: COSE_Sign1, COSE_Signature, COSE_Encrypt, COSE_recipient, COSE_Encrypt0, COSE_Mac and COSE_Mac0.  These structures all have the same beginning elements so that a consistent calculation of the counter signature can be computed.  Details on computing counter signatures are found in <a href="#counter_signature">Section 4.5</a>.  </dd>
 </dl>
 
 <p> </p>
@@ -1098,7 +1098,7 @@ COSE_Encrypt0 = [
     ciphertext : bstr / nil,
 ]
 </pre>
-<h1 id="rfc.section.5.3"><a href="#rfc.section.5.3">5.3.</a> <a href="#encryption-algorithm-for-aead-algorithms" id="encryption-algorithm-for-aead-algorithms">Encryption Algorithm for AEAD algorithms</a></h1>
+<h1 id="rfc.section.5.3"><a href="#rfc.section.5.3">5.3.</a> <a href="#encryption-algorithm-for-aead-algorithms" id="encryption-algorithm-for-aead-algorithms">How to encrypt and decrypt for AEAD Algorithms</a></h1>
 <p id="rfc.section.5.3.p.1">The encryption algorithm for AEAD algorithms is fairly simple.  The first step is to create a consistent byte stream for the authenticated data structure.  For this purpose, we use a CBOR array.  The fields of the array in order are: </p>
 
 <ol>
@@ -1138,7 +1138,7 @@ Enc_structure = [
 </ol>
 
 <p> </p>
-<h1 id="rfc.section.5.4"><a href="#rfc.section.5.4">5.4.</a> <a href="#encryption-algorithm-for-ae-algorithms" id="encryption-algorithm-for-ae-algorithms">Encryption algorithm for AE algorithms</a></h1>
+<h1 id="rfc.section.5.4"><a href="#rfc.section.5.4">5.4.</a> <a href="#encryption-algorithm-for-ae-algorithms" id="encryption-algorithm-for-ae-algorithms">How to encrypt and decrypt for AE Algorithms</a></h1>
 <p id="rfc.section.5.4.p.1">How to encrypt a message: </p>
 
 <ol>
@@ -1268,7 +1268,7 @@ MAC_structure = [
 <p> </p>
 <h1 id="rfc.section.7"><a href="#rfc.section.7">7.</a> <a href="#key-structure" id="key-structure">Key Objects</a></h1>
 <p id="rfc.section.7.p.1">A COSE Key structure is built on a CBOR map object.  The set of common parameters that can appear in a COSE Key can be found in the IANA "COSE Key Common Parameters" registry (<a href="#cose-key-map-registry">Section 16.5</a>).  Additional parameters defined for specific key types can be found in the IANA "COSE Key Type Parameters" registry (<a href="#cose-key-parameter-registry">Section 16.6</a>).  </p>
-<p id="rfc.section.7.p.2">A COSE Key Set uses a CBOR array object as its underlying type.  The values of the array elements are COSE Keys.  A Key Set MUST have at least one element in the array.  </p>
+<p id="rfc.section.7.p.2">A COSE Key Set uses a CBOR array object as its underlying type.  The values of the array elements are COSE Keys.  A Key Set MUST have at least one element in the array.  Examples of Key Sets can be found in <a href="#COSE_KEYS">Appendix C.7</a>.  </p>
 <p id="rfc.section.7.p.3">Each element in a key set MUST be processed independently.  If one element in a key set is either malformed or uses a key that is not understood by an application, that key is ignored and the other keys are processed normally.  </p>
 <p id="rfc.section.7.p.4">The element "kty" is a required element in a COSE_Key map.  </p>
 <p id="rfc.section.7.p.5">The CDDL grammar describing COSE_Key and COSE_KeySet is: </p>
@@ -4087,7 +4087,7 @@ a69e8c07dfbca5bb1f661bc5f8e0df9e3eff5'
 )
 </pre>
 <p id="rfc.section.C.6.1.p.3">Note that this example uses the same inputs as <a href="#Appendix_B_5_1">Appendix C.5.1</a>.  </p>
-<h1 id="rfc.appendix.C.7"><a href="#rfc.appendix.C.7">C.7.</a> COSE Keys</h1>
+<h1 id="rfc.appendix.C.7"><a href="#rfc.appendix.C.7">C.7.</a> <a href="#COSE_KEYS" id="COSE_KEYS">COSE Keys</a></h1>
 <h1 id="rfc.appendix.C.7.1"><a href="#rfc.appendix.C.7.1">C.7.1.</a> Public Keys</h1>
 <p id="rfc.section.C.7.1.p.1">This is an example of a COSE Key set.  This example includes the public keys for all of the previous examples.  </p>
 <p id="rfc.section.C.7.1.p.2">In order the keys are: </p>
