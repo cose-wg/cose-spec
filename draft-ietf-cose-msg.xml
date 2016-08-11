@@ -329,6 +329,15 @@ values = any
       </t>
 
       <t>
+        COSE messages are also built using the concept of using layers to separate different types of cryptographic concepts.
+        As an example of how this works consider the COSE_Encrypt message (<xref target="EnvelopedData"/>).
+        This message type is broken into two layers: the content layer and the recipient layer.
+        In the content layer, the plain text is encrypted and information about the encrypted message are placed.
+        In the recipient layer, the content encryption key (CEK) is encrypted and information about how it is encrypted for each recipient is placed.
+        A single layer version of the encryption message COSE_Encrypt0 (<xref target="EnvelopedData0"/>) is provided for cases where the CEK is pre-shared.
+      </t>
+
+      <t>
         Identification of which type of message has been presented is done by the following method:
         <list style="numbers">
           <t>
@@ -510,8 +519,9 @@ tag=10
             This bucket MUST be empty if it is not going to be included in a cryptographic computation.
             This bucket is encoded in the message as a binary object.
             This value is obtained by CBOR encoding the protected map and wrapping it in a bstr object.
-            Senders SHOULD encode an empty protected map as a zero length binary object (i.e., the byte string h'a0').
-            This encoding is used because it is both shorter and the version used in the serialization structures for cryptographic computation.
+            Senders SHOULD encode an zero length map as a zero length string rather than as a zero length map (encoded as h'a0').
+            The zero length binary encoding is preferred because it is both shorter and the version used in the serialization structures for cryptographic computation.
+            After encoding the map the value is wrapped in the binary object.
             Recipients MUST accept both a zero length binary value and a zero length map encoded in the binary value.
             The wrapping allows for the encoding of the protected map to be transported with a greater chance that it will not be altered in transit.
             (Badly behaved intermediates could decode and re-encode, but this will result in a failure to verify unless the re-encoded byte string is identical to the decoded byte string.)
@@ -600,10 +610,11 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
                 <t>Integer labels in the range of 0 to 8 SHOULD be omitted.</t>
                 
                 <t>
-                  Integer labels in the range -1 to -255 can be omitted as they are algorithm dependent.
+                  Integer labels in the range -1 to -128 can be omitted as they are algorithm dependent.
                   If an application can correctly process an algorithm, it can be assumed that it will correctly process all of the common parameters associated with that algorithm.
-                  (The algorithm range is -1 to -65536; the higher end is for more optional algorithm specific items.)
+                  Integer labels in the range -129 to -65536 SHOULD be included as these would be less common parameters that might not be generally supported.
                 </t>
+                
                 <t>
                   Labels for parameters required for an application MAY be omitted.
                   Applications should have a statement if the label can be omitted.
@@ -632,13 +643,13 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
               The internal structure of 'kid' values is not defined and cannot be relied on by applications.
               Key identifier values are hints about which key to use.
 	      This is not a security critical field.
-	      For this reason, it SHOULD be placed in the unprotected headers bucket.
+	      For this reason, it can be placed in the unprotected headers bucket.
             </t>
 
             <t hangText="IV">
               This parameter holds the Initialization Vector (IV) value.
               For some symmetric encryption algorithms this may be referred to as a nonce.
-              As the IV is authenticated by the encryption process, it SHOULD be placed in the unprotected header bucket.
+              As the IV is authenticated by the encryption process, it can be placed in the unprotected header bucket.
             </t>
 
             <t hangText='Partial IV'>
@@ -1183,6 +1194,7 @@ COSE_Encrypt = [
           
           <t hangText='ciphertext'>
             contains the encrypted key encoded as a bstr.
+            All encoded keys are symetric keys, the binary value of the key is the content.
             If there is not an encrypted key, then this field is encoded as a nil value.
           </t>
           
@@ -1230,7 +1242,7 @@ COSE_recipient = [
 
     </section>
 
-    <section title="Single Recipient Encrypted">
+    <section title="Single Recipient Encrypted" anchor="EnvelopedData0">
       <t>
         The COSE_Encrypt0 encrypted structure does not have the ability to specify recipients of the message.
         The structure assumes that the recipient of the object will already know the identity of the key to be used in order to decrypt the message.
@@ -3265,7 +3277,7 @@ COSE_KDF_Context = [
         </section>
       </section>
 
-      <section title="Key Agreement with KDF" anchor="ECDH-Direct">
+      <section title="Key Agreement with Key Wrap" anchor="ECDH-Direct">
         <t>
           Key Agreement with Key Wrapping uses a randomly generated CEK.
           The CEK is then encrypted using a Key Wrapping algorithm and a key derived from the shared secret computed by the key agreement algorithm.
