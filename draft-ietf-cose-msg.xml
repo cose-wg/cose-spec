@@ -519,8 +519,9 @@ tag=10
             This bucket MUST be empty if it is not going to be included in a cryptographic computation.
             This bucket is encoded in the message as a binary object.
             This value is obtained by CBOR encoding the protected map and wrapping it in a bstr object.
-            Senders SHOULD encode an empty protected map as a zero length binary object (i.e., the byte string h'40').
-            This encoding is used because it is both shorter and the version used in the serialization structures for cryptographic computation.
+            Senders SHOULD encode an zero length map as a zero length string rather than as a zero length map (encoded as h'a0').
+            The zero length binary encoding is preferred because it is both shorter and the version used in the serialization structures for cryptographic computation.
+            After encoding the map the value is wrapped in the binary object.
             Recipients MUST accept both a zero length binary value and a zero length map encoded in the binary value.
             The wrapping allows for the encoding of the protected map to be transported with a greater chance that it will not be altered in transit.
             (Badly behaved intermediates could decode and re-encode, but this will result in a failure to verify unless the re-encoded byte string is identical to the decoded byte string.)
@@ -642,13 +643,13 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
               The internal structure of 'kid' values is not defined and cannot be relied on by applications.
               Key identifier values are hints about which key to use.
 	      This is not a security critical field.
-	      For this reason, it SHOULD be placed in the unprotected headers bucket.
+	      For this reason, it can be placed in the unprotected headers bucket.
             </t>
 
             <t hangText="IV">
               This parameter holds the Initialization Vector (IV) value.
               For some symmetric encryption algorithms this may be referred to as a nonce.
-              As the IV is authenticated by the encryption process, it SHOULD be placed in the unprotected header bucket.
+              As the IV is authenticated by the encryption process, it can be placed in the unprotected header bucket.
             </t>
 
             <t hangText='Partial IV'>
