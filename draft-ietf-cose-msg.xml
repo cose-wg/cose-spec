@@ -64,6 +64,11 @@
 <?rfc sortrefs="yes"?>
 <?rfc comments="yes"?>
 
+<!-- RFC EDITOR
+There have been a number of comments about my use of parenthesized sentences in the middle of paragraphs.
+Please look at these and determine if the parens should be left or removed.
+-->
+
 <rfc ipr="trust200902" docName="draft-ietf-cose-msg-latest" category="std">
   <front>
     <title>CBOR Object Signing and Encryption (COSE)</title>
@@ -82,7 +87,7 @@
     <abstract>
       <t>
         Concise Binary Object Representation (CBOR) is data format designed for small code size and small message size.
-        There is a need for the ability to have the basic security services defined for this data format.
+        There is a need for the ability to have basic security services defined for this data format.
         This document defines the CBOR Object Signing and Encryption (COSE) specification.
         This specification describes how to create and process signature, message authentication codes and encryption using CBOR for serialization.
         This specification additionally specifies how to represent cryptographic keys using CBOR.
@@ -105,12 +110,12 @@
     <section anchor="introduction" title="Introduction">
 
       <t>
-        There has been an increased focus on the small, constrained devices that make up the Internet of Things (IoT). 
+        There has been an increased focus on small, constrained devices that make up the Internet of Things (IoT). 
         One of the standards that has come out of this process is the Concise Binary Object Representation (CBOR) <xref target="RFC7049"/>. 
         CBOR extended the data model of the JavaScript Object Notation (JSON) <xref target="RFC7159"/> by allowing for binary data, among other changes. 
         CBOR is being adopted by several of the IETF working groups dealing with the IoT world as their encoding of data structures. 
         CBOR was designed specifically to be both small in terms of messages transport and implementation size, as well having a schema free decoder.
-        A need exists to provide message security services for IoT and using CBOR as the message encoding format makes sense.
+        A need exists to provide message security services for IoT, using CBOR as the message encoding format makes sense.
       </t>
 
       <t>
@@ -147,10 +152,11 @@
         <t>
           <list style="symbols">
             <t>
-              Define a single top message structure so that encrypted, signed and MACed messages can easily identified and still have a consistent view.
+              Define a single top message structure so that encrypted, signed and MACed messages can easily be identified and still have a consistent view.
             </t>
             <t>
-              Signed messages separate the concept of protected and unprotected parameters that are for the content and the signature.
+              Signed messages distinguish between the protected and unprotected parameters that relate to the content from those that relate to the signature.
+              <!-- Signed messages separate the concept of protected and unprotected parameters that are for the content and the signature. -->
             </t>
             <t>
               MACed messages are separated from signed messages.
@@ -519,9 +525,9 @@ tag=10
             This bucket MUST be empty if it is not going to be included in a cryptographic computation.
             This bucket is encoded in the message as a binary object.
             This value is obtained by CBOR encoding the protected map and wrapping it in a bstr object.
-            Senders SHOULD encode an zero length map as a zero length string rather than as a zero length map (encoded as h'a0').
+            Senders SHOULD encode a zero length map as a zero length string rather than as a zero length map (encoded as h'a0').
             The zero length binary encoding is preferred because it is both shorter and the version used in the serialization structures for cryptographic computation.
-            After encoding the map the value is wrapped in the binary object.
+            After encoding the map, the value is wrapped in the binary object.
             Recipients MUST accept both a zero length binary value and a zero length map encoded in the binary value.
             The wrapping allows for the encoding of the protected map to be transported with a greater chance that it will not be altered in transit.
             (Badly behaved intermediates could decode and re-encode, but this will result in a failure to verify unless the re-encoded byte string is identical to the decoded byte string.)
@@ -733,7 +739,8 @@ Generic_Headers = (
     <section anchor="signing-structure" title="Signing Objects">
       <t>
         COSE supports two different signature structures.
-        COSE_Sign allows for one or more signers to be applied to a single content.
+        COSE_Sign allows for one or more signatures to be applied to the same content.
+<!--        COSE_Sign allows for one or more signers to be applied to a single content. -->
         COSE_Sign1 is restricted to a single signer.
         The structures cannot be converted between each other; as the signature computation includes a parameter identifying which structure is being used, the converted structure will fail signature validation.
       </t>
@@ -741,7 +748,8 @@ Generic_Headers = (
       <section title="Signing with One or More Signers" anchor="full-signature">
       <t>
         The COSE_Sign structure allows for one or more signatures to be applied to a message payload.
-        There are provisions for parameters about the content and parameters about the signature to be carried along with the signature itself.
+        <!-- There are provisions for parameters about the content and parameters about the signature to be carried along with the signature itself.-->
+        Parameters relating to the content and parameters relating to the signature are carried along with the signature itself.
         These parameters may be authenticated by the signature, or just present.
         An example of a parameter about the content is the content type.
         Examples of parameters about the signature would be the algorithm and key used to create the signature and counter signatures.
@@ -752,7 +760,7 @@ Generic_Headers = (
         However, there are some application environments where other rules are needed.
         An application that employs a rule other than one valid signature for each signer must specify those rules.
         Also, where simple matching of the signer identifier is not sufficient to determine whether the signatures were generated by the same signer, the application specification must describe how to determine which signatures were generated by the same signer.
-        Support of different communities of recipients is the primary reason that signers choose to include more than one signature.
+        Support for different communities of recipients is the primary reason that signers choose to include more than one signature.
         For example, the COSE_Sign structure might include signatures generated with the Edwards Digital Signature Algorithm (EdDSA) signature algorithm and with the Elliptic Curve Digital Signature Algorithm (ECDSA) signature algorithm.
         This allows recipients to verify the signature associated with one algorithm or the other.
         (The original source of this text is <xref target="RFC5652"/>.)
@@ -1044,7 +1052,7 @@ Sig_structure = [
         </t>
 
         <t>
-          How to verify a signature:
+          The steps for verifying a signature are:
 
           <list style="numbers">
             <t>
@@ -1360,7 +1368,7 @@ Enc_structure = [
                   The key to be used is determined by the algorithm and key at the current layer.
                   Examples are key transport keys <xref target="KeyTransport"/>, key wrap keys <xref target="key_wrap_algs"/> or pre-shared secrets.
                 </t>
-                <t hangText="Direct and Direct Key Agreement:">
+                <t hangText="Direct Encryption and Direct Key Agreement:">
                   The key is determined by the key and algorithm in the recipient structure.
                   The encryption algorithm and size of the key to be used are inputs into the KDF used for the recipient.
                   (For direct, the KDF can be thought of as the identity operation.)
@@ -1404,7 +1412,7 @@ Enc_structure = [
                   The key to be used is determined by the algorithm and key at the current layer.
                   Examples are key transport keys <xref target="KeyTransport"/>, key wrap keys <xref target="key_wrap_algs"/> or pre-shared secrets.
                 </t>
-                <t hangText="Direct and Direct Key Agreement:">
+                <t hangText="Direct Encryption and Direct Key Agreement:">
                   The key is determined by the key and algorithm in the recipient structure.
                   The encryption algorithm and size of the key to be used are inputs into the KDF used for the recipient.
                   (For direct, the KDF can be thought of as the identity operation.)
@@ -1446,7 +1454,7 @@ Enc_structure = [
                   The key to be used is determined by the algorithm and key at the current layer.
                   Examples are key transport keys <xref target="KeyTransport"/>, key wrap keys <xref target="key_wrap_algs"/> or pre-shared secrets.
                 </t>
-                <t hangText="Direct and Direct Key Agreement:">
+                <t hangText="Direct Encryption and Direct Key Agreement:">
                   The key is determined by the key and algorithm in the recipient structure.
                   The encryption algorithm and size of the key to be used are inputs into the KDF used for the recipient.
                   (For direct, the KDF can be thought of as the identity operation.)
@@ -1488,7 +1496,7 @@ Enc_structure = [
                   The key to be used is determined by the algorithm and key at the current layer.
                   Examples are key transport keys <xref target="KeyTransport"/>, key wrap keys <xref target="key_wrap_algs"/> or pre-shared secrets.
                 </t>
-                <t hangText="Direct and Direct Key Agreement:">
+                <t hangText="Direct Encryption and Direct Key Agreement:">
                   The key is determined by the key and algorithm in the recipient structure.
                   The encryption algorithm and size of the key to be used are inputs into the KDF used for the recipient.
                   (For direct, the KDF can be thought of as the identity operation.)
@@ -1718,7 +1726,7 @@ MAC_structure = [
           </t>
 
         <t>
-          How to verify a MAC are:
+          The steps to verify a MAC are:
 
           <list style="numbers">
             <t>
@@ -2101,7 +2109,7 @@ valid, message content = Verification(message sent, key, signature)
       <t>
         Message Authentication Codes (MACs) provide data authentication and integrity protection.
         They provide either no or very limited data origination.
-        (One cannot, for example, be used to prove the identity of the sender to a third party.)
+        A MAC, for example, be used to prove the identity of the sender to a third party.
       </t>
 
       <t>
@@ -2170,7 +2178,7 @@ valid = MAC_Verify(message content, key, tag)
           When using a COSE key for this algorithm, the following checks are made:
           <list style="symbols">
             <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
-            <t>If the 'alg' field present, it MUST match the HMAC algorithm being used.</t>
+            <t>If the 'alg' field is present, it MUST match the HMAC algorithm being used.</t>
             <t>If the 'key_ops' field is present, it MUST include 'MAC create' when creating an HMAC authentication tag.</t>
             <t>If the 'key_ops' field is present, it MUST include 'MAC verify' when verifying an HMAC authentication tag.</t>
           </list>
@@ -2183,7 +2191,7 @@ valid = MAC_Verify(message content, key, tag)
         <section title="Security Considerations">
           <t>
             HMAC has proved to be resistant to attack even when used with weakened hash algorithms.
-            The current best method appears to be a brute force attack on the key.
+            The current best known attack appears is to brute force the key.
             This means that key size is going to be directly related to the security of an HMAC operation.
           </t>
         </section>
@@ -2225,7 +2233,7 @@ valid = MAC_Verify(message content, key, tag)
           When using a COSE key for this algorithm, the following checks are made:
           <list style="symbols">
             <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
-            <t>If the 'alg' field present, it MUST match the AES-MAC algorithm being used.</t>
+            <t>If the 'alg' field is present, it MUST match the AES-MAC algorithm being used.</t>
             <t>If the 'key_ops' field is present, it MUST include 'MAC create' when creating an AES-MAC authentication tag.</t>
             <t>If the 'key_ops' field is present, it MUST include 'MAC verify' when verifying an AES-MAC authentication tag.</t>
           </list>
@@ -2234,16 +2242,19 @@ valid = MAC_Verify(message content, key, tag)
         <section title="Security Considerations">
           <t>
             A number of attacks exist against CBC-MAC that need to be considered.
-            <list style="symbols">
+-            <list style="symbols">
               <t>
                 A single key must only be used for messages of a fixed and known length.
-                If this is not the case, an attacker will be able to generate a message with a valid tag given two message, tag pairs.
+                If this is not the case, an attacker will be able to generate a message with a valid tag given two message and tag pairs.
                 This can be addressed by using different keys for different length messages.
                 The current structure mitigates this problem, as a specific encoding structure that includes lengths is built and signed.
                 (CMAC also addresses this issue.)
               </t>
               <t>
-                If the same key is used for both encryption and authentication operations, using CBC modes an attacker can produce messages with a valid authentication code.
+     When using CBC mode, if the same key is used for both encryption and authentication
+      operations, an attacker can produce messages with
+      a valid authentication code.
+      <!-- If the same key is used for both encryption and authentication operations, using CBC modes an attacker can produce messages with a valid authentication code. -->
               </t>
               <t>
                 If the IV can be modified, then messages can be forged.
@@ -2322,7 +2333,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
           When using a COSE key for this algorithm, the following checks are made:
           <list style="symbols">
             <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
-            <t>If the 'alg' field present, it MUST match the AES-GCM algorithm being used.</t>
+            <t>If the 'alg' field is present, it MUST match the AES-GCM algorithm being used.</t>
             <t>If the 'key_ops' field is present, it MUST include 'encrypt' or 'wrap key' when encrypting.</t>
             <t>If the 'key_ops' field is present, it MUST include 'decrypt' or 'unwrap key'  when decrypting.</t>
           </list>
@@ -2379,7 +2390,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
           We define a matrix of algorithms in this document over the values of L and M.
           Constrained devices are usually operating in situations where they use short messages and want to avoid doing recipient specific cryptographic operations.
           This favors smaller values of both L and M.
-          Less constrained devices will want to be able to user larger messages and are more willing to generate new keys for every operation.
+          Less constrained devices will want to be able to use larger messages and are more willing to generate new keys for every operation.
           This favors larger values of L and M.
         </t>
 
@@ -2438,7 +2449,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
           When using a COSE key for this algorithm, the following checks are made:
           <list style="symbols">
             <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
-            <t>If the 'alg' field present, it MUST match the AES-CCM algorithm being used.</t>
+            <t>If the 'alg' field is present, it MUST match the AES-CCM algorithm being used.</t>
             <t>If the 'key_ops' field is present, it MUST include 'encrypt' or 'wrap key' when encrypting.</t>
             <t>If the 'key_ops' field is present, it MUST include 'decrypt' or 'unwrap key'  when decrypting.</t>
           </list>
@@ -2504,7 +2515,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
           When using a COSE key for this algorithm, the following checks are made:
           <list style="symbols">
             <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
-            <t>If the 'alg' field present, it MUST match the ChaCha20/Poly1305 algorithm being used.</t>
+            <t>If the 'alg' field is present, it MUST match the ChaCha20/Poly1305 algorithm being used.</t>
             <t>If the 'key_ops' field is present, it MUST include 'encrypt' or 'wrap key' when encrypting.</t>
             <t>If the 'key_ops' field is present, it MUST include 'decrypt' or 'unwrap key'  when decrypting.</t>
           </list>
@@ -2959,7 +2970,7 @@ COSE_KDF_Context = [
               When using a COSE key for this algorithm, the following checks are made:
               <list style="symbols">
                 <t>The 'kty' field MUST be present and it MUST be 'Symmetric'.</t>
-                <t>If the 'alg' field present, it MUST match the algorithm being used.</t>
+                <t>If the 'alg' field is present, it MUST match the algorithm being used.</t>
                 <t>If the 'key_ops' field is present, it MUST include 'deriveKey' or 'deriveBits'.</t>
               </list>
             </t>
@@ -2972,7 +2983,7 @@ COSE_KDF_Context = [
               </t>
 
               <t>
-                While these methods do not provide for PFS, as the same shared secret is used for all of the keys generated, if the key for any single message is discovered only the message (or series of messages) using that derived key are compromised.
+                While these methods do not provide for perfect forward secrecy, as the same shared secret is used for all of the keys generated, if the key for any single message is discovered only the message (or series of messages) using that derived key are compromised.
                 A new key derivation step will generate a new key which requires the same amount of work to get the key.
               </t>
             </section>
@@ -2999,7 +3010,7 @@ COSE_KDF_Context = [
             </t>
             <t>
               The 'recipients' field is normally absent, but can be used.
-              Applications MUST deal with a recipient field present, not being able to decrypt that recipient is an acceptable way of dealing with it.
+              Applications MUST deal with a recipient field being present, not being able to decrypt that recipient is an acceptable way of dealing with it.
               Failing to process the message is not an acceptable way of dealing with it.
             </t>
             <t>
@@ -3247,7 +3258,7 @@ COSE_KDF_Context = [
             When using a COSE key for this algorithm, the following checks are made:
             <list style="symbols">
               <t>The 'kty' field MUST be present and it MUST be 'EC2' or 'OKP'.</t>
-              <t>If the 'alg' field present, it MUST match the Key Agreement algorithm being used.</t>
+              <t>If the 'alg' field is present, it MUST match the Key Agreement algorithm being used.</t>
               <t>If the 'key_ops' field is present, it MUST include 'derive key' or 'derive bits' for the private key.</t>
               <t>If the 'key_ops' field is present, it MUST be empty for the public key.</t>
             </list>
@@ -3344,7 +3355,7 @@ COSE_KDF_Context = [
             When using a COSE key for this algorithm, the following checks are made:
             <list style="symbols">
               <t>The 'kty' field MUST be present and it MUST be 'EC2' or 'OKP'.</t>
-              <t>If the 'alg' field present, it MUST match the Key Agreement algorithm being used.</t>
+              <t>If the 'alg' field is present, it MUST match the Key Agreement algorithm being used.</t>
               <t>If the 'key_ops' field is present, it MUST include 'derive key' or 'derive bits' for the private key.</t>
               <t>If the 'key_ops' field is present, it MUST be empty for the public key.</t>
             </list>
@@ -3630,8 +3641,8 @@ COSE_KDF_Context = [
       </t>
 
       <t>
-        Applications are therefore intended to profile the usage of this document.
-        This section provides a set of guidelines and topics that applications need to consider when using this document.
+        It is intended that a profile of this document be created that defines the interopability requirements for that specific application.
+        This section provides a set of guidelines and topics that need to be considered when profiling this document.
 
         <list style="symbols">
           <t>
@@ -3709,8 +3720,10 @@ COSE_KDF_Context = [
 
         <t>
           It is requested that IANA create a new registry entitled "COSE Header Parameters".
-          The registry is to be created as Expert Review Required.
-          Expert review guidelines are provided in <xref target="review"/>.
+          The registry should be created as Expert Review Required.
+          Guidelines for the experts is provided <xref target="review"/>.
+          It should be noted that in additional to the expert review, some portions of the registry require a specification, potentially on standards track, be supplied as well.
+          
         </t>
 
         <t>
@@ -3831,7 +3844,8 @@ COSE_KDF_Context = [
         <t>
           It is requested that IANA create a new registry entitled "COSE Algorithms Registry".
           The registry is to be created as Expert Review Required.
-          Expert review guidelines are provided in <xref target="review"/>.
+          Guidelines for the experts is provided <xref target="review"/>.
+          It should be noted that in additional to the expert review, some portions of the registry require a specification, potentially on standards track, be supplied as well.
         </t>
 
         <t>
@@ -3875,7 +3889,8 @@ COSE_KDF_Context = [
         <t>
           It is requested that IANA create a new registry entitled "COSE Key Common Parameters" registry.
           The registry is to be created as Expert Review Required.
-          Expert review guidelines are provided in <xref target="review"/>.
+          Guidelines for the experts is provided <xref target="review"/>.
+          It should be noted that in additional to the expert review, some portions of the registry require a specification, potentially on standards track, be supplied as well.
         </t>
 
         <t>
@@ -3968,7 +3983,7 @@ COSE_KDF_Context = [
 
       <section anchor="cose-key-type-registry" title="COSE Key Type Registry">
         <t>
-          It is requested that IANA create a new registry "COSE Key Type Registry">
+          It is requested that IANA create a new registry "COSE Key Type Registry".
           The registry is to be created as Expert Review Required.
           Expert review guidelines are provided in <xref target="review"/>.
         </t>
@@ -4006,7 +4021,8 @@ COSE_KDF_Context = [
         <t>
           It is requested that IANA create a new registry "COSE Elliptic Curve Parameters".
           The registry is to be created as Expert Review Required.
-          Expert review guidelines are provided in <xref target="review"/>.
+          Guidelines for the experts is provided <xref target="review"/>.
+          It should be noted that in additional to the expert review, some portions of the registry require a specification, potentially on standards track, be supplied as well.
         </t>
 
         <t>
@@ -4232,7 +4248,8 @@ COSE_KDF_Context = [
             <t>
               Experts should take into account the expected usage of fields when approving point assignment.
               The fact that there is a range for standards track documents does not mean that a standards track document cannot have points assigned outside of that range.
-              Some of the ranges are restricted in range, items that are not expected to be common or are not expected to be used in constrained environments should be assigned to values which will encode to longer byte strings.
+              The length of the encoded value should be weighed against how many code points of that length are left, the size of device it will be used on, and the number of code points left that encode to that size.
+<!--              Some of the ranges are restricted, items that are not expected to be common or are not expected to be used in constrained environments should be assigned to values which will encode to longer byte strings. -->
             </t>
 
             <t>
@@ -4346,7 +4363,7 @@ COSE_KDF_Context = [
             It is therefore recommended that keys be restricted to a single algorithm.
           </t>
           <t>
-            Use of 'direct' as a recipient algorithm combined with a second recipient algorithm, either directly in a separate message, exposes the direct key to the second recipient.
+            Use of 'direct' as a recipient algorithm combined with a second recipient algorithm, exposes the direct key to the second recipient.
           </t>
           <t>
             Several of the algorithms in this document have limits on the number of times that a key can be used without leaking information about the key.
