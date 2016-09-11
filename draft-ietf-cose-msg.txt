@@ -4,8 +4,8 @@
 
 COSE Working Group                                             J. Schaad
 Internet-Draft                                            August Cellars
-Intended status: Standards Track                         August 14, 2016
-Expires: February 15, 2017
+Intended status: Standards Track                      September 11, 2016
+Expires: March 15, 2017
 
 
                CBOR Object Signing and Encryption (COSE)
@@ -15,9 +15,9 @@ Abstract
 
    Concise Binary Object Representation (CBOR) is data format designed
    for small code size and small message size.  There is a need for the
-   ability to have the basic security services defined for this data
-   format.  This document defines the CBOR Object Signing and Encryption
-   (COSE) specification.  This specification describes how to create and
+   ability to have basic security services defined for this data format.
+   This document defines the CBOR Object Signing and Encryption (COSE)
+   specification.  This specification describes how to create and
    process signature, message authentication codes and encryption using
    CBOR for serialization.  This specification additionally specifies
    how to represent cryptographic keys using CBOR.
@@ -45,7 +45,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on February 15, 2017.
+   This Internet-Draft will expire on March 15, 2017.
 
 
 
@@ -53,9 +53,9 @@ Status of This Memo
 
 
 
-Schaad                  Expires February 15, 2017               [Page 1]
+Schaad                   Expires March 15, 2017                 [Page 1]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
 Copyright Notice
@@ -97,8 +97,8 @@ Table of Contents
      5.3.  How to encrypt and decrypt for AEAD Algorithms  . . . . .  25
      5.4.  How to encrypt and decrypt for AE Algorithms  . . . . . .  28
    6.  MAC Objects . . . . . . . . . . . . . . . . . . . . . . . . .  29
-     6.1.  MACed Message with Recipients . . . . . . . . . . . . . .  29
-     6.2.  MACed Messages with Implicit Key  . . . . . . . . . . . .  30
+     6.1.  MACed Message with Recipients . . . . . . . . . . . . . .  30
+     6.2.  MACed Messages with Implicit Key  . . . . . . . . . . . .  31
      6.3.  How to compute and verify a MAC . . . . . . . . . . . . .  31
    7.  Key Objects . . . . . . . . . . . . . . . . . . . . . . . . .  33
      7.1.  COSE Key Common Parameters  . . . . . . . . . . . . . . .  33
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Schaad                  Expires February 15, 2017               [Page 2]
+Schaad                   Expires March 15, 2017                 [Page 2]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
        8.2.1.  Security Considerations . . . . . . . . . . . . . . .  41
@@ -154,7 +154,7 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
      16.1.  CBOR Tag assignment  . . . . . . . . . . . . . . . . . .  75
      16.2.  COSE Header Parameters Registry  . . . . . . . . . . . .  75
      16.3.  COSE Header Algorithm Parameters Registry  . . . . . . .  76
-     16.4.  COSE Algorithms Registry . . . . . . . . . . . . . . . .  76
+     16.4.  COSE Algorithms Registry . . . . . . . . . . . . . . . .  77
      16.5.  COSE Key Common Parameters Registry  . . . . . . . . . .  77
      16.6.  COSE Key Type Parameters Registry  . . . . . . . . . . .  78
      16.7.  COSE Key Type Registry . . . . . . . . . . . . . . . . .  79
@@ -165,74 +165,74 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017               [Page 3]
+Schaad                   Expires March 15, 2017                 [Page 3]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
      16.10. CoAP Content-Format Registrations  . . . . . . . . . . .  83
-     16.11. Expert Review Instructions . . . . . . . . . . . . . . .  83
-   17. Implementation Status . . . . . . . . . . . . . . . . . . . .  84
-     17.1.  Author's Versions  . . . . . . . . . . . . . . . . . . .  85
+     16.11. Expert Review Instructions . . . . . . . . . . . . . . .  84
+   17. Implementation Status . . . . . . . . . . . . . . . . . . . .  85
+     17.1.  Author's Versions  . . . . . . . . . . . . . . . . . . .  86
      17.2.  COSE Testing Library . . . . . . . . . . . . . . . . . .  86
-   18. Security Considerations . . . . . . . . . . . . . . . . . . .  86
-   19. References  . . . . . . . . . . . . . . . . . . . . . . . . .  88
-     19.1.  Normative References . . . . . . . . . . . . . . . . . .  88
-     19.2.  Informative References . . . . . . . . . . . . . . . . .  89
-   Appendix A.  Making Mandatory Algorithm Header Optional . . . . .  92
-     A.1.  Algorithm Identification  . . . . . . . . . . . . . . . .  92
-     A.2.  Counter Signature Without Headers . . . . . . . . . . . .  95
-   Appendix B.  Two Layers of Recipient Information  . . . . . . . .  96
-   Appendix C.  Examples . . . . . . . . . . . . . . . . . . . . . .  97
-     C.1.  Examples of Signed Message  . . . . . . . . . . . . . . .  98
-       C.1.1.  Single Signature  . . . . . . . . . . . . . . . . . .  98
-       C.1.2.  Multiple Signers  . . . . . . . . . . . . . . . . . .  99
-       C.1.3.  Counter Signature . . . . . . . . . . . . . . . . . . 100
-       C.1.4.  Signature w/ Criticality  . . . . . . . . . . . . . . 101
-     C.2.  Single Signer Examples  . . . . . . . . . . . . . . . . . 102
-       C.2.1.  Single ECDSA signature  . . . . . . . . . . . . . . . 102
-     C.3.  Examples of Enveloped Messages  . . . . . . . . . . . . . 103
-       C.3.1.  Direct ECDH . . . . . . . . . . . . . . . . . . . . . 103
-       C.3.2.  Direct plus Key Derivation  . . . . . . . . . . . . . 104
-       C.3.3.  Counter Signature on Encrypted Content  . . . . . . . 105
-       C.3.4.  Encrypted Content with External Data  . . . . . . . . 107
-     C.4.  Examples of Encrypted Messages  . . . . . . . . . . . . . 107
-       C.4.1.  Simple Encrypted Message  . . . . . . . . . . . . . . 107
-       C.4.2.  Encrypted Message w/ a Partial IV . . . . . . . . . . 108
-     C.5.  Examples of MACed messages  . . . . . . . . . . . . . . . 108
-       C.5.1.  Shared Secret Direct MAC  . . . . . . . . . . . . . . 108
-       C.5.2.  ECDH Direct MAC . . . . . . . . . . . . . . . . . . . 109
-       C.5.3.  Wrapped MAC . . . . . . . . . . . . . . . . . . . . . 110
-       C.5.4.  Multi-recipient MACed message . . . . . . . . . . . . 111
-     C.6.  Examples of MAC0 messages . . . . . . . . . . . . . . . . 112
-       C.6.1.  Shared Secret Direct MAC  . . . . . . . . . . . . . . 112
-     C.7.  COSE Keys . . . . . . . . . . . . . . . . . . . . . . . . 113
-       C.7.1.  Public Keys . . . . . . . . . . . . . . . . . . . . . 113
-       C.7.2.  Private Keys  . . . . . . . . . . . . . . . . . . . . 114
-   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . . 116
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . . 117
+   18. Security Considerations . . . . . . . . . . . . . . . . . . .  87
+   19. References  . . . . . . . . . . . . . . . . . . . . . . . . .  89
+     19.1.  Normative References . . . . . . . . . . . . . . . . . .  89
+     19.2.  Informative References . . . . . . . . . . . . . . . . .  90
+   Appendix A.  Making Mandatory Algorithm Header Optional . . . . .  93
+     A.1.  Algorithm Identification  . . . . . . . . . . . . . . . .  93
+     A.2.  Counter Signature Without Headers . . . . . . . . . . . .  96
+   Appendix B.  Two Layers of Recipient Information  . . . . . . . .  97
+   Appendix C.  Examples . . . . . . . . . . . . . . . . . . . . . .  98
+     C.1.  Examples of Signed Message  . . . . . . . . . . . . . . .  99
+       C.1.1.  Single Signature  . . . . . . . . . . . . . . . . . .  99
+       C.1.2.  Multiple Signers  . . . . . . . . . . . . . . . . . . 100
+       C.1.3.  Counter Signature . . . . . . . . . . . . . . . . . . 101
+       C.1.4.  Signature w/ Criticality  . . . . . . . . . . . . . . 102
+     C.2.  Single Signer Examples  . . . . . . . . . . . . . . . . . 103
+       C.2.1.  Single ECDSA signature  . . . . . . . . . . . . . . . 103
+     C.3.  Examples of Enveloped Messages  . . . . . . . . . . . . . 104
+       C.3.1.  Direct ECDH . . . . . . . . . . . . . . . . . . . . . 104
+       C.3.2.  Direct plus Key Derivation  . . . . . . . . . . . . . 105
+       C.3.3.  Counter Signature on Encrypted Content  . . . . . . . 106
+       C.3.4.  Encrypted Content with External Data  . . . . . . . . 108
+     C.4.  Examples of Encrypted Messages  . . . . . . . . . . . . . 108
+       C.4.1.  Simple Encrypted Message  . . . . . . . . . . . . . . 108
+       C.4.2.  Encrypted Message w/ a Partial IV . . . . . . . . . . 109
+     C.5.  Examples of MACed messages  . . . . . . . . . . . . . . . 109
+       C.5.1.  Shared Secret Direct MAC  . . . . . . . . . . . . . . 109
+       C.5.2.  ECDH Direct MAC . . . . . . . . . . . . . . . . . . . 110
+       C.5.3.  Wrapped MAC . . . . . . . . . . . . . . . . . . . . . 111
+       C.5.4.  Multi-recipient MACed message . . . . . . . . . . . . 112
+     C.6.  Examples of MAC0 messages . . . . . . . . . . . . . . . . 113
+       C.6.1.  Shared Secret Direct MAC  . . . . . . . . . . . . . . 113
+     C.7.  COSE Keys . . . . . . . . . . . . . . . . . . . . . . . . 114
+       C.7.1.  Public Keys . . . . . . . . . . . . . . . . . . . . . 114
+       C.7.2.  Private Keys  . . . . . . . . . . . . . . . . . . . . 115
+   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . . 117
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . . 118
 
 1.  Introduction
 
-   There has been an increased focus on the small, constrained devices
-   that make up the Internet of Things (IoT).  One of the standards that
-   has come out of this process is the Concise Binary Object
-   Representation (CBOR) [RFC7049].  CBOR extended the data model of the
+   There has been an increased focus on small, constrained devices that
+   make up the Internet of Things (IoT).  One of the standards that has
+   come out of this process is the Concise Binary Object Representation
+   (CBOR) [RFC7049].  CBOR extended the data model of the JavaScript
 
 
 
-Schaad                  Expires February 15, 2017               [Page 4]
+Schaad                   Expires March 15, 2017                 [Page 4]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
-   JavaScript Object Notation (JSON) [RFC7159] by allowing for binary
-   data, among other changes.  CBOR is being adopted by several of the
-   IETF working groups dealing with the IoT world as their encoding of
-   data structures.  CBOR was designed specifically to be both small in
-   terms of messages transport and implementation size, as well having a
+   Object Notation (JSON) [RFC7159] by allowing for binary data, among
+   other changes.  CBOR is being adopted by several of the IETF working
+   groups dealing with the IoT world as their encoding of data
+   structures.  CBOR was designed specifically to be both small in terms
+   of messages transport and implementation size, as well having a
    schema free decoder.  A need exists to provide message security
-   services for IoT and using CBOR as the message encoding format makes
+   services for IoT, using CBOR as the message encoding format makes
    sense.
 
    The JOSE working group produced a set of documents
@@ -257,11 +257,12 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 1.1.  Design changes from JOSE
 
    o  Define a single top message structure so that encrypted, signed
-      and MACed messages can easily identified and still have a
+      and MACed messages can easily be identified and still have a
       consistent view.
 
-   o  Signed messages separate the concept of protected and unprotected
-      parameters that are for the content and the signature.
+   o  Signed messages distinguish between the protected and unprotected
+      parameters that relate to the content from those that relate to
+      the signature.
 
    o  MACed messages are separated from signed messages.
 
@@ -272,15 +273,17 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    o  Use binary encodings for binary data rather than base64url
       encodings.
 
+
+
+
+
+Schaad                   Expires March 15, 2017                 [Page 5]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
    o  Combine the authentication tag for encryption algorithms with the
       cipher text.
-
-
-
-Schaad                  Expires February 15, 2017               [Page 5]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
 
    o  The set of cryptographic algorithms has been expanded in some
       directions, and trimmed in others.
@@ -327,16 +330,16 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
    As well as the prose description, a version of a CBOR grammar is
    presented in CDDL.  Since CDDL has not been published as an RFC, this
+
+
+
+Schaad                   Expires March 15, 2017                 [Page 6]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
    grammar may not work with the final version of CDDL.  The CDDL
    grammar is informational, the prose description is normative.
-
-
-
-
-Schaad                  Expires February 15, 2017               [Page 6]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
 
    The collected CDDL can be extracted from the XML version of this
    document via the following XPath expression below.  (Depending on the
@@ -386,12 +389,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-
-
-
-Schaad                  Expires February 15, 2017               [Page 7]
+Schaad                   Expires March 15, 2017                 [Page 7]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
 1.5.  Document Terminology
@@ -445,9 +445,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017               [Page 8]
+Schaad                   Expires March 15, 2017                 [Page 8]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    Identification of which type of message has been presented is done by
@@ -501,9 +501,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017               [Page 9]
+Schaad                   Expires March 15, 2017                 [Page 9]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    +-------+---------------+---------------+---------------------------+
@@ -557,9 +557,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 10]
+Schaad                   Expires March 15, 2017                [Page 10]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    recipient structures do not provide for authenticated data.  If this
@@ -580,11 +580,11 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
       is not going to be included in a cryptographic computation.  This
       bucket is encoded in the message as a binary object.  This value
       is obtained by CBOR encoding the protected map and wrapping it in
-      a bstr object.  Senders SHOULD encode an zero length map as a zero
+      a bstr object.  Senders SHOULD encode a zero length map as a zero
       length string rather than as a zero length map (encoded as h'a0').
       The zero length binary encoding is preferred because it is both
       shorter and the version used in the serialization structures for
-      cryptographic computation.  After encoding the map the value is
+      cryptographic computation.  After encoding the map, the value is
       wrapped in the binary object.  Recipients MUST accept both a zero
       length binary value and a zero length map encoded in the binary
       value.  The wrapping allows for the encoding of the protected map
@@ -613,9 +613,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 11]
+Schaad                   Expires March 15, 2017                [Page 11]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    type).  The presence of both buckets is required.  The parameters
@@ -669,9 +669,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 12]
+Schaad                   Expires March 15, 2017                [Page 12]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    crit  The parameter is used to indicate which protected header labels
@@ -725,9 +725,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 13]
+Schaad                   Expires March 15, 2017                [Page 13]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
       find the correct one.  The internal structure of 'kid' values is
@@ -781,9 +781,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 14]
+Schaad                   Expires March 15, 2017                [Page 14]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    +-----------+-------+----------------+-------------+----------------+
@@ -837,9 +837,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 15]
+Schaad                   Expires March 15, 2017                [Page 15]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    Generic_Headers = (
@@ -855,7 +855,7 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 4.  Signing Objects
 
    COSE supports two different signature structures.  COSE_Sign allows
-   for one or more signers to be applied to a single content.
+   for one or more signatures to be applied to the same content.
    COSE_Sign1 is restricted to a single signer.  The structures cannot
    be converted between each other; as the signature computation
    includes a parameter identifying which structure is being used, the
@@ -864,13 +864,13 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 4.1.  Signing with One or More Signers
 
    The COSE_Sign structure allows for one or more signatures to be
-   applied to a message payload.  There are provisions for parameters
-   about the content and parameters about the signature to be carried
-   along with the signature itself.  These parameters may be
-   authenticated by the signature, or just present.  An example of a
-   parameter about the content is the content type.  Examples of
-   parameters about the signature would be the algorithm and key used to
-   create the signature and counter signatures.
+   applied to a message payload.  Parameters relating to the content and
+   parameters relating to the signature are carried along with the
+   signature itself.  These parameters may be authenticated by the
+   signature, or just present.  An example of a parameter about the
+   content is the content type.  Examples of parameters about the
+   signature would be the algorithm and key used to create the signature
+   and counter signatures.
 
    When more than one signature is present, the successful validation of
    one signature associated with a given signer is usually treated as a
@@ -881,7 +881,7 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    the signer identifier is not sufficient to determine whether the
    signatures were generated by the same signer, the application
    specification must describe how to determine which signatures were
-   generated by the same signer.  Support of different communities of
+   generated by the same signer.  Support for different communities of
    recipients is the primary reason that signers choose to include more
    than one signature.  For example, the COSE_Sign structure might
    include signatures generated with the Edwards Digital Signature
@@ -893,9 +893,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 16]
+Schaad                   Expires March 15, 2017                [Page 16]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    detailed information on multiple signature evaluation can be found in
@@ -949,9 +949,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 17]
+Schaad                   Expires March 15, 2017                [Page 17]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    COSE_Sign = [
@@ -1005,9 +1005,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 18]
+Schaad                   Expires March 15, 2017                [Page 18]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    unprotected  as described in Section 3.
@@ -1061,9 +1061,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 19]
+Schaad                   Expires March 15, 2017                [Page 19]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
       could state that the fields are to be ordered by the option
@@ -1117,9 +1117,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 20]
+Schaad                   Expires March 15, 2017                [Page 20]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    Sig_structure = [
@@ -1145,7 +1145,7 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    4.  Place the resulting signature value in the 'signature' field of
        the array.
 
-   How to verify a signature:
+   The steps for verifying a signature are:
 
    1.  Create a Sig_structure object and populate it with the
        appropriate fields.
@@ -1173,9 +1173,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 21]
+Schaad                   Expires March 15, 2017                [Page 21]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    signature in the unprotected attributes of a COSE_Encrypt object.
@@ -1229,9 +1229,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 22]
+Schaad                   Expires March 15, 2017                [Page 22]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    The same techniques and structures are used for encrypting both the
@@ -1285,9 +1285,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 23]
+Schaad                   Expires March 15, 2017                [Page 23]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    ciphertext  contains the encrypted key encoded as a bstr.  All
@@ -1341,9 +1341,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 24]
+Schaad                   Expires March 15, 2017                [Page 24]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
 5.2.  Single Recipient Encrypted
@@ -1397,9 +1397,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 25]
+Schaad                   Expires March 15, 2017                [Page 25]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
        "Encrypt"  for the first layer of a COSE_Encrypt data structure
@@ -1448,20 +1448,21 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
           Section 12.3, key wrap keys Section 12.2.1 or pre-shared
           secrets.
 
-       Direct and Direct Key Agreement:  The key is determined by the
-          key and algorithm in the recipient structure.  The encryption
+       Direct Encryption and Direct Key Agreement:  The key is
+          determined by the key and algorithm in the recipient
 
 
 
-Schaad                  Expires February 15, 2017              [Page 26]
+Schaad                   Expires March 15, 2017                [Page 26]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
-          algorithm and size of the key to be used are inputs into the
-          KDF used for the recipient.  (For direct, the KDF can be
-          thought of as the identity operation.)  Examples of these
-          algorithms are found in Section 12.1.2 and Section 12.4.1.
+          structure.  The encryption algorithm and size of the key to be
+          used are inputs into the KDF used for the recipient.  (For
+          direct, the KDF can be thought of as the identity operation.)
+          Examples of these algorithms are found in Section 12.1.2 and
+          Section 12.4.1.
 
        Other:  The key is randomly generated.
 
@@ -1489,12 +1490,13 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
           Section 12.3, key wrap keys Section 12.2.1 or pre-shared
           secrets.
 
-       Direct and Direct Key Agreement:  The key is determined by the
-          key and algorithm in the recipient structure.  The encryption
-          algorithm and size of the key to be used are inputs into the
-          KDF used for the recipient.  (For direct, the KDF can be
-          thought of as the identity operation.)  Examples of these
-          algorithms are found in Section 12.1.2 and Section 12.4.1.
+       Direct Encryption and Direct Key Agreement:  The key is
+          determined by the key and algorithm in the recipient
+          structure.  The encryption algorithm and size of the key to be
+          used are inputs into the KDF used for the recipient.  (For
+          direct, the KDF can be thought of as the identity operation.)
+          Examples of these algorithms are found in Section 12.1.2 and
+          Section 12.4.1.
 
        Other:  The key is determined by decoding and decrypting one of
           the recipient structures.
@@ -1507,11 +1509,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-
-
-Schaad                  Expires February 15, 2017              [Page 27]
+Schaad                   Expires March 15, 2017                [Page 27]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
 5.4.  How to encrypt and decrypt for AE Algorithms
@@ -1531,12 +1531,13 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
           Section 12.3, key wrap keys Section 12.2.1 or pre-shared
           secrets.
 
-       Direct and Direct Key Agreement:  The key is determined by the
-          key and algorithm in the recipient structure.  The encryption
-          algorithm and size of the key to be used are inputs into the
-          KDF used for the recipient.  (For direct, the KDF can be
-          thought of as the identity operation.)  Examples of these
-          algorithms are found in Section 12.1.2 and Section 12.4.1.
+       Direct Encryption and Direct Key Agreement:  The key is
+          determined by the key and algorithm in the recipient
+          structure.  The encryption algorithm and size of the key to be
+          used are inputs into the KDF used for the recipient.  (For
+          direct, the KDF can be thought of as the identity operation.)
+          Examples of these algorithms are found in Section 12.1.2 and
+          Section 12.4.1.
 
        Other:  The key is randomly generated.
 
@@ -1560,22 +1561,25 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
        No Recipients:  The key to be used is determined by the algorithm
           and key at the current layer.  Examples are key transport keys
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 28]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
           Section 12.3, key wrap keys Section 12.2.1 or pre-shared
           secrets.
 
-
-
-Schaad                  Expires February 15, 2017              [Page 28]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
-       Direct and Direct Key Agreement:  The key is determined by the
-          key and algorithm in the recipient structure.  The encryption
-          algorithm and size of the key to be used are inputs into the
-          KDF used for the recipient.  (For direct, the KDF can be
-          thought of as the identity operation.)  Examples of these
-          algorithms are found in Section 12.1.2 and Section 12.4.1.
+       Direct Encryption and Direct Key Agreement:  The key is
+          determined by the key and algorithm in the recipient
+          structure.  The encryption algorithm and size of the key to be
+          used are inputs into the KDF used for the recipient.  (For
+          direct, the KDF can be thought of as the identity operation.)
+          Examples of these algorithms are found in Section 12.1.2 and
+          Section 12.4.1.
 
        Other:  The key is determined by decoding and decrypting one of
           the recipient structures.
@@ -1610,6 +1614,18 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    yourself.)  The origination property can be obtained with both of the
    MAC message structures.
 
+
+
+
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 29]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
 6.1.  MACed Message with Recipients
 
    The multiple recipient MACed message uses two structures, the
@@ -1617,14 +1633,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    the COSE_recipient structure (Section 5.1) to hold the key used for
    the MAC computation.  Examples of MACed messages can be found in
    Appendix C.5.
-
-
-
-
-Schaad                  Expires February 15, 2017              [Page 29]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
 
    The MAC structure can be encoded either tagged or untagged depending
    on the context it will be used in.  A tagged COSE_Mac structure is
@@ -1663,6 +1671,17 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
       recipients :[+COSE_recipient]
    ]
 
+
+
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 30]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
 6.2.  MACed Messages with Implicit Key
 
    In this section, we describe the structure and methods to be used
@@ -1672,15 +1691,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    The MACed message uses the COSE_Mac0 structure defined in this
    section for carrying the body.  Examples of MACed messages with an
    implicit key can be found in Appendix C.6.
-
-
-
-
-
-Schaad                  Expires February 15, 2017              [Page 30]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
 
    The MAC structure can be encoded either tagged or untagged depending
    on the context it will be used in.  A tagged COSE_Mac0 structure is
@@ -1719,6 +1729,15 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
        encoded.  This string is "MAC" for the COSE_Mac structure.  This
        string is "MAC0" for the COSE_Mac0 structure.
 
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 31]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
    2.  The protected attributes from the COSE_MAC structure.  If there
        are no protected attributes, a zero length bstr is used.
 
@@ -1729,14 +1748,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
    4.  The payload to be MAC-ed encoded in a bstr type.  The payload is
        placed here independent of how it is transported.
-
-
-
-
-Schaad                  Expires February 15, 2017              [Page 31]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
 
    The CDDL fragment that corresponds to the above text is:
 
@@ -1764,7 +1775,7 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
    5.  Encrypt and encode the MAC key for each recipient of the message.
 
-   How to verify a MAC are:
+   The steps to verify a MAC are:
 
    1.  Create a MAC_structure object and populate it with the
        appropriate fields.
@@ -1775,24 +1786,20 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    3.  Obtain the cryptographic key from one of the recipients of the
        message.
 
+
+
+
+Schaad                   Expires March 15, 2017                [Page 32]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
    4.  Call the MAC creation algorithm passing in K (the key to use),
        alg (the algorithm to MAC with) and ToBeMaced (the value to
        compute the MAC on).
 
    5.  Compare the MAC value to the 'tag' field of the COSE_Mac or
        COSE_Mac0 structure.
-
-
-
-
-
-
-
-
-Schaad                  Expires February 15, 2017              [Page 32]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
 
 7.  Key Objects
 
@@ -1838,16 +1845,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-
-
-
-
-
-
-
-Schaad                  Expires February 15, 2017              [Page 33]
+Schaad                   Expires March 15, 2017                [Page 33]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    +---------+-------+----------------+------------+-------------------+
@@ -1901,9 +1901,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 34]
+Schaad                   Expires March 15, 2017                [Page 34]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
       key.  This field is intended for matching against a 'kid'
@@ -1957,9 +1957,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 35]
+Schaad                   Expires March 15, 2017                [Page 35]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    +---------+-------+-------------------------------------------------+
@@ -2013,9 +2013,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 36]
+Schaad                   Expires March 15, 2017                [Page 36]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    The second scheme is signature with message recovery.  (An example of
@@ -2069,9 +2069,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 37]
+Schaad                   Expires March 15, 2017                [Page 37]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
               +-------+-------+---------+------------------+
@@ -2125,9 +2125,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 38]
+Schaad                   Expires March 15, 2017                [Page 38]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    o  If the 'key_ops' field is present, it MUST include 'verify' when
@@ -2181,9 +2181,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 39]
+Schaad                   Expires March 15, 2017                [Page 39]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
 8.2.  Edwards-curve Digital Signature Algorithms (EdDSA)
@@ -2237,9 +2237,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 40]
+Schaad                   Expires March 15, 2017                [Page 40]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    o  If the 'key_ops' field is present, it MUST include 'sign' when
@@ -2262,8 +2262,8 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
    Message Authentication Codes (MACs) provide data authentication and
    integrity protection.  They provide either no or very limited data
-   origination.  (One cannot, for example, be used to prove the identity
-   of the sender to a third party.)
+   origination.  A MAC, for example, be used to prove the identity of
+   the sender to a third party.
 
    MACs use the same scheme as signature with appendix algorithms.  The
    message content is processed and an authentication code is produced.
@@ -2293,9 +2293,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 41]
+Schaad                   Expires March 15, 2017                [Page 41]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    time, the security of HMAC combined with MD5 has not yet been shown
@@ -2349,13 +2349,13 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 42]
+Schaad                   Expires March 15, 2017                [Page 42]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
-   o  If the 'alg' field present, it MUST match the HMAC algorithm being
-      used.
+   o  If the 'alg' field is present, it MUST match the HMAC algorithm
+      being used.
 
    o  If the 'key_ops' field is present, it MUST include 'MAC create'
       when creating an HMAC authentication tag.
@@ -2370,9 +2370,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 9.1.1.  Security Considerations
 
    HMAC has proved to be resistant to attack even when used with
-   weakened hash algorithms.  The current best method appears to be a
-   brute force attack on the key.  This means that key size is going to
-   be directly related to the security of an HMAC operation.
+   weakened hash algorithms.  The current best known attack appears is
+   to brute force the key.  This means that key size is going to be
+   directly related to the security of an HMAC operation.
 
 9.2.  AES Message Authentication Code (AES-CBC-MAC)
 
@@ -2405,9 +2405,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 43]
+Schaad                   Expires March 15, 2017                [Page 43]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    +-------------+-------+----------+----------+-----------------------+
@@ -2439,7 +2439,7 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
    o  The 'kty' field MUST be present and it MUST be 'Symmetric'.
 
-   o  If the 'alg' field present, it MUST match the AES-MAC algorithm
+   o  If the 'alg' field is present, it MUST match the AES-MAC algorithm
       being used.
 
    o  If the 'key_ops' field is present, it MUST include 'MAC create'
@@ -2451,27 +2451,27 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 9.2.1.  Security Considerations
 
    A number of attacks exist against CBC-MAC that need to be considered.
+   -
 
    o  A single key must only be used for messages of a fixed and known
       length.  If this is not the case, an attacker will be able to
-      generate a message with a valid tag given two message, tag pairs.
-      This can be addressed by using different keys for different length
-      messages.  The current structure mitigates this problem, as a
+      generate a message with a valid tag given two message and tag
+      pairs.  This can be addressed by using different keys for
+      different length messages.  The current structure mitigates this
 
 
 
-
-Schaad                  Expires February 15, 2017              [Page 44]
+Schaad                   Expires March 15, 2017                [Page 44]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
-      specific encoding structure that includes lengths is built and
-      signed.  (CMAC also addresses this issue.)
+      problem, as a specific encoding structure that includes lengths is
+      built and signed.  (CMAC also addresses this issue.)
 
-   o  If the same key is used for both encryption and authentication
-      operations, using CBC modes an attacker can produce messages with
-      a valid authentication code.
+   o  When using CBC mode, if the same key is used for both encryption
+      and authentication operations, an attacker can produce messages
+      with a valid authentication code.
 
    o  If the IV can be modified, then messages can be forged.  This is
       addressed by fixing the IV to all zeros.
@@ -2517,9 +2517,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 45]
+Schaad                   Expires March 15, 2017                [Page 45]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    set of values.  For this document however, the size of the
@@ -2549,7 +2549,7 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
    o  The 'kty' field MUST be present and it MUST be 'Symmetric'.
 
-   o  If the 'alg' field present, it MUST match the AES-GCM algorithm
+   o  If the 'alg' field is present, it MUST match the AES-GCM algorithm
       being used.
 
    o  If the 'key_ops' field is present, it MUST include 'encrypt' or
@@ -2573,9 +2573,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 46]
+Schaad                   Expires March 15, 2017                [Page 46]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    Doing so drastically changes both the maximum messages size
@@ -2611,7 +2611,7 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    L and M.  Constrained devices are usually operating in situations
    where they use short messages and want to avoid doing recipient
    specific cryptographic operations.  This favors smaller values of
-   both L and M.  Less constrained devices will want to be able to user
+   both L and M.  Less constrained devices will want to be able to use
    larger messages and are more willing to generate new keys for every
    operation.  This favors larger values of L and M.
 
@@ -2629,9 +2629,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 47]
+Schaad                   Expires March 15, 2017                [Page 47]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    The following values are used for M:
@@ -2685,9 +2685,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 48]
+Schaad                   Expires March 15, 2017                [Page 48]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    +--------------------+-------+----+-----+-----+---------------------+
@@ -2741,9 +2741,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 49]
+Schaad                   Expires March 15, 2017                [Page 49]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    When using a COSE key for this algorithm, the following checks are
@@ -2751,7 +2751,7 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
    o  The 'kty' field MUST be present and it MUST be 'Symmetric'.
 
-   o  If the 'alg' field present, it MUST match the AES-CCM algorithm
+   o  If the 'alg' field is present, it MUST match the AES-CCM algorithm
       being used.
 
    o  If the 'key_ops' field is present, it MUST include 'encrypt' or
@@ -2797,9 +2797,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 50]
+Schaad                   Expires March 15, 2017                [Page 50]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    as the plain text and additional data as inputs and produces the
@@ -2825,7 +2825,7 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
    o  The 'kty' field MUST be present and it MUST be 'Symmetric'.
 
-   o  If the 'alg' field present, it MUST match the ChaCha20/Poly1305
+   o  If the 'alg' field is present, it MUST match the ChaCha20/Poly1305
       algorithm being used.
 
    o  If the 'key_ops' field is present, it MUST include 'encrypt' or
@@ -2853,9 +2853,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 51]
+Schaad                   Expires March 15, 2017                [Page 51]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    o  Secrets that are not uniformly random: This is type of secret that
@@ -2909,9 +2909,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 52]
+Schaad                   Expires March 15, 2017                [Page 52]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
       computation and does not need to be separately authenticated.  The
@@ -2965,9 +2965,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 53]
+Schaad                   Expires March 15, 2017                [Page 53]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
                    +------+-------+------+-------------+
@@ -3021,9 +3021,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 54]
+Schaad                   Expires March 15, 2017                [Page 54]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    +---------------+-------+-----------+-------------------------------+
@@ -3077,9 +3077,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 55]
+Schaad                   Expires March 15, 2017                [Page 55]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
          the roles of "client" and "server" may be assigned to different
@@ -3133,9 +3133,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 56]
+Schaad                   Expires March 15, 2017                [Page 56]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
          keys for a data stream vs a control stream.  This field is
@@ -3189,9 +3189,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 57]
+Schaad                   Expires March 15, 2017                [Page 57]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
 12.1.  Direct Encryption
@@ -3245,9 +3245,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 58]
+Schaad                   Expires March 15, 2017                [Page 58]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    o  These keys need to be dedicated to a single algorithm.  There have
@@ -3301,9 +3301,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 59]
+Schaad                   Expires March 15, 2017                [Page 59]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    +---------------------+-------+-------------+-----------------------+
@@ -3329,7 +3329,7 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
    o  The 'kty' field MUST be present and it MUST be 'Symmetric'.
 
-   o  If the 'alg' field present, it MUST match the algorithm being
+   o  If the 'alg' field is present, it MUST match the algorithm being
       used.
 
    o  If the 'key_ops' field is present, it MUST include 'deriveKey' or
@@ -3341,12 +3341,12 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    over time.  The shared secret forms the basis of trust.  Although not
    used directly, it should still be subject to scheduled rotation.
 
-   While these methods do not provide for PFS, as the same shared secret
-   is used for all of the keys generated, if the key for any single
-   message is discovered only the message (or series of messages) using
-   that derived key are compromised.  A new key derivation step will
-   generate a new key which requires the same amount of work to get the
-   key.
+   While these methods do not provide for perfect forward secrecy, as
+   the same shared secret is used for all of the keys generated, if the
+   key for any single message is discovered only the message (or series
+   of messages) using that derived key are compromised.  A new key
+   derivation step will generate a new key which requires the same
+   amount of work to get the key.
 
 12.2.  Key Wrapping
 
@@ -3357,9 +3357,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 60]
+Schaad                   Expires March 15, 2017                [Page 60]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    superior to direct encryption if the system has any capability for
@@ -3375,10 +3375,10 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
       an AE algorithm.
 
    o  The 'recipients' field is normally absent, but can be used.
-      Applications MUST deal with a recipient field present, not being
-      able to decrypt that recipient is an acceptable way of dealing
-      with it.  Failing to process the message is not an acceptable way
-      of dealing with it.
+      Applications MUST deal with a recipient field being present, not
+      being able to decrypt that recipient is an acceptable way of
+      dealing with it.  Failing to process the message is not an
+      acceptable way of dealing with it.
 
    o  The plain text to be encrypted is the key from next layer down
       (usually the content layer).
@@ -3413,9 +3413,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 61]
+Schaad                   Expires March 15, 2017                [Page 61]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    o  If the 'key_ops' field is present, it MUST include 'encrypt' or
@@ -3469,9 +3469,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 62]
+Schaad                   Expires March 15, 2017                [Page 62]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    This key is normally used as a CEK or MAC key, but could be used for
@@ -3525,9 +3525,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 63]
+Schaad                   Expires March 15, 2017                [Page 63]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    o  Curve Type/Curve: The curve selected controls not only the size of
@@ -3581,9 +3581,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 64]
+Schaad                   Expires March 15, 2017                [Page 64]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    o  Key Wrap algorithm: No key wrap algorithm is used.  This is
@@ -3637,9 +3637,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 65]
+Schaad                   Expires March 15, 2017                [Page 65]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    +-----------+-------+----------+-----------+------------------------+
@@ -3669,7 +3669,7 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
    o  The 'kty' field MUST be present and it MUST be 'EC2' or 'OKP'.
 
-   o  If the 'alg' field present, it MUST match the Key Agreement
+   o  If the 'alg' field is present, it MUST match the Key Agreement
       algorithm being used.
 
    o  If the 'key_ops' field is present, it MUST include 'derive key' or
@@ -3693,9 +3693,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 66]
+Schaad                   Expires March 15, 2017                [Page 66]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    public key has to be chosen maliciously or the sender has to be
@@ -3749,9 +3749,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 67]
+Schaad                   Expires March 15, 2017                [Page 67]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    +-----------+-------+---------+------------+--------+---------------+
@@ -3805,12 +3805,12 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 68]
+Schaad                   Expires March 15, 2017                [Page 68]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
-   o  If the 'alg' field present, it MUST match the Key Agreement
+   o  If the 'alg' field is present, it MUST match the Key Agreement
       algorithm being used.
 
    o  If the 'key_ops' field is present, it MUST include 'derive key' or
@@ -3861,9 +3861,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 69]
+Schaad                   Expires March 15, 2017                [Page 69]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    only the x coordinate as the y coordinate is either to be recomputed
@@ -3917,9 +3917,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 70]
+Schaad                   Expires March 15, 2017                [Page 70]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    y  contains either the sign bit or the value of y coordinate for the
@@ -3973,9 +3973,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 71]
+Schaad                   Expires March 15, 2017                [Page 71]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
       in Table 22.  Other curves may be registered in the future and
@@ -4029,9 +4029,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 72]
+Schaad                   Expires March 15, 2017                [Page 72]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
              +------+----------+-------+------+-------------+
@@ -4075,19 +4075,19 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    for interoperability.  The requirements about which algorithms and
    which services are needed are deferred to each application.
 
-   Applications are therefore intended to profile the usage of this
-   document.  This section provides a set of guidelines and topics that
-   applications need to consider when using this document.
+   It is intended that a profile of this document be created that
+   defines the interopability requirements for that specific
+   application.  This section provides a set of guidelines and topics
+   that need to be considered when profiling this document.
 
    o  Applications need to determine the set of messages defined in this
       document that they will be using.  The set of messages corresponds
 
 
 
-
-Schaad                  Expires February 15, 2017              [Page 73]
+Schaad                   Expires March 15, 2017                [Page 73]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
       fairly directly to the set of security services that are needed
@@ -4141,9 +4141,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017              [Page 74]
+Schaad                   Expires March 15, 2017                [Page 74]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
 16.  IANA Considerations
@@ -4162,8 +4162,11 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 16.2.  COSE Header Parameters Registry
 
    It is requested that IANA create a new registry entitled "COSE Header
-   Parameters".  The registry is to be created as Expert Review
-   Required.  Expert review guidelines are provided in Section 16.11.
+   Parameters".  The registry should be created as Expert Review
+   Required.  Guidelines for the experts is provided Section 16.11.  It
+   should be noted that in additional to the expert review, some
+   portions of the registry require a specification, potentially on
+   standards track, be supplied as well.
 
    The columns of the registry are:
 
@@ -4191,16 +4194,16 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
    description  This contains a brief description of the header field.
 
+
+
+
+Schaad                   Expires March 15, 2017                [Page 75]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
    specification  This contains a pointer to the specification defining
       the header field (where public).
-
-
-
-
-Schaad                  Expires February 15, 2017              [Page 75]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
 
    The initial contents of the registry can be found in Table 2 and
    Table 27.  The specification column for all rows in that table should
@@ -4243,20 +4246,28 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    Table 14, and Table 19.  The specification column for all rows in
    that table should be this document.
 
+
+
+
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 76]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
 16.4.  COSE Algorithms Registry
 
    It is requested that IANA create a new registry entitled "COSE
    Algorithms Registry".  The registry is to be created as Expert Review
-   Required.  Expert review guidelines are provided in Section 16.11.
+   Required.  Guidelines for the experts is provided Section 16.11.  It
+   should be noted that in additional to the expert review, some
+   portions of the registry require a specification, potentially on
+   standards track, be supplied as well.
 
    The columns of the registry are:
-
-
-
-Schaad                  Expires February 15, 2017              [Page 76]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
 
    value  The value to be used to identify this algorithm.  Algorithm
       values MUST be unique.  The value can be a positive integer, a
@@ -4290,8 +4301,18 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
    It is requested that IANA create a new registry entitled "COSE Key
    Common Parameters" registry.  The registry is to be created as Expert
-   Review Required.  Expert review guidelines are provided in
-   Section 16.11.
+   Review Required.  Guidelines for the experts is provided
+   Section 16.11.  It should be noted that in additional to the expert
+   review, some portions of the registry require a specification,
+   potentially on standards track, be supplied as well.
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 77]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
 
    The columns of the registry are:
 
@@ -4306,14 +4327,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
       2 are designated as Specification Required.  Integer values of
       greater than 65535 and strings of length greater than 2 are
       designated as expert review.  Integer values in the range -1 to
-
-
-
-Schaad                  Expires February 15, 2017              [Page 77]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
       -65536 are used for key parameters specific to a single algorithm
       delegated to the "COSE Key Type Parameter Labels" registry.
       Integer values less than -65536 are marked as private use.
@@ -4347,6 +4360,16 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    name  This is a descriptive name that enables easier reference to the
       item.  It is not used in the encoding.
 
+
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 78]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
    label  The label is to be unique for every value of key type.  The
       range of values is from -256 to -1.  Labels are expected to be
       reused for different keys.
@@ -4362,18 +4385,10 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    Table 24, and Table 25.  The specification column for all of these
    entries will be this document.
 
-
-
-
-Schaad                  Expires February 15, 2017              [Page 78]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
 16.7.  COSE Key Type Registry
 
    It is requested that IANA create a new registry "COSE Key Type
-   Registry"> The registry is to be created as Expert Review Required.
+   Registry".  The registry is to be created as Expert Review Required.
    Expert review guidelines are provided in Section 16.11.
 
    The columns of this table are:
@@ -4398,7 +4413,18 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
    It is requested that IANA create a new registry "COSE Elliptic Curve
    Parameters".  The registry is to be created as Expert Review
-   Required.  Expert review guidelines are provided in Section 16.11.
+   Required.  Guidelines for the experts is provided Section 16.11.  It
+   should be noted that in additional to the expert review, some
+   portions of the registry require a specification, potentially on
+   standards track, be supplied as well.
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 79]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
 
    The columns of the table are:
 
@@ -4417,14 +4443,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
       curve.
 
    description  This field contains a brief description of the curve.
-
-
-
-
-Schaad                  Expires February 15, 2017              [Page 79]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
 
    specification  This contains a pointer to the public specification
       for the curve if one exists.
@@ -4456,6 +4474,14 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
       Interoperability considerations: N/A
 
+
+
+
+Schaad                   Expires March 15, 2017                [Page 80]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
       Published specification: RFC TBD
 
       Applications that use this media type: To be identified
@@ -4474,13 +4500,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
       iesg@ietf.org
 
       Intended usage: COMMON
-
-
-
-Schaad                  Expires February 15, 2017              [Page 80]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
 
       Restrictions on usage: N/A
 
@@ -4512,6 +4531,13 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
       Security considerations: See the Security Considerations section
       of RFC TBD.
 
+
+
+Schaad                   Expires March 15, 2017                [Page 81]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
       Interoperability considerations: N/A
 
       Published specification: RFC TBD
@@ -4530,13 +4556,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
       Person & email address to contact for further information:
       iesg@ietf.org
-
-
-
-Schaad                  Expires February 15, 2017              [Page 81]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
 
       Intended usage: COMMON
 
@@ -4567,6 +4586,14 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
       Published specification: RFC TBD
 
+
+
+
+Schaad                   Expires March 15, 2017                [Page 82]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
       Applications that use this media type: To be identified
 
       Fragment identifier considerations: N/A
@@ -4586,14 +4613,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
       Restrictions on usage: N/A
 
-
-
-
-Schaad                  Expires February 15, 2017              [Page 82]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
       Author: Jim Schaad, ietf@augustcellars.com
 
       Change Controller: IESG
@@ -4604,6 +4623,32 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
    IANA is requested to add the following entries to the "CoAP Content-
    Format" registry.  ID assignment in the 24-255 range is requested.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 83]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
 
    +---------------------------------+----------+-------+--------------+
    | Media Type                      | Encoding | ID    | Reference    |
@@ -4642,14 +4687,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    what the experts should be looking for, but they are being designated
    as experts for a reason so they should be given substantial latitude.
 
-
-
-
-Schaad                  Expires February 15, 2017              [Page 83]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
    Expert reviewers should take into consideration the following points:
 
    o  Point squatting should be discouraged.  Reviewers are encouraged
@@ -4659,6 +4696,15 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
       The zones tagged as private use are intended for testing purposes
       and closed environments, code points in other ranges should not be
       assigned for testing.
+
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 84]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
 
    o  Specifications are required for the standards track range of point
       assignment.  Specifications should exist for specification
@@ -4673,11 +4719,11 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    o  Experts should take into account the expected usage of fields when
       approving point assignment.  The fact that there is a range for
       standards track documents does not mean that a standards track
-      document cannot have points assigned outside of that range.  Some
-      of the ranges are restricted in range, items that are not expected
-      to be common or are not expected to be used in constrained
-      environments should be assigned to values which will encode to
-      longer byte strings.
+      document cannot have points assigned outside of that range.  The
+      length of the encoded value should be weighed against how many
+      code points of that length are left, the size of device it will be
+      used on, and the number of code points left that encode to that
+      size.
 
    o  When algorithms are registered, vanity registrations should be
       discouraged.  One way to do this is to require registrations to
@@ -4698,14 +4744,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    RFCs.  Please note that the listing of any individual implementation
    here does not imply endorsement by the IETF.  Furthermore, no effort
    has been spent to verify the information presented here that was
-
-
-
-Schaad                  Expires February 15, 2017              [Page 84]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
    supplied by IETF contributors.  This is not intended as, and must not
    be construed to be, a catalog of available implementations or their
    features.  Readers are advised to note that other implementations may
@@ -4715,6 +4753,15 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    to assign due consideration to documents that have the benefit of
    running code, which may serve as evidence of valuable experimentation
    and feedback that have made the implemented protocols more mature.
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 85]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
    It is up to the individual working groups to use this information as
    they see fit".
 
@@ -4754,14 +4801,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
       Licensing: Revised BSD License
 
-
-
-
-Schaad                  Expires February 15, 2017              [Page 85]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
 17.2.  COSE Testing Library
 
       Implementation Location: https://github.com/cose-wg/Examples
@@ -4770,6 +4809,15 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
       Description: A set of tests for the COSE library is provided as
       part of the implementation effort.  Both success and fail tests
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 86]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
       have been provided.  All of the examples in this document are part
       of this example set.
 
@@ -4798,8 +4846,8 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
       be restricted to a single algorithm.
 
    o  Use of 'direct' as a recipient algorithm combined with a second
-      recipient algorithm, either directly in a separate message,
-      exposes the direct key to the second recipient.
+      recipient algorithm, exposes the direct key to the second
+      recipient.
 
    o  Several of the algorithms in this document have limits on the
       number of times that a key can be used without leaking information
@@ -4810,14 +4858,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    of the KDF will prevent that.  There is however, a different issue
    that needs to be addressed.  Having two recipients requires that the
    CEK be shared between two recipients.  The second recipient therefore
-
-
-
-Schaad                  Expires February 15, 2017              [Page 86]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
    has a CEK that was derived from material that can be used for the
    weak proof of origin.  The second recipient could create a message
    using the same CEK and send it to the first recipient, the first
@@ -4825,6 +4865,14 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    make an assumption that the CEK could be used for proof of origin
    even though it is from the wrong entity.  If the key wrap step is
    added, then no proof of origin is implied and this is not an issue.
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 87]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
 
    Although it has been mentioned before, the use of a single key for
    multiple algorithms has been demonstrated in some cases to leak
@@ -4866,14 +4914,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    of these cases, there is no known requirement on the nonce being both
    unique and unpredictable, under these circumstances it reasonable to
    use a counter for creation of the nonce.  In cases where one wants
-
-
-
-Schaad                  Expires February 15, 2017              [Page 87]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
    the pattern of the nonce to be unpredictable as well as unique, one
    can use a key created for that purpose and encrypt the counter to
    produce the nonce value.
@@ -4882,6 +4922,14 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    analysis of encrypted messages based on the length of the message.
    This specification does not provide for a uniform method of providing
    padding as part of the message structure.  An observer can
+
+
+
+Schaad                   Expires March 15, 2017                [Page 88]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
    distinguish between two different strings (for example, 'YES' and
    'NO') based on length for all of the content encryption algorithms
    that are defined in this document.  This means that it is up to
@@ -4921,15 +4969,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
               CBC-MAC (CCM)", RFC 3610, DOI 10.17487/RFC3610, September
               2003, <http://www.rfc-editor.org/info/rfc3610>.
 
-
-
-
-
-Schaad                  Expires February 15, 2017              [Page 88]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
    [RFC5869]  Krawczyk, H. and P. Eronen, "HMAC-based Extract-and-Expand
               Key Derivation Function (HKDF)", RFC 5869,
               DOI 10.17487/RFC5869, May 2010,
@@ -4939,6 +4978,13 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
               Curve Cryptography Algorithms", RFC 6090,
               DOI 10.17487/RFC6090, February 2011,
               <http://www.rfc-editor.org/info/rfc6090>.
+
+
+
+Schaad                   Expires March 15, 2017                [Page 89]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
 
    [RFC7049]  Bormann, C. and P. Hoffman, "Concise Binary Object
               Representation (CBOR)", RFC 7049, DOI 10.17487/RFC7049,
@@ -4961,7 +5007,7 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
    [I-D.irtf-cfrg-eddsa]
               Josefsson, S. and I. Liusvaara, "Edwards-curve Digital
-              Signature Algorithm (EdDSA)", draft-irtf-cfrg-eddsa-06
+              Signature Algorithm (EdDSA)", draft-irtf-cfrg-eddsa-08
               (work in progress), August 2016.
 
    [PVSig]    Brown, D. and D. Johnson, "Formal Security Proofs for a
@@ -4977,15 +5023,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
               Specification", RFC 2633, DOI 10.17487/RFC2633, June 1999,
               <http://www.rfc-editor.org/info/rfc2633>.
 
-
-
-
-
-Schaad                  Expires February 15, 2017              [Page 89]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
    [RFC2898]  Kaliski, B., "PKCS #5: Password-Based Cryptography
               Specification Version 2.0", RFC 2898,
               DOI 10.17487/RFC2898, September 2000,
@@ -4995,6 +5032,15 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
               Standards (PKCS) #1: RSA Cryptography Specifications
               Version 2.1", RFC 3447, DOI 10.17487/RFC3447, February
               2003, <http://www.rfc-editor.org/info/rfc3447>.
+
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 90]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
 
    [RFC4231]  Nystrom, M., "Identifiers and Test Vectors for HMAC-SHA-
               224, HMAC-SHA-256, HMAC-SHA-384, and HMAC-SHA-512",
@@ -5033,15 +5079,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
               DOI 10.17487/RFC5752, January 2010,
               <http://www.rfc-editor.org/info/rfc5752>.
 
-
-
-
-
-Schaad                  Expires February 15, 2017              [Page 90]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
    [RFC5990]  Randall, J., Kaliski, B., Brainard, J., and S. Turner,
               "Use of the RSA-KEM Key Transport Algorithm in the
               Cryptographic Message Syntax (CMS)", RFC 5990,
@@ -5052,6 +5089,14 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
               for the MD5 Message-Digest and the HMAC-MD5 Algorithms",
               RFC 6151, DOI 10.17487/RFC6151, March 2011,
               <http://www.rfc-editor.org/info/rfc6151>.
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 91]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
 
    [RFC6979]  Pornin, T., "Deterministic Usage of the Digital Signature
               Algorithm (DSA) and Elliptic Curve Digital Signature
@@ -5087,17 +5132,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
               for Security", RFC 7748, DOI 10.17487/RFC7748, January
               2016, <http://www.rfc-editor.org/info/rfc7748>.
 
-
-
-
-
-
-
-Schaad                  Expires February 15, 2017              [Page 91]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
    [RFC7942]  Sheffer, Y. and A. Farrel, "Improving Awareness of Running
               Code: The Implementation Status Section", BCP 205,
               RFC 7942, DOI 10.17487/RFC7942, July 2016,
@@ -5108,6 +5142,17 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
               Special Publication 800-56A: Recommendation for Pair-Wise
               Key Establishment Schemes Using Discrete Logarithm
               Cryptography", May 2013.
+
+
+
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 92]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
 
 Appendix A.  Making Mandatory Algorithm Header Optional
 
@@ -5145,15 +5190,6 @@ A.1.  Algorithm Identification
    This set of recommendations applies to the case where an application
    is distributing a fixed algorithm along with the key information for
    use in a single COSE object.  This normally applies to the smallest
-
-
-
-
-Schaad                  Expires February 15, 2017              [Page 92]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
    of the COSE objects, specifically COSE_Sign1, COSE_Mac0, and
    COSE_Encrypt0, but could apply to the other structures as well.
 
@@ -5166,6 +5202,14 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
       requirement is stated so that there will never be a case where
       there is any ambiguity about the question of which algorithm
       should be used, the implicit or the explicit one.  This applies
+
+
+
+Schaad                   Expires March 15, 2017                [Page 93]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
       even if the transported algorithm identifier is a protected
       attribute.  This applies even if the transported algorithm is the
       same as the implicit algorithm.
@@ -5202,14 +5246,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
    o  Applications cannot rely on key identifiers being unique unless
       they take significant efforts to ensure that they are computed in
       such a way as to create this guarantee.  Even when an application
-
-
-
-Schaad                  Expires February 15, 2017              [Page 93]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
       does this, the uniqueness might be violated if the application is
       run in different contexts (i.e., with a different context
       provider) or if the system combines the security contexts from
@@ -5222,6 +5258,14 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
       value.  This external data field can be used as such for content
       encryption, MAC, and signature algorithms.  It can be used in the
       SuppPrivInfo field for those algorithms which use a KDF function
+
+
+
+Schaad                   Expires March 15, 2017                [Page 94]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
+
       to derive a key value.  Applications may also want to protect
       other information that is part of the context structure as well.
       It should be noted that those fields, such as the key or a base
@@ -5258,14 +5302,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
       party B, the second context is for sending messages from party B
       to party A.  This means that there is no chance for a reflection
       attack to occur as each party uses different secret keys to send
-
-
-
-Schaad                  Expires February 15, 2017              [Page 94]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
       its messages, a message that is reflected back to it would fail to
       decrypt.
 
@@ -5276,6 +5312,15 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
       of the first context.  This allows these entities to validate that
       the message came from an individual without being able to decrypt
       the message and see the content.
+
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 95]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
 
    o  Two contexts are distributed as a pair.  The first context
       contains a key for dealing with MACed messages, the second context
@@ -5314,18 +5359,24 @@ A.2.  Counter Signature Without Headers
 
    When computing the signature for the bare counter signature header,
    the same Sig_structure defined in Section 4.4 is used.  The
-
-
-
-Schaad                  Expires February 15, 2017              [Page 95]
-
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
-
-
    sign_protected field is omitted, as there is no protected header
    field in in this counter signature header.  The value of
    "CounterSignature0" is placed in the context field of the
    Sig_stucture.
+
+
+
+
+
+
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 96]
+
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
+
 
    +-------------------+-------+--------+------------------------------+
    | name              | label | value  | description                  |
@@ -5373,9 +5424,14 @@ Appendix B.  Two Layers of Recipient Information
 
 
 
-Schaad                  Expires February 15, 2017              [Page 96]
+
+
+
+
+
+Schaad                   Expires March 15, 2017                [Page 97]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    992(
@@ -5429,9 +5485,9 @@ Appendix C.  Examples
 
 
 
-Schaad                  Expires February 15, 2017              [Page 97]
+Schaad                   Expires March 15, 2017                [Page 98]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    A GitHub project has been created at https://github.com/cose-wg/
@@ -5485,9 +5541,9 @@ C.1.1.  Single Signature
 
 
 
-Schaad                  Expires February 15, 2017              [Page 98]
+Schaad                   Expires March 15, 2017                [Page 99]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    991(
@@ -5541,9 +5597,9 @@ C.1.2.  Multiple Signers
 
 
 
-Schaad                  Expires February 15, 2017              [Page 99]
+Schaad                   Expires March 15, 2017               [Page 100]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    991(
@@ -5597,9 +5653,9 @@ C.1.3.  Counter Signature
 
 
 
-Schaad                  Expires February 15, 2017             [Page 100]
+Schaad                   Expires March 15, 2017               [Page 101]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    991(
@@ -5653,9 +5709,9 @@ C.1.4.  Signature w/ Criticality
 
 
 
-Schaad                  Expires February 15, 2017             [Page 101]
+Schaad                   Expires March 15, 2017               [Page 102]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    991(
@@ -5709,9 +5765,9 @@ C.2.1.  Single ECDSA signature
 
 
 
-Schaad                  Expires February 15, 2017             [Page 102]
+Schaad                   Expires March 15, 2017               [Page 103]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    997(
@@ -5765,9 +5821,9 @@ C.3.1.  Direct ECDH
 
 
 
-Schaad                  Expires February 15, 2017             [Page 103]
+Schaad                   Expires March 15, 2017               [Page 104]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    992(
@@ -5821,9 +5877,9 @@ C.3.2.  Direct plus Key Derivation
 
 
 
-Schaad                  Expires February 15, 2017             [Page 104]
+Schaad                   Expires March 15, 2017               [Page 105]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    Size of binary file is 92 bytes
@@ -5877,9 +5933,9 @@ C.3.3.  Counter Signature on Encrypted Content
 
 
 
-Schaad                  Expires February 15, 2017             [Page 105]
+Schaad                   Expires March 15, 2017               [Page 106]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    992(
@@ -5933,9 +5989,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017             [Page 106]
+Schaad                   Expires March 15, 2017               [Page 107]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
 C.3.4.  Encrypted Content with External Data
@@ -5989,9 +6045,9 @@ C.4.1.  Simple Encrypted Message
 
 
 
-Schaad                  Expires February 15, 2017             [Page 107]
+Schaad                   Expires March 15, 2017               [Page 108]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    993(
@@ -6045,9 +6101,9 @@ C.5.1.  Shared Secret Direct MAC
 
 
 
-Schaad                  Expires February 15, 2017             [Page 108]
+Schaad                   Expires March 15, 2017               [Page 109]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    994(
@@ -6101,9 +6157,9 @@ C.5.2.  ECDH Direct MAC
 
 
 
-Schaad                  Expires February 15, 2017             [Page 109]
+Schaad                   Expires March 15, 2017               [Page 110]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    994(
@@ -6157,9 +6213,9 @@ C.5.3.  Wrapped MAC
 
 
 
-Schaad                  Expires February 15, 2017             [Page 110]
+Schaad                   Expires March 15, 2017               [Page 111]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    994(
@@ -6213,9 +6269,9 @@ C.5.4.  Multi-recipient MACed message
 
 
 
-Schaad                  Expires February 15, 2017             [Page 111]
+Schaad                   Expires March 15, 2017               [Page 112]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    994(
@@ -6269,9 +6325,9 @@ C.6.1.  Shared Secret Direct MAC
 
 
 
-Schaad                  Expires February 15, 2017             [Page 112]
+Schaad                   Expires March 15, 2017               [Page 113]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    o  Recipient class: direct shared secret
@@ -6325,9 +6381,9 @@ C.7.1.  Public Keys
 
 
 
-Schaad                  Expires February 15, 2017             [Page 113]
+Schaad                   Expires March 15, 2017               [Page 114]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    [
@@ -6381,9 +6437,9 @@ C.7.2.  Private Keys
 
 
 
-Schaad                  Expires February 15, 2017             [Page 114]
+Schaad                   Expires March 15, 2017               [Page 115]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    o  An EC key with a kid of "meriadoc.brandybuck@buckland.example"
@@ -6437,9 +6493,9 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
 
 
 
-Schaad                  Expires February 15, 2017             [Page 115]
+Schaad                   Expires March 15, 2017               [Page 116]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
        -4:h'00085138ddabf5ca975f5860f91a08e91d6d5f9a76ad4018766a476680b
@@ -6493,9 +6549,9 @@ Acknowledgments
 
 
 
-Schaad                  Expires February 15, 2017             [Page 116]
+Schaad                   Expires March 15, 2017               [Page 117]
 
-Internet-Draft  CBOR Object Signing and Encryption (COSE)    August 2016
+Internet-Draft  CBOR Object Signing and Encryption (COSE) September 2016
 
 
    Jones, Ilari Liusvaara, Francesca Palombini, Goran Selander, and
@@ -6549,4 +6605,4 @@ Author's Address
 
 
 
-Schaad                  Expires February 15, 2017             [Page 117]
+Schaad                   Expires March 15, 2017               [Page 118]
