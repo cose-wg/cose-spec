@@ -309,10 +309,10 @@ values = any
           It is defined in <xref target="RFC7252"/>.
         </t>
         <t>
-          Authenticated Encryption (AE) <xref target="5116"/> algorithms are those encryption algorithms which provide an authentication check of the contents algorithm with the encryption service.
+          Authenticated Encryption (AE) <xref target="RFC5116"/> algorithms are those encryption algorithms which provide an authentication check of the contents algorithm with the encryption service.
         </t>
         <t>
-          Authenticated Encryption with Authenticated Data (AEAD) <xref target="5116"/> algorithms provide the same content authentication service as AE algorithms, but additionally provide for authentication of non-encrypted data as well.
+          Authenticated Encryption with Authenticated Data (AEAD) <xref target="RFC5116"/> algorithms provide the same content authentication service as AE algorithms, but additionally provide for authentication of non-encrypted data as well.
         </t>
 
         <!--
@@ -867,6 +867,7 @@ COSE_Sign = [
           <t hangText='signature'>
             contains the computed signature value.
             The type of the field is a bstr.
+            Algorithms MUST specify padding if the signature value is not a multiple of 8 bits.
           </t>
           
         </list>
@@ -1864,6 +1865,7 @@ COSE_KeySet = [+COSE_Key]
             This parameter is defined to restrict the set of operations that a key is to be used for.
             The value of the field is an array of values from <xref target="table-key-ops"/>.
             Algorithms define the values of key ops that are permitted to appear and are required for specific operations.
+            The set of values matches that in <xref target="JWK"/> and <xref target="W3C.WebCrypto"/>.
           </t>
 
           <t hangText="Base IV:">
@@ -1893,7 +1895,7 @@ COSE_KeySet = [+COSE_Key]
         <c>wrap key</c>         <c>5</c>        <c>The key is used for key wrapping.</c>
         <c>unwrap key</c>       <c>6</c>        <c>The key is used for key unwrapping.  Requires private key fields.</c>
         <c>derive key</c>        <c>7</c>        <c>The key is used for deriving keys.  Requires private key fields.</c>
-        <c>derive bits</c>      <c>8</c>        <c>The key is used for deriving bits.  Requires private key fields.</c>
+        <c>derive bits</c>      <c>8</c>        <c>The key is used for deriving bits not to be used as a key.  Requires private key fields.</c>
         <c>MAC create</c>       <c>9</c>        <c>The key is used for creating MACs.</c>
         <c>MAC verify</c>       <c>10</c>       <c>The key is used for validating MACs.</c>
       </texttable>
@@ -3872,7 +3874,7 @@ COSE_KDF_Context = [
             <t hangText='The columns of the registry are:'>
               
             </t>
-            <t hangText='value'>
+            <t hangText='value:'>
               The value to be used to identify this algorithm.
               Algorithm values MUST be unique.
               The value can be a positive integer, a negative integer or a string.
@@ -3881,11 +3883,15 @@ COSE_KDF_Context = [
               Integer values of greater than 65535 and strings of length greater than 2 are designated as expert review.
               Integer values less than -65536 are marked as private use.
             </t>
-            <t hangText='description'>
+            <t hangText='description:'>
               A short description of the algorithm.
             </t>
-            <t hangText='specification'>
+            <t hangText='specification:'>
               A document where the algorithm is defined (if publicly available).
+            </t>
+            <t hangText='recommended:'>
+              Does the IETF have a concensus recommendation to use the algorithm.
+              The legal values are 'yes', 'no' and 'deprecated'.
             </t>
           </list>
         </t>
@@ -3893,7 +3899,8 @@ COSE_KDF_Context = [
         <t>
           The initial contents of the registry can be found in
           <xref target="table-AES-CCM"/>, <xref target="table-AES-GCM"/>, <xref target="Table-CHACHA"/>, <xref target="table_ecdsa"/>, <xref target="table-hmac"/>, <xref target="table-aes-mac"/>, <xref target="table-direct"/>, <xref target="table-direct-kdf"/>, <xref target="table_aes_keywrap"/>, <xref target="table-eddsa-algs"/>, <xref target="table-ecdh-es-table-wrap"/> and <xref target="table-ecdh-es-table"/>.
-          The specification column for all rows in that table should be this document.
+          The specification column for all rows in the table should be this document.
+          The recommneded column for all rows in the table are set to 'yes'.
         </t>
 
         <t>
@@ -4071,11 +4078,16 @@ COSE_KDF_Context = [
             <t hangText='specification'>
               This contains a pointer to the public specification for the curve if one exists.
             </t>
+            <t hangText='recommended:'>
+              Does the IETF have a concensus recommendation to use the algorithm.
+              The legal values are 'yes', 'no' and 'deprecated'.
+            </t>
           </list>
         </t>
         <t>
           This registry will be initially populated by the values in <xref target="table-ec-curves"/>.
           The specification column for all of these entries will be this document.
+          The recommended column for all of the inital entries will be 'yes'.
         </t>
 
 
