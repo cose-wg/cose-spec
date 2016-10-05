@@ -969,8 +969,9 @@ COSE_Sign1 = [
           Such a construction needs to take into account the following issues:
           <list style="symbols">
             <t>
-              If multiple items are included, care needs to be taken that data cannot bleed between the items.
-              This is usually addressed by making fields fixed width and/or encoding the length of the field.
+              If multiple items are included, applications need to ensure that the same byte string is not produced if there are different inputs.
+              This could occur by appending the strings 'AB' and 'CDE' or by appending the strings 'ABC' and 'DE'.
+              This is usually addressed by making fields a fixed width and/or encoding the length of the field as part of the output.
               Using options from CoAP <xref target="RFC7252"/> as an example, these fields use a TLV structure so they can be concatenated without any problems.
             </t>
             <t>
@@ -1865,7 +1866,7 @@ COSE_KeySet = [+COSE_Key]
             This parameter is defined to restrict the set of operations that a key is to be used for.
             The value of the field is an array of values from <xref target="table-key-ops"/>.
             Algorithms define the values of key ops that are permitted to appear and are required for specific operations.
-            The set of values matches that in <xref target="JWK"/> and <xref target="W3C.WebCrypto"/>.
+            The set of values matches that in <xref target="RFC7517"/> and <xref target="W3C.WebCrypto"/>.
           </t>
 
           <t hangText="Base IV:">
@@ -1876,6 +1877,7 @@ COSE_KeySet = [+COSE_Key]
             Extreme care needs to be taken when using a Base IV in an application.
             Many encryption algorithms lose security if the same IV is used twice.
             <vspace blankLines="1"/>
+            If different keys are derived for each sender, using the same base IV with partial IVs starting at zero is likely to ensure that the IV would not be used twice for a single key.
             If different keys are derived for each sender, starting at the same base IV is likely to satisfy this condition.
             If the same key is used for multiple senders, then the application needs to provide for a method of dividing the IV space up between the senders.
             This could be done by providing a different base point to start from or a different partial IV to start with and restricting the number of messages to be sent before re-keying.
@@ -4586,10 +4588,19 @@ COSE_KDF_Context = [
         </front>
         <format target="https://www.certicom.com/images/pdfs/CerticomWP-PVSigSec_login.pdf" type="PDF"/>
       </reference>
-
+      
       &RFC7942;
       &RFC2045;
       &RFC5116;
+
+      <reference anchor="W3C.WebCrypto">
+        <front>
+          <title>Web Cryptography API</title>
+          <author initials="M." surname="Watson"/>
+          <date year="2016" month="July"/>
+        </front>
+        <format target="https://w3c.github.io/webcrypto/Overview.html" type="HTML"/>
+      </reference>
 
     </references>
 
