@@ -5,9 +5,7 @@
   <!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml" >
   <!ENTITY RFC2045 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2045.xml" >
   <!ENTITY RFC2633 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2633.xml" >
-  <!ENTITY RFC2898 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2898.xml" >
   <!ENTITY RFC3394 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3394.xml" >
-  <!ENTITY RFC3447 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3447.xml" >
   <!ENTITY RFC3610 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3610.xml" >
   <!ENTITY RFC4231 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4231.xml" >
   <!ENTITY RFC4262 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4262.xml" >
@@ -37,6 +35,9 @@
   <!ENTITY CDDL SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.greevenbosch-appsawg-cbor-cddl.xml" >
   <!ENTITY CBCMAC SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.mcgrew-aead-aes-cbc-hmac-sha2.xml" >
   <!ENTITY CFRG-EDDSA SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.irtf-cfrg-eddsa.xml" >
+  <!ENTITY RFC2898 SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.moriarty-pkcs5-v2dot1.xml" >
+  <!ENTITY RFC3447 SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.moriarty-pkcs1.xml" >
+  <!ENTITY OSCOAP SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.selander-ace-object-security.xml" >
 
 <!ENTITY Appendix_A SYSTEM "includes/Appendix_A.xml">
 <!ENTITY Appendix_B_3_1 SYSTEM "includes/Appendix_B_3_1.xml">
@@ -1988,7 +1989,7 @@ valid, message content = Verification(message sent, key, signature)
 
         <t>
           This document defines ECDSA to work only with the curves P-256, P-384 and P-521.
-          This document requires that the curves be encoded using the 'EC2' key type.
+          This document requires that the curves be encoded using the 'EC2' (2 coordinate Elliptic Curve) key type.
           Implementations need to check that the key type and curve are correct when creating and verifying a signature.
           Other documents can define it to work with other curves and points in the future.
         </t>
@@ -2007,7 +2008,7 @@ valid, message content = Verification(message sent, key, signature)
         </t>
 
         <t>
-          Using the function defined in <xref target="RFC3447"/> the signature is:
+          Using the function defined in <xref target="I-D.moriarty-pkcs1"/> the signature is:
           <vspace/>
           Signature = I2OSP(R, n) | I2OSP(S, n)
           <vspace/>
@@ -2097,7 +2098,7 @@ valid, message content = Verification(message sent, key, signature)
           When using a COSE key for this algorithm the following checks are made:
 
           <list style="symbols">
-            <t> The 'kty' field MUST be present and it MUST be 'OKP'.
+            <t> The 'kty' field MUST be present and it MUST be 'OKP' (Octet Key Pair).
             <!--
             <cref source="GS">Should we do some type of pointer to what an OKP is - intra docpoiter?</cref>
             <cref source="JLS">I think the answer for this can be no.  We point to the appropriate table when we defined what a 'kty' is so they have had a chance to find out what 'OKP' is.  If we did this we would need to do it for all of the different values that show up here.</cref>-->
@@ -2111,7 +2112,7 @@ valid, message content = Verification(message sent, key, signature)
 
         <section title="Security Considerations">
           <t>
-            The Edwards curves for EdDSA and ECDH are distinct and should not be used for the other algorithm.
+            How public values are computed is not the same when looking at EdDSA and ECDH, for this reason they should not be used with the other algorithm.
           </t>
 
           <t>
@@ -2567,7 +2568,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
       <t>
         General KDF functions work well with the first type of secret, can do reasonably well with the second type of secret, and generally do poorly with the last type of secret.
         None of the KDF functions in this section are designed to deal with the type of secrets that are used for passwords.
-        Functions like PBES2 <xref target="RFC2898"/> need to be used for that type of secret.
+        Functions like PBES2 <xref target="I-D.moriarty-pkcs5-v2dot1"/> need to be used for that type of secret.
       </t>
 
       <t>
@@ -3204,7 +3205,7 @@ COSE_KDF_Context = [
                 Once the computed secret is known, the resulting value needs to be converted to a byte string to run the KDF function.
                 The X coordinate is used for all of the curves defined in this document.
                 For curves X25519 and X448, the resulting value is used directly as it is a byte string of a known length.
-                For the P-256, P-384 and P-521 curves, the X coordinate is run through the I2OSP function defined in <xref target="RFC3447"/>, using the same computation for n as is defined in <xref target="ECDSA"/>.
+                For the P-256, P-384 and P-521 curves, the X coordinate is run through the I2OSP function defined in <xref target="I-D.moriarty-pkcs1"/>, using the same computation for n as is defined in <xref target="ECDSA"/>.
               </t>
               
               <t>
@@ -3315,9 +3316,11 @@ COSE_KDF_Context = [
         <t>
           Key Agreement with Key Wrapping uses a randomly generated CEK.
           The CEK is then encrypted using a Key Wrapping algorithm and a key derived from the shared secret computed by the key agreement algorithm.
+          The function for this would be:
         </t>
-
-
+        <figure><artwork><![CDATA[
+encryptedKey = KeyWrap(KDF(DH-Shared, context), CEK)
+]]></artwork></figure>
 
         <t>
           The COSE_Encrypt structure for the recipient is organized as follows:
@@ -3661,6 +3664,11 @@ COSE_KDF_Context = [
         This document is designed to provide a set of security services, but not to provide implementation requirements for specific usage.
         The interoperability requirements are provided for how each of the individual services are used and how the algorithms are to be used for interoperability.
         The requirements about which algorithms and which services are needed are deferred to each application.
+      </t>
+
+      <t>
+        An example of a profile can be found in <xref target="I-D.selander-ace-object-security"/> where two profiles are being developed.
+        One is for carrying content by itself, and the other is for carrying content in combination with CoAP headers.
       </t>
 
       <t>
@@ -4527,6 +4535,9 @@ COSE_KDF_Context = [
         <format target="http://www.secg.org/sec1-v2.pdf" type="PDF"/>
       </reference>
 
+      &RFC6979;
+      &RFC7748;
+      &CFRG-EDDSA;
       
     </references>
 
@@ -4545,7 +4556,6 @@ COSE_KDF_Context = [
       &RFC5752;
       &RFC5990;
       &RFC6151;
-      &RFC6979;
       &RFC7159;
       &RFC7252;
       &RFC7515;
@@ -4554,8 +4564,6 @@ COSE_KDF_Context = [
       &RFC7518;
       &RFC4949;
       
-      &RFC7748;
-      &CFRG-EDDSA;
 
       <reference anchor="SP800-56A">
         <front>
@@ -4601,6 +4609,8 @@ COSE_KDF_Context = [
         </front>
         <format target="https://w3c.github.io/webcrypto/Overview.html" type="HTML"/>
       </reference>
+
+      &OSCOAP;
 
     </references>
 
@@ -4658,7 +4668,7 @@ COSE_KDF_Context = [
           <t>
             A computed value is included as part of the encoded plain text.
             The computed value is then checked by the decryptor using the same computation path.
-            This is the approach followed by RSAES-OAEP <xref target="RFC3447"/>.
+            This is the approach followed by RSAES-OAEP <xref target="I-D.moriarty-pkcs1"/>.
           </t>
         </list>
       </t>
