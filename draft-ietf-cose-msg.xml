@@ -5,14 +5,13 @@
   <!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml" >
   <!ENTITY RFC2045 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2045.xml" >
   <!ENTITY RFC2633 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2633.xml" >
-  <!ENTITY RFC2898 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2898.xml" >
   <!ENTITY RFC3394 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3394.xml" >
-  <!ENTITY RFC3447 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3447.xml" >
   <!ENTITY RFC3610 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3610.xml" >
   <!ENTITY RFC4231 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4231.xml" >
   <!ENTITY RFC4262 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4262.xml" >
   <!ENTITY RFC4493 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4493.xml" >
   <!ENTITY RFC4949 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4949.xml" >
+  <!ENTITY RFC5116 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5116.xml" >
   <!ENTITY RFC5480 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5480.xml" >
   <!ENTITY RFC5652 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5652.xml" >
   <!ENTITY RFC5751 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5751.xml" >
@@ -36,6 +35,9 @@
   <!ENTITY CDDL SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.greevenbosch-appsawg-cbor-cddl.xml" >
   <!ENTITY CBCMAC SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.mcgrew-aead-aes-cbc-hmac-sha2.xml" >
   <!ENTITY CFRG-EDDSA SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.irtf-cfrg-eddsa.xml" >
+  <!ENTITY RFC2898 SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.moriarty-pkcs5-v2dot1.xml" >
+  <!ENTITY RFC3447 SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.moriarty-pkcs1.xml" >
+  <!ENTITY OSCOAP SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.selander-ace-object-security.xml" >
 
 <!ENTITY Appendix_A SYSTEM "includes/Appendix_A.xml">
 <!ENTITY Appendix_B_3_1 SYSTEM "includes/Appendix_B_3_1.xml">
@@ -228,6 +230,15 @@ Please look at these and determine if the parens should be left or removed.
         </t>
 
         <t>
+          Two syntaxes from CDDL appear in this document as shorthand.
+          These are:
+          <list style="empty">
+            <t>FOO / BAR - indicates that either FOO or BAR can appear here</t>
+            <t>[+ FOO] - indicates that the type FOO appears one or more times in an array</t>
+          </list>
+        </t>
+
+        <t>
           As well as the prose description, a version of a CBOR grammar is presented in CDDL.
           Since CDDL has not been published as an RFC, this grammar may not work with the final version of CDDL.
           The CDDL grammar is informational, the prose description is normative.
@@ -299,10 +310,10 @@ values = any
           It is defined in <xref target="RFC7252"/>.
         </t>
         <t>
-          Authenticated Encryption (AE) algorithms are those encryption algorithms which provide an authentication check of the contents algorithm with the encryption service.
+          Authenticated Encryption (AE) <xref target="RFC5116"/> algorithms are those encryption algorithms which provide an authentication check of the contents algorithm with the encryption service.
         </t>
         <t>
-          Authenticated Encryption with Authenticated Data (AEAD) algorithms provide the same content authentication service as AE algorithms, but additionally provide for authentication of non-encrypted data as well.
+          Authenticated Encryption with Authenticated Data (AEAD) <xref target="RFC5116"/> algorithms provide the same content authentication service as AE algorithms, but additionally provide for authentication of non-encrypted data as well.
         </t>
 
         <!--
@@ -601,14 +612,14 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
 
         <t>
           <list style="hanging">
-            <t hangText='alg'>
+            <t hangText='alg:'>
               This parameter is used to indicate the algorithm used for the security processing.
               This parameter MUST be present in the COSE_Signature, COSE_Sign1, COSE_Encrypt, COSE_Encrypt0, COSE_Mac, and COSE_Mac0 structures.
               When the algorithm supports authenticating associated data, this parameter MUST be in the protected header bucket.
               The value is taken from the "COSE Algorithms" Registry (see <xref target="cose-algorithm-registry"/>).
             </t>
             
-            <t hangText='crit'>
+            <t hangText='crit:'>
               The parameter is used to indicate which protected header labels an application that is processing a message is required to understand.
               Parameters defined in this document do not need to be included as they should be understood by all implementations.
 
@@ -636,7 +647,7 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
               If the 'crit' value list includes a value for which the parameter is not in the protected bucket, this is a fatal error in processing the message.
             </t>
             
-            <t hangText='content type'>
+            <t hangText='content type:'>
               This parameter is used to indicate the content type of the data in the payload or cipher text fields.
               Integers are from the "CoAP Content-Formats" IANA registry table <xref target="COAP.Formats"/>.
               Text values following the syntax of Content-Type defined in Section 5.1 of <xref target="RFC2045"/> omitting the prefix string "Content-Type:".
@@ -645,7 +656,7 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
               Applications SHOULD provide this parameter if the content structure is potentially ambiguous.
             </t>
             
-            <t hangText='kid'>
+            <t hangText='kid:'>
               This parameter identifies one piece of data that can be used as input to find the needed cryptographic key.
               The value of this parameter can be matched against the 'kid' member in a COSE_Key structure.
               Other methods of key distribution can define an equivalent field to be matched.
@@ -657,7 +668,7 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
 	      For this reason, it can be placed in the unprotected headers bucket.
             </t>
 
-            <t hangText="IV">
+            <t hangText="IV:">
               This parameter holds the Initialization Vector (IV) value.
               For some symmetric encryption algorithms this may be referred to as a nonce.
               The IV can be placed in the unprotected header as modifying the IV will cause the decryption to yield plaintext that is readily detectable as garbled.
@@ -677,7 +688,7 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
               </list>
             </t>
 
-            <t hangText='counter signature'>
+            <t hangText='counter signature:'>
               This parameter holds one or more counter signature values.
               Counter signatures provide a method of having a second party sign some data.
 	      The counter signature parameter can occur as an unprotected attribute in any of the following structures: COSE_Sign1, COSE_Signature, COSE_Encrypt, COSE_recipient, COSE_Encrypt0, COSE_Mac and COSE_Mac0.
@@ -863,6 +874,7 @@ COSE_Sign = [
           <t hangText='signature'>
             contains the computed signature value.
             The type of the field is a bstr.
+            Algorithms MUST specify padding if the signature value is not a multiple of 8 bits.
           </t>
           
         </list>
@@ -964,8 +976,9 @@ COSE_Sign1 = [
           Such a construction needs to take into account the following issues:
           <list style="symbols">
             <t>
-              If multiple items are included, care needs to be taken that data cannot bleed between the items.
-              This is usually addressed by making fields fixed width and/or encoding the length of the field.
+              If multiple items are included, applications need to ensure that the same byte string is not produced if there are different inputs.
+              This could occur by appending the strings 'AB' and 'CDE' or by appending the strings 'ABC' and 'DE'.
+              This is usually addressed by making fields a fixed width and/or encoding the length of the field as part of the output.
               Using options from CoAP <xref target="RFC7252"/> as an example, these fields use a TLV structure so they can be concatenated without any problems.
             </t>
             <t>
@@ -987,9 +1000,11 @@ COSE_Sign1 = [
 
         <t>
           In order to create a signature, a well-defined byte stream is needed.
+          The Sig_struture is used to create the canonical form.
           This signing and verification process takes in the body information (COSE_Sign or COSE_Sign1), the signer information (COSE_Signature), and the application data (external source).
-          A CBOR array is used to construct the byte stream.
-          The fields of the array in order are:
+          A Sig_structure is a CBOR array.
+          The fields of the Sig_struture in order are:
+          
           <list style="numbers">
             <t>
               A text string identifying the context of the signature.
@@ -1284,7 +1299,7 @@ COSE_Encrypt0_Tagged = #6.993(COSE_Encrypt0) ; Replace 993 with TBD3
 
 
       <t>
-        The COSE_Encrypt structure is a CBOR array.
+        The COSE_Encrypt0 structure is a CBOR array.
         The fields of the array in order are:
 
         <list style="hanging">
@@ -1319,7 +1334,9 @@ COSE_Encrypt0 = [
         <t>
           The encryption algorithm for AEAD algorithms is fairly simple.
           The first step is to create a consistent byte stream for the authenticated data structure.
-          For this purpose, we use a CBOR array.  The fields of the array in order are:
+          For this purpose, we use an Enc_structure.
+          The Enc_structure is a CBOR array.
+          The fields of the Enc_structure in order are:
 
           <list style="numbers">
             <t>
@@ -1856,6 +1873,7 @@ COSE_KeySet = [+COSE_Key]
             This parameter is defined to restrict the set of operations that a key is to be used for.
             The value of the field is an array of values from <xref target="table-key-ops"/>.
             Algorithms define the values of key ops that are permitted to appear and are required for specific operations.
+            The set of values matches that in <xref target="RFC7517"/> and <xref target="W3C.WebCrypto"/>.
           </t>
 
           <t hangText="Base IV:">
@@ -1866,6 +1884,7 @@ COSE_KeySet = [+COSE_Key]
             Extreme care needs to be taken when using a Base IV in an application.
             Many encryption algorithms lose security if the same IV is used twice.
             <vspace blankLines="1"/>
+            If different keys are derived for each sender, using the same base IV with partial IVs starting at zero is likely to ensure that the IV would not be used twice for a single key.
             If different keys are derived for each sender, starting at the same base IV is likely to satisfy this condition.
             If the same key is used for multiple senders, then the application needs to provide for a method of dividing the IV space up between the senders.
             This could be done by providing a different base point to start from or a different partial IV to start with and restricting the number of messages to be sent before re-keying.
@@ -1885,7 +1904,7 @@ COSE_KeySet = [+COSE_Key]
         <c>wrap key</c>         <c>5</c>        <c>The key is used for key wrapping.</c>
         <c>unwrap key</c>       <c>6</c>        <c>The key is used for key unwrapping.  Requires private key fields.</c>
         <c>derive key</c>        <c>7</c>        <c>The key is used for deriving keys.  Requires private key fields.</c>
-        <c>derive bits</c>      <c>8</c>        <c>The key is used for deriving bits.  Requires private key fields.</c>
+        <c>derive bits</c>      <c>8</c>        <c>The key is used for deriving bits not to be used as a key.  Requires private key fields.</c>
         <c>MAC create</c>       <c>9</c>        <c>The key is used for creating MACs.</c>
         <c>MAC verify</c>       <c>10</c>       <c>The key is used for validating MACs.</c>
       </texttable>
@@ -1976,7 +1995,7 @@ valid, message content = Verification(message sent, key, signature)
 
         <t>
           This document defines ECDSA to work only with the curves P-256, P-384 and P-521.
-          This document requires that the curves be encoded using the 'EC2' key type.
+          This document requires that the curves be encoded using the 'EC2' (2 coordinate Elliptic Curve) key type.
           Implementations need to check that the key type and curve are correct when creating and verifying a signature.
           Other documents can define it to work with other curves and points in the future.
         </t>
@@ -1995,7 +2014,7 @@ valid, message content = Verification(message sent, key, signature)
         </t>
 
         <t>
-          Using the function defined in <xref target="RFC3447"/> the signature is:
+          Using the function defined in <xref target="I-D.moriarty-pkcs1"/> the signature is:
           <vspace/>
           Signature = I2OSP(R, n) | I2OSP(S, n)
           <vspace/>
@@ -2085,7 +2104,7 @@ valid, message content = Verification(message sent, key, signature)
           When using a COSE key for this algorithm the following checks are made:
 
           <list style="symbols">
-            <t> The 'kty' field MUST be present and it MUST be 'OKP'.
+            <t> The 'kty' field MUST be present and it MUST be 'OKP' (Octet Key Pair).
             <!--
             <cref source="GS">Should we do some type of pointer to what an OKP is - intra docpoiter?</cref>
             <cref source="JLS">I think the answer for this can be no.  We point to the appropriate table when we defined what a 'kty' is so they have had a chance to find out what 'OKP' is.  If we did this we would need to do it for all of the different values that show up here.</cref>-->
@@ -2099,7 +2118,7 @@ valid, message content = Verification(message sent, key, signature)
 
         <section title="Security Considerations">
           <t>
-            The Edwards curves for EdDSA and ECDH are distinct and should not be used for the other algorithm.
+            How public values are computed is not the same when looking at EdDSA and ECDH, for this reason they should not be used with the other algorithm.
           </t>
 
           <t>
@@ -2555,7 +2574,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
       <t>
         General KDF functions work well with the first type of secret, can do reasonably well with the second type of secret, and generally do poorly with the last type of secret.
         None of the KDF functions in this section are designed to deal with the type of secrets that are used for passwords.
-        Functions like PBES2 <xref target="RFC2898"/> need to be used for that type of secret.
+        Functions like PBES2 <xref target="I-D.moriarty-pkcs5-v2dot1"/> need to be used for that type of secret.
       </t>
 
       <t>
@@ -2725,7 +2744,7 @@ valid, message content = Decrypt(cipher text, key, additional data)
 
         <t>
           We define a CBOR object to hold the context information.
-          This object is referred to as CBOR_KDF_Context.
+          This object is referred to as COSE_KDF_Context.
           The object is based on a CBOR array type.
           
           The fields in the array are:
@@ -3192,7 +3211,7 @@ COSE_KDF_Context = [
                 Once the computed secret is known, the resulting value needs to be converted to a byte string to run the KDF function.
                 The X coordinate is used for all of the curves defined in this document.
                 For curves X25519 and X448, the resulting value is used directly as it is a byte string of a known length.
-                For the P-256, P-384 and P-521 curves, the X coordinate is run through the I2OSP function defined in <xref target="RFC3447"/>, using the same computation for n as is defined in <xref target="ECDSA"/>.
+                For the P-256, P-384 and P-521 curves, the X coordinate is run through the I2OSP function defined in <xref target="I-D.moriarty-pkcs1"/>, using the same computation for n as is defined in <xref target="ECDSA"/>.
               </t>
               
               <t>
@@ -3303,9 +3322,11 @@ COSE_KDF_Context = [
         <t>
           Key Agreement with Key Wrapping uses a randomly generated CEK.
           The CEK is then encrypted using a Key Wrapping algorithm and a key derived from the shared secret computed by the key agreement algorithm.
+          The function for this would be:
         </t>
-
-
+        <figure><artwork><![CDATA[
+encryptedKey = KeyWrap(KDF(DH-Shared, context), CEK)
+]]></artwork></figure>
 
         <t>
           The COSE_Encrypt structure for the recipient is organized as follows:
@@ -3652,6 +3673,11 @@ COSE_KDF_Context = [
       </t>
 
       <t>
+        An example of a profile can be found in <xref target="I-D.selander-ace-object-security"/> where two profiles are being developed.
+        One is for carrying content by itself, and the other is for carrying content in combination with CoAP headers.
+      </t>
+
+      <t>
         It is intended that a profile of this document be created that defines the interoperability requirements for that specific application.
         This section provides a set of guidelines and topics that need to be considered when profiling this document.
 
@@ -3864,7 +3890,7 @@ COSE_KDF_Context = [
             <t hangText='The columns of the registry are:'>
               
             </t>
-            <t hangText='value'>
+            <t hangText='value:'>
               The value to be used to identify this algorithm.
               Algorithm values MUST be unique.
               The value can be a positive integer, a negative integer or a string.
@@ -3873,11 +3899,15 @@ COSE_KDF_Context = [
               Integer values of greater than 65535 and strings of length greater than 2 are designated as expert review.
               Integer values less than -65536 are marked as private use.
             </t>
-            <t hangText='description'>
+            <t hangText='description:'>
               A short description of the algorithm.
             </t>
-            <t hangText='specification'>
+            <t hangText='specification:'>
               A document where the algorithm is defined (if publicly available).
+            </t>
+            <t hangText='recommended:'>
+              Does the IETF have a concensus recommendation to use the algorithm.
+              The legal values are 'yes', 'no' and 'deprecated'.
             </t>
           </list>
         </t>
@@ -3885,7 +3915,8 @@ COSE_KDF_Context = [
         <t>
           The initial contents of the registry can be found in
           <xref target="table-AES-CCM"/>, <xref target="table-AES-GCM"/>, <xref target="Table-CHACHA"/>, <xref target="table_ecdsa"/>, <xref target="table-hmac"/>, <xref target="table-aes-mac"/>, <xref target="table-direct"/>, <xref target="table-direct-kdf"/>, <xref target="table_aes_keywrap"/>, <xref target="table-eddsa-algs"/>, <xref target="table-ecdh-es-table-wrap"/> and <xref target="table-ecdh-es-table"/>.
-          The specification column for all rows in that table should be this document.
+          The specification column for all rows in the table should be this document.
+          The recommneded column for all rows in the table are set to 'yes'.
         </t>
 
         <t>
@@ -4063,11 +4094,16 @@ COSE_KDF_Context = [
             <t hangText='specification'>
               This contains a pointer to the public specification for the curve if one exists.
             </t>
+            <t hangText='recommended:'>
+              Does the IETF have a concensus recommendation to use the algorithm.
+              The legal values are 'yes', 'no' and 'deprecated'.
+            </t>
           </list>
         </t>
         <t>
           This registry will be initially populated by the values in <xref target="table-ec-curves"/>.
           The specification column for all of these entries will be this document.
+          The recommended column for all of the inital entries will be 'yes'.
         </t>
 
 
@@ -4505,6 +4541,9 @@ COSE_KDF_Context = [
         <format target="http://www.secg.org/sec1-v2.pdf" type="PDF"/>
       </reference>
 
+      &RFC6979;
+      &RFC7748;
+      &CFRG-EDDSA;
       
     </references>
 
@@ -4523,7 +4562,6 @@ COSE_KDF_Context = [
       &RFC5752;
       &RFC5990;
       &RFC6151;
-      &RFC6979;
       &RFC7159;
       &RFC7252;
       &RFC7515;
@@ -4532,8 +4570,6 @@ COSE_KDF_Context = [
       &RFC7518;
       &RFC4949;
       
-      &RFC7748;
-      &CFRG-EDDSA;
 
       <reference anchor="SP800-56A">
         <front>
@@ -4566,9 +4602,21 @@ COSE_KDF_Context = [
         </front>
         <format target="https://www.certicom.com/images/pdfs/CerticomWP-PVSigSec_login.pdf" type="PDF"/>
       </reference>
-
+      
       &RFC7942;
       &RFC2045;
+      &RFC5116;
+
+      <reference anchor="W3C.WebCrypto">
+        <front>
+          <title>Web Cryptography API</title>
+          <author initials="M." surname="Watson"/>
+          <date year="2016" month="July"/>
+        </front>
+        <format target="https://w3c.github.io/webcrypto/Overview.html" type="HTML"/>
+      </reference>
+
+      &OSCOAP;
 
     </references>
 
@@ -4626,7 +4674,7 @@ COSE_KDF_Context = [
           <t>
             A computed value is included as part of the encoded plain text.
             The computed value is then checked by the decryptor using the same computation path.
-            This is the approach followed by RSAES-OAEP <xref target="RFC3447"/>.
+            This is the approach followed by RSAES-OAEP <xref target="I-D.moriarty-pkcs1"/>.
           </t>
         </list>
       </t>
