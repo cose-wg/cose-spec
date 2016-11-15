@@ -1,5 +1,5 @@
 Example_DIR = c:\projects\cose\examples\new\spec-examples
-DUMPER_DIR = c:\projects\cose\cose-c\build\dist\dumper\debug
+DUMPER_DIR = c:\projects\cose\cose-c\dist\dumper\debug
 
 .SUFFIXES:
 .SUFFIXES: .bin .fred .xml
