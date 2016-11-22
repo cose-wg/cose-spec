@@ -355,7 +355,7 @@ li, p {
 <link href="#rfc.references" rel="Chapter" title="19 References"/>
 <link href="#rfc.references.1" rel="Chapter" title="19.1 Normative References"/>
 <link href="#rfc.references.2" rel="Chapter" title="19.2 Informative References"/>
-<link href="#rfc.appendix.A" rel="Chapter" title="A Making Mandatory Algorithm Header Optional"/>
+<link href="#rfc.appendix.A" rel="Chapter" title="A Guidelines for External Data Authentication of Algorithms"/>
 <link href="#rfc.appendix.A.1" rel="Chapter" title="A.1 Algorithm Identification"/>
 <link href="#rfc.appendix.A.2" rel="Chapter" title="A.2 Counter Signature Without Headers"/>
 <link href="#rfc.appendix.B" rel="Chapter" title="B Two Layers of Recipient Information"/>
@@ -542,7 +542,7 @@ li, p {
 <li>19.   <a href="#rfc.references">References</a></li>
 <ul><li>19.1.   <a href="#rfc.references.1">Normative References</a></li>
 <li>19.2.   <a href="#rfc.references.2">Informative References</a></li>
-</ul><li>Appendix A.   <a href="#rfc.appendix.A">Making Mandatory Algorithm Header Optional</a></li>
+</ul><li>Appendix A.   <a href="#rfc.appendix.A">Guidelines for External Data Authentication of Algorithms</a></li>
 <ul><li>A.1.   <a href="#rfc.appendix.A.1">Algorithm Identification</a></li>
 <li>A.2.   <a href="#rfc.appendix.A.2">Counter Signature Without Headers</a></li>
 </ul><li>Appendix B.   <a href="#rfc.appendix.B">Two Layers of Recipient Information</a></li>
@@ -780,7 +780,7 @@ empty_or_serialized_map = bstr .cbor header_map / bstr .size 0
 
 <dl>
   <dt>alg:</dt>
-  <dd style="margin-left: 8">This parameter is used to indicate the algorithm used for the security processing.  This parameter MUST be present in the COSE_Signature, COSE_Sign1, COSE_Encrypt, COSE_Encrypt0, COSE_Mac, and COSE_Mac0 structures.  When the algorithm supports authenticating associated data, this parameter MUST be in the protected header bucket.  The value is taken from the "COSE Algorithms" Registry (see <a href="#cose-algorithm-registry">Section 16.4</a>).  </dd>
+  <dd style="margin-left: 8">This parameter is used to indicate the algorithm used for the security processing.  This parameter MUST be authenticated where the ability to do so exists.  This support is provided by AEAD algorithms or construction (COSE_Sign, COSE_Sign0, COSE_Mac and COSE_Mac0).  This authentication can be done either by placing the header in the protected header bucket or as part of the externally supplied data.  The value is taken from the "COSE Algorithms" Registry (see <a href="#cose-algorithm-registry">Section 16.4</a>).  </dd>
   <dt>crit:</dt>
   <dd style="margin-left: 8">The parameter is used to indicate which protected header labels an application that is processing a message is required to understand.  Parameters defined in this document do not need to be included as they should be understood by all implementations.  When present, this parameter MUST be placed in the protected header bucket.  The array MUST have at least one value in it.  <br/> Not all labels need to be included in the 'crit' parameter.  The rules for deciding which header labels are placed in the array are: <ul><li>Integer labels in the range of 0 to 8 SHOULD be omitted.</li><li>Integer labels in the range -1 to -128 can be omitted as they are algorithm dependent.  If an application can correctly process an algorithm, it can be assumed that it will correctly process all of the common parameters associated with that algorithm.  Integer labels in the range -129 to -65536 SHOULD be included as these would be less common parameters that might not be generally supported.  </li><li>Labels for parameters required for an application MAY be omitted.  Applications should have a statement if the label can be omitted.  </li></ul><p> The header parameter values indicated by 'crit' can be processed by either the security library code or by an application using a security library; the only requirement is that the parameter is processed.  If the 'crit' value list includes a value for which the parameter is not in the protected bucket, this is a fatal error in processing the message.  </p></dd>
   <dt>content type:</dt>
@@ -3411,7 +3411,7 @@ encryptedKey = KeyWrap(KDF(DH-Shared, context), CEK)
     </tr>
   </tbody>
 </table>
-<h1 id="rfc.appendix.A"><a href="#rfc.appendix.A">Appendix A.</a> Making Mandatory Algorithm Header Optional</h1>
+<h1 id="rfc.appendix.A"><a href="#rfc.appendix.A">Appendix A.</a> Guidelines for External Data Authentication of Algorithms</h1>
 <p id="rfc.section.A.p.1">There has been a portion of the working group who have expressed a strong desire to relax the rule that the algorithm identifier be required to appear in each level of a COSE object.  There are two basic reasons that have been advanced to support this position.  First, the resulting message will be smaller if the algorithm identifier is omitted from the most common messages in a CoAP environment.  Second, there is a potential bug that will arise if full checking is not done correctly between the different places that an algorithm identifier could be placed (the message itself, an application statement, the key structure that the sender possesses and the key structure the recipient possesses).  </p>
 <p id="rfc.section.A.p.2">This appendix lays out how such a change can be made and the details that an application needs to specify in order to use this option.  Two different sets of details are specified: Those needed to omit an algorithm identifier and those needed to use a variant on the counter signature attribute that contains no attributes about itself.  </p>
 <h1 id="rfc.appendix.A.1"><a href="#rfc.appendix.A.1">A.1.</a> Algorithm Identification</h1>

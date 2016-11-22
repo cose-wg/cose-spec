@@ -179,7 +179,8 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)  November 2016
    19. References  . . . . . . . . . . . . . . . . . . . . . . . . .  91
      19.1.  Normative References . . . . . . . . . . . . . . . . . .  91
      19.2.  Informative References . . . . . . . . . . . . . . . . .  92
-   Appendix A.  Making Mandatory Algorithm Header Optional . . . . .  95
+   Appendix A.  Guidelines for External Data Authentication of
+                Algorithms . . . . . . . . . . . . . . . . . . . . .  95
      A.1.  Algorithm Identification  . . . . . . . . . . . . . . . .  95
      A.2.  Counter Signature Without Headers . . . . . . . . . . . .  98
    Appendix B.  Two Layers of Recipient Information  . . . . . . . .  99
@@ -217,7 +218,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)  November 2016
    There has been an increased focus on small, constrained devices that
    make up the Internet of Things (IoT).  One of the standards that has
    come out of this process is the Concise Binary Object Representation
-   (CBOR) [RFC7049].  CBOR extended the data model of the JavaScript
 
 
 
@@ -226,6 +226,7 @@ Schaad                    Expires May 26, 2017                  [Page 4]
 Internet-Draft  CBOR Object Signing and Encryption (COSE)  November 2016
 
 
+   (CBOR) [RFC7049].  CBOR extended the data model of the JavaScript
    Object Notation (JSON) [RFC7159] by allowing for binary data, among
    other changes.  CBOR is being adopted by several of the IETF working
    groups dealing with the IoT world as their encoding of data
@@ -272,7 +273,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)  November 2016
 
    o  Use binary encodings for binary data rather than base64url
       encodings.
-
 
 
 
@@ -660,12 +660,12 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)  November 2016
    The set of header parameters defined in this section are:
 
    alg:  This parameter is used to indicate the algorithm used for the
-      security processing.  This parameter MUST be present in the
-      COSE_Signature, COSE_Sign1, COSE_Encrypt, COSE_Encrypt0, COSE_Mac,
-      and COSE_Mac0 structures.  When the algorithm supports
-      authenticating associated data, this parameter MUST be in the
-      protected header bucket.  The value is taken from the "COSE
-      Algorithms" Registry (see Section 16.4).
+      security processing.  This parameter MUST be authenticated where
+      the ability to do so exists.  This support is provided by AEAD
+      algorithms or construction (COSE_Sign, COSE_Sign0, COSE_Mac and
+      COSE_Mac0).  This authentication can be done either by placing the
+      header in the protected header bucket or as part of the externally
+
 
 
 
@@ -673,6 +673,9 @@ Schaad                    Expires May 26, 2017                 [Page 12]
 
 Internet-Draft  CBOR Object Signing and Encryption (COSE)  November 2016
 
+
+      supplied data.  The value is taken from the "COSE Algorithms"
+      Registry (see Section 16.4).
 
    crit:  The parameter is used to indicate which protected header
       labels an application that is processing a message is required to
@@ -719,9 +722,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)  November 2016
    kid:  This parameter identifies one piece of data that can be used as
       input to find the needed cryptographic key.  The value of this
       parameter can be matched against the 'kid' member in a COSE_Key
-      structure.  Other methods of key distribution can define an
-      equivalent field to be matched.  Applications MUST NOT assume that
-      'kid' values are unique.  There may be more than one key with the
 
 
 
@@ -730,6 +730,9 @@ Schaad                    Expires May 26, 2017                 [Page 13]
 Internet-Draft  CBOR Object Signing and Encryption (COSE)  November 2016
 
 
+      structure.  Other methods of key distribution can define an
+      equivalent field to be matched.  Applications MUST NOT assume that
+      'kid' values are unique.  There may be more than one key with the
       same 'kid' value, so all of the keys associated with this 'kid'
       may need to be checked.  The internal structure of 'kid' values is
       not defined and cannot be relied on by applications.  Key
@@ -767,9 +770,6 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)  November 2016
       structures all have the same beginning elements so that a
       consistent calculation of the counter signature can be computed.
       Details on computing counter signatures are found in Section 4.5.
-
-
-
 
 
 
@@ -5288,7 +5288,7 @@ Internet-Draft  CBOR Object Signing and Encryption (COSE)  November 2016
    [W3C.WebCrypto]
               Watson, M., "Web Cryptography API", July 2016.
 
-Appendix A.  Making Mandatory Algorithm Header Optional
+Appendix A.  Guidelines for External Data Authentication of Algorithms
 
    There has been a portion of the working group who have expressed a
    strong desire to relax the rule that the algorithm identifier be
